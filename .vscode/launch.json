@@ -1,0 +1,34 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/index.js",
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "args": ["contract", "../PureNFT/build/contracts/LightNFT.json","--create"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Schema Definition",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/tableCreations.js",
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "args": ["--create"]
+        }
+    ]
+}
