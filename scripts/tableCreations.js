@@ -12,7 +12,7 @@ else
 import { Command } from 'commander';
 const program = new Command();
 import { dynamodb } from './ddbClient.js';
-import { Config } from '../configuration.js';
+import { Config } from './configuration.js';
 import { CreateTableCommand, DeleteTableCommand, DescribeTableCommand } from "@aws-sdk/client-dynamodb";
 const config = Config();
 

@@ -4,7 +4,7 @@
 import Web3 from 'web3';
 import { dynamodb } from '../ddbClient.js';
 //const config = require('./configuration')();
-import { Config } from '../configuration.js';
+import { Config } from '../../configuration.js';
 import fs from 'fs';
 import { PutItemCommand } from "@aws-sdk/client-dynamodb";
 

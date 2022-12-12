@@ -1,5 +1,5 @@
 
-import { Config } from '../configuration.js';
+import { Config } from './configuration.js';
 const config = Config();
 
 var schemas = [

@@ -5,17 +5,37 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "node",
+            "name": "Launch API",
+            "type": "lldb",
             "request": "launch",
-            "name": "Launch Program",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}/index.js",
-            "env": {
-                "NODE_ENV": "development"
+            "program": "${workspaceRoot}/target/debug/api",
+            "args": [ "arg1", "arg2" ],
+            "cwd": "${workspaceRoot}/target/debug",
+        }, 
+        {
+            "name": "Attach to API",
+            "type": "lldb",
+            "request": "attach",
+            "program": "${workspaceRoot}/target/debug/api",
+        },
+        {
+            "name": "Debug ALL unit tests in library 'mylib'", // https://gist.github.com/xanathar/c7c83e6d53b72dd4464f695607012629
+            "type": "lldb",
+            "request": "launch",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=mylib"
+                ],
+                "filter": {
+                    "name": "mylib",
+                    "kind": "lib"
+                }
             },
-            "args": ["contract", "../PureNFT/build/contracts/LightNFT.json","--create"]
+            "args": [ ],
+            "cwd": "${workspaceFolder}"
         },
         {
             "type": "node",
