@@ -1,14 +1,15 @@
 use std::time::SystemTime;
+use serde::{Serialize, Deserialize};
 
 pub trait Userer {
-    fn CheckLogin(&self) -> bool;
+    fn check_login(&self) -> bool;
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct User {
-    userID: String,
-    creationTime: SystemTime,
-    walletAddress: String,
+    user_id: String,
+    creation_time: SystemTime,
+    wallet_address: String,
     email: String,
     device: String,
 }
@@ -16,9 +17,9 @@ pub struct User {
 impl User {
     pub fn new() -> User {
         User {
-            userID: String::new(),
-            creationTime: SystemTime::now(),
-            walletAddress: String::new(),
+            user_id: String::new(),
+            creation_time: SystemTime::now(),
+            wallet_address: String::new(),
             email: String::new(),
             device: String::new(),
         }
@@ -26,7 +27,7 @@ impl User {
 }
 
 impl Userer for User {
-    fn CheckLogin(&self) -> bool {
+    fn check_login(&self) -> bool {
         return true;
     }
 }

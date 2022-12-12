@@ -10,7 +10,7 @@ var schemas = [
         "AttributeDefinitions": [
             {
                 "AttributeName": "userID",
-                "AttributeType": "N"
+                "AttributeType": "S"
             },
             {
                 "AttributeName": "creationTime",

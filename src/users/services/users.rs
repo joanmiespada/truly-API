@@ -5,13 +5,13 @@ use crate::users::repositories::users::{UsersRepo, UserRepository};
 
 
 pub trait LoginOps {
-    fn Login() -> User;
+    fn login() -> User;
 }
 
 #[async_trait]
 pub trait UserManipulation {
-    async fn get_all(&self) -> Vec<User>;
-    async fn get_by_user_id(&self,id:i64) -> Option<User>;
+    async fn get_all(&self, page_number:u32, page_size:u32) -> Vec<User>;
+    async fn get_by_user_id(&self,id:String) -> Option<User>;
 }
 
 pub struct UsersService{
@@ -28,7 +28,7 @@ impl UsersService {
 
 impl LoginOps for UsersService {
 
-    fn Login() -> User {
+    fn login() -> User {
         let user = User::new();
         return user;
     }
@@ -37,12 +37,12 @@ impl LoginOps for UsersService {
 #[async_trait]
 impl UserManipulation for UsersService{
 
-    async fn get_all(&self) -> Vec<User>{
-        let res = self.repository.get_all().await;
+    async fn get_all(&self, page_number:u32, page_size:u32) -> Vec<User>{
+        let res = self.repository.get_all(page_number, page_size).await;
         return  res.unwrap(); //vec![];
     }
 
-    async fn get_by_user_id(&self, id:i64) -> Option<User>{
+    async fn get_by_user_id(&self, id:String) -> Option<User>{
         let res = self.repository.get_by_user_id(id).await;
         return  res.unwrap(); //vec![];
         // return  None;

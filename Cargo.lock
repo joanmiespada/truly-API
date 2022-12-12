@@ -243,6 +243,7 @@ dependencies = [
  "aws-sdk-dynamodb",
  "chrono",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

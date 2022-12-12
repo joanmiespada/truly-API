@@ -1,6 +1,5 @@
 
-use crate::http::handlers;
-use actix_web::{dev::Server, web, App, HttpServer, Error};
+use actix_web::{ Error};
 use async_trait::async_trait;
 
 #[async_trait]
