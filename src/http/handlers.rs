@@ -1,7 +1,11 @@
+use std::time::SystemTime;
+
+use actix_rt::System;
 use actix_web::{web, Responder };
+use aws_sdk_dynamodb::types::DateTime;
 use serde::Deserialize;
 
-use crate::users::services::users::{UserManipulation, UsersService};
+use crate::users::{services::users::{UserManipulation, UsersService}, models::user::{self, User}};
 
 const PAGESIZE_MAX: u32 = 20;
 const PAGESIZE_MIN: u32 = 5;
@@ -57,11 +61,23 @@ pub async fn get_user_by_id(state: web::Data<AppState>, path: web::Path<String>)
 }
 
 #[derive(Deserialize)]
-pub struct NewUser {}
+pub struct NewUser {
+    pub wallet_address: String,
+    pub email: String,
+    pub device: String,
+}
 
-pub async fn add_user() -> impl Responder {
-    let new_id = 0;
-    format!("{}", new_id)
+pub async fn add_user(state: web::Data<AppState>, payload: web::Json<NewUser> ) -> impl Responder {
+    let user_service = &state.user_service;
+
+    let mut user = User::new();
+    *user.set_email() = payload.email.clone();
+    *user.set_wallet_address() = payload.wallet_address.clone();
+    *user.set_device() = payload.device.clone();
+
+    let new_id = user_service.add_user(&mut user).await;
+
+    format!("{{id:{}}}", new_id)
 }
 
 /*

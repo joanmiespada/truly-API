@@ -1,5 +1,5 @@
-use std::mem::replace;
 
+use env_logger::Env;
 use aws_config::{meta::region::RegionProviderChain, SdkConfig};
 
 pub struct Config {
@@ -17,6 +17,9 @@ impl Config {
         let region_provider = RegionProviderChain::default_provider().or_else("us-east-1");
         let aux  = aws_config::from_env().region(region_provider).load().await;
         self.aws_config = Some(aux);
+
+        env_logger::init_from_env(Env::default().default_filter_or("info"));
+
         
         //replace(&mut self.aws_config,  Some(aux));
     }

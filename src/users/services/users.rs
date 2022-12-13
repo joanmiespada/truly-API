@@ -1,3 +1,4 @@
+use actix_web::Result;
 use async_trait::async_trait;
 
 use crate::users::models::user::User;
@@ -12,6 +13,7 @@ pub trait LoginOps {
 pub trait UserManipulation {
     async fn get_all(&self, page_number:u32, page_size:u32) -> Vec<User>;
     async fn get_by_user_id(&self,id:String) -> Option<User>;
+    async fn add_user(&self, user:&mut User) -> String;
 }
 
 pub struct UsersService{
@@ -46,6 +48,11 @@ impl UserManipulation for UsersService{
         let res = self.repository.get_by_user_id(id).await;
         return  res.unwrap(); //vec![];
         // return  None;
+    }
+
+    async fn add_user(&self, user:&mut User) -> String{
+        let res = self.repository.add_user(user).await;
+        return res.unwrap();
     }
 
 }

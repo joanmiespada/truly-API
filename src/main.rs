@@ -2,6 +2,7 @@
 //use aws_sdk_dynamodb::Client;
 use actix_web::{ web, App, HttpServer, };
 use http::handlers::{self, AppState};
+use actix_web::middleware::Logger;
 
 mod users;
 mod config;
@@ -22,6 +23,8 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(AppState {
                 user_service: user_service.clone(),
             }))
+            .wrap(Logger::default())
+            //.wrap(Logger::new("%a %{User-Agent}i"))
             .route("/users", web::get().to(handlers::get_users))
             .route("/users/{id}", web::get().to(handlers::get_user_by_id))
             .route("/users", web::post().to(handlers::add_user))

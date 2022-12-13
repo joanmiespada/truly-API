@@ -9,7 +9,7 @@ use crate::users::models::user::User;
 #[async_trait]
 pub trait UserRepository {
     //async fn configure(&mut self) -> Result<(), Error>;
-    async fn add_user(&self,user: &User) -> Result<(), Error>;
+    async fn add_user(&self,user: &mut User) -> Result<String, Error>;
     async fn get_by_user_id(&self, id: String) -> Result<Option<User>, Error>;
     async fn get_all(&self, page_number:u32, page_size:u32) -> Result<Vec<User>, Error> ;
 }
@@ -49,7 +49,7 @@ impl UserRepository for UsersRepo {
 
     }*/
  
-    async fn add_user(&self, user: &User) -> Result<(), Error> {
+    async fn add_user(&self, user: &mut User) -> Result<String, Error> {
 /*         let user_av = AttributeValue::S(item.username);
         let type_av = AttributeValue::S(item.p_type);
         let age_av = AttributeValue::S(item.age);
@@ -80,7 +80,9 @@ impl UserRepository for UsersRepo {
             attributes.get("p_type")
         );
         */
-        Ok(())
+        let new_id = "djdjdjdjd-jdjdjd".to_string();
+        *user.set_user_id() = new_id;
+        Ok("sdfsdfs".to_string())
     }
     
     async fn get_all(&self, page_number:u32, page_size:u32) -> Result<Vec<User>, Error> {
