@@ -1,6 +1,6 @@
 use actix_web::Result;
 use async_trait::async_trait;
-
+use uuid::Uuid;
 use crate::users::models::user::User;
 use crate::users::repositories::users::{UsersRepo, UserRepository};
 
@@ -51,8 +51,10 @@ impl UserManipulation for UsersService{
     }
 
     async fn add_user(&self, user:&mut User) -> String{
-        let res = self.repository.add_user(user).await;
-        return res.unwrap();
+        let id = Uuid::new_v4();
+        *user.set_user_id() = id.to_string();
+        self.repository.add_user(user).await;
+        return id.to_string();
     }
 
 }

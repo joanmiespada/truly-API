@@ -1,42 +1,47 @@
 use std::io::Error;
 
+use crate::users::models::user::User;
 use async_trait::async_trait;
 use aws_config::{meta::region::RegionProviderChain, SdkConfig};
-use aws_sdk_dynamodb::{Client};
-
-use crate::users::models::user::User;
+use aws_sdk_dynamodb::{model::{AttributeValue, Select}, Client};
+use chrono::{
+    prelude::{DateTime, Utc},
+    Local,
+};
 
 #[async_trait]
 pub trait UserRepository {
     //async fn configure(&mut self) -> Result<(), Error>;
-    async fn add_user(&self,user: &mut User) -> Result<String, Error>;
+    async fn add_user(&self, user: &mut User) -> Result<(), Error>;
     async fn get_by_user_id(&self, id: String) -> Result<Option<User>, Error>;
-    async fn get_all(&self, page_number:u32, page_size:u32) -> Result<Vec<User>, Error> ;
+    async fn get_all(&self, page_number: u32, page_size: u32) -> Result<Vec<User>, Error>;
 }
 
 pub struct UsersRepo {
     client: Client,
 }
 
-impl UsersRepo{
+impl UsersRepo {
     pub fn new(aux: &SdkConfig) -> UsersRepo {
-        UsersRepo { client: Client::new(aux) }
+        UsersRepo {
+            client: Client::new(aux),
+        }
     }
 }
 
-
-impl Clone for UsersRepo{
+impl Clone for UsersRepo {
     fn clone(&self) -> UsersRepo {
-        let aux = UsersRepo{ client: self.client.clone() };
+        let aux = UsersRepo {
+            client: self.client.clone(),
+        };
         //aux.configure();
         return aux;
     }
 }
 
-
 #[async_trait]
 impl UserRepository for UsersRepo {
-    /* 
+    /*
     async fn configure(&mut self) -> Result<(), Error> {
         //let shared_config = aws_config::load_from_env().await;
         //client = Client::new(&shared_config);
@@ -48,62 +53,98 @@ impl UserRepository for UsersRepo {
         Ok(())
 
     }*/
- 
-    async fn add_user(&self, user: &mut User) -> Result<String, Error> {
-/*         let user_av = AttributeValue::S(item.username);
-        let type_av = AttributeValue::S(item.p_type);
-        let age_av = AttributeValue::S(item.age);
-        let first_av = AttributeValue::S(item.first);
-        let last_av = AttributeValue::S(item.last);
 
-        let request = client
+    async fn add_user(&self, user: &mut User) -> Result<(), Error> {
+        let user_id_av = AttributeValue::S(user.get_user_id().clone());
+        let device_av = AttributeValue::S(user.get_device().clone());
+        let creation_time_av = AttributeValue::S(iso8601(user.get_creation_time()));
+        let email_av = AttributeValue::S(user.get_email().clone());
+        let wallet_address_av = AttributeValue::S(user.get_wallet_address().clone());
+
+        let request = self
+            .client
             .put_item()
-            .table_name(table)
-            .item("username", user_av)
-            .item("account_type", type_av)
-            .item("age", age_av)
-            .item("first_name", first_av)
-            .item("last_name", last_av);
+            .table_name("users")
+            .item("userID", user_id_av)
+            .item("creationTime", creation_time_av)
+            .item("walletAddress", wallet_address_av)
+            .item("email_name", email_av)
+            .item("device_name", device_av);
 
-        println!("Executing request [{request:?}] to add item...");
+        //println!("Executing request [{request:?}] to add item...");
 
-        let resp = request.send().await?;
+        match request.send().await {
+            Ok(_) => {}
+            Err(e) => {
+                eprintln!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                panic!("error when saving at Dynamodb");
+            }
+        }
 
-        let attributes = resp.attributes().unwrap();
-
-        println!(
-            "Added user {:?}, {:?} {:?}, age {:?} as {:?} user",
-            attributes.get("username"),
-            attributes.get("first_name"),
-            attributes.get("last_name"),
-            attributes.get("age"),
-            attributes.get("p_type")
-        );
-        */
-        let new_id = "djdjdjdjd-jdjdjd".to_string();
-        *user.set_user_id() = new_id;
-        Ok("sdfsdfs".to_string())
+        Ok(())
     }
-    
-    async fn get_all(&self, page_number:u32, page_size:u32) -> Result<Vec<User>, Error> {
+
+    async fn get_all(&self, page_number: u32, page_size: u32) -> Result<Vec<User>, Error> {
         let mut aux = Vec::new();
-        aux.push( User::new()  );
+        aux.push(User::new());
 
         Ok(aux)
     }
 
     async fn get_by_user_id(&self, id: String) -> Result<Option<User>, Error> {
-        Ok( Some(User::new())  ) 
+        let user_id_av = AttributeValue::S(id);
+        let request = self
+            .client
+            .query()
+            .table_name("users")
+            .key_condition_expression("userID = :value".to_string())
+            .expression_attribute_values(":value".to_string(), user_id_av)
+            .select(Select::AllAttributes);
+
+        match request.send().await {
+            Ok(doc) => {
+                if doc.count() > 0 {
+                    println!("{:?}", doc.items.unwrap_or_default().pop());
+                    let income = doc.items.unwrap_or_default().pop().unwrap();
+                    
+                    let mut user = User::new();
+                    let aux = income.get("email").unwrap();
+                    let i = aux.as_s().unwrap();
+                    *user.set_email() = i.clone();
+                    Ok(Some(user))
+                } else {
+                    Ok((None))
+                }
+            }
+            Err(e) => {
+                eprintln!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                panic!("error when saving at Dynamodb");
+            }
+        }
     }
 }
 
-/* 
+fn iso8601(st: &std::time::SystemTime) -> String {
+    let dt: DateTime<Utc> = st.clone().into();
+    format!("{}", dt.format("%+"))
+    // formats like "2001-07-08T00:34:60.026490+09:30"
+}
+
+/*
 pub fn CreateUserRepo() -> UsersRepo {
     let aux = UsersRepo { client: todo!()  };
 
     aux.configure();
 
     return aux;
-        
+
 }
 */

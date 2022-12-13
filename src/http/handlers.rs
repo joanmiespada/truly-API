@@ -77,7 +77,7 @@ pub async fn add_user(state: web::Data<AppState>, payload: web::Json<NewUser> ) 
 
     let new_id = user_service.add_user(&mut user).await;
 
-    format!("{{id:{}}}", new_id)
+    format!("{{'id':'{}'}}", new_id)
 }
 
 /*
