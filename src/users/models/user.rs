@@ -1,5 +1,5 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::time::SystemTime;
 
 pub trait Userer {
     fn check_login(&self) -> bool;
@@ -8,7 +8,7 @@ pub trait Userer {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct User {
     user_id: String,
-    creation_time: SystemTime,
+    creation_time: DateTime<Utc>,
     wallet_address: String,
     email: String,
     device: String,
@@ -18,42 +18,42 @@ impl User {
     pub fn new() -> User {
         User {
             user_id: String::new(),
-            creation_time: SystemTime::now(),
+            creation_time: Utc::now(),
             wallet_address: String::new(),
             email: String::new(),
             device: String::new(),
         }
     }
 
-    pub fn get_user_id(&self) -> &String {
+    pub fn user_id(&self) -> &String {
         &self.user_id
     }
-    pub fn set_user_id(&mut self) -> &mut String {
-        &mut self.user_id 
+    pub fn set_user_id(&mut self, val: &String) {
+        self.user_id = val.clone() 
     }
-    pub fn get_creation_time(&self) -> &SystemTime {
+    pub fn creation_time(&self) -> &DateTime<Utc> {
         &self.creation_time
     }
-    pub fn set_creation_time(&mut self ) -> &mut SystemTime {
-        &mut self.creation_time 
+    pub fn set_creation_time(&mut self, val: &DateTime<Utc> ) {
+        self.creation_time = val.clone() 
     }
-    pub fn get_wallet_address(&self) -> &String {
+    pub fn wallet_address(&self) -> &String {
         &self.wallet_address
     }
-    pub fn set_wallet_address(&mut self) -> &mut String {
-        &mut self.wallet_address
+    pub fn set_wallet_address(&mut self, val: &String ) {
+        self.wallet_address = val.clone()
     }
-    pub fn get_email(&self) -> &String {
+    pub fn email(&self) -> &String {
         &self.email
     }
-    pub fn set_email(&mut self, ) -> &mut String {
-        &mut self.email
+    pub fn set_email(&mut self, val: &String ) {
+        self.email = val.clone()
     }
-    pub fn get_device(&self) -> &String {
+    pub fn device(&self) -> &String {
         &self.device
     }
-    pub fn set_device(&mut self) -> &mut String{
-        &mut self.device
+    pub fn set_device(&mut self, val: &String) {
+        self.device = val.clone()
     }
 }
 

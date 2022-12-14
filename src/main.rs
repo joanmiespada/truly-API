@@ -14,7 +14,7 @@ async fn main() -> std::io::Result<()> {
     let mut config = config::Config::new();
     config.setup().await;
 
-    let user_repo = users::repositories::users::UsersRepo::new(config.getAWSConfig());
+    let user_repo = users::repositories::users::UsersRepo::new(config.aws_config());
     let user_service = users::services::users::UsersService::new(user_repo);
 
     // Start http server

@@ -1,9 +1,12 @@
-use std::io::Error;
+use std::{io::Error };
 
 use crate::users::models::user::User;
 use async_trait::async_trait;
-use aws_config::{meta::region::RegionProviderChain, SdkConfig};
-use aws_sdk_dynamodb::{model::{AttributeValue, Select}, Client};
+use aws_config::{SdkConfig};
+use aws_sdk_dynamodb::{
+    model::{AttributeValue, Select},
+    Client,
+};
 use chrono::{
     prelude::{DateTime, Utc},
     Local,
@@ -55,11 +58,11 @@ impl UserRepository for UsersRepo {
     }*/
 
     async fn add_user(&self, user: &mut User) -> Result<(), Error> {
-        let user_id_av = AttributeValue::S(user.get_user_id().clone());
-        let device_av = AttributeValue::S(user.get_device().clone());
-        let creation_time_av = AttributeValue::S(iso8601(user.get_creation_time()));
-        let email_av = AttributeValue::S(user.get_email().clone());
-        let wallet_address_av = AttributeValue::S(user.get_wallet_address().clone());
+        let user_id_av = AttributeValue::S(user.user_id().clone());
+        let device_av = AttributeValue::S(user.device().clone());
+        let creation_time_av = AttributeValue::S(iso8601(user.creation_time()));
+        let email_av = AttributeValue::S(user.email().clone());
+        let wallet_address_av = AttributeValue::S(user.wallet_address().clone());
 
         let request = self
             .client
@@ -68,8 +71,8 @@ impl UserRepository for UsersRepo {
             .item("userID", user_id_av)
             .item("creationTime", creation_time_av)
             .item("walletAddress", wallet_address_av)
-            .item("email_name", email_av)
-            .item("device_name", device_av);
+            .item("email", email_av)
+            .item("device", device_av);
 
         //println!("Executing request [{request:?}] to add item...");
 
@@ -105,20 +108,80 @@ impl UserRepository for UsersRepo {
             .expression_attribute_values(":value".to_string(), user_id_av)
             .select(Select::AllAttributes);
 
+        let results = request.send().await;
+
+        if let Some(items) = results.unwrap().items {
+            let mut user = User::new();
+
+            if items.len() == 0 {
+                return Ok(None);
+            } 
+
+            let aux = &items[0];
+            //let keyfield = "userID";
+            //let eres = aux.get(&*keyfield).unwrap();
+            let _user_id = aux.get("userID").unwrap();
+            let user_id = _user_id.as_s().unwrap();
+
+            let email = aux.get("email").unwrap().as_s().unwrap();
+            let device = aux.get("device").unwrap().as_s().unwrap();
+            let wallet_address = aux.get("walletAddress").unwrap().as_s().unwrap();
+            let creation_time = aux.get("creationTime").unwrap().as_s().unwrap();
+
+            user.set_creation_time(&from_iso8601(creation_time));
+            user.set_device(device);
+            user.set_wallet_address(wallet_address);
+            user.set_email(email);
+            user.set_user_id(user_id);
+/* 
+            let user = User {
+                user_id: userID.clone(),
+                email: email.clone(),
+                device: device.clone(),
+                wallet_address: wallet_address.clone(),
+                creation_time: from_iso8601( creation_time)
+
+            };*/
+            Ok(Some(user))
+        /*
+                    for &item in &items[0] {
+                        match item.get() {
+                            Some(doc) => {
+                                let i = doc.as_s().unwrap().as_str();
+                                Ok(None)
+                            }
+                            None => Ok(None),
+                        }
+                    }
+        */
+        //let movies = items.iter().map(|v| v.into()).cloned().collect::<Option<User>>();
+        //Ok(movies)
+        //Ok(None)
+        } else {
+            Ok(None)
+        }
+
+        /*
         match request.send().await {
             Ok(doc) => {
                 if doc.count() > 0 {
                     println!("{:?}", doc.items.unwrap_or_default().pop());
-                    let income = doc.items.unwrap_or_default().pop().unwrap();
-                    
-                    let mut user = User::new();
-                    let aux = income.get("email").unwrap();
-                    let i = aux.as_s().unwrap();
-                    *user.set_email() = i.clone();
-                    Ok(Some(user))
+                    let income = doc.items.unwrap_or_default().pop(); //.clone();
+
+                    match income {
+                        Some(x) => {
+                            let mut user = User::new();
+                            let aux = x.get("email").unwrap();
+                            let i = aux.as_s().unwrap();
+                            *user.set_email() = i.clone();
+                            Ok(Some(user))
+                        }
+                        None => Ok((None)),
+                    }
                 } else {
                     Ok((None))
                 }
+
             }
             Err(e) => {
                 eprintln!(
@@ -128,14 +191,21 @@ impl UserRepository for UsersRepo {
                 );
                 panic!("error when saving at Dynamodb");
             }
-        }
+        }*/
     }
 }
 
-fn iso8601(st: &std::time::SystemTime) -> String {
+//fn iso8601(st: &std::time::SystemTime) -> String {
+fn iso8601(st: &DateTime<Utc>) -> String {
     let dt: DateTime<Utc> = st.clone().into();
     format!("{}", dt.format("%+"))
     // formats like "2001-07-08T00:34:60.026490+09:30"
+}
+
+fn from_iso8601(st: &String) -> DateTime<Utc> {
+
+    let aux =  st.parse::<DateTime<Utc>>().unwrap();    //DateTime::parse_from_str(st, "%+").unwrap();
+    aux
 }
 
 /*

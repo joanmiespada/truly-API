@@ -1,6 +1,5 @@
-use std::env;
 
-use aws_config::{meta::region::RegionProviderChain, SdkConfig};
+use aws_config::{ SdkConfig};
 use aws_sdk_dynamodb::{Endpoint, Region};
 use env_logger::Env;
 
@@ -33,7 +32,7 @@ impl Config {
 
         //replace(&mut self.aws_config,  Some(aux));
     }
-    pub fn getAWSConfig(&self) -> &SdkConfig {
+    pub fn aws_config(&self) -> &SdkConfig {
         let aux = self.aws_config.as_ref().unwrap();
         return aux;
     }

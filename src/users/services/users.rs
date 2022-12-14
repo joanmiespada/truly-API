@@ -52,7 +52,7 @@ impl UserManipulation for UsersService{
 
     async fn add_user(&self, user:&mut User) -> String{
         let id = Uuid::new_v4();
-        *user.set_user_id() = id.to_string();
+        user.set_user_id(&id.to_string());
         self.repository.add_user(user).await;
         return id.to_string();
     }

@@ -1,11 +1,10 @@
-use std::time::SystemTime;
-
-use actix_rt::System;
-use actix_web::{web, Responder };
-use aws_sdk_dynamodb::types::DateTime;
+use actix_web::{web, Responder, HttpResponse };
 use serde::Deserialize;
 
-use crate::users::{services::users::{UserManipulation, UsersService}, models::user::{self, User}};
+use crate::users::{
+    models::user::{User},
+    services::users::{UserManipulation, UsersService},
+};
 
 const PAGESIZE_MAX: u32 = 20;
 const PAGESIZE_MIN: u32 = 5;
@@ -33,10 +32,7 @@ pub async fn get_users(
     let page_size = params.pageSize.unwrap_or(PAGESIZE_MAX);
 
     if page_num < PAGENUM_MIN {
-        return format!(
-            "pageNumber is {}, when the minimum value is 1",
-            page_num
-        );
+        return format!("pageNumber is {}, when the minimum value is 1", page_num);
     }
     if page_size < PAGESIZE_MIN || page_size > PAGESIZE_MAX {
         return format!(
@@ -44,9 +40,7 @@ pub async fn get_users(
             page_size, PAGENUM_MIN, PAGESIZE_MAX
         );
     }
-    let res = user_service
-        .get_all(page_num, page_size)
-        .await;
+    let res = user_service.get_all(page_num, page_size).await;
     let serialized_users = serde_json::to_string(&res).unwrap();
     format!("{}", serialized_users)
 }
@@ -54,10 +48,15 @@ pub async fn get_users(
 pub async fn get_user_by_id(state: web::Data<AppState>, path: web::Path<String>) -> impl Responder {
     let user_service = &state.user_service;
     let id = path.into_inner();
-    let user_nullable = user_service.get_by_user_id(id).await;
-    let user = user_nullable.unwrap();
-    let serialized_user = serde_json::to_string(&user).unwrap();
-    format!("{}", serialized_user)
+    match user_service.get_by_user_id(id).await {
+        Some(user) => {
+            //let serialized_user = serde_json::to_string(&user).unwrap();
+            return HttpResponse::Ok().json(user);
+        }
+        None => {
+           return HttpResponse::NoContent().finish();
+        }
+    }
 }
 
 #[derive(Deserialize)]
@@ -67,13 +66,13 @@ pub struct NewUser {
     pub device: String,
 }
 
-pub async fn add_user(state: web::Data<AppState>, payload: web::Json<NewUser> ) -> impl Responder {
+pub async fn add_user(state: web::Data<AppState>, payload: web::Json<NewUser>) -> impl Responder {
     let user_service = &state.user_service;
 
     let mut user = User::new();
-    *user.set_email() = payload.email.clone();
-    *user.set_wallet_address() = payload.wallet_address.clone();
-    *user.set_device() = payload.device.clone();
+    user.set_email(&payload.email);
+    user.set_wallet_address(&payload.wallet_address);
+    user.set_device(&payload.device);
 
     let new_id = user_service.add_user(&mut user).await;
 
