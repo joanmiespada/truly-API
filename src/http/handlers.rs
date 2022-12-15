@@ -1,4 +1,3 @@
-use std::f32::consts::E;
 
 use actix_web::{web, Responder, HttpResponse };
 use serde::{Deserialize, Serialize};
@@ -46,7 +45,7 @@ pub async fn get_users(
     }
     let res = user_service.get_all(page_num, page_size).await;
     match res {
-        Err(e) => HttpResponse::InternalServerError().finish(), 
+        Err(_) => HttpResponse::InternalServerError().finish(), 
         Ok(vec_user)=> HttpResponse::Ok().json(vec_user)
     }
 }

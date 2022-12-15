@@ -1,7 +1,5 @@
-use actix_web::Result;
 use async_trait::async_trait;
 use uuid::Uuid;
-use crate::users::errors::users::DynamoDBError;
 use crate::users::models::user::User;
 use crate::users::repositories::users::{UsersRepo, UserRepository};
 
