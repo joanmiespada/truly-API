@@ -1,6 +1,6 @@
-use std::{io::Error };
-
 use crate::users::models::user::User;
+use crate::users::errors::users::{UserAlreadyExistsError,DynamoDBError};
+use std::io::Error;
 use async_trait::async_trait;
 use aws_config::{SdkConfig};
 use aws_sdk_dynamodb::{
@@ -12,12 +12,22 @@ use chrono::{
     Local,
 };
 
+static USERS_TABLE_NAME: &str="usres";
+static EMAIL_FIELD_NAME: &str="email";
+static DEVICE_FIELD_NAME: &str="device";
+static WALLETADDRESS_FIELD_NAME: &str="walletAddress";
+static USERID_FIELD_NAME: &str="userID";
+static CREATIONTIME_FIELD_NAME: &str="creationTime";
+
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+
 #[async_trait]
 pub trait UserRepository {
     //async fn configure(&mut self) -> Result<(), Error>;
-    async fn add_user(&self, user: &mut User) -> Result<(), Error>;
-    async fn get_by_user_id(&self, id: String) -> Result<Option<User>, Error>;
-    async fn get_all(&self, page_number: u32, page_size: u32) -> Result<Vec<User>, Error>;
+    async fn add_user(&self, user: &mut User) -> ResultE<String>;
+    async fn get_by_user_id(&self, id: String) -> ResultE<Option<User>>;
+    async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<User>>;
+    async fn check_if_key_exists(&self, user_id: &String, field: &String, value: &String) -> ResultE<Option<bool>> ;
 }
 
 pub struct UsersRepo {
@@ -57,7 +67,50 @@ impl UserRepository for UsersRepo {
 
     }*/
 
-    async fn add_user(&self, user: &mut User) -> Result<(), Error> {
+    async fn check_if_key_exists(&self, user_id: &String, field: &String, value: &String) -> ResultE<Option<bool>> {
+        let mut filter= "".to_string();  
+        filter.push_str(&field);
+        filter.push_str(" = :value");
+
+        let value_av = AttributeValue::S(value.clone());
+        let request = self
+            .client
+            .query()
+            .table_name(USERS_TABLE_NAME)
+            .key_condition_expression(filter)
+            .expression_attribute_values(":value".to_string(), value_av)
+            .select(Select::Count);
+
+        match request.send().await {
+            Ok(res)=> {
+                return Ok(Some(true));
+            },
+            Err(e)=>{
+                tracing::error!("Failed to execute query for searching duplicates: {:?}", e);
+                return Err(DynamoDBError(e.to_string()).into());
+                //return Err(e.into());
+                //Err(UserAlreadyExistsError.into())
+                //UserAlreadyExistsError.into()
+                //e.into()
+                //DynamoDBError::into("eeerer")
+            }
+        }
+
+
+    }
+
+    async fn add_user(&self, user: &mut User) -> ResultE<String> {
+
+
+        let res = self.check_if_key_exists(user.user_id(),&"email".to_string(), user.email() ).await?;
+        match res {
+            Some(val)=> if val { return Err(UserAlreadyExistsError("email already exists".to_string()).into());},
+            None=>{}
+        } 
+        self.check_if_key_exists(user.user_id(),&"device".to_string(), user.device() ).await?; 
+        self.check_if_key_exists(user.user_id(),&"walletAddress".to_string(), user.wallet_address() ).await?; 
+
+
         let user_id_av = AttributeValue::S(user.user_id().clone());
         let device_av = AttributeValue::S(user.device().clone());
         let creation_time_av = AttributeValue::S(iso8601(user.creation_time()));
@@ -67,48 +120,59 @@ impl UserRepository for UsersRepo {
         let request = self
             .client
             .put_item()
-            .table_name("users")
-            .item("userID", user_id_av)
-            .item("creationTime", creation_time_av)
-            .item("walletAddress", wallet_address_av)
-            .item("email", email_av)
-            .item("device", device_av);
+            .table_name(USERS_TABLE_NAME)
+            .item(USERID_FIELD_NAME, user_id_av)
+            .item(CREATIONTIME_FIELD_NAME, creation_time_av)
+            .item(WALLETADDRESS_FIELD_NAME, wallet_address_av)
+            .item(EMAIL_FIELD_NAME, email_av)
+            .item(DEVICE_FIELD_NAME, device_av);
 
         //println!("Executing request [{request:?}] to add item...");
 
         match request.send().await {
-            Ok(_) => {}
+            Ok(_) => Ok( user.user_id().clone() ),
             Err(e) => {
                 eprintln!(
                     "Error at [{}] - {} ",
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                panic!("error when saving at Dynamodb");
+                tracing::error!("Failed to execute query: {:?}", e);
+                //panic!("error when saving at Dynamodb");
+                return Err(DynamoDBError(e.to_string()).into())
+                //return Error::new(ErrorKind::Other, "sdsfsdf"); //   Err("error when saving at Dynamodb");
             }
         }
 
-        Ok(())
     }
 
-    async fn get_all(&self, page_number: u32, page_size: u32) -> Result<Vec<User>, Error> {
+    async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<User>> {
         let mut aux = Vec::new();
         aux.push(User::new());
 
         Ok(aux)
     }
 
-    async fn get_by_user_id(&self, id: String) -> Result<Option<User>, Error> {
+    async fn get_by_user_id(&self, id: String) -> ResultE<Option<User>> {
         let user_id_av = AttributeValue::S(id);
+
+        let mut filter= "".to_string();  
+        filter.push_str(USERID_FIELD_NAME);
+        filter.push_str(" = :value");
+
         let request = self
             .client
             .query()
-            .table_name("users")
-            .key_condition_expression("userID = :value".to_string())
+            .table_name(USERS_TABLE_NAME)
+            .key_condition_expression(filter)
             .expression_attribute_values(":value".to_string(), user_id_av)
             .select(Select::AllAttributes);
 
         let results = request.send().await;
+        match results {
+            Err(e) => return Err(DynamoDBError(e.to_string()).into()),
+            Ok(_)=>{}
+        }
 
         if let Some(items) = results.unwrap().items {
             let mut user = User::new();
@@ -120,78 +184,26 @@ impl UserRepository for UsersRepo {
             let aux = &items[0];
             //let keyfield = "userID";
             //let eres = aux.get(&*keyfield).unwrap();
-            let _user_id = aux.get("userID").unwrap();
+            let _user_id = aux.get(USERID_FIELD_NAME ).unwrap();
             let user_id = _user_id.as_s().unwrap();
 
-            let email = aux.get("email").unwrap().as_s().unwrap();
-            let device = aux.get("device").unwrap().as_s().unwrap();
-            let wallet_address = aux.get("walletAddress").unwrap().as_s().unwrap();
-            let creation_time = aux.get("creationTime").unwrap().as_s().unwrap();
+            let email = aux.get( EMAIL_FIELD_NAME).unwrap().as_s().unwrap();
+            let device = aux.get(DEVICE_FIELD_NAME).unwrap().as_s().unwrap();
+            let wallet_address = aux.get(WALLETADDRESS_FIELD_NAME).unwrap().as_s().unwrap();
+            let creation_time = aux.get(CREATIONTIME_FIELD_NAME).unwrap().as_s().unwrap();
 
             user.set_creation_time(&from_iso8601(creation_time));
             user.set_device(device);
             user.set_wallet_address(wallet_address);
             user.set_email(email);
             user.set_user_id(user_id);
-/* 
-            let user = User {
-                user_id: userID.clone(),
-                email: email.clone(),
-                device: device.clone(),
-                wallet_address: wallet_address.clone(),
-                creation_time: from_iso8601( creation_time)
 
-            };*/
             Ok(Some(user))
-        /*
-                    for &item in &items[0] {
-                        match item.get() {
-                            Some(doc) => {
-                                let i = doc.as_s().unwrap().as_str();
-                                Ok(None)
-                            }
-                            None => Ok(None),
-                        }
-                    }
-        */
-        //let movies = items.iter().map(|v| v.into()).cloned().collect::<Option<User>>();
-        //Ok(movies)
-        //Ok(None)
+
         } else {
             Ok(None)
         }
 
-        /*
-        match request.send().await {
-            Ok(doc) => {
-                if doc.count() > 0 {
-                    println!("{:?}", doc.items.unwrap_or_default().pop());
-                    let income = doc.items.unwrap_or_default().pop(); //.clone();
-
-                    match income {
-                        Some(x) => {
-                            let mut user = User::new();
-                            let aux = x.get("email").unwrap();
-                            let i = aux.as_s().unwrap();
-                            *user.set_email() = i.clone();
-                            Ok(Some(user))
-                        }
-                        None => Ok((None)),
-                    }
-                } else {
-                    Ok((None))
-                }
-
-            }
-            Err(e) => {
-                eprintln!(
-                    "Error at [{}] - {} ",
-                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
-                    e
-                );
-                panic!("error when saving at Dynamodb");
-            }
-        }*/
     }
 }
 
@@ -203,18 +215,8 @@ fn iso8601(st: &DateTime<Utc>) -> String {
 }
 
 fn from_iso8601(st: &String) -> DateTime<Utc> {
-
     let aux =  st.parse::<DateTime<Utc>>().unwrap();    //DateTime::parse_from_str(st, "%+").unwrap();
     aux
 }
 
-/*
-pub fn CreateUserRepo() -> UsersRepo {
-    let aux = UsersRepo { client: todo!()  };
 
-    aux.configure();
-
-    return aux;
-
-}
-*/
