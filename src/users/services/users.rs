@@ -1,3 +1,5 @@
+use std::fmt;
+
 use async_trait::async_trait;
 use uuid::Uuid;
 use crate::users::models::user::User;
@@ -9,11 +11,13 @@ pub trait LoginOps {
     fn login() -> User;
 }
 
+
 #[async_trait]
 pub trait UserManipulation {
     async fn get_all(&self, page_number:u32, page_size:u32) -> ResultE<Vec<User>>;
     async fn get_by_user_id(&self,id:String) -> ResultE<Option<User>>;
     async fn add_user(&self, user:&mut User) -> ResultE<String>;
+    async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>>;
 }
 
 pub struct UsersService{
@@ -41,13 +45,12 @@ impl UserManipulation for UsersService{
 
     async fn get_all(&self, page_number:u32, page_size:u32) -> ResultE<Vec<User>>{
         let res = self.repository.get_all(page_number, page_size).await?;
-        Ok(res) //.unwrap(); //vec![];
+        Ok(res) 
     }
 
     async fn get_by_user_id(&self, id:String) -> ResultE<Option<User>>{
         let res = self.repository.get_by_user_id(id).await?;
-        Ok(res)//.unwrap(); //vec![];
-        // return  None;
+        Ok(res)
     }
 
     async fn add_user(&self, user:&mut User) -> ResultE<String>{
@@ -55,13 +58,11 @@ impl UserManipulation for UsersService{
         user.set_user_id(&id.to_string());
         let res =self.repository.add_user(user).await ?;
         Ok(res)
-/* 
-        let fin = match res {
-            Some(newid) => Some(newid.to_string()),
-            Err(e)=> Err(e)            
-        };
-        return fin;
-        */
+    }
+    
+    async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>>{
+        let res = self.repository.get_by_filter(field, value).await ?;
+        Ok(res)
     }
 
 }

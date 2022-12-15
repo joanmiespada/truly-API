@@ -1,8 +1,25 @@
+use std::fmt;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 pub trait Userer {
     fn check_login(&self) -> bool;
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub enum UserRoles  {
+    Basic,
+    Admin,
+}
+
+impl fmt::Display for UserRoles {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            UserRoles::Basic => write!(f, "Basic"),
+            UserRoles::Admin => write!(f, "Admin"),
+        }
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -12,6 +29,7 @@ pub struct User {
     wallet_address: String,
     email: String,
     device: String,
+    roles: Vec<UserRoles>
 }
 
 impl User {
@@ -22,6 +40,7 @@ impl User {
             wallet_address: String::new(),
             email: String::new(),
             device: String::new(),
+            roles: Vec::new()
         }
     }
 
@@ -55,6 +74,23 @@ impl User {
     pub fn set_device(&mut self, val: &String) {
         self.device = val.clone()
     }
+    pub fn roles(&self) -> &Vec<UserRoles> {
+        &self.roles
+    }
+    pub fn set_roles(&mut self, val: &Vec<UserRoles>) {
+        self.roles = val.clone()
+    }
+    pub fn roles_add(&mut self, val: &UserRoles) {
+        self.roles.push(val.clone());
+    }
+    pub fn roles_is(&self, val: &UserRoles) -> bool {
+        for role in self.roles.iter() {
+            if role == val {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 impl Userer for User {
@@ -63,21 +99,4 @@ impl Userer for User {
     }
 }
 
-/*
-impl Clone for User {
-    fn clone(&self) -> User {
-        User {
-            userID: (self.userID),
-            creationTime: (self.creationTime),
-            walletAddress: (self.walletAddress),
-            email: (self.email),
-            device: (self.device),
-        }
-    }
-}*/
 
-/*
-pub fn CreateUser() -> User {
-    return User::new();
-
-}*/

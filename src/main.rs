@@ -1,16 +1,15 @@
 // src/main.rs
 //use aws_sdk_dynamodb::Client;
-use actix_web::{ web, App, HttpServer, };
-use http::handlers::{self, AppState};
 use actix_web::middleware::Logger;
+use actix_web::{web, App, HttpServer};
+use http::handlers::{self, AppState};
 
-mod users;
 mod config;
 mod http;
+mod users;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-
     let mut config = config::Config::new();
     config.setup().await;
 
@@ -28,6 +27,10 @@ async fn main() -> std::io::Result<()> {
             .route("/users", web::get().to(handlers::get_users))
             .route("/users/{id}", web::get().to(handlers::get_user_by_id))
             .route("/users", web::post().to(handlers::add_user))
+            .route(
+                "/users/{field}/{value}",
+                web::get().to(handlers::get_user_by_filter),
+            )
         //.route("/users/{id}", web::delete().to(handlers::delete_user))
     })
     .bind("127.0.0.1:8080")?

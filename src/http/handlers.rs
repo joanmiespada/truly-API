@@ -116,3 +116,29 @@ pub async fn add_user(state: web::Data<AppState>, payload: web::Json<NewUser>) -
 pub async fn delete_user() -> impl Responder {
     format!("hello from delete user")
 }*/
+#[derive(Serialize,Deserialize)]
+pub struct Filter {
+    pub field: String,
+    pub value: String
+}
+pub async fn get_user_by_filter(state: web::Data<AppState>, payload: web::Json<Filter>) -> impl Responder {
+    let user_service = &state.user_service;
+    let op_res = user_service.get_by_filter(&payload.field, &payload.value ).await;
+    match op_res {
+        Ok(users) => {
+            if users.len() == 0 {
+                HttpResponse::NoContent().finish()
+            }else{
+                 HttpResponse::Ok().json(users)    
+            }
+        },
+        Err(e) => {
+            if let Some(_) = e.downcast_ref::<DynamoDBError>() {
+                HttpResponse::ServiceUnavailable().finish()    
+            } else {
+                HttpResponse::InternalServerError().finish()    
+            }
+        }
+    }
+    
+}

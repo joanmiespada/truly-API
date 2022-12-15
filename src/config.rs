@@ -15,7 +15,7 @@ impl Config {
         std::env::set_var("RUST_LOG", "actix_web=debug");
 
         let endpoint_resolver =
-            Endpoint::immutable("http://localhost:8000".parse().expect("valid URI"));
+            Endpoint::immutable("http://localhost:8000".parse().expect("invalid URI"));
         let region_provider = Region::new("local");
         /* 
             RegionProviderChain::first_try(env::var("local").ok().map(Region::new))
