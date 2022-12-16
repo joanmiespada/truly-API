@@ -2,6 +2,13 @@
 use aws_config::{ SdkConfig};
 use aws_sdk_dynamodb::{Endpoint, Region};
 use env_logger::Env;
+use dotenv::dotenv;
+use serde::Deserialize;
+
+#[derive(Deserialize, Debug)]
+struct EnvironmentVariables {
+    admin_account_userid: String,
+}
 
 pub struct Config {
     aws_config: Option<SdkConfig>,
@@ -12,6 +19,15 @@ impl Config {
         Config { aws_config: None }
     }
     pub async fn setup(&mut self) {
+        
+        dotenv().ok();
+        match envy::from_env::<EnvironmentVariables>() {
+            Ok(env_vars) => println!("{:#?}", env_vars),
+            Err(error) => eprintln!("{:#?}", error),
+        }
+
+        std::env::var("ADMIN_ACCOUNT_USERID").expect("root admin account must set at env variables");
+
         std::env::set_var("RUST_LOG", "actix_web=debug");
 
         let endpoint_resolver =
