@@ -26,6 +26,8 @@ async fn main() -> std::io::Result<()> {
             //.wrap(Logger::new("%a %{User-Agent}i"))
             .route("/users", web::get().to(handlers::get_users))
             .route("/users/{id}", web::get().to(handlers::get_user_by_id))
+            .route("/users/{id}", web::put().to(handlers::update_user))
+            .route("/users/promote/{id}", web::post().to(handlers::promote_user))
             .route("/users", web::post().to(handlers::add_user))
             .route(
                 "/users/{field}/{value}",

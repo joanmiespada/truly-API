@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::users::{
     models::user::{User},
-    services::users::{UserManipulation, UsersService}, errors::users::{DynamoDBError, UserAlreadyExistsError},
+    services::users::{UserManipulation, UsersService}, errors::users::{DynamoDBError, UserAlreadyExistsError, UserNoExistsError},
 };
 
 const PAGESIZE_MAX: u32 = 20;
@@ -53,7 +53,7 @@ pub async fn get_users(
 pub async fn get_user_by_id(state: web::Data<AppState>, path: web::Path<String>) -> impl Responder {
     let user_service = &state.user_service;
     let id = path.into_inner();
-    let op_res = user_service.get_by_user_id(id).await;
+    let op_res = user_service.get_by_user_id(&id).await;
     match op_res {
         Ok(some_user) => {
             match some_user {
@@ -141,4 +141,60 @@ pub async fn get_user_by_filter(state: web::Data<AppState>, payload: web::Json<F
         }
     }
     
+}
+
+#[derive(Serialize,Deserialize)]
+pub struct UpdateUser {
+    pub wallet_address: String, 
+    pub device: String,
+    pub email: String
+}
+pub async fn update_user(state: web::Data<AppState>, payload: web::Json<UpdateUser>, path: web::Path<String>) -> impl Responder {
+    let user_service = &state.user_service;
+
+    let id = path.into_inner();
+
+    let mut user = User::new();
+    user.set_email(&payload.email);
+    user.set_wallet_address(&payload.wallet_address);
+    user.set_device(&payload.device);
+
+    let op_res = user_service.update_user(&id, &user).await;
+    match op_res {
+        Err(e) => {
+            if let Some(_) = e.downcast_ref::<DynamoDBError>() {
+                HttpResponse::ServiceUnavailable().finish()    
+            } else if  let Some(_) = e.downcast_ref::<UserNoExistsError>() {
+                HttpResponse::BadRequest().finish()
+            } else {
+                HttpResponse::InternalServerError().finish()    
+            }
+        },
+        Ok(iid) => { 
+            HttpResponse::Ok().body(iid.to_string())
+        }
+    }
+}
+
+//TODO---> JWT to identify the current user, only Admins can perform it!!!
+pub async fn promote_user(state: web::Data<AppState>, path: web::Path<String>) -> impl Responder {
+    let user_service = &state.user_service;
+
+    let id = path.into_inner();
+
+    let op_res = user_service.promote_user_to_admin(&id).await;
+    match op_res {
+        Err(e) => {
+            if let Some(_) = e.downcast_ref::<DynamoDBError>() {
+                HttpResponse::ServiceUnavailable().finish()    
+            } else if  let Some(_) = e.downcast_ref::<UserNoExistsError>() {
+                HttpResponse::BadRequest().finish()
+            } else {
+                HttpResponse::InternalServerError().finish()    
+            }
+        },
+        Ok(iid) => { 
+            HttpResponse::Ok().body(iid.to_string())
+        }
+    }
 }

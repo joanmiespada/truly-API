@@ -1,8 +1,8 @@
-use std::fmt;
 
 use async_trait::async_trait;
 use uuid::Uuid;
-use crate::users::models::user::User;
+use crate::users::errors::users::UserNoExistsError;
+use crate::users::models::user::{User, UserRoles, Userer};
 use crate::users::repositories::users::{UsersRepo, UserRepository};
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -15,9 +15,11 @@ pub trait LoginOps {
 #[async_trait]
 pub trait UserManipulation {
     async fn get_all(&self, page_number:u32, page_size:u32) -> ResultE<Vec<User>>;
-    async fn get_by_user_id(&self,id:String) -> ResultE<Option<User>>;
+    async fn get_by_user_id(&self,id:&String) -> ResultE<Option<User>>;
     async fn add_user(&self, user:&mut User) -> ResultE<String>;
     async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>>;
+    async fn update_user(&self,id:&String, user: &User) ->ResultE<bool> ;
+    async fn promote_user_to_admin(&self, id: &String) ->ResultE<bool>;
 }
 
 pub struct UsersService{
@@ -48,7 +50,7 @@ impl UserManipulation for UsersService{
         Ok(res) 
     }
 
-    async fn get_by_user_id(&self, id:String) -> ResultE<Option<User>>{
+    async fn get_by_user_id(&self, id:&String) -> ResultE<Option<User>>{
         let res = self.repository.get_by_user_id(id).await?;
         Ok(res)
     }
@@ -56,6 +58,7 @@ impl UserManipulation for UsersService{
     async fn add_user(&self, user:&mut User) -> ResultE<String>{
         let id = Uuid::new_v4();
         user.set_user_id(&id.to_string());
+        user.roles_add(&UserRoles::Basic);
         let res =self.repository.add_user(user).await ?;
         Ok(res)
     }
@@ -63,6 +66,38 @@ impl UserManipulation for UsersService{
     async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>>{
         let res = self.repository.get_by_filter(field, value).await ?;
         Ok(res)
+    }
+
+    async fn update_user(&self, id: &String, user: &User) ->ResultE<bool> {
+        let data =self.repository.get_by_user_id(id).await?; 
+        match data {
+           None =>  Err(UserNoExistsError("not found".to_string()).into()),
+           Some(dbuser)=> {
+                let mut res :User = dbuser.clone();
+
+                res.set_email(user.email());
+                res.set_wallet_address(user.wallet_address());
+                res.set_device(user.device());
+
+                let res = self.repository.update_user(&id, &res).await ?;
+                Ok(res)
+           },
+        }
+    }
+
+    //Todo check if the thread's user is Admin, if not, this operation is fobidden
+    async fn promote_user_to_admin(&self, id: &String) ->ResultE<bool>{
+
+        let data =self.repository.get_by_user_id(id).await?; 
+        match data {
+           None =>  Err(UserNoExistsError("not found".to_string()).into()),
+           Some(dbuser)=> {
+                let mut res :User = dbuser.clone();
+                res.promote_to_admin();
+                let res = self.repository.update_user(&id, &res).await ?;
+                Ok(res)
+           },
+        }
     }
 
 }

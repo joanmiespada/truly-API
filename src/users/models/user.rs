@@ -5,12 +5,46 @@ use serde::{Deserialize, Serialize};
 
 pub trait Userer {
     fn check_login(&self) -> bool;
+    fn promote_to_admin(&mut self);
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum UserRoles  {
     Basic,
     Admin,
+}
+
+impl UserRoles{
+    pub fn isAdmin(&self) -> bool
+    {
+        match *self {
+            UserRoles::Admin => true,
+            _ => false,
+        }
+    }
+
+    pub fn to_vec_str(input: &Vec<UserRoles>) -> Vec<String> {
+
+        let aux: Vec<String> = input.into_iter().map(|i| i.to_string()).collect();
+
+        return aux;
+    }
+    pub fn from_vec_str(input: &Vec<String>) -> Vec<UserRoles> {
+
+        let aux: Vec<UserRoles> = input.into_iter()
+            .map(|i| UserRoles::deserialize(i) )
+            .filter(|f| !f.is_none())
+            .map(|t| t.unwrap())
+            .collect();
+        return aux;
+    }
+    pub fn deserialize(input: &str) -> Option<UserRoles> {
+        match input {
+            "Basic" => return Some(UserRoles::Basic),
+            "Admin" => return Some(UserRoles::Admin),
+            _ => return None
+        }
+    }
 }
 
 impl fmt::Display for UserRoles {
@@ -21,6 +55,7 @@ impl fmt::Display for UserRoles {
         }
     }
 }
+
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct User {
@@ -80,22 +115,34 @@ impl User {
     pub fn set_roles(&mut self, val: &Vec<UserRoles>) {
         self.roles = val.clone()
     }
+    pub fn set_roles2(&mut self, val: &Vec<String>) {
+        let rls =UserRoles::from_vec_str(val);
+        self.set_roles(&rls);
+    }
     pub fn roles_add(&mut self, val: &UserRoles) {
         self.roles.push(val.clone());
     }
-    pub fn roles_is(&self, val: &UserRoles) -> bool {
-        for role in self.roles.iter() {
-            if role == val {
-                return true;
-            }
+    pub fn isAdmin(&self) -> bool {
+
+        let i =self.roles.iter().filter(|r| r.isAdmin()).count();
+        match i{
+            0 => return false,
+            _ => true
         }
-        return false;
     }
+
+    
+
 }
 
 impl Userer for User {
     fn check_login(&self) -> bool {
         return true;
+    }
+    fn promote_to_admin(&mut self) {
+        if !self.isAdmin() {
+            self.roles.push(UserRoles::Admin);
+        }
     }
 }
 

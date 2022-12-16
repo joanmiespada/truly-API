@@ -24,3 +24,25 @@ impl Display for DynamoDBError {
         write!(f, "{}", self.0)
     }
 }
+
+#[derive(Debug)]
+pub struct UserNoExistsError(pub String);
+
+impl std::error::Error for UserNoExistsError {}
+
+impl Display for UserNoExistsError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "user doesn't exists in database")
+    }
+}
+
+#[derive(Debug)]
+pub struct UserMismatchError(pub String);
+
+impl std::error::Error for UserMismatchError {}
+
+impl Display for UserMismatchError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "users' key data might repeated in database")
+    }
+}
