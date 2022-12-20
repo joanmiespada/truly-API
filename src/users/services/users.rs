@@ -7,16 +7,15 @@ use crate::users::repositories::users::{UsersRepo, UserRepository};
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-pub trait LoginOps {
-    fn login() -> User;
-}
 
 
 #[async_trait]
 pub trait UserManipulation {
     async fn get_all(&self, page_number:u32, page_size:u32) -> ResultE<Vec<User>>;
     async fn get_by_user_id(&self,id:&String) -> ResultE<Option<User>>;
-    async fn add_user(&self, user:&mut User) -> ResultE<String>;
+    async fn get_by_user_device(&self,device:&String) -> ResultE<User>;
+    async fn get_by_user_email_and_password(&self, email:&String, password: &String) -> ResultE<User>;
+    async fn add_user(&self, user:&mut User, password: &String) -> ResultE<String>;
     async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>>;
     async fn update_user(&self,id:&String, user: &User) ->ResultE<bool> ;
     async fn promote_user_to_admin(&self, id: &String) ->ResultE<bool>;
@@ -34,13 +33,7 @@ impl UsersService {
     }
 }
 
-impl LoginOps for UsersService {
 
-    fn login() -> User {
-        let user = User::new();
-        return user;
-    }
-}
 
 #[async_trait]
 impl UserManipulation for UsersService{
@@ -54,12 +47,22 @@ impl UserManipulation for UsersService{
         let res = self.repository.get_by_user_id(id).await?;
         Ok(res)
     }
+    
+    async fn get_by_user_device(&self,device:&String) -> ResultE<User>{
+        let res = self.repository.get_by_user_device(device).await?;
+        Ok(res)
+    }
+    async fn get_by_user_email_and_password(&self, email:&String, password: &String) -> ResultE<User>{
+        let res = self.repository.get_by_user_email_and_password(email, password).await?;
+        Ok(res)
+    }
 
-    async fn add_user(&self, user:&mut User) -> ResultE<String>{
+
+    async fn add_user(&self, user:&mut User, password: &String) -> ResultE<String>{
         let id = Uuid::new_v4();
         user.set_user_id(&id.to_string());
         user.roles_add(&UserRoles::Basic);
-        let res =self.repository.add_user(user).await ?;
+        let res =self.repository.add_user(user, password).await ?;
         Ok(res)
     }
     
@@ -108,4 +111,3 @@ impl Clone for UsersService{
         return aux;
     }
 }
-

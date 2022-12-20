@@ -15,7 +15,7 @@ pub enum UserRoles  {
 }
 
 impl UserRoles{
-    pub fn isAdmin(&self) -> bool
+    pub fn is_admin(&self) -> bool
     {
         match *self {
             UserRoles::Admin => true,
@@ -63,6 +63,7 @@ pub struct User {
     creation_time: DateTime<Utc>,
     wallet_address: String,
     email: String,
+    //password: String,
     device: String,
     roles: Vec<UserRoles>
 }
@@ -75,7 +76,8 @@ impl User {
             wallet_address: String::new(),
             email: String::new(),
             device: String::new(),
-            roles: Vec::new()
+            roles: Vec::new(),
+            //password: String::new(),
         }
     }
 
@@ -115,23 +117,28 @@ impl User {
     pub fn set_roles(&mut self, val: &Vec<UserRoles>) {
         self.roles = val.clone()
     }
-    pub fn set_roles2(&mut self, val: &Vec<String>) {
+    /*pub fn set_roles2(&mut self, val: &Vec<String>) {
         let rls =UserRoles::from_vec_str(val);
         self.set_roles(&rls);
-    }
+    }*/
     pub fn roles_add(&mut self, val: &UserRoles) {
         self.roles.push(val.clone());
     }
-    pub fn isAdmin(&self) -> bool {
+    pub fn is_admin(&self) -> bool {
 
-        let i =self.roles.iter().filter(|r| r.isAdmin()).count();
+        let i =self.roles.iter().filter(|r| r.is_admin()).count();
         match i{
             0 => return false,
             _ => true
         }
     }
-
-    
+    /* 
+    pub fn password (&self) -> &String {
+        &self.password
+    }
+    pub fn set_password(&mut self, val: &String ) {
+        self.password = val.clone()
+    }*/
 
 }
 
@@ -140,7 +147,7 @@ impl Userer for User {
         return true;
     }
     fn promote_to_admin(&mut self) {
-        if !self.isAdmin() {
+        if !self.is_admin() {
             self.roles.push(UserRoles::Admin);
         }
     }

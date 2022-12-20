@@ -1,11 +1,16 @@
 // src/main.rs
 //use aws_sdk_dynamodb::Client;
+use actix_cors::Cors;
 use actix_web::middleware::Logger;
-use actix_web::{web, App, HttpServer};
-use http::handlers::{self, AppState};
+use actix_web::{http::header, App, HttpServer};
+use actix_web::{web, HttpResponse};
+use handlers::appstate::AppState;
+use handlers::{login_hd, auth_middleware};
+use handlers::users_hd::{self};
+use tracing_actix_web::TracingLogger;
 
 mod config;
-mod http;
+mod handlers;
 mod users;
 
 #[actix_rt::main]
@@ -13,32 +18,38 @@ async fn main() -> std::io::Result<()> {
     let mut config = config::Config::new();
     config.setup().await;
 
-    let user_repo = users::repositories::users::UsersRepo::new(config.aws_config());
+    let user_repo = users::repositories::users::UsersRepo::new(&config); //(config.aws_config());
     let user_service = users::services::users::UsersService::new(user_repo);
 
     // Start http server
-    HttpServer::new(move || {
+    HttpServer::new( move || {
         App::new()
             .app_data(web::Data::new(AppState {
                 user_service: user_service.clone(),
+                app_config: config.clone(),
             }))
-            .wrap(Logger::default())
-            //.wrap(Logger::new("%a %{User-Agent}i"))
-            .route("/users", web::get().to(handlers::get_users))
-            .route("/users/{id}", web::get().to(handlers::get_user_by_id))
-            .route("/users/{id}", web::put().to(handlers::update_user))
-            .route("/users/promote/{id}", web::post().to(handlers::promote_user))
-            .route("/users", web::post().to(handlers::add_user))
-            .route(
-                "/users/{field}/{value}",
-                web::get().to(handlers::get_user_by_filter),
+             
+            .wrap(
+                Cors::default()
+                    //.allowed_origin("http://localhost:8080")
+                    .allow_any_origin()
+                    .allowed_methods(vec!["GET", "POST", "PUT"])
+                    .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
+                    .allowed_header(header::CONTENT_TYPE)
+                    .supports_credentials()
+                    .max_age(3600),
             )
-        //.route("/users/{id}", web::delete().to(handlers::delete_user))
+            //.wrap(Logger::new("%a %{User-Agent}i"))
+            .wrap(TracingLogger::default())
+            .wrap(Logger::default())
+            .configure(routes)
     })
-    .bind("127.0.0.1:8080")?
-    //.unwrap()
+    .bind("127.0.0.1:8080")//?
+    .unwrap_or_else(|_| panic!("Could not bind server to address"))
+    //.start();
     .run()
     .await
+
 
     //let api =  Http;
     //api.start();
@@ -58,9 +69,37 @@ async fn main() -> std::io::Result<()> {
 
     */
 }
+
+fn routes(app: &mut web::ServiceConfig) {
+    app
+    .service(
+        web::scope("/api")
+            .wrap(auth_middleware::SayHi)
+            .route("/users", web::get().to(users_hd::get_users))
+            .route("/users/{id}", web::get().to(users_hd::get_user_by_id))
+            .route("/users/{id}", web::put().to(users_hd::update_user))
+            .route(
+                "/users/promote/{id}",
+                web::post().to(users_hd::promote_user), //.and(with_auth(UserRoles::Admin)),
+            )
+            .route("/users", web::post().to(users_hd::add_user))
+            .route(
+                "/users/{field}/{value}",
+                web::get().to(users_hd::get_user_by_filter),
+            ),
+        //.route("/{id}", web::delete().to( users_hd::delete_user ))
+    )
+    .service(
+        web::scope("/auth")
+            .route("/login", web::post().to(login_hd::login))
+            .route("/logout", web::post().to(login_hd::logout)),
+    );
+}
+
 // -----------------------------------------------------------------------------------------------------
 // https://blog.logrocket.com/deploy-lambda-functions-rust/
 use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
+use users::models::user::UserRoles;
 /// This is the main body for the function.
 /// Write your code inside it.
 /// There are some code example in the following URLs:

@@ -41,6 +41,11 @@ tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt"] }
 dotenv = "0.15.0"
 envy = "0.4.2"
+jsonwebtoken = "8.2.0"
+tracing-actix-web = "0.6.2"
+actix-cors = "0.6.4"
+futures-util = "0.3.25"
+rust-crypto = "0.2.36"
 
 [dependencies.uuid]
 version = "1.2.2"

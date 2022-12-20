@@ -46,3 +46,14 @@ impl Display for UserMismatchError {
         write!(f, "users' key data might repeated in database")
     }
 }
+
+#[derive(Debug)]
+pub struct JWTSecurityError(pub String);
+
+impl std::error::Error for JWTSecurityError{}
+
+impl Display for  JWTSecurityError{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "jwt creation token failed")
+    }
+}

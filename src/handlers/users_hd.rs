@@ -4,16 +4,16 @@ use serde::{Deserialize, Serialize};
 
 use crate::users::{
     models::user::{User},
-    services::users::{UserManipulation, UsersService}, errors::users::{DynamoDBError, UserAlreadyExistsError, UserNoExistsError},
+    services::users::{UserManipulation }, errors::users::{DynamoDBError, UserAlreadyExistsError, UserNoExistsError},
 };
+
+use super::appstate::AppState;
 
 const PAGESIZE_MAX: u32 = 20;
 const PAGESIZE_MIN: u32 = 5;
 const PAGENUM_MIN: u32 = 1;
 
-pub struct AppState {
-    pub user_service: UsersService,
-}
+
 
 #[allow(non_snake_case)]
 #[derive(Deserialize)]
@@ -76,6 +76,7 @@ pub async fn get_user_by_id(state: web::Data<AppState>, path: web::Path<String>)
 pub struct NewUser {
     pub wallet_address: String,
     pub email: String,
+    pub password: String,
     pub device: String,
 }
 
@@ -92,7 +93,7 @@ pub async fn add_user(state: web::Data<AppState>, payload: web::Json<NewUser>) -
     user.set_wallet_address(&payload.wallet_address);
     user.set_device(&payload.device);
 
-    let op_res = user_service.add_user(&mut user).await;
+    let op_res = user_service.add_user(&mut user, &payload.password).await;
     match op_res {
         Err(e) => {
             if let Some(_) = e.downcast_ref::<DynamoDBError>() {
@@ -112,10 +113,6 @@ pub async fn add_user(state: web::Data<AppState>, payload: web::Json<NewUser>) -
     //format!("{{'id':'{}'}}", new_id)
 }
 
-/*
-pub async fn delete_user() -> impl Responder {
-    format!("hello from delete user")
-}*/
 #[derive(Serialize,Deserialize)]
 pub struct Filter {
     pub field: String,
@@ -198,3 +195,8 @@ pub async fn promote_user(state: web::Data<AppState>, path: web::Path<String>) -
         }
     }
 }
+
+pub fn delete_user(state: web::Data<AppState>) -> impl Responder {
+    HttpResponse::MethodNotAllowed().finish()
+}
+ 

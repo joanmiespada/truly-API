@@ -1,9 +1,16 @@
 use std::collections::HashMap;
 
-use crate::users::errors::users::{DynamoDBError, UserAlreadyExistsError, UserMismatchError};
+use crypto::hmac::Hmac;
+use crypto::mac::Mac;
+use crypto::sha2::Sha256;
+//use serialize::hex::ToHex;
+
+use crate::config::{Config, EnvironmentVariables};
+use crate::users::errors::users::{
+    DynamoDBError, UserAlreadyExistsError, UserMismatchError, UserNoExistsError,
+};
 use crate::users::models::user::{User, UserRoles};
 use async_trait::async_trait;
-use aws_config::SdkConfig;
 use aws_sdk_dynamodb::{
     model::{AttributeValue, Select},
     Client,
@@ -15,6 +22,7 @@ use chrono::{
 
 static USERS_TABLE_NAME: &str = "users";
 static EMAIL_FIELD_NAME: &str = "email";
+static PASSWORD_FIELD_NAME: &str = "password";
 static DEVICE_FIELD_NAME: &str = "device";
 static WALLETADDRESS_FIELD_NAME: &str = "walletAddress";
 static USERID_FIELD_NAME: &str = "userID";
@@ -26,26 +34,47 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 #[async_trait]
 pub trait UserRepository {
-    async fn add_user(&self, user: &mut User) -> ResultE<String>;
+    async fn add_user(&self, user: &mut User, password: &String) -> ResultE<String>;
     async fn update_user(&self, id: &String, user: &User) -> ResultE<bool>;
     async fn get_by_user_id(&self, id: &String) -> ResultE<Option<User>>;
+    async fn get_by_user_device(&self, device: &String) -> ResultE<User>;
+    async fn get_by_user_email_and_password(
+        &self,
+        email: &String,
+        password: &String,
+    ) -> ResultE<User>;
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<User>>;
-    async fn check_if_key_exists(&self, field: &str, value: &String) -> ResultE<Option<Vec<String>>>;
+    async fn check_if_key_exists(
+        &self,
+        field: &str,
+        value: &String,
+    ) -> ResultE<Option<Vec<String>>>;
     async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>>;
 }
 
+#[derive(Clone, Debug)]
 pub struct UsersRepo {
     client: Client,
+    //config: Config
+    environment_vars: EnvironmentVariables,
 }
 
 impl UsersRepo {
+    /*
     pub fn new(aux: &SdkConfig) -> UsersRepo {
         UsersRepo {
             client: Client::new(aux),
         }
+    }*/
+    pub fn new(conf: &Config) -> UsersRepo {
+        UsersRepo {
+            client: Client::new(conf.aws_config()),
+            environment_vars: conf.env_vars().clone(),
+        }
     }
 }
 
+/*
 impl Clone for UsersRepo {
     fn clone(&self) -> UsersRepo {
         let aux = UsersRepo {
@@ -53,7 +82,7 @@ impl Clone for UsersRepo {
         };
         return aux;
     }
-}
+}*/
 
 #[async_trait]
 impl UserRepository for UsersRepo {
@@ -97,13 +126,13 @@ impl UserRepository for UsersRepo {
         }
     }
 
-    async fn add_user(&self, user: &mut User) -> ResultE<String> {
+    async fn add_user(&self, user: &mut User, password: &String) -> ResultE<String> {
         let mut res = self
             .check_if_key_exists(EMAIL_FIELD_NAME, user.email())
             .await?;
         match res {
             Some(_) => {
-                    return Err(UserAlreadyExistsError("email already exists".to_string()).into());
+                return Err(UserAlreadyExistsError("email already exists".to_string()).into());
             }
             None => {}
         }
@@ -112,7 +141,7 @@ impl UserRepository for UsersRepo {
             .await?;
         match res {
             Some(_) => {
-                    return Err(UserAlreadyExistsError("device already exists".to_string()).into());
+                return Err(UserAlreadyExistsError("device already exists".to_string()).into());
             }
             None => {}
         }
@@ -121,10 +150,9 @@ impl UserRepository for UsersRepo {
             .await?;
         match res {
             Some(_) => {
-                    return Err(UserAlreadyExistsError(
-                        "wallet address already exists".to_string(),
-                    )
-                    .into());
+                return Err(
+                    UserAlreadyExistsError("wallet address already exists".to_string()).into(),
+                );
             }
             None => {}
         }
@@ -133,6 +161,9 @@ impl UserRepository for UsersRepo {
         let device_av = AttributeValue::S(user.device().clone());
         let creation_time_av = AttributeValue::S(iso8601(user.creation_time()));
         let email_av = AttributeValue::S(user.email().clone());
+        let password_av =
+            AttributeValue::S(cypher_text(password, &self.environment_vars.hmac_secret));
+
         let wallet_address_av = AttributeValue::S(user.wallet_address().clone());
         let roles_av = AttributeValue::Ss(UserRoles::to_vec_str(user.roles()).clone());
 
@@ -144,6 +175,7 @@ impl UserRepository for UsersRepo {
             .item(CREATIONTIME_FIELD_NAME, creation_time_av)
             .item(WALLETADDRESS_FIELD_NAME, wallet_address_av)
             .item(EMAIL_FIELD_NAME, email_av)
+            .item(PASSWORD_FIELD_NAME, password_av)
             .item(DEVICE_FIELD_NAME, device_av)
             .item(ROLES_FIELD_NAME, roles_av);
 
@@ -301,13 +333,74 @@ impl UserRepository for UsersRepo {
         Ok(usersqueried)
     }
 
+    async fn get_by_user_device(&self, device: &String) -> ResultE<User> {
+        let res = self
+            .get_by_filter(&DEVICE_FIELD_NAME.to_string(), device)
+            .await?;
+        if res.len() == 0 {
+            Err(UserNoExistsError("no device found".to_string()).into())
+        } else {
+            Ok(res[0].clone())
+        }
+    }
+    async fn get_by_user_email_and_password(
+        &self,
+        email: &String,
+        password: &String,
+    ) -> ResultE<User> {
+        let email_av = AttributeValue::S(email.to_string());
+
+        let mut filter = "".to_string();
+        filter.push_str(&EMAIL_FIELD_NAME.to_string());
+        filter.push_str(" = :value");
+
+        let request = self
+            .client
+            .query()
+            .table_name(USERS_TABLE_NAME)
+            .key_condition_expression(filter)
+            .expression_attribute_values(email.to_string(), email_av)
+            .select(Select::AllAttributes);
+
+        let results = request.send().await;
+        match results {
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(DynamoDBError(e.to_string()).into());
+            }
+            Ok(items) => {
+                let docus = items.items().unwrap();
+                if docus.len() == 0 {
+                    return Err(UserNoExistsError("no email found".to_string()).into());
+                }
+                let doc = docus.first().unwrap();
+
+                let mut user = User::new();
+                mapping_from_doc_to_user(&doc, &mut user);
+
+                let password_stored_hashed = doc.get(PASSWORD_FIELD_NAME).unwrap().as_s().unwrap();
+                let password_coming = cypher_text(&password, &self.environment_vars.hmac_secret);
+                if *password_stored_hashed == password_coming {
+                    Ok(user)
+                } else {
+                    Err(UserNoExistsError("no email or password found".to_string()).into())
+                }
+            }
+        }
+    }
+
     async fn update_user(&self, id: &String, user: &User) -> ResultE<bool> {
         let mut res = self
             .check_if_key_exists(EMAIL_FIELD_NAME, user.email())
             .await?;
         match res {
             Some(val) => {
-                if val.iter().filter(|x| **x==*id).count() != 0 {
+                if val.iter().filter(|x| **x == *id).count() != 0 {
                     return Err(UserMismatchError("email is already in use".to_string()).into());
                 }
             }
@@ -318,7 +411,7 @@ impl UserRepository for UsersRepo {
             .await?;
         match res {
             Some(val) => {
-                if val.iter().filter(|x| **x==*id).count() != 0 {
+                if val.iter().filter(|x| **x == *id).count() != 0 {
                     return Err(UserMismatchError("device is already in use".to_string()).into());
                 }
             }
@@ -329,7 +422,7 @@ impl UserRepository for UsersRepo {
             .await?;
         match res {
             Some(val) => {
-                if val.iter().filter(|x| **x==*id).count() != 0 {
+                if val.iter().filter(|x| **x == *id).count() != 0 {
                     return Err(UserMismatchError(
                         "wallet address is already already in use".to_string(),
                     )
@@ -398,6 +491,7 @@ fn mapping_from_doc_to_user(doc: &HashMap<String, AttributeValue>, user: &mut Us
     let user_id = _user_id.as_s().unwrap();
 
     let email = doc.get(EMAIL_FIELD_NAME).unwrap().as_s().unwrap();
+    //let passw = doc.get(PASSWORD_FIELD_NAME).unwrap().as_s().unwrap();
     let device = doc.get(DEVICE_FIELD_NAME).unwrap().as_s().unwrap();
     let wallet_address = doc.get(WALLETADDRESS_FIELD_NAME).unwrap().as_s().unwrap();
     let creation_time = doc.get(CREATIONTIME_FIELD_NAME).unwrap().as_s().unwrap();
@@ -407,6 +501,18 @@ fn mapping_from_doc_to_user(doc: &HashMap<String, AttributeValue>, user: &mut Us
     user.set_device(device);
     user.set_wallet_address(wallet_address);
     user.set_email(email);
+    //user.set_password(passw);
     user.set_user_id(user_id);
     user.set_roles(&UserRoles::from_vec_str(roles));
+}
+
+fn cypher_text(text: &String, key: &String) -> String {
+    //let hmac_key = env_vars.hmac_secret.as_bytes();
+    let hmac_key = key.as_bytes();
+    let mut hmac = Hmac::new(Sha256::new(), hmac_key);
+    hmac.input(text.as_bytes());
+
+    let cypher_password = String::from_utf8(hmac.result().code().to_owned()).unwrap(); // result.into_bytes();
+
+    cypher_password
 }
