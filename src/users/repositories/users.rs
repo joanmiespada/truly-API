@@ -21,14 +21,17 @@ use chrono::{
 };
 
 static USERS_TABLE_NAME: &str = "users";
+static USERS_TABLE_INDEX_EMAIL: &str = "email";
+static USERS_TABLE_INDEX_DEVICE: &str = "device";
+//static USERS_TABLE_INDEX_WALLETADDRESS: &str = "walletAddress";
 static EMAIL_FIELD_NAME: &str = "email";
 static PASSWORD_FIELD_NAME: &str = "password";
 static DEVICE_FIELD_NAME: &str = "device";
 static WALLETADDRESS_FIELD_NAME: &str = "walletAddress";
-static USERID_FIELD_NAME: &str = "userID";
+static USERID_FIELD_NAME_PK: &str = "userID";
 static CREATIONTIME_FIELD_NAME: &str = "creationTime";
 static LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
-static ROLES_FIELD_NAME: &str = "userRoles";
+static ROLES_FIELD_NAME: &str = "roles";
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -36,7 +39,7 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 pub trait UserRepository {
     async fn add_user(&self, user: &mut User, password: &String) -> ResultE<String>;
     async fn update_user(&self, id: &String, user: &User) -> ResultE<bool>;
-    async fn get_by_user_id(&self, id: &String) -> ResultE<Option<User>>;
+    async fn get_by_user_id(&self, id: &String) -> ResultE<User>;
     async fn get_by_user_device(&self, device: &String) -> ResultE<User>;
     async fn get_by_user_email_and_password(
         &self,
@@ -49,7 +52,7 @@ pub trait UserRepository {
         field: &str,
         value: &String,
     ) -> ResultE<Option<Vec<String>>>;
-    async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>>;
+    //async fn get_by_filter(&self, field: &str, value: &String, index: &str) -> ResultE<Vec<String>>;
 }
 
 #[derive(Clone, Debug)]
@@ -71,6 +74,51 @@ impl UsersRepo {
             client: Client::new(conf.aws_config()),
             environment_vars: conf.env_vars().clone(),
         }
+    }
+    async fn get_by_filter(
+        &self,
+        field: &str,
+        value: &String,
+        index: &str,
+    ) -> ResultE<Vec<String>> {
+        let mut usersqueried = Vec::new();
+        let value_av = AttributeValue::S(value.to_string());
+
+        let mut filter = "".to_string();
+        filter.push_str(&*field);
+        filter.push_str(" = :value");
+
+        let request = self
+            .client
+            .query()
+            .table_name(USERS_TABLE_NAME)
+            .index_name(index)
+            .key_condition_expression(filter)
+            .expression_attribute_values(":value".to_string(), value_av)
+            .select(Select::AllProjectedAttributes);
+
+        let results = request.send().await;
+        match results {
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(DynamoDBError(e.to_string()).into());
+            }
+            Ok(items) => {
+                let docus = items.items().unwrap();
+                for doc in docus {
+                    let _user_id = doc.get(USERID_FIELD_NAME_PK).unwrap();
+                    let user_id = _user_id.as_s().unwrap();
+
+                    usersqueried.push(user_id.clone());
+                }
+            }
+        }
+        Ok(usersqueried)
     }
 }
 
@@ -114,7 +162,7 @@ impl UserRepository for UsersRepo {
                 let docs = x.items.unwrap();
                 let aux = docs
                     .iter()
-                    .map(|doc| doc.get(USERID_FIELD_NAME).unwrap().as_s().unwrap())
+                    .map(|doc| doc.get(USERID_FIELD_NAME_PK).unwrap().as_s().unwrap())
                     .map(|doc| doc.to_string())
                     .collect();
                 return Ok(Some(aux));
@@ -171,7 +219,7 @@ impl UserRepository for UsersRepo {
             .client
             .put_item()
             .table_name(USERS_TABLE_NAME)
-            .item(USERID_FIELD_NAME, user_id_av)
+            .item(USERID_FIELD_NAME_PK, user_id_av)
             .item(CREATIONTIME_FIELD_NAME, creation_time_av)
             .item(WALLETADDRESS_FIELD_NAME, wallet_address_av)
             .item(EMAIL_FIELD_NAME, email_av)
@@ -258,14 +306,14 @@ impl UserRepository for UsersRepo {
         Ok(usersqueried)
     }
 
-    async fn get_by_user_id(&self, id: &String) -> ResultE<Option<User>> {
+    async fn get_by_user_id(&self, id: &String) -> ResultE<User> {
         let user_id_av = AttributeValue::S(id.clone());
 
         let request = self
             .client
             .get_item()
             .table_name(USERS_TABLE_NAME)
-            .key(USERID_FIELD_NAME, user_id_av);
+            .key(USERID_FIELD_NAME_PK, user_id_av);
 
         let results = request.send().await;
         match results {
@@ -280,67 +328,26 @@ impl UserRepository for UsersRepo {
             }
             Ok(_) => {}
         }
-
-        if let Some(aux) = results.unwrap().item {
-            let mut user = User::new();
-
-            mapping_from_doc_to_user(&aux, &mut user);
-
-            Ok(Some(user))
-        } else {
-            Ok(None)
-        }
-    }
-
-    async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>> {
-        let mut usersqueried = Vec::new();
-        let value_av = AttributeValue::S(value.to_string());
-
-        let mut filter = "".to_string();
-        filter.push_str(&*field);
-        filter.push_str(" = :value");
-
-        let request = self
-            .client
-            .query()
-            .table_name(USERS_TABLE_NAME)
-            .key_condition_expression(filter)
-            .expression_attribute_values(":value".to_string(), value_av)
-            .select(Select::AllAttributes);
-
-        let results = request.send().await;
-        match results {
-            Err(e) => {
-                let mssag = format!(
-                    "Error at [{}] - {} ",
-                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
-                    e
-                );
-                tracing::error!(mssag);
-                return Err(DynamoDBError(e.to_string()).into());
-            }
-            Ok(items) => {
-                let docus = items.items().unwrap();
-                for doc in docus {
-                    let mut user = User::new();
-
-                    mapping_from_doc_to_user(&doc, &mut user);
-
-                    usersqueried.push(user);
-                }
+        match results.unwrap().item {
+            None => Err(UserNoExistsError("id doesn't exist".to_string()).into()),
+            Some(aux) => {
+                let mut user = User::new();
+                mapping_from_doc_to_user(&aux, &mut user);
+                Ok(user)
             }
         }
-        Ok(usersqueried)
     }
 
     async fn get_by_user_device(&self, device: &String) -> ResultE<User> {
         let res = self
-            .get_by_filter(&DEVICE_FIELD_NAME.to_string(), device)
+            .get_by_filter(&DEVICE_FIELD_NAME, device, &USERS_TABLE_INDEX_DEVICE)
             .await?;
+
         if res.len() == 0 {
             Err(UserNoExistsError("no device found".to_string()).into())
         } else {
-            Ok(res[0].clone())
+            let user = self.get_by_user_id(&res[0]).await?;
+            Ok(user)
         }
     }
     async fn get_by_user_email_and_password(
@@ -358,9 +365,10 @@ impl UserRepository for UsersRepo {
             .client
             .query()
             .table_name(USERS_TABLE_NAME)
+            .index_name(USERS_TABLE_INDEX_EMAIL)
             .key_condition_expression(filter)
             .expression_attribute_values(email.to_string(), email_av)
-            .select(Select::AllAttributes);
+            .select(Select::AllProjectedAttributes);
 
         let results = request.send().await;
         match results {
@@ -379,9 +387,10 @@ impl UserRepository for UsersRepo {
                     return Err(UserNoExistsError("no email found".to_string()).into());
                 }
                 let doc = docus.first().unwrap();
+                let _user_id = doc.get(USERID_FIELD_NAME_PK).unwrap();
+                let user_id = _user_id.as_s().unwrap();
 
-                let mut user = User::new();
-                mapping_from_doc_to_user(&doc, &mut user);
+                let user = self.get_by_user_id(&user_id).await?;
 
                 let password_stored_hashed = doc.get(PASSWORD_FIELD_NAME).unwrap().as_s().unwrap();
                 let password_coming = cypher_text(&password, &self.environment_vars.hmac_secret);
@@ -452,7 +461,7 @@ impl UserRepository for UsersRepo {
             .client
             .update_item()
             .table_name(USERS_TABLE_NAME)
-            .key(USERID_FIELD_NAME, id_av)
+            .key(USERID_FIELD_NAME_PK, id_av)
             .update_expression(update_express)
             .expression_attribute_values(":device", device_av)
             .expression_attribute_values(":email", email_av)
@@ -487,7 +496,7 @@ fn from_iso8601(st: &String) -> DateTime<Utc> {
     aux
 }
 fn mapping_from_doc_to_user(doc: &HashMap<String, AttributeValue>, user: &mut User) {
-    let _user_id = doc.get(USERID_FIELD_NAME).unwrap();
+    let _user_id = doc.get(USERID_FIELD_NAME_PK).unwrap();
     let user_id = _user_id.as_s().unwrap();
 
     let email = doc.get(EMAIL_FIELD_NAME).unwrap().as_s().unwrap();

@@ -14,7 +14,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/users?pageNumber=1&pageSize=10",
+							"raw": "http://localhost:8080/users?pageNumber=2&pageSize=15",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -26,18 +26,181 @@
 							"query": [
 								{
 									"key": "pageNumber",
-									"value": "1"
+									"value": "2"
 								},
 								{
 									"key": "pageSize",
-									"value": "10"
+									"value": "15"
 								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "UserById",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/users?pageNumber=2&pageSize=15",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users"
+							],
+							"query": [
+								{
+									"key": "pageNumber",
+									"value": "2"
+								},
+								{
+									"key": "pageSize",
+									"value": "15"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Users",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"wallet_address\":\"0x0d00303030430d0dkdkkd\",\n    \"email\":\"foo@foo.com\",\n    \"device\": \"dysdius-sdjdjsd-sdferf-werw23422\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users"
 							]
 						}
 					},
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "login by device",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"device\":\"{{test_device}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_uri}}/auth/login",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login by user/pass",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\":\"{{test_email}}\",\n    \"password\":\"{{test_password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_uri}}/auth/login",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_uri",
+			"value": "http://localhost:8080",
+			"type": "default"
+		},
+		{
+			"key": "test_email",
+			"value": "admin@admin.com",
+			"type": "default"
+		},
+		{
+			"key": "test_password",
+			"value": "123456789aA",
+			"type": "default"
+		},
+		{
+			"key": "test_device",
+			"value": "device-12341234-12341234-12341234-1234",
+			"type": "default"
+		},
+		{
+			"key": "admin_token",
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMjM0LTEyMzQtMTIzNC0xMjM0LTEyMzQtMTIzNCIsInJvbGUiOiJBZG1pbixCYXNpYywiLCJleHAiOjE2NzE2MzM0NTZ9.9Dxv4snMVdbZSXayeXvMRFE8ne68IEkuiPLVj1VG0pX3-B07i4PGdYRNe4byHGdbkm2oa9PlnKXFkMqgbjZNwA",
+			"type": "default"
 		}
 	]
 }

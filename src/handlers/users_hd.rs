@@ -55,15 +55,12 @@ pub async fn get_user_by_id(state: web::Data<AppState>, path: web::Path<String>)
     let id = path.into_inner();
     let op_res = user_service.get_by_user_id(&id).await;
     match op_res {
-        Ok(some_user) => {
-            match some_user {
-                Some(user) => HttpResponse::Ok().json(user),
-                None => HttpResponse::NoContent().finish()
-            }
-        },
+        Ok(user) => HttpResponse::Ok().json(user),
         Err(e) => {
             if let Some(_) = e.downcast_ref::<DynamoDBError>() {
-                HttpResponse::ServiceUnavailable().finish()    
+                HttpResponse::ServiceUnavailable().finish()   
+            } else if  let Some(_) = e.downcast_ref::< UserNoExistsError>() {
+                HttpResponse::NoContent().finish()
             } else {
                 HttpResponse::InternalServerError().finish()    
             }
@@ -113,6 +110,7 @@ pub async fn add_user(state: web::Data<AppState>, payload: web::Json<NewUser>) -
     //format!("{{'id':'{}'}}", new_id)
 }
 
+/* 
 #[derive(Serialize,Deserialize)]
 pub struct Filter {
     pub field: String,
@@ -139,6 +137,7 @@ pub async fn get_user_by_filter(state: web::Data<AppState>, payload: web::Json<F
     }
     
 }
+*/
 
 #[derive(Serialize,Deserialize)]
 pub struct UpdateUser {

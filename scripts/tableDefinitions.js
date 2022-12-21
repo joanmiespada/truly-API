@@ -13,10 +13,6 @@ var schemas = [
                 "AttributeType": "S"
             },
             {
-                "AttributeName": "creationTime",
-                "AttributeType": "S"
-            },
-            {
                 "AttributeName": "walletAddress",
                 "AttributeType": "S"
             },
@@ -33,10 +29,6 @@ var schemas = [
             {
                 "AttributeName": "userID",
                 "KeyType": "HASH"
-            },
-            {
-                "AttributeName": "creationTime",
-                "KeyType": "RANGE"
             },
         ],
         "GlobalSecondaryIndexes": [

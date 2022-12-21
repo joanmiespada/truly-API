@@ -1,10 +1,8 @@
-use std::collections::HashMap;
 
 use async_trait::async_trait;
 
 use crate::users::errors::users::UserNoExistsError;
-use crate::users::models::user::{User, UserRoles, Userer};
-use crate::users::repositories::users::{UserRepository, UsersRepo};
+use crate::users::models::user::UserRoles;
 
 use super::users::UserManipulation;
 use super::users::UsersService;
@@ -40,6 +38,7 @@ impl LoginOps for UsersService {
         };
 
         if let Some(dvc) = device {
+
             let usr = self.get_by_user_device(dvc).await?;
             llt.user_id = usr.user_id().clone();
             llt.roles = usr.roles().clone();

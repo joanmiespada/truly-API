@@ -1,9 +1,12 @@
+use std::str::FromStr;
+
 // src/main.rs
 //use aws_sdk_dynamodb::Client;
 use actix_cors::Cors;
+use actix_web::http::Uri;
 use actix_web::middleware::Logger;
 use actix_web::{http::header, App, HttpServer};
-use actix_web::{web, HttpResponse};
+use actix_web::{web};
 use handlers::appstate::AppState;
 use handlers::{login_hd, auth_middleware};
 use handlers::users_hd::{self};
@@ -18,8 +21,12 @@ async fn main() -> std::io::Result<()> {
     let mut config = config::Config::new();
     config.setup().await;
 
-    let user_repo = users::repositories::users::UsersRepo::new(&config); //(config.aws_config());
+    let user_repo = users::repositories::users::UsersRepo::new(&config); 
     let user_service = users::services::users::UsersService::new(user_repo);
+
+    let env = config.env_vars();//.env_variables;//.as_ref().unwrap();
+    let server_address = format!("{}:{}", env.local_address, env.local_port );
+
 
     // Start http server
     HttpServer::new( move || {
@@ -44,7 +51,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .configure(routes)
     })
-    .bind("127.0.0.1:8080")//?
+    .bind(server_address)//?
     .unwrap_or_else(|_| panic!("Could not bind server to address"))
     //.start();
     .run()
@@ -83,10 +90,10 @@ fn routes(app: &mut web::ServiceConfig) {
                 web::post().to(users_hd::promote_user), //.and(with_auth(UserRoles::Admin)),
             )
             .route("/users", web::post().to(users_hd::add_user))
-            .route(
-                "/users/{field}/{value}",
-                web::get().to(users_hd::get_user_by_filter),
-            ),
+            //.route(
+            //    "/users/{field}/{value}",
+            //    web::get().to(users_hd::get_user_by_filter),
+            //),
         //.route("/{id}", web::delete().to( users_hd::delete_user ))
     )
     .service(

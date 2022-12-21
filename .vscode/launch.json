@@ -12,6 +12,9 @@
             "args": [ "arg1", "arg2" ],
             "cwd": "${workspaceRoot}/target/debug",
             "preLaunchTask": "build",
+            "env": {
+                "ENVIRONMENT":"development",
+            }
         }, 
         {
             "name": "Attach to API",
