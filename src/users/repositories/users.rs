@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use crypto::hmac::Hmac;
 use crypto::mac::Mac;
 use crypto::sha2::Sha256;
-//use serialize::hex::ToHex;
+use futures_util::StreamExt;
+use rustc_serialize::hex::ToHex;
 
 use crate::config::{Config, EnvironmentVariables};
 use crate::users::errors::users::{
@@ -23,7 +24,7 @@ use chrono::{
 static USERS_TABLE_NAME: &str = "users";
 static USERS_TABLE_INDEX_EMAIL: &str = "email";
 static USERS_TABLE_INDEX_DEVICE: &str = "device";
-//static USERS_TABLE_INDEX_WALLETADDRESS: &str = "walletAddress";
+static USERS_TABLE_INDEX_WALLETADDRESS: &str = "walletAddress";
 static EMAIL_FIELD_NAME: &str = "email";
 static PASSWORD_FIELD_NAME: &str = "password";
 static DEVICE_FIELD_NAME: &str = "device";
@@ -47,11 +48,11 @@ pub trait UserRepository {
         password: &String,
     ) -> ResultE<User>;
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<User>>;
-    async fn check_if_key_exists(
+    /*async fn check_if_key_exists(
         &self,
         field: &str,
         value: &String,
-    ) -> ResultE<Option<Vec<String>>>;
+    ) -> ResultE<Option<Vec<String>>>;*/
     //async fn get_by_filter(&self, field: &str, value: &String, index: &str) -> ResultE<Vec<String>>;
 }
 
@@ -134,6 +135,7 @@ impl Clone for UsersRepo {
 
 #[async_trait]
 impl UserRepository for UsersRepo {
+    /*
     async fn check_if_key_exists(
         &self,
         field: &str,
@@ -172,45 +174,41 @@ impl UserRepository for UsersRepo {
                 return Err(DynamoDBError(e.to_string()).into());
             }
         }
-    }
+    } */
 
     async fn add_user(&self, user: &mut User, password: &String) -> ResultE<String> {
+        //replace this method by the last one: get_by_filter
         let mut res = self
-            .check_if_key_exists(EMAIL_FIELD_NAME, user.email())
+            .get_by_filter(EMAIL_FIELD_NAME, user.email(), USERS_TABLE_INDEX_EMAIL)
             .await?;
-        match res {
-            Some(_) => {
-                return Err(UserAlreadyExistsError("email already exists".to_string()).into());
-            }
-            None => {}
+
+        if res.len() > 0 {
+            return Err(UserAlreadyExistsError("email already exists".to_string()).into());
         }
         res = self
-            .check_if_key_exists(DEVICE_FIELD_NAME, user.device())
+            .get_by_filter(DEVICE_FIELD_NAME, user.device(), USERS_TABLE_INDEX_DEVICE)
             .await?;
-        match res {
-            Some(_) => {
-                return Err(UserAlreadyExistsError("device already exists".to_string()).into());
-            }
-            None => {}
+        if res.len() > 0 {
+            return Err(UserAlreadyExistsError("device already exists".to_string()).into());
         }
         res = self
-            .check_if_key_exists(WALLETADDRESS_FIELD_NAME, user.wallet_address())
+            .get_by_filter(
+                WALLETADDRESS_FIELD_NAME,
+                user.wallet_address(),
+                USERS_TABLE_INDEX_WALLETADDRESS,
+            )
             .await?;
-        match res {
-            Some(_) => {
-                return Err(
-                    UserAlreadyExistsError("wallet address already exists".to_string()).into(),
-                );
-            }
-            None => {}
+        if res.len() > 0 {
+            return Err(UserAlreadyExistsError("wallet address already exists".to_string()).into());
         }
 
         let user_id_av = AttributeValue::S(user.user_id().clone());
         let device_av = AttributeValue::S(user.device().clone());
         let creation_time_av = AttributeValue::S(iso8601(user.creation_time()));
+        let update_time_av = AttributeValue::S(iso8601(user.creation_time()));
         let email_av = AttributeValue::S(user.email().clone());
         let password_av =
-            AttributeValue::S(cypher_text(password, &self.environment_vars.hmac_secret));
+            AttributeValue::S(cypher_text(password, &self.environment_vars.hmac_secret)?);
 
         let wallet_address_av = AttributeValue::S(user.wallet_address().clone());
         let roles_av = AttributeValue::Ss(UserRoles::to_vec_str(user.roles()).clone());
@@ -221,6 +219,7 @@ impl UserRepository for UsersRepo {
             .table_name(USERS_TABLE_NAME)
             .item(USERID_FIELD_NAME_PK, user_id_av)
             .item(CREATIONTIME_FIELD_NAME, creation_time_av)
+            .item(LASTUPDATETIME_FIELD_NAME, update_time_av)
             .item(WALLETADDRESS_FIELD_NAME, wallet_address_av)
             .item(EMAIL_FIELD_NAME, email_av)
             .item(PASSWORD_FIELD_NAME, password_av)
@@ -243,27 +242,38 @@ impl UserRepository for UsersRepo {
         }
     }
 
+
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<User>> {
         let mut usersqueried = Vec::new();
         // result.push(User::new());
 
-        /*let mut filter = "".to_string();
-        filter.push_str(USERID_FIELD_NAME);
-        filter.push_str(" = :hashKey");*/
+        /*let user_id_av = AttributeValue::S(user.user_id().clone());
+        let mut filter = "".to_string();
+        filter.push_str(USERID_FIELD_NAME_PK);
+        filter.push_str(" = :value");*/
+
         let mut page = 0;
         let mut exclusive_start_key = None;
         loop {
             let request = self
                 .client
                 .query()
+                //.scan()
                 .table_name(USERS_TABLE_NAME)
+                //.into_paginator()
                 .limit(page_size as i32)
+                
                 .set_exclusive_start_key(exclusive_start_key)
                 //.key_condition_expression(filter)
                 //.expression_attribute_values(":value".to_string(), user_id_av)
                 .select(Select::AllAttributes);
+                //.items();
+                //.send()
+                //.collect()
+                //.await;
 
             let results = request.send().await;
+            //let results: Result<Vec<_>, _> = request.send().collect().await;
             match results {
                 Err(e) => {
                     let mssag = format!(
@@ -393,7 +403,7 @@ impl UserRepository for UsersRepo {
                 let user = self.get_by_user_id(&user_id).await?;
 
                 let password_stored_hashed = doc.get(PASSWORD_FIELD_NAME).unwrap().as_s().unwrap();
-                let password_coming = cypher_text(&password, &self.environment_vars.hmac_secret);
+                let password_coming = cypher_text(&password, &self.environment_vars.hmac_secret)?;
                 if *password_stored_hashed == password_coming {
                     Ok(user)
                 } else {
@@ -405,40 +415,31 @@ impl UserRepository for UsersRepo {
 
     async fn update_user(&self, id: &String, user: &User) -> ResultE<bool> {
         let mut res = self
-            .check_if_key_exists(EMAIL_FIELD_NAME, user.email())
+            .get_by_filter(EMAIL_FIELD_NAME, user.email(), USERS_TABLE_INDEX_EMAIL)
+            //.check_if_key_exists(EMAIL_FIELD_NAME, user.email())
             .await?;
-        match res {
-            Some(val) => {
-                if val.iter().filter(|x| **x == *id).count() != 0 {
-                    return Err(UserMismatchError("email is already in use".to_string()).into());
-                }
-            }
-            None => {}
+        if res.iter().filter(|x| **x == *id).count() != 0 {
+            return Err(UserMismatchError("email is already in use".to_string()).into());
         }
         res = self
-            .check_if_key_exists(DEVICE_FIELD_NAME, user.device())
+            .get_by_filter(DEVICE_FIELD_NAME, user.device(), USERS_TABLE_INDEX_DEVICE)
+            //.check_if_key_exists(DEVICE_FIELD_NAME, user.device())
             .await?;
-        match res {
-            Some(val) => {
-                if val.iter().filter(|x| **x == *id).count() != 0 {
-                    return Err(UserMismatchError("device is already in use".to_string()).into());
-                }
-            }
-            None => {}
+        if res.iter().filter(|x| **x == *id).count() != 0 {
+            return Err(UserMismatchError("device is already in use".to_string()).into());
         }
         res = self
-            .check_if_key_exists(WALLETADDRESS_FIELD_NAME, user.wallet_address())
+            .get_by_filter(
+                WALLETADDRESS_FIELD_NAME,
+                user.wallet_address(),
+                USERS_TABLE_INDEX_WALLETADDRESS,
+            )
+            //.check_if_key_exists(WALLETADDRESS_FIELD_NAME, user.wallet_address())
             .await?;
-        match res {
-            Some(val) => {
-                if val.iter().filter(|x| **x == *id).count() != 0 {
-                    return Err(UserMismatchError(
-                        "wallet address is already already in use".to_string(),
-                    )
-                    .into());
-                }
-            }
-            None => {}
+        if res.iter().filter(|x| **x == *id).count() != 0 {
+            return Err(
+                UserMismatchError("wallet address is already already in use".to_string()).into(),
+            );
         }
 
         let id_av = AttributeValue::S(id.clone());
@@ -515,13 +516,32 @@ fn mapping_from_doc_to_user(doc: &HashMap<String, AttributeValue>, user: &mut Us
     user.set_roles(&UserRoles::from_vec_str(roles));
 }
 
-fn cypher_text(text: &String, key: &String) -> String {
+fn cypher_text(text: &String, key: &String) -> ResultE<String> {
     //let hmac_key = env_vars.hmac_secret.as_bytes();
     let hmac_key = key.as_bytes();
     let mut hmac = Hmac::new(Sha256::new(), hmac_key);
+
     hmac.input(text.as_bytes());
 
-    let cypher_password = String::from_utf8(hmac.result().code().to_owned()).unwrap(); // result.into_bytes();
+    let res = hmac.result().code().to_hex();// .to_owned();
+    return Ok(res);
+/* 
+    let cypher_password_ops = String::from_utf8(res); //. unwrap();
+    match cypher_password_ops  {
+        Err(e) => { eprintln!("{}",e.to_string());  return Err(e.into());},
+        Ok(cypher_password) => Ok(cypher_password)
+        
+    }
+*/
+    //return Ok(cypher_password);
+ /*   match cypher_password_ops {
+        Err(x) =>{
 
-    cypher_password
+        },
+        Ok(cypher_password) => { return cypher_password}*/
+        
+    //}
+    //.unwrap(); // result.into_bytes();
+
+    
 }

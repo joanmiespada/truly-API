@@ -1,9 +1,8 @@
-use std::str::FromStr;
+extern crate crypto;
+extern crate rustc_serialize;
+extern crate derive_more;
 
-// src/main.rs
-//use aws_sdk_dynamodb::Client;
 use actix_cors::Cors;
-use actix_web::http::Uri;
 use actix_web::middleware::Logger;
 use actix_web::{http::header, App, HttpServer};
 use actix_web::{web};
@@ -56,33 +55,15 @@ async fn main() -> std::io::Result<()> {
     //.start();
     .run()
     .await
-
-
-    //let api =  Http;
-    //api.start();
-
-    /*
-    // Start http server
-    HttpServer::new(move || {
-        App::new()
-            .route("/users", web::get().to(handlers::get_users))
-            .route("/users/{id}", web::get().to(handlers::get_user_by_id))
-            .route("/users", web::post().to(handlers::add_user))
-            //.route("/users/{id}", web::delete().to(handlers::delete_user))
-    })
-    .bind("127.0.0.1:8080")?
-    .run()
-    .await
-
-    */
+    
 }
 
 fn routes(app: &mut web::ServiceConfig) {
     app
     .service(
         web::scope("/api")
-            .wrap(auth_middleware::SayHi)
-            .route("/users", web::get().to(users_hd::get_users))
+            .wrap(auth_middleware::Auth)
+            //.route("/users", web::get().to(users_hd::get_users))
             .route("/users/{id}", web::get().to(users_hd::get_user_by_id))
             .route("/users/{id}", web::put().to(users_hd::update_user))
             .route(
@@ -99,7 +80,7 @@ fn routes(app: &mut web::ServiceConfig) {
     .service(
         web::scope("/auth")
             .route("/login", web::post().to(login_hd::login))
-            .route("/logout", web::post().to(login_hd::logout)),
+            //.route("/logout", web::post().to(login_hd::logout)),
     );
 }
 

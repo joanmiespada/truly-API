@@ -1,12 +1,13 @@
 use actix_web::{web, HttpResponse, Responder};
+use aws_sdk_dynamodb::middleware::RetryConfig;
 use chrono::Utc;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
-use crate::users::{
-    errors::users::{DynamoDBError, JWTSecurityError, UserNoExistsError},
+use crate::{users::{
+    errors::users::{DynamoDBError, UserNoExistsError},
     models::user::UserRoles,
-};
+}, config};
 
 /*
 use crate::users::{
@@ -14,7 +15,7 @@ use crate::users::{
     services::users::{ LoginOps,  UsersService}, errors::users::{DynamoDBError, UserAlreadyExistsError, UserNoExistsError},
 };
 */
-use super::appstate::AppState;
+use super::{appstate::AppState, auth_middleware::JWTSecurityError};
 use crate::users::services::login::LoginOps;
 
 #[derive(Serialize, Deserialize)]
@@ -27,8 +28,6 @@ pub struct LoginUser {
 pub struct LoginResponse {
     pub token: String,
 }
-const BEARER: &str = "Bearer ";
-const JWT_SECRET: &[u8] = b"secret";
 
 pub async fn login(
     state: web::Data<AppState>,
@@ -36,6 +35,7 @@ pub async fn login(
     //path: web::Path<String>,
 ) -> impl Responder {
     let user_service = &state.user_service;
+    let conf = &state.app_config;
 
     let op_res = user_service
         .login(&payload.device, &payload.email, &payload.password)
@@ -51,7 +51,7 @@ pub async fn login(
             }
         }
         Ok(log_inf) => {
-            let token_creation_ops = create_jwt(&log_inf.user_id, &log_inf.roles);
+            let token_creation_ops = create_jwt(&log_inf.user_id, &log_inf.roles, conf);
             match token_creation_ops {
                 Err(e) => HttpResponse::InternalServerError().finish(),
                 Ok(token) => HttpResponse::Ok().json(&LoginResponse { token }),
@@ -61,30 +61,32 @@ pub async fn login(
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-struct Claims {
-    sub: String,
-    role: String,
-    exp: usize,
+pub struct Claims {
+    pub sub: String,
+    pub roles: Vec<UserRoles>,
+    //pub roles: String,
+    pub exp: usize,
 }
 
-fn create_jwt(uid: &str, roles: &Vec<UserRoles>) -> Result<String, Box<dyn std::error::Error>> {
+fn create_jwt(uid: &str, roles: &Vec<UserRoles>, conf: &config::Config) -> Result<String, actix_web::Error> {
     let expiration = Utc::now()
-        .checked_add_signed(chrono::Duration::seconds(60))
+        .checked_add_signed(chrono::Duration::hours(2))
         .expect("valid timestamp")
         .timestamp();
 
-    let rr = roles.into_iter().map(|r| format!("{},", r.to_string()) ).collect();
+    //let rr = roles.into_iter().map(|r| format!("{},", r.to_string()) ).collect();
     let claims = Claims {
         sub: uid.to_owned(),
-        role: rr, // role.to_string(),
+        roles: roles.clone(), // rr, // role.to_string(),
+        //roles: rr, // role.to_string(),
         exp: expiration as usize,
     };
     let header = Header::new(Algorithm::HS512);
-    let key = EncodingKey::from_secret(JWT_SECRET);
+    let key = EncodingKey::from_secret( conf.env_vars().jwt_token_base.as_bytes() );
     let jwt = encode(&header, &claims, &key);
     match jwt {
         Ok(x) => Ok(x),
-        Err(e) => Err(JWTSecurityError(e.to_string()).into()),
+        Err(e) => Err(JWTSecurityError::from("fail creating a token".to_string()).into() ),
     }
 }
 

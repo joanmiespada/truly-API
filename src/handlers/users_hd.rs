@@ -22,7 +22,6 @@ pub struct QueryPagination {
     pageSize: Option<u32>,
 }
 
-// use serde::Deserialize;
 pub async fn get_users(
     state: web::Data<AppState>,
     params: web::Query<QueryPagination>,
