@@ -1,14 +1,14 @@
 extern crate crypto;
-extern crate rustc_serialize;
 extern crate derive_more;
+extern crate rustc_serialize;
 
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
+use actix_web::web;
 use actix_web::{http::header, App, HttpServer};
-use actix_web::{web};
 use handlers::appstate::AppState;
-use handlers::{login_hd, auth_middleware};
 use handlers::users_hd::{self};
+use handlers::{auth_middleware, login_hd, jwt_middleware, user_my_hd};
 use tracing_actix_web::TracingLogger;
 
 mod config;
@@ -20,21 +20,19 @@ async fn main() -> std::io::Result<()> {
     let mut config = config::Config::new();
     config.setup().await;
 
-    let user_repo = users::repositories::users::UsersRepo::new(&config); 
+    let user_repo = users::repositories::users::UsersRepo::new(&config);
     let user_service = users::services::users::UsersService::new(user_repo);
 
-    let env = config.env_vars();//.env_variables;//.as_ref().unwrap();
-    let server_address = format!("{}:{}", env.local_address, env.local_port );
-
+    let env = config.env_vars(); //.env_variables;//.as_ref().unwrap();
+    let server_address = format!("{}:{}", env.local_address, env.local_port);
 
     // Start http server
-    HttpServer::new( move || {
+    HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(AppState {
                 user_service: user_service.clone(),
                 app_config: config.clone(),
             }))
-             
             .wrap(
                 Cors::default()
                     //.allowed_origin("http://localhost:8080")
@@ -50,18 +48,26 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .configure(routes)
     })
-    .bind(server_address)//?
+    .bind(server_address) //?
     .unwrap_or_else(|_| panic!("Could not bind server to address"))
     //.start();
     .run()
     .await
-    
 }
 
 fn routes(app: &mut web::ServiceConfig) {
-    app
-    .service(
+    app.service(
         web::scope("/api")
+            .wrap(jwt_middleware::Jwt)
+            .route("/users", web::get().to(user_my_hd::get_my_user))
+            .route("/users", web::put().to(user_my_hd::update_my_user))
+            .route(
+                "/users/password_update",
+                web::post().to(user_my_hd::password_update_my_user), //.and(with_auth(UserRoles::Admin)),
+            ),
+    )
+    .service(
+        web::scope("/admin")
             .wrap(auth_middleware::Auth)
             //.route("/users", web::get().to(users_hd::get_users))
             .route("/users/{id}", web::get().to(users_hd::get_user_by_id))
@@ -70,17 +76,15 @@ fn routes(app: &mut web::ServiceConfig) {
                 "/users/promote/{id}",
                 web::post().to(users_hd::promote_user), //.and(with_auth(UserRoles::Admin)),
             )
-            .route("/users", web::post().to(users_hd::add_user))
-            //.route(
-            //    "/users/{field}/{value}",
-            //    web::get().to(users_hd::get_user_by_filter),
-            //),
-        //.route("/{id}", web::delete().to( users_hd::delete_user ))
+            .route(
+                "/users/password_update/{id}",
+                web::post().to(users_hd::password_update_user), //.and(with_auth(UserRoles::Admin)),
+            )
     )
     .service(
         web::scope("/auth")
             .route("/login", web::post().to(login_hd::login))
-            //.route("/logout", web::post().to(login_hd::logout)),
+            .route("/signup", web::post().to(users_hd::add_user)), //.route("/logout", web::post().to(login_hd::logout)),
     );
 }
 

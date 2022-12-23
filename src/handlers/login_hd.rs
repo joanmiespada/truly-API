@@ -15,7 +15,7 @@ use crate::users::{
     services::users::{ LoginOps,  UsersService}, errors::users::{DynamoDBError, UserAlreadyExistsError, UserNoExistsError},
 };
 */
-use super::{appstate::AppState, auth_middleware::JWTSecurityError};
+use super::{appstate::AppState, jwt_middleware::JWTSecurityError};
 use crate::users::services::login::LoginOps;
 
 #[derive(Serialize, Deserialize)]
@@ -62,7 +62,7 @@ pub async fn login(
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Claims {
-    pub sub: String,
+    pub uid: String,
     pub roles: Vec<UserRoles>,
     //pub roles: String,
     pub exp: usize,
@@ -76,7 +76,7 @@ fn create_jwt(uid: &str, roles: &Vec<UserRoles>, conf: &config::Config) -> Resul
 
     //let rr = roles.into_iter().map(|r| format!("{},", r.to_string()) ).collect();
     let claims = Claims {
-        sub: uid.to_owned(),
+        uid: uid.to_owned(),
         roles: roles.clone(), // rr, // role.to_string(),
         //roles: rr, // role.to_string(),
         exp: expiration as usize,

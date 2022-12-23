@@ -1,14 +1,16 @@
 use actix_web::{
     body::EitherBody,
     dev::{self, Service, ServiceRequest, ServiceResponse, Transform},
-    http::{header::AUTHORIZATION},
+    http::header::{AUTHORIZATION, HeaderName},
     Error, HttpRequest, HttpResponse, ResponseError,
 };
 use futures_util::future::LocalBoxFuture;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
+use lambda_http::http::HeaderValue;
 use std::future::{ready, Ready};
 
-use crate::handlers::jwt_middleware::{ JWTSecurityError, BEARER };
+pub const BEARER: &str = "Bearer ";
+pub const UID_HEAD_KEY: &str = "__UID__";
 
 use super::login_hd::Claims;
 
@@ -16,12 +18,12 @@ use super::login_hd::Claims;
 // 1. Middleware initialization, middleware factory gets called with
 //    next service in chain as parameter.
 // 2. Middleware's call method gets called with normal request.
-pub struct Auth;
+pub struct Jwt;
 
 // Middleware factory is `Transform` trait
 // `S` - type of the next service
 // `B` - type of response's body
-impl<S, B> Transform<S, ServiceRequest> for Auth
+impl<S, B> Transform<S, ServiceRequest> for Jwt
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
@@ -30,19 +32,19 @@ where
     type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
     type InitError = ();
-    type Transform = AuthMiddleware<S>;
+    type Transform = JwtMiddleware<S>;
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(AuthMiddleware { service }))
+        ready(Ok(JwtMiddleware { service }))
     }
 }
 
-pub struct AuthMiddleware<S> {
+pub struct JwtMiddleware<S> {
     service: S,
 }
 
-impl<S, B> Service<ServiceRequest> for AuthMiddleware<S>
+impl<S, B> Service<ServiceRequest> for JwtMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
@@ -54,16 +56,26 @@ where
 
     dev::forward_ready!(service);
 
-    fn call(&self, req: ServiceRequest) -> Self::Future {
-        let mut auth_flag = false;
+    fn call(&self, mut req: ServiceRequest) -> Self::Future {
 
         //println!("Hi from start. You requested: {}", req.path());
 
-        let aux = checkRoles(req.request());
+        let aux = check_jwt_token(req.request());
 
         match aux {
-            Ok(_) => {
-                auth_flag = true;
+            Ok(uid) => {
+                //inyect as header the user ID
+                let head_value = HeaderValue::from_str( uid.as_str()).unwrap();
+                req.headers_mut().append(HeaderName::from_static(UID_HEAD_KEY), head_value);
+                let fut = self.service.call(req);
+
+                Box::pin(async move {
+                    // let res = fut.await?;
+                    fut.await.map(ServiceResponse::map_into_left_body)
+
+                    //println!("Hi from response");
+                    //Ok(res)
+                })
             }
             Err(e) => {
                 let (request, _pl) = req.into_parts();
@@ -73,28 +85,10 @@ where
                 return Box::pin(async move { Ok(new_response) });
             }
         }
-
-        if auth_flag {
-            let fut = self.service.call(req);
-
-            Box::pin(async move {
-                // let res = fut.await?;
-                fut.await.map(ServiceResponse::map_into_left_body)
-
-                //println!("Hi from response");
-                //Ok(res)
-            })
-        } else {
-            let (request, _pl) = req.into_parts();
-            let res = HttpResponse::Forbidden().finish().map_into_right_body();
-
-            let new_response = ServiceResponse::new(request, res);
-            Box::pin(async move { Ok(new_response) })
-        }
     }
 }
 
-pub fn checkRoles(request: &HttpRequest) -> Result<bool, Error> {
+pub fn check_jwt_token(request: &HttpRequest) -> Result<String, Error> {
     let req_headers = request.headers();
     //let basic_auth_header = req_headers.get(AUTHORIZATION);
 
@@ -128,19 +122,17 @@ pub fn checkRoles(request: &HttpRequest) -> Result<bool, Error> {
     );
     match decoded {
         Err(e) => return Err(JWTSecurityError::from("jwt error".to_string()).into()),
-        Ok(deco) => {
-            let matches = deco
-                .claims
-                .roles
-                .into_iter()
-                .filter(|i| i.is_admin())
-                .count();
-            if matches == 0 {
-                return Err(JWTSecurityError::from("jwt error".to_string()).into());
-            }
+        Ok(deco) => Ok(deco.claims.uid), /*let matches = deco
+                                             .claims
+                                             .roles
+                                             .into_iter()
+                                             .filter(|i| i.is_admin())
+                                             .count();
+                                         if matches == 0 {
+                                             return Err(JWTSecurityError::from("jwt error".to_string()).into());
+                                         }
 
-            Ok(true)
-        }
+                                         Ok(true)*/
     }
 }
 
@@ -163,48 +155,48 @@ pub enum MyErrorTypes {
 }
 */
 
-// #[derive(Debug)] //, Display, Error)]
-//                  //#[display(fmt = "my error: {}", name)]
-// pub struct JWTSecurityError {
-//     pub name: Option<String>,
-//     //pub err_type: MyErrorTypes,
-// }
+#[derive(Debug)] //, Display, Error)]
+                 //#[display(fmt = "my error: {}", name)]
+pub struct JWTSecurityError {
+    pub name: Option<String>,
+    //pub err_type: MyErrorTypes,
+}
 
-// impl JWTSecurityError {
-//     pub fn message(&self) -> String {
-//         match &self.name {
-//             Some(c) => c.clone(),
-//             None => String::from(""),
-//         }
-//     }
-// }
+impl JWTSecurityError {
+    pub fn message(&self) -> String {
+        match &self.name {
+            Some(c) => c.clone(),
+            None => String::from(""),
+        }
+    }
+}
 
-// impl std::fmt::Display for JWTSecurityError {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(f, "{:?}", self)
-//     }
-// }
+impl std::fmt::Display for JWTSecurityError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
 
-// impl From<String> for JWTSecurityError {
-//     fn from(err: String) -> JWTSecurityError {
-//         JWTSecurityError {
-//             name: Some(err),
-//             //err_type: MyErrorTypes::OtherError("ssdfd".to_string()),
-//         }
-//     }
-// }
+impl From<String> for JWTSecurityError {
+    fn from(err: String) -> JWTSecurityError {
+        JWTSecurityError {
+            name: Some(err),
+            //err_type: MyErrorTypes::OtherError("ssdfd".to_string()),
+        }
+    }
+}
 
-// impl ResponseError for JWTSecurityError {
-//     /*fn status_code(&self) -> StatusCode {
-//         match self.err_type {
-//             JWTTokenCreationError => StatusCode::INTERNAL_SERVER_ERROR,
-//             WrongCredentialsError => StatusCode::BAD_REQUEST,
-//             JWTTokenError => StatusCode::INTERNAL_SERVER_ERROR,
-//             NoAuthHeaderError => StatusCode::INTERNAL_SERVER_ERROR,
-//         }
-//     }*/
+impl ResponseError for JWTSecurityError {
+    /*fn status_code(&self) -> StatusCode {
+        match self.err_type {
+            JWTTokenCreationError => StatusCode::INTERNAL_SERVER_ERROR,
+            WrongCredentialsError => StatusCode::BAD_REQUEST,
+            JWTTokenError => StatusCode::INTERNAL_SERVER_ERROR,
+            NoAuthHeaderError => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }*/
 
-//     fn error_response(&self) -> HttpResponse {
-//         HttpResponse::build(self.status_code()).json(self.name.clone())
-//     }
-// }
+    fn error_response(&self) -> HttpResponse {
+        HttpResponse::build(self.status_code()).json(self.name.clone())
+    }
+}

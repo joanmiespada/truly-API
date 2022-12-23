@@ -17,10 +17,11 @@ pub trait UserManipulation {
         email: &String,
         password: &String,
     ) -> ResultE<User>;
-    async fn add_user(&self, user: &mut User, password: &String) -> ResultE<String>;
+    async fn add_user(&self, user: &mut User, password: &Option<String>) -> ResultE<String>;
     //async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>>;
     async fn update_user(&self, id: &String, user: &User) -> ResultE<bool>;
     async fn promote_user_to_admin(&self, id: &String) -> ResultE<bool>;
+    async fn update_password(&self, id: &String, password: &String) -> ResultE<()>;
 }
 
 pub struct UsersService {
@@ -61,7 +62,7 @@ impl UserManipulation for UsersService {
         Ok(res)
     }
 
-    async fn add_user(&self, user: &mut User, password: &String) -> ResultE<String> {
+    async fn add_user(&self, user: &mut User, password: &Option<String>) -> ResultE<String> {
         let id = Uuid::new_v4();
         user.set_user_id(&id.to_string());
         user.roles_add(&UserRoles::Basic);
@@ -78,12 +79,28 @@ impl UserManipulation for UsersService {
         let dbuser = self.repository.get_by_user_id(id).await?;
         let mut res: User = dbuser.clone();
 
-        res.set_email(user.email());
-        res.set_wallet_address(user.wallet_address());
-        res.set_device(user.device());
+        match user.email(){
+            None => (),
+            Some(eml) => res.set_email(eml)
+        }
+        match user.wallet_address() {
+            None => (),
+            Some(wa) => {
+                res.set_wallet_address(wa);
+            }
+        }
+        match user.device() {
+            None => (),
+            Some(dvc) => res.set_device(dvc)
+        }
 
         let res = self.repository.update_user(&id, &res).await?;
         Ok(res)
+    }
+    
+    async fn update_password(&self, id: &String, password: &String) -> ResultE<()> {
+        _ = self.repository.update_password(id, password ).await?;
+        Ok(())
     }
 
     //Todo check if the thread's user is Admin, if not, this operation is fobidden
@@ -91,7 +108,7 @@ impl UserManipulation for UsersService {
         let dbuser = self.repository.get_by_user_id(id).await?;
         let mut res: User = dbuser.clone();
         res.promote_to_admin();
-        let res = self.repository.update_user(&id, &res).await?;
+        let res = self.repository.update_user(&id, &res ).await?;
         Ok(res)
     }
 }

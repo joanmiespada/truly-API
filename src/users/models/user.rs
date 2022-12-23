@@ -1,5 +1,5 @@
 use std::fmt;
-
+use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -61,21 +61,21 @@ impl fmt::Display for UserRoles {
 pub struct User {
     user_id: String,
     creation_time: DateTime<Utc>,
-    wallet_address: String,
-    email: String,
-    //password: String,
-    device: String,
+    wallet_address: Option<String>,
+    email: Option<String>,
+    //password: String, // don't use it here! 
+    device: Option<String>,
     roles: Vec<UserRoles>
 }
 
 impl User {
     pub fn new() -> User {
         User {
-            user_id: String::new(),
+            user_id:  Uuid::nil().to_string(),
             creation_time: Utc::now(),
-            wallet_address: String::new(),
-            email: String::new(),
-            device: String::new(),
+            wallet_address: None,
+            email: None,
+            device: None,
             roles: Vec::new(),
             //password: String::new(),
         }
@@ -93,23 +93,23 @@ impl User {
     pub fn set_creation_time(&mut self, val: &DateTime<Utc> ) {
         self.creation_time = val.clone() 
     }
-    pub fn wallet_address(&self) -> &String {
+    pub fn wallet_address(&self) -> &Option<String> {
         &self.wallet_address
     }
     pub fn set_wallet_address(&mut self, val: &String ) {
-        self.wallet_address = val.clone()
+        self.wallet_address = Some(val.clone())
     }
-    pub fn email(&self) -> &String {
+    pub fn email(&self) -> &Option<String> {
         &self.email
     }
     pub fn set_email(&mut self, val: &String ) {
-        self.email = val.clone()
+        self.email = Some(val.clone())
     }
-    pub fn device(&self) -> &String {
+    pub fn device(&self) -> &Option<String> {
         &self.device
     }
     pub fn set_device(&mut self, val: &String) {
-        self.device = val.clone()
+        self.device = Some(val.clone())
     }
     pub fn roles(&self) -> &Vec<UserRoles> {
         &self.roles

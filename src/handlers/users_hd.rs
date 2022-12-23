@@ -70,10 +70,10 @@ pub async fn get_user_by_id(state: web::Data<AppState>, path: web::Path<String>)
 
 #[derive(Deserialize)]
 pub struct NewUser {
-    pub wallet_address: String,
-    pub email: String,
-    pub password: String,
-    pub device: String,
+    pub wallet_address: Option<String>,
+    pub email: Option<String>,
+    pub password: Option<String>,
+    pub device: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -85,9 +85,17 @@ pub async fn add_user(state: web::Data<AppState>, payload: web::Json<NewUser>) -
     let user_service = &state.user_service;
 
     let mut user = User::new();
-    user.set_email(&payload.email);
-    user.set_wallet_address(&payload.wallet_address);
-    user.set_device(&payload.device);
+
+    if let Some(eml) = &payload.email{
+        user.set_email( eml );
+    }
+
+    if let Some(wll) = &payload.wallet_address {
+        user.set_wallet_address(wll);
+    }
+    if let Some(dvc) = &payload.device {
+        user.set_device(dvc);
+    }
 
     let op_res = user_service.add_user(&mut user, &payload.password).await;
     match op_res {
@@ -165,13 +173,37 @@ pub async fn update_user(state: web::Data<AppState>, payload: web::Json<UpdateUs
                 HttpResponse::InternalServerError().finish()    
             }
         },
+        Ok(_) => { 
+            HttpResponse::Ok().finish()
+        }
+    }
+}
+#[derive(Serialize,Deserialize)]
+pub struct UpdatePasswordUser {
+    pub password: String, 
+}
+pub async fn password_update_user(state: web::Data<AppState>, payload: web::Json<UpdatePasswordUser>, path: web::Path<String>) -> impl Responder {
+    let user_service = &state.user_service;
+
+    let id = path.into_inner();
+
+    let op_res = user_service. update_password(&id, &payload.password).await;
+    match op_res {
+        Err(e) => {
+            if let Some(_) = e.downcast_ref::<DynamoDBError>() {
+                HttpResponse::ServiceUnavailable().finish()    
+            } else if  let Some(_) = e.downcast_ref::<UserNoExistsError>() {
+                HttpResponse::BadRequest().finish()
+            } else {
+                HttpResponse::InternalServerError().finish()    
+            }
+        },
         Ok(iid) => { 
-            HttpResponse::Ok().body(iid.to_string())
+            HttpResponse::Ok().finish()
         }
     }
 }
 
-//TODO---> JWT to identify the current user, only Admins can perform it!!!
 pub async fn promote_user(state: web::Data<AppState>, path: web::Path<String>) -> impl Responder {
     let user_service = &state.user_service;
 

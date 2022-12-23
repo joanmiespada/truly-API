@@ -38,8 +38,9 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 #[async_trait]
 pub trait UserRepository {
-    async fn add_user(&self, user: &mut User, password: &String) -> ResultE<String>;
+    async fn add_user(&self, user: &mut User, password: &Option<String>) -> ResultE<String>;
     async fn update_user(&self, id: &String, user: &User) -> ResultE<bool>;
+    async fn update_password(&self, id: &String, password: &String) -> ResultE<()>;
     async fn get_by_user_id(&self, id: &String) -> ResultE<User>;
     async fn get_by_user_device(&self, device: &String) -> ResultE<User>;
     async fn get_by_user_email_and_password(
@@ -121,96 +122,128 @@ impl UsersRepo {
         }
         Ok(usersqueried)
     }
-}
 
-/*
-impl Clone for UsersRepo {
-    fn clone(&self) -> UsersRepo {
-        let aux = UsersRepo {
-            client: self.client.clone(),
-        };
-        return aux;
+    async fn checks(&self,user: &User ) -> ResultE<bool>{
+        
+        match user.email() {
+            None => {},
+            Some(email) => {
+                let res = self
+                    .get_by_filter(EMAIL_FIELD_NAME, email, USERS_TABLE_INDEX_EMAIL)
+                    .await?;
+                if res.into_iter().filter(|x| *x != *user.user_id()   ).count() > 0 {
+                    return Err(UserMismatchError("email is already in use".to_string()).into());
+                }
+            }
+        }
+
+        match user.device() {
+            None => {},
+            Some(device) => {
+                let res = self
+                    .get_by_filter(DEVICE_FIELD_NAME, device, USERS_TABLE_INDEX_DEVICE)
+                    .await?;
+                if res.into_iter().filter(|x| *x != *user.user_id()   ).count() > 0 {
+                    return Err(UserAlreadyExistsError("device already exists".to_string()).into());
+                }
+            }
+        }
+
+        match user.wallet_address() {
+            None => {}
+            Some(wallet_address) => {
+                let res = self
+                    .get_by_filter(
+                        WALLETADDRESS_FIELD_NAME,
+                        wallet_address,
+                        USERS_TABLE_INDEX_WALLETADDRESS,
+                    )
+                    .await?;
+                if res.into_iter().filter(|x| *x != *user.user_id()  ).count() > 0 {
+                    return Err(UserAlreadyExistsError(
+                        "wallet address already exists".to_string(),
+                    )
+                    .into());
+                }
+            }
+        }
+
+        return Ok(true);
+
     }
-}*/
+
+}
 
 #[async_trait]
 impl UserRepository for UsersRepo {
-    /*
-    async fn check_if_key_exists(
-        &self,
-        field: &str,
-        value: &String,
-    ) -> ResultE<Option<Vec<String>>> {
-        //let mut filter = "".to_string();
-        //filter.push_str(&field);
-        //filter.push_str(" = :value");
 
-        let filter = format!("{0} = :value", field).to_string();
+    async fn add_user(&self, user: &mut User, password: &Option<String>) -> ResultE<String> {
 
-        let value_av = AttributeValue::S(value.clone());
-        let request = self
-            .client
-            .query()
-            .table_name(USERS_TABLE_NAME)
-            .key_condition_expression(filter)
-            .expression_attribute_values(":value".to_string(), value_av)
-            .select(Select::AllProjectedAttributes);
+        /* 
+        match user.email() {
+            None => {}
+            Some(email) => {
+                let res = self
+                    .get_by_filter(EMAIL_FIELD_NAME, email, USERS_TABLE_INDEX_EMAIL)
+                    .await?;
 
-        match request.send().await {
-            Ok(x) => {
-                if x.count() == 0 {
-                    return Ok(None);
+                if res.len() > 0 {
+                    return Err(UserAlreadyExistsError("email already exists".to_string()).into());
                 }
-                let docs = x.items.unwrap();
-                let aux = docs
-                    .iter()
-                    .map(|doc| doc.get(USERID_FIELD_NAME_PK).unwrap().as_s().unwrap())
-                    .map(|doc| doc.to_string())
-                    .collect();
-                return Ok(Some(aux));
-            }
-            Err(e) => {
-                tracing::error!("Failed to execute query for searching duplicates: {:?}", e);
-                return Err(DynamoDBError(e.to_string()).into());
             }
         }
-    } */
 
-    async fn add_user(&self, user: &mut User, password: &String) -> ResultE<String> {
-        //replace this method by the last one: get_by_filter
-        let mut res = self
-            .get_by_filter(EMAIL_FIELD_NAME, user.email(), USERS_TABLE_INDEX_EMAIL)
-            .await?;
+        match user.device() {
+            None => {}
+            Some(device) => {
+                let res = self
+                    .get_by_filter(DEVICE_FIELD_NAME, device, USERS_TABLE_INDEX_DEVICE)
+                    .await?;
+                if res.len() > 0 {
+                    return Err(UserAlreadyExistsError("device already exists".to_string()).into());
+                }
+            }
+        }
 
-        if res.len() > 0 {
-            return Err(UserAlreadyExistsError("email already exists".to_string()).into());
-        }
-        res = self
-            .get_by_filter(DEVICE_FIELD_NAME, user.device(), USERS_TABLE_INDEX_DEVICE)
-            .await?;
-        if res.len() > 0 {
-            return Err(UserAlreadyExistsError("device already exists".to_string()).into());
-        }
-        res = self
-            .get_by_filter(
-                WALLETADDRESS_FIELD_NAME,
-                user.wallet_address(),
-                USERS_TABLE_INDEX_WALLETADDRESS,
-            )
-            .await?;
-        if res.len() > 0 {
-            return Err(UserAlreadyExistsError("wallet address already exists".to_string()).into());
-        }
+        match user.wallet_address() {
+            None => {}
+            Some(wallet_address) => {
+                let res = self
+                    .get_by_filter(
+                        WALLETADDRESS_FIELD_NAME,
+                        wallet_address,
+                        USERS_TABLE_INDEX_WALLETADDRESS,
+                    )
+                    .await?;
+                if res.len() > 0 {
+                    return Err(UserAlreadyExistsError(
+                        "wallet address already exists".to_string(),
+                    )
+                    .into());
+                }
+            }
+        }*/
+
+        self.checks(user).await?;
 
         let user_id_av = AttributeValue::S(user.user_id().clone());
-        let device_av = AttributeValue::S(user.device().clone());
+        let device_av = AttributeValue::S(user.device().clone().unwrap_or_default());
         let creation_time_av = AttributeValue::S(iso8601(user.creation_time()));
         let update_time_av = AttributeValue::S(iso8601(user.creation_time()));
-        let email_av = AttributeValue::S(user.email().clone());
-        let password_av =
-            AttributeValue::S(cypher_text(password, &self.environment_vars.hmac_secret)?);
+        let email_av = AttributeValue::S(user.email().clone().unwrap_or_default());
+        let mut password_av: AttributeValue;
 
-        let wallet_address_av = AttributeValue::S(user.wallet_address().clone());
+        match password {
+            None => {
+                password_av = AttributeValue::S("NULL".to_string());
+            }
+            Some(pass) => {
+                password_av =
+                    AttributeValue::S(cypher_text(pass, &self.environment_vars.hmac_secret)?);
+            }
+        }
+
+        let wallet_address_av = AttributeValue::S(user.wallet_address().clone().unwrap_or_default());
         let roles_av = AttributeValue::Ss(UserRoles::to_vec_str(user.roles()).clone());
 
         let request = self
@@ -242,7 +275,6 @@ impl UserRepository for UsersRepo {
         }
     }
 
-
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<User>> {
         let mut usersqueried = Vec::new();
         // result.push(User::new());
@@ -262,15 +294,14 @@ impl UserRepository for UsersRepo {
                 .table_name(USERS_TABLE_NAME)
                 //.into_paginator()
                 .limit(page_size as i32)
-                
                 .set_exclusive_start_key(exclusive_start_key)
                 //.key_condition_expression(filter)
                 //.expression_attribute_values(":value".to_string(), user_id_av)
                 .select(Select::AllAttributes);
-                //.items();
-                //.send()
-                //.collect()
-                //.await;
+            //.items();
+            //.send()
+            //.collect()
+            //.await;
 
             let results = request.send().await;
             //let results: Result<Vec<_>, _> = request.send().collect().await;
@@ -414,6 +445,9 @@ impl UserRepository for UsersRepo {
     }
 
     async fn update_user(&self, id: &String, user: &User) -> ResultE<bool> {
+  
+        self.checks(user).await?;
+        /* 
         let mut res = self
             .get_by_filter(EMAIL_FIELD_NAME, user.email(), USERS_TABLE_INDEX_EMAIL)
             //.check_if_key_exists(EMAIL_FIELD_NAME, user.email())
@@ -440,14 +474,17 @@ impl UserRepository for UsersRepo {
             return Err(
                 UserMismatchError("wallet address is already already in use".to_string()).into(),
             );
-        }
+        }*/
 
+        let last_update_time_av = AttributeValue::S(iso8601(&Utc::now()));
         let id_av = AttributeValue::S(id.clone());
 
-        let device_av = AttributeValue::S(user.device().clone());
-        let last_update_time_av = AttributeValue::S(iso8601(&Utc::now()));
-        let email_av = AttributeValue::S(user.email().clone());
-        let wallet_address_av = AttributeValue::S(user.wallet_address().clone());
+        let dvc = user.device().clone().unwrap_or_default();
+        let device_av= AttributeValue::S( dvc ); 
+
+        let email_av :AttributeValue = AttributeValue::S( user.email().clone().unwrap_or_default() );
+
+        let  wallet_address_av: AttributeValue = AttributeValue::S(user.wallet_address().clone().unwrap_or_default());
         let roles_av = AttributeValue::Ss(UserRoles::to_vec_str(user.roles()).clone());
 
         //format!("set {0} = :device ",DEVICE_FIELD_NAME, )
@@ -472,6 +509,42 @@ impl UserRepository for UsersRepo {
 
         match request.send().await {
             Ok(_) => Ok(true),
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(DynamoDBError(e.to_string()).into());
+            }
+        }
+    }
+
+    async fn update_password(&self, id: &String, password: &String) -> ResultE<()> {
+       
+        let aux = &self.environment_vars.hmac_secret;
+        let password_av = AttributeValue::S(cypher_text(password,aux)?);
+        
+
+        let last_update_time_av = AttributeValue::S(iso8601(&Utc::now()));
+        let id_av = AttributeValue::S(id.clone());
+
+        let mut update_express = "set ".to_string();
+        update_express.push_str(format!("{0} = :value ", PASSWORD_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :lastup ", LASTUPDATETIME_FIELD_NAME).as_str());
+
+        let request = self
+            .client
+            .update_item()
+            .table_name(USERS_TABLE_NAME)
+            .key(USERID_FIELD_NAME_PK, id_av)
+            .update_expression(update_express)
+            .expression_attribute_values(":value", password_av)
+            .expression_attribute_values(":lastup", last_update_time_av);
+
+        match request.send().await {
+            Ok(_) => Ok(()),
             Err(e) => {
                 let mssag = format!(
                     "Error at [{}] - {} ",
@@ -523,25 +596,23 @@ fn cypher_text(text: &String, key: &String) -> ResultE<String> {
 
     hmac.input(text.as_bytes());
 
-    let res = hmac.result().code().to_hex();// .to_owned();
+    let res = hmac.result().code().to_hex(); // .to_owned();
     return Ok(res);
-/* 
-    let cypher_password_ops = String::from_utf8(res); //. unwrap();
-    match cypher_password_ops  {
-        Err(e) => { eprintln!("{}",e.to_string());  return Err(e.into());},
-        Ok(cypher_password) => Ok(cypher_password)
-        
-    }
-*/
-    //return Ok(cypher_password);
- /*   match cypher_password_ops {
-        Err(x) =>{
+    /*
+        let cypher_password_ops = String::from_utf8(res); //. unwrap();
+        match cypher_password_ops  {
+            Err(e) => { eprintln!("{}",e.to_string());  return Err(e.into());},
+            Ok(cypher_password) => Ok(cypher_password)
 
-        },
-        Ok(cypher_password) => { return cypher_password}*/
-        
+        }
+    */
+    //return Ok(cypher_password);
+    /*   match cypher_password_ops {
+    Err(x) =>{
+
+    },
+    Ok(cypher_password) => { return cypher_password}*/
+
     //}
     //.unwrap(); // result.into_bytes();
-
-    
 }
