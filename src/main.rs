@@ -7,8 +7,7 @@ use actix_web::middleware::Logger;
 use actix_web::web;
 use actix_web::{http::header, App, HttpServer};
 use handlers::appstate::AppState;
-use handlers::users_hd::{self};
-use handlers::{auth_middleware, login_hd, jwt_middleware, user_my_hd};
+use handlers::{auth_middleware, jwt_middleware, login_hd, users_hd, user_my_hd};
 use tracing_actix_web::TracingLogger;
 
 mod config;
@@ -56,20 +55,21 @@ async fn main() -> std::io::Result<()> {
 }
 
 fn routes(app: &mut web::ServiceConfig) {
-    app.service(
+    app
+    .service(   
         web::scope("/api")
             .wrap(jwt_middleware::Jwt)
-            .route("/users", web::get().to(user_my_hd::get_my_user))
-            .route("/users", web::put().to(user_my_hd::update_my_user))
+            .route("/user", web::get().to(user_my_hd::get_my_user)) 
+            .route("/user", web::put().to(user_my_hd::update_my_user))
             .route(
-                "/users/password_update",
-                web::post().to(user_my_hd::password_update_my_user), //.and(with_auth(UserRoles::Admin)),
+                "/user/password_update",
+                web::put().to(user_my_hd::password_update_my_user), //.and(with_auth(UserRoles::Admin)),
             ),
     )
-    .service(
+     .service(
         web::scope("/admin")
             .wrap(auth_middleware::Auth)
-            //.route("/users", web::get().to(users_hd::get_users))
+            .route("/users", web::get().to(users_hd::get_users))
             .route("/users/{id}", web::get().to(users_hd::get_user_by_id))
             .route("/users/{id}", web::put().to(users_hd::update_user))
             .route(
@@ -79,7 +79,7 @@ fn routes(app: &mut web::ServiceConfig) {
             .route(
                 "/users/password_update/{id}",
                 web::post().to(users_hd::password_update_user), //.and(with_auth(UserRoles::Admin)),
-            )
+            ),
     )
     .service(
         web::scope("/auth")

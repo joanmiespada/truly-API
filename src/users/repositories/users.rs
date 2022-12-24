@@ -132,7 +132,7 @@ impl UsersRepo {
                     .get_by_filter(EMAIL_FIELD_NAME, email, USERS_TABLE_INDEX_EMAIL)
                     .await?;
                 if res.into_iter().filter(|x| *x != *user.user_id()   ).count() > 0 {
-                    return Err(UserMismatchError("email is already in use".to_string()).into());
+                    return Err(UserAlreadyExistsError("email is already in use".to_string()).into());
                 }
             }
         }

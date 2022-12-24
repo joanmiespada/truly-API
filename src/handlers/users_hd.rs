@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::users::{
     models::user::{User},
-    services::users::{UserManipulation }, errors::users::{DynamoDBError, UserAlreadyExistsError, UserNoExistsError},
+    services::users::{UserManipulation }, errors::users::{DynamoDBError, UserAlreadyExistsError, UserNoExistsError, UserMismatchError },
 };
 
 use super::appstate::AppState;
@@ -102,8 +102,10 @@ pub async fn add_user(state: web::Data<AppState>, payload: web::Json<NewUser>) -
         Err(e) => {
             if let Some(_) = e.downcast_ref::<DynamoDBError>() {
                 HttpResponse::ServiceUnavailable().finish()    
-            } else if  let Some(_) = e.downcast_ref::<UserAlreadyExistsError>() {
-                HttpResponse::BadRequest().finish()
+            } else if  let Some(err) = e.downcast_ref::<UserAlreadyExistsError>() {
+                HttpResponse::BadRequest().body(err.to_string())
+            } else if  let Some(err) = e.downcast_ref::<UserMismatchError>() {
+                HttpResponse::BadRequest().body( err.to_string())
             } else {
                 HttpResponse::InternalServerError().finish()    
             }

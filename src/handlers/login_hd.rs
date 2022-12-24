@@ -70,7 +70,7 @@ pub struct Claims {
 
 fn create_jwt(uid: &str, roles: &Vec<UserRoles>, conf: &config::Config) -> Result<String, actix_web::Error> {
     let expiration = Utc::now()
-        .checked_add_signed(chrono::Duration::hours(2))
+        .checked_add_signed(chrono::Duration::hours(24))
         .expect("valid timestamp")
         .timestamp();
 

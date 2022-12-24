@@ -6,27 +6,26 @@
 	},
 	"item": [
 		{
-			"name": "Users",
+			"name": "admin",
 			"item": [
 				{
-					"name": "Users",
+					"name": "All Users",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/users?pageNumber=2&pageSize=15",
-							"protocol": "http",
+							"raw": "{{base_uri}}/admin/users?pageNumber=0&pageSize=15",
 							"host": [
-								"localhost"
+								"{{base_uri}}"
 							],
-							"port": "8080",
 							"path": [
+								"admin",
 								"users"
 							],
 							"query": [
 								{
 									"key": "pageNumber",
-									"value": "2"
+									"value": "0"
 								},
 								{
 									"key": "pageSize",
@@ -38,67 +37,176 @@
 					"response": []
 				},
 				{
-					"name": "UserById",
+					"name": "User By Id",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/users?pageNumber=2&pageSize=15",
-							"protocol": "http",
+							"raw": "{{base_uri}}/admin/users/39f3977a-88ef-4cab-8e25-a280f835e778",
 							"host": [
-								"localhost"
+								"{{base_uri}}"
 							],
-							"port": "8080",
 							"path": [
-								"users"
-							],
-							"query": [
-								{
-									"key": "pageNumber",
-									"value": "2"
-								},
-								{
-									"key": "pageSize",
-									"value": "15"
-								}
+								"admin",
+								"users",
+								"39f3977a-88ef-4cab-8e25-a280f835e778"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Users",
+					"name": "User Update by Id",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_uri}}/admin/users/39f3977a-88ef-4cab-8e25-a280f835e778",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"admin",
+								"users",
+								"39f3977a-88ef-4cab-8e25-a280f835e778"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Promote User by Id",
 					"request": {
 						"method": "POST",
 						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"wallet_address\":\"0x0d00303030430d0dkdkkd\",\n    \"email\":\"foo@foo.com\",\n    \"device\": \"dysdius-sdjdjsd-sdferf-werw23422\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
 						"url": {
-							"raw": "http://localhost:8080/users",
-							"protocol": "http",
+							"raw": "{{base_uri}}/admin/users/39f3977a-88ef-4cab-8e25-a280f835e778",
 							"host": [
-								"localhost"
+								"{{base_uri}}"
 							],
-							"port": "8080",
 							"path": [
-								"users"
+								"admin",
+								"users",
+								"39f3977a-88ef-4cab-8e25-a280f835e778"
 							]
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Update passwd User by Id",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_uri}}/admin/users/password_update/39f3977a-88ef-4cab-8e25-a280f835e778",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"admin",
+								"users",
+								"password_update",
+								"39f3977a-88ef-4cab-8e25-a280f835e778"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{admin_token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
 				}
 			]
 		},
 		{
 			"name": "Auth",
 			"item": [
+				{
+					"name": "Signup",
+					"item": [
+						{
+							"name": "User only token",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"device\": \"1dysdius-sdjdjsd-qwerqwerqwer-werw23422\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_uri}}/auth/signup",
+									"host": [
+										"{{base_uri}}"
+									],
+									"path": [
+										"auth",
+										"signup"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "User Full",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"wallet_address\": \"0x10d00303030430d0dkdkkd\",\n    \"email\": \"foo1@foo.com\",\n    \"password\":\"123456789aA\",\n    \"device\": \"1dysdius-sdjdjsd-sdferf-werw23422\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_uri}}/auth/signup",
+									"host": [
+										"{{base_uri}}"
+									],
+									"path": [
+										"auth",
+										"signup"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
 				{
 					"name": "login by device",
 					"request": {
@@ -153,6 +261,121 @@
 					},
 					"response": []
 				}
+			],
+			"auth": {
+				"type": "noauth"
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "api",
+			"item": [
+				{
+					"name": "User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_uri}}/api/user/",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"api",
+								"user",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "User update fields",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_uri}}/api/user/",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"api",
+								"user",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "User update passw",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_uri}}/api/user/",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"api",
+								"user",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{non_admin_token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
 			]
 		}
 	],
@@ -180,27 +403,38 @@
 		{
 			"key": "base_uri",
 			"value": "http://localhost:8080",
-			"type": "default"
+			"type": "default",
+			"disabled": true
 		},
 		{
 			"key": "test_email",
 			"value": "admin@admin.com",
-			"type": "default"
+			"type": "default",
+			"disabled": true
 		},
 		{
 			"key": "test_password",
 			"value": "123456789aA",
-			"type": "default"
+			"type": "default",
+			"disabled": true
 		},
 		{
 			"key": "test_device",
 			"value": "device-12341234-12341234-12341234-1234",
-			"type": "default"
+			"type": "default",
+			"disabled": true
 		},
 		{
 			"key": "admin_token",
-			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMjM0LTEyMzQtMTIzNC0xMjM0LTEyMzQtMTIzNCIsInJvbGUiOiJBZG1pbixCYXNpYywiLCJleHAiOjE2NzE2MzM0NTZ9.9Dxv4snMVdbZSXayeXvMRFE8ne68IEkuiPLVj1VG0pX3-B07i4PGdYRNe4byHGdbkm2oa9PlnKXFkMqgbjZNwA",
-			"type": "default"
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMjM0LTEyMzQtMTIzNC0xMjM0LTEyMzQtMTIzNCIsInJvbGVzIjpbIkFkbWluIiwiQmFzaWMiXSwiZXhwIjoxNjcxNzQ2NDYyfQ.em_7oqTVj7tCyc3gHATi4gf02O2ABwmNzU90reJFn7bLqUmRHJlY5g3llaQJCj_v27yhJdQKHPlaFTsTcT8uUw",
+			"type": "default",
+			"disabled": true
+		},
+		{
+			"key": "non_admin_token",
+			"value": "--",
+			"type": "default",
+			"disabled": true
 		}
 	]
 }
