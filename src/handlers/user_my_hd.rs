@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use actix_web::{web, Responder, HttpResponse, HttpRequest, http::header::TryIntoHeaderValue };
+use actix_web::{web, Responder, HttpResponse, HttpRequest, http::header::TryIntoHeaderValue, dev::Payload };
 use serde::{Deserialize, Serialize};
 
 use crate::users::{
@@ -11,20 +11,26 @@ use crate::users::{
 use super::{appstate::AppState, jwt_middleware::UID_HEAD_KEY};
 
 #[derive(Serialize,Deserialize)]
-pub struct UpdateUser {
-    pub wallet_address: String, 
-    pub device: String,
-    pub email: String
+pub struct UpdateMyUser {
+    pub wallet_address: Option<String>, 
+    pub device: Option<String>,
+    pub email: Option<String>
 }
-pub async fn update_my_user(req: HttpRequest,state: web::Data<AppState>, payload: web::Json<UpdateUser>, path: web::Path<String>) -> impl Responder {
+pub async fn update_my_user(req: HttpRequest,state: web::Data<AppState>, payload: web::Json<UpdateMyUser> ) -> impl Responder {
     let user_service = &state.user_service;
 
     let id = get_user_id(&req);
 
     let mut temp_user = User::new();
-    temp_user.set_email(&payload.email);
-    temp_user.set_wallet_address(&payload.wallet_address);
-    temp_user.set_device(&payload.device);
+    if let Some(email) = &payload.email {
+        temp_user.set_email(email);
+    }
+    if let Some(wallet) = &payload.wallet_address {
+        temp_user.set_wallet_address(wallet);
+    }
+    if let Some(devc) = &payload.device {
+        temp_user.set_device(devc);
+    }
 
     let op_res = user_service.update_user(&id, &temp_user).await;
     match op_res {
@@ -68,7 +74,7 @@ pub async fn get_my_user(req: HttpRequest,state: web::Data<AppState>) -> impl Re
 pub struct UpdatePasswordUser {
     pub password: String, 
 }
-pub async fn password_update_my_user( req: HttpRequest, state: web::Data<AppState>, payload: web::Json<UpdatePasswordUser>, path: web::Path<String>) -> impl Responder {
+pub async fn password_update_my_user( req: HttpRequest, state: web::Data<AppState>, payload: web::Json<UpdatePasswordUser> ) -> impl Responder {
     let user_service = &state.user_service;
 
     let id = get_user_id(&req);

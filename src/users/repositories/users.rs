@@ -32,7 +32,7 @@ static WALLETADDRESS_FIELD_NAME: &str = "walletAddress";
 static USERID_FIELD_NAME_PK: &str = "userID";
 static CREATIONTIME_FIELD_NAME: &str = "creationTime";
 static LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
-static ROLES_FIELD_NAME: &str = "roles";
+static ROLES_FIELD_NAME: &str = "userRoles";
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -123,27 +123,28 @@ impl UsersRepo {
         Ok(usersqueried)
     }
 
-    async fn checks(&self,user: &User ) -> ResultE<bool>{
-        
+    async fn checks(&self, user: &User) -> ResultE<bool> {
         match user.email() {
-            None => {},
+            None => {}
             Some(email) => {
                 let res = self
                     .get_by_filter(EMAIL_FIELD_NAME, email, USERS_TABLE_INDEX_EMAIL)
                     .await?;
-                if res.into_iter().filter(|x| *x != *user.user_id()   ).count() > 0 {
-                    return Err(UserAlreadyExistsError("email is already in use".to_string()).into());
+                if res.into_iter().filter(|x| *x != *user.user_id()).count() > 0 {
+                    return Err(
+                        UserAlreadyExistsError("email is already in use".to_string()).into(),
+                    );
                 }
             }
         }
 
         match user.device() {
-            None => {},
+            None => {}
             Some(device) => {
                 let res = self
                     .get_by_filter(DEVICE_FIELD_NAME, device, USERS_TABLE_INDEX_DEVICE)
                     .await?;
-                if res.into_iter().filter(|x| *x != *user.user_id()   ).count() > 0 {
+                if res.into_iter().filter(|x| *x != *user.user_id()).count() > 0 {
                     return Err(UserAlreadyExistsError("device already exists".to_string()).into());
                 }
             }
@@ -159,7 +160,7 @@ impl UsersRepo {
                         USERS_TABLE_INDEX_WALLETADDRESS,
                     )
                     .await?;
-                if res.into_iter().filter(|x| *x != *user.user_id()  ).count() > 0 {
+                if res.into_iter().filter(|x| *x != *user.user_id()).count() > 0 {
                     return Err(UserAlreadyExistsError(
                         "wallet address already exists".to_string(),
                     )
@@ -169,17 +170,45 @@ impl UsersRepo {
         }
 
         return Ok(true);
-
     }
 
+    async fn get_by_id(&self, id: &String) -> ResultE<HashMap<String, AttributeValue>> {
+        let user_id_av = AttributeValue::S(id.clone());
+
+        let request = self
+            .client
+            .get_item()
+            .table_name(USERS_TABLE_NAME)
+            .key(USERID_FIELD_NAME_PK, user_id_av);
+
+        let results = request.send().await;
+        match results {
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(DynamoDBError(e.to_string()).into());
+            }
+            Ok(_) => {}
+        }
+        match results.unwrap().item {
+            None => Err(UserNoExistsError("id doesn't exist".to_string()).into()),
+            Some(aux) => {
+                //let mut user = User::new();
+                //mapping_from_doc_to_user(&aux, &mut user);
+                Ok(aux)
+            }
+        }
+    }
 }
 
 #[async_trait]
 impl UserRepository for UsersRepo {
-
     async fn add_user(&self, user: &mut User, password: &Option<String>) -> ResultE<String> {
-
-        /* 
+        /*
         match user.email() {
             None => {}
             Some(email) => {
@@ -243,7 +272,8 @@ impl UserRepository for UsersRepo {
             }
         }
 
-        let wallet_address_av = AttributeValue::S(user.wallet_address().clone().unwrap_or_default());
+        let wallet_address_av =
+            AttributeValue::S(user.wallet_address().clone().unwrap_or_default());
         let roles_av = AttributeValue::Ss(UserRoles::to_vec_str(user.roles()).clone());
 
         let request = self
@@ -348,6 +378,13 @@ impl UserRepository for UsersRepo {
     }
 
     async fn get_by_user_id(&self, id: &String) -> ResultE<User> {
+        let res = self.get_by_id(id).await?;
+        let mut user = User::new();
+        mapping_from_doc_to_user(&res, &mut user);
+        Ok(user)
+    }
+
+    /*
         let user_id_av = AttributeValue::S(id.clone());
 
         let request = self
@@ -378,6 +415,7 @@ impl UserRepository for UsersRepo {
             }
         }
     }
+    */
 
     async fn get_by_user_device(&self, device: &String) -> ResultE<User> {
         let res = self
@@ -408,7 +446,7 @@ impl UserRepository for UsersRepo {
             .table_name(USERS_TABLE_NAME)
             .index_name(USERS_TABLE_INDEX_EMAIL)
             .key_condition_expression(filter)
-            .expression_attribute_values(email.to_string(), email_av)
+            .expression_attribute_values(":value".to_string(), email_av)
             .select(Select::AllProjectedAttributes);
 
         let results = request.send().await;
@@ -431,12 +469,14 @@ impl UserRepository for UsersRepo {
                 let _user_id = doc.get(USERID_FIELD_NAME_PK).unwrap();
                 let user_id = _user_id.as_s().unwrap();
 
-                let user = self.get_by_user_id(&user_id).await?;
+                let user = self.get_by_id(&user_id).await?;
 
-                let password_stored_hashed = doc.get(PASSWORD_FIELD_NAME).unwrap().as_s().unwrap();
+                let password_stored_hashed = user.get(PASSWORD_FIELD_NAME).unwrap().as_s().unwrap();
                 let password_coming = cypher_text(&password, &self.environment_vars.hmac_secret)?;
                 if *password_stored_hashed == password_coming {
-                    Ok(user)
+                    let mut usr = User::new();
+                    mapping_from_doc_to_user(&user, &mut usr);
+                    Ok(usr)
                 } else {
                     Err(UserNoExistsError("no email or password found".to_string()).into())
                 }
@@ -445,9 +485,8 @@ impl UserRepository for UsersRepo {
     }
 
     async fn update_user(&self, id: &String, user: &User) -> ResultE<bool> {
-  
         self.checks(user).await?;
-        /* 
+        /*
         let mut res = self
             .get_by_filter(EMAIL_FIELD_NAME, user.email(), USERS_TABLE_INDEX_EMAIL)
             //.check_if_key_exists(EMAIL_FIELD_NAME, user.email())
@@ -480,20 +519,21 @@ impl UserRepository for UsersRepo {
         let id_av = AttributeValue::S(id.clone());
 
         let dvc = user.device().clone().unwrap_or_default();
-        let device_av= AttributeValue::S( dvc ); 
+        let device_av = AttributeValue::S(dvc);
 
-        let email_av :AttributeValue = AttributeValue::S( user.email().clone().unwrap_or_default() );
+        let email_av: AttributeValue = AttributeValue::S(user.email().clone().unwrap_or_default());
 
-        let  wallet_address_av: AttributeValue = AttributeValue::S(user.wallet_address().clone().unwrap_or_default());
+        let wallet_address_av: AttributeValue =
+            AttributeValue::S(user.wallet_address().clone().unwrap_or_default());
         let roles_av = AttributeValue::Ss(UserRoles::to_vec_str(user.roles()).clone());
 
         //format!("set {0} = :device ",DEVICE_FIELD_NAME, )
         let mut update_express = "set ".to_string();
-        update_express.push_str(format!("{0} = :device ", DEVICE_FIELD_NAME).as_str());
-        update_express.push_str(format!("{0} = :email ", EMAIL_FIELD_NAME).as_str());
-        update_express.push_str(format!("{0} = :wa ", WALLETADDRESS_FIELD_NAME).as_str());
-        update_express.push_str(format!("{0} = :lastup ", LASTUPDATETIME_FIELD_NAME).as_str());
-        update_express.push_str(format!("{0} = :roles ", ROLES_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :device, ", DEVICE_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :email, ", EMAIL_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :wa, ", WALLETADDRESS_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :lastup, ", LASTUPDATETIME_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :r_les ", ROLES_FIELD_NAME).as_str());
 
         let request = self
             .client
@@ -505,7 +545,7 @@ impl UserRepository for UsersRepo {
             .expression_attribute_values(":email", email_av)
             .expression_attribute_values(":wa", wallet_address_av)
             .expression_attribute_values(":lastup", last_update_time_av)
-            .expression_attribute_values(":roles", roles_av);
+            .expression_attribute_values(":r_les", roles_av);
 
         match request.send().await {
             Ok(_) => Ok(true),
@@ -522,16 +562,14 @@ impl UserRepository for UsersRepo {
     }
 
     async fn update_password(&self, id: &String, password: &String) -> ResultE<()> {
-       
         let aux = &self.environment_vars.hmac_secret;
-        let password_av = AttributeValue::S(cypher_text(password,aux)?);
-        
+        let password_av = AttributeValue::S(cypher_text(password, aux)?);
 
         let last_update_time_av = AttributeValue::S(iso8601(&Utc::now()));
         let id_av = AttributeValue::S(id.clone());
 
         let mut update_express = "set ".to_string();
-        update_express.push_str(format!("{0} = :value ", PASSWORD_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :value, ", PASSWORD_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :lastup ", LASTUPDATETIME_FIELD_NAME).as_str());
 
         let request = self
