@@ -19,8 +19,8 @@ const config = {
     },
     production: {
         blockchainURL: '',
-        dbURL: '', //not needed in prod
-        dbRegion: 'eu-west-1',
+        dbURL: 'https://dynamodb.eu-central-1.amazonaws.com',
+        dbRegion: 'eu-central-1',
         networkID: 1
     }
 };
