@@ -44,8 +44,8 @@ pub async fn login(
         Err(e) => {
             if let Some(_) = e.downcast_ref::<DynamoDBError>() {
                 HttpResponse::ServiceUnavailable().finish()
-            } else if let Some(_) = e.downcast_ref::<UserNoExistsError>() {
-                HttpResponse::NotAcceptable().finish()
+            } else if let Some(e) = e.downcast_ref::<UserNoExistsError>() {
+                HttpResponse::NotAcceptable().body(e.to_string())
             } else {
                 HttpResponse::InternalServerError().finish()
             }

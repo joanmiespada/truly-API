@@ -45,9 +45,10 @@ jsonwebtoken = "8.2.0"
 tracing-actix-web = "0.6.2"
 actix-cors = "0.6.4"
 futures-util = "0.3.25"
-rust-crypto = "0.2.36"
 rustc-serialize = "0.3.24"
 derive_more = "0.99.17"
+rand = "0.8.5"
+rust-argon2 = "1.0.0"
 
 [dependencies.uuid]
 version = "1.2.2"

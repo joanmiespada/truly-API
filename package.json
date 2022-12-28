@@ -4,7 +4,9 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "local": "NODE_ENV=development node --inspect scripts/tableCreations.js"
+    "createTables": "NODE_ENV=development node --inspect ./scripts/tableCreations.js --create",
+    "deleteTables": "NODE_ENV=development node --inspect ./scripts/tableCreations.js --delete", 
+    "createAdminUser": "NODE_ENV=development node --inspect scripts/admin_user.js"
   },
   "author": "",
   "license": "ISC",

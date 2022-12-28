@@ -1,13 +1,3 @@
-/*const config = require('./configuration')();
-
-var AWS = require('aws-sdk');
-
-let dynamodb;
-if (process.env.NODE_ENV === "development")
-    dynamodb = new AWS.DynamoDB({ endpoint: new AWS.Endpoint(config.dbURL), region: config.dbRegion });
-else
-    dynamodb = new AWS.DynamoDB();
-*/
 
 import { Command } from 'commander';
 const program = new Command();

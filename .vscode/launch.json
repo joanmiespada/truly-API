@@ -53,6 +53,19 @@
                 "NODE_ENV": "development"
             },
             "args": ["--create"]
-        }
+        },
+        {
+            "name": "debug user admin creation",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceRoot}/scripts/admin_user.js",
+            "env":{
+                "NODE_ENV": "development"
+            },
+            "cwd": "${workspaceRoot}",
+            "outFiles": [
+                "${workspaceRoot}/test/**/*"
+            ],
+          },
     ]
 }

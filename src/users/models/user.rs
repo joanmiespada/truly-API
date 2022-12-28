@@ -1,22 +1,22 @@
-use std::fmt;
-use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::fmt;
+use uuid::Uuid;
 
 pub trait Userer {
     fn check_login(&self) -> bool;
     fn promote_to_admin(&mut self);
+    fn downgrade_from_admin(&mut self);
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub enum UserRoles  {
+#[derive(Clone, Copy, Serialize, Deserialize, Debug)]
+pub enum UserRoles {
     Basic,
     Admin,
 }
 
-impl UserRoles{
-    pub fn is_admin(&self) -> bool
-    {
+impl UserRoles {
+    pub fn is_admin(&self) -> bool {
         match *self {
             UserRoles::Admin => true,
             _ => false,
@@ -24,15 +24,14 @@ impl UserRoles{
     }
 
     pub fn to_vec_str(input: &Vec<UserRoles>) -> Vec<String> {
-
         let aux: Vec<String> = input.into_iter().map(|i| i.to_string()).collect();
 
         return aux;
     }
     pub fn from_vec_str(input: &Vec<String>) -> Vec<UserRoles> {
-
-        let aux: Vec<UserRoles> = input.into_iter()
-            .map(|i| UserRoles::deserialize(i) )
+        let aux: Vec<UserRoles> = input
+            .into_iter()
+            .map(|i| UserRoles::deserialize(i))
             .filter(|f| !f.is_none())
             .map(|t| t.unwrap())
             .collect();
@@ -42,7 +41,7 @@ impl UserRoles{
         match input {
             "Basic" => return Some(UserRoles::Basic),
             "Admin" => return Some(UserRoles::Admin),
-            _ => return None
+            _ => return None,
         }
     }
 }
@@ -56,6 +55,11 @@ impl fmt::Display for UserRoles {
     }
 }
 
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub enum UserStatus {
+    Enabled,
+    Disabled,
+}
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct User {
@@ -63,21 +67,23 @@ pub struct User {
     creation_time: DateTime<Utc>,
     wallet_address: Option<String>,
     email: Option<String>,
-    //password: String, // don't use it here! 
+    //password: String, // don't use it here!
     device: Option<String>,
-    roles: Vec<UserRoles>
+    roles: Vec<UserRoles>,
+    status: UserStatus,
 }
 
 impl User {
     pub fn new() -> User {
         User {
-            user_id:  Uuid::nil().to_string(),
+            user_id: Uuid::nil().to_string(),
             creation_time: Utc::now(),
             wallet_address: None,
             email: None,
             device: None,
             roles: Vec::new(),
             //password: String::new(),
+            status: UserStatus::Enabled,
         }
     }
 
@@ -85,24 +91,24 @@ impl User {
         &self.user_id
     }
     pub fn set_user_id(&mut self, val: &String) {
-        self.user_id = val.clone() 
+        self.user_id = val.clone()
     }
     pub fn creation_time(&self) -> &DateTime<Utc> {
         &self.creation_time
     }
-    pub fn set_creation_time(&mut self, val: &DateTime<Utc> ) {
-        self.creation_time = val.clone() 
+    pub fn set_creation_time(&mut self, val: &DateTime<Utc>) {
+        self.creation_time = val.clone()
     }
     pub fn wallet_address(&self) -> &Option<String> {
         &self.wallet_address
     }
-    pub fn set_wallet_address(&mut self, val: &String ) {
+    pub fn set_wallet_address(&mut self, val: &String) {
         self.wallet_address = Some(val.clone())
     }
     pub fn email(&self) -> &Option<String> {
         &self.email
     }
-    pub fn set_email(&mut self, val: &String ) {
+    pub fn set_email(&mut self, val: &String) {
         self.email = Some(val.clone())
     }
     pub fn device(&self) -> &Option<String> {
@@ -125,21 +131,25 @@ impl User {
         self.roles.push(val.clone());
     }
     pub fn is_admin(&self) -> bool {
-
-        let i =self.roles.iter().filter(|r| r.is_admin()).count();
-        match i{
+        let i = self.roles.iter().filter(|r| r.is_admin()).count();
+        match i {
             0 => return false,
-            _ => true
+            _ => true,
         }
     }
-    /* 
+    /*
     pub fn password (&self) -> &String {
         &self.password
     }
     pub fn set_password(&mut self, val: &String ) {
         self.password = val.clone()
     }*/
-
+    pub fn status(&self) -> &UserStatus {
+        &self.status
+    }
+    pub fn set_status(&mut self, val: &UserStatus) {
+        self.status = val.clone()
+    }
 }
 
 impl Userer for User {
@@ -151,6 +161,30 @@ impl Userer for User {
             self.roles.push(UserRoles::Admin);
         }
     }
+    fn downgrade_from_admin(&mut self) {
+        if self.is_admin() {
+            let aux = self.roles.clone();
+            let rolesWithoutAdmin: Vec<UserRoles> =
+                aux.into_iter().filter(|x| !x.is_admin()).collect(); // .push(UserRoles::Admin);
+            self.roles = rolesWithoutAdmin.clone();
+        }
+    }
 }
 
+impl UserStatus {
+    pub fn parse(input: &str) -> UserStatus {
+        match input {
+            "Enabled" => return UserStatus::Enabled,
+            _ => return UserStatus::Disabled,
+        }
+    }
+}
 
+impl fmt::Display for UserStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            UserStatus::Enabled => write!(f, "Enabled"),
+            UserStatus::Disabled => write!(f, "Disabled"),
+        }
+    }
+}

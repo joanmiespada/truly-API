@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::users::{
     models::user::{User},
-    services::users::{UserManipulation }, errors::users::{DynamoDBError, UserAlreadyExistsError, UserNoExistsError, UserMismatchError },
+    services::users::{UserManipulation, promote_user }, errors::users::{DynamoDBError, UserAlreadyExistsError, UserNoExistsError, UserMismatchError },
 };
 
 use super::appstate::AppState;
@@ -211,7 +211,29 @@ pub async fn promote_user(state: web::Data<AppState>, path: web::Path<String>) -
 
     let id = path.into_inner();
 
-    let op_res = user_service.promote_user_to_admin(&id).await;
+    let op_res = user_service.promote_user_to(&id, &promote_user::upgrade ).await;
+    match op_res {
+        Err(e) => {
+            if let Some(_) = e.downcast_ref::<DynamoDBError>() {
+                HttpResponse::ServiceUnavailable().finish()    
+            } else if  let Some(_) = e.downcast_ref::<UserNoExistsError>() {
+                HttpResponse::BadRequest().finish()
+            } else {
+                HttpResponse::InternalServerError().finish()    
+            }
+        },
+        Ok(iid) => { 
+            HttpResponse::Ok().body(iid.to_string())
+        }
+    }
+}
+
+pub async fn downgrade_user(state: web::Data<AppState>, path: web::Path<String>) -> impl Responder {
+    let user_service = &state.user_service;
+
+    let id = path.into_inner();
+
+    let op_res = user_service.promote_user_to(&id, &promote_user::downgrade ).await;
     match op_res {
         Err(e) => {
             if let Some(_) = e.downcast_ref::<DynamoDBError>() {

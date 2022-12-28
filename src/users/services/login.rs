@@ -26,6 +26,8 @@ pub trait LoginOps {
 
 #[async_trait]
 impl LoginOps for UsersService {
+
+    #[tracing::instrument()]
     async fn login(
         &self,
         device: &Option<String>,

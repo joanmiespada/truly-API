@@ -46,4 +46,13 @@ impl Display for UserMismatchError {
         write!(f, "users' key data might repeated in database: {}", self.0)
     }
 }
+#[derive(Debug)]
+pub struct UserPasswordError(pub String);
 
+impl std::error::Error for UserPasswordError {}
+
+impl Display for UserPasswordError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "users' password check: {}", self.0)
+    }
+}

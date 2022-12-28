@@ -20,10 +20,11 @@ pub trait UserManipulation {
     async fn add_user(&self, user: &mut User, password: &Option<String>) -> ResultE<String>;
     //async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>>;
     async fn update_user(&self, id: &String, user: &User) -> ResultE<bool>;
-    async fn promote_user_to_admin(&self, id: &String) -> ResultE<bool>;
+    async fn promote_user_to(&self, id: &String , promo: &promote_user) -> ResultE<bool>;
     async fn update_password(&self, id: &String, password: &String) -> ResultE<()>;
 }
 
+#[derive(Debug)]
 pub struct UsersService {
     repository: UsersRepo,
 }
@@ -33,35 +34,49 @@ impl UsersService {
         UsersService { repository: repo }
     }
 }
+pub enum promote_user{
+        downgrade,
+        upgrade
+}
 
 #[async_trait]
 impl UserManipulation for UsersService {
+    #[tracing::instrument()]
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<User>> {
         let res = self.repository.get_all(page_number, page_size).await?;
         Ok(res)
     }
 
+    #[tracing::instrument()]
     async fn get_by_user_id(&self, id: &String) -> ResultE<User> {
         let res = self.repository.get_by_user_id(id).await?;
         Ok(res)
     }
 
+    #[tracing::instrument( fields( device= tracing::field::Empty) )]
     async fn get_by_user_device(&self, device: &String) -> ResultE<User> {
+        tracing::Span::current().record("device", &tracing::field::display(&device));
         let res = self.repository.get_by_user_device(device).await?;
         Ok(res)
     }
+    #[tracing::instrument( fields( email, success=false ))]
     async fn get_by_user_email_and_password(
         &self,
         email: &String,
         password: &String,
     ) -> ResultE<User> {
+        tracing::Span::current().record("email", &tracing::field::display(&email));
+
         let res = self
             .repository
             .get_by_user_email_and_password(email, password)
             .await?;
+
+        tracing::Span::current().record("success", &tracing::field::display(true));
         Ok(res)
     }
 
+    #[tracing::instrument()]
     async fn add_user(&self, user: &mut User, password: &Option<String>) -> ResultE<String> {
         let id = Uuid::new_v4();
         user.set_user_id(&id.to_string());
@@ -75,13 +90,14 @@ impl UserManipulation for UsersService {
         Ok(res)
     }*/
 
+    #[tracing::instrument()]
     async fn update_user(&self, id: &String, user: &User) -> ResultE<bool> {
         let dbuser = self.repository.get_by_user_id(id).await?;
         let mut res: User = dbuser.clone();
 
-        match user.email(){
+        match user.email() {
             None => (),
-            Some(eml) => res.set_email(eml)
+            Some(eml) => res.set_email(eml),
         }
         match user.wallet_address() {
             None => (),
@@ -91,29 +107,37 @@ impl UserManipulation for UsersService {
         }
         match user.device() {
             None => (),
-            Some(dvc) => res.set_device(dvc)
+            Some(dvc) => res.set_device(dvc),
         }
 
         let res = self.repository.update_user(&id, &res).await?;
         Ok(res)
     }
-    
+
+    #[tracing::instrument()]
     async fn update_password(&self, id: &String, password: &String) -> ResultE<()> {
-        _ = self.repository.update_password(id, password ).await?;
+        _ = self.repository.update_password(id, password).await?;
         Ok(())
     }
 
-    //Todo check if the thread's user is Admin, if not, this operation is fobidden
-    async fn promote_user_to_admin(&self, id: &String) -> ResultE<bool> {
+    
+
+    async fn promote_user_to(&self, id: &String, promo: &promote_user ) -> ResultE<bool> {
         let dbuser = self.repository.get_by_user_id(id).await?;
         let mut res: User = dbuser.clone();
-        res.promote_to_admin();
-        let res = self.repository.update_user(&id, &res ).await?;
+        match promo {
+            promote_user::upgrade =>{ res.promote_to_admin();}
+            promote_user::downgrade =>{ res.downgrade_from_admin();}
+        }
+        
+        let res = self.repository.update_user(&id, &res).await?;
         Ok(res)
     }
+    
 }
 
 impl Clone for UsersService {
+    #[tracing::instrument()]
     fn clone(&self) -> UsersService {
         let aux = UsersService {
             repository: self.repository.clone(),

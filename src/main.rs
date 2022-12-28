@@ -1,4 +1,3 @@
-extern crate crypto;
 extern crate derive_more;
 extern crate rustc_serialize;
 
@@ -73,8 +72,12 @@ fn routes(app: &mut web::ServiceConfig) {
             .route("/users/{id}", web::get().to(users_hd::get_user_by_id))
             .route("/users/{id}", web::put().to(users_hd::update_user))
             .route(
-                "/users/promote/{id}",
+                "/users/upgrade/{id}",
                 web::post().to(users_hd::promote_user), //.and(with_auth(UserRoles::Admin)),
+            )
+            .route(
+                "/users/downgrade/{id}",
+                web::post().to(users_hd::downgrade_user), //.and(with_auth(UserRoles::Admin)),
             )
             .route(
                 "/users/password_update/{id}",
