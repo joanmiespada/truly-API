@@ -1,6 +1,6 @@
 use crate::config::EnvironmentVariables;
 use crate::users::errors::users::UserNoExistsError;
-use crate::users::models::user::{User, UserRoles, Userer};
+use crate::users::models::user::{User, UserRoles, UserStatus, Userer};
 use crate::users::repositories::users::{UserRepository, UsersRepo};
 use async_trait::async_trait;
 use uuid::Uuid;
@@ -19,8 +19,8 @@ pub trait UserManipulation {
     ) -> ResultE<User>;
     async fn add_user(&self, user: &mut User, password: &Option<String>) -> ResultE<String>;
     //async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>>;
-    async fn update_user(&self, id: &String, user: &User) -> ResultE<bool>;
-    async fn promote_user_to(&self, id: &String , promo: &promote_user) -> ResultE<bool>;
+    async fn update_user(&self, id: &String, user: &UpdatableFildsUser) -> ResultE<bool>;
+    async fn promote_user_to(&self, id: &String, promo: &promote_user) -> ResultE<bool>;
     async fn update_password(&self, id: &String, password: &String) -> ResultE<()>;
 }
 
@@ -34,9 +34,26 @@ impl UsersService {
         UsersService { repository: repo }
     }
 }
-pub enum promote_user{
-        downgrade,
-        upgrade
+pub enum promote_user {
+    downgrade,
+    upgrade,
+}
+#[derive(Debug)]
+pub struct UpdatableFildsUser {
+    pub email: Option<String>,
+    pub wallet_address: Option<String>,
+    pub device: Option<String>,
+    pub status: Option<String>,
+}
+impl UpdatableFildsUser {
+    pub fn new() -> UpdatableFildsUser {
+        UpdatableFildsUser {
+            email: None,
+            wallet_address: None,
+            device: None,
+            status: None,
+        }
+    }
 }
 
 #[async_trait]
@@ -59,7 +76,7 @@ impl UserManipulation for UsersService {
         let res = self.repository.get_by_user_device(device).await?;
         Ok(res)
     }
-    #[tracing::instrument( fields( email, success=false ))]
+    #[tracing::instrument(fields(email, success = false))]
     async fn get_by_user_email_and_password(
         &self,
         email: &String,
@@ -91,23 +108,33 @@ impl UserManipulation for UsersService {
     }*/
 
     #[tracing::instrument()]
-    async fn update_user(&self, id: &String, user: &User) -> ResultE<bool> {
+    async fn update_user(&self, id: &String, user: &UpdatableFildsUser) -> ResultE<bool> {
         let dbuser = self.repository.get_by_user_id(id).await?;
         let mut res: User = dbuser.clone();
 
-        match user.email() {
+        match &user.email {
             None => (),
-            Some(eml) => res.set_email(eml),
+            Some(eml) => res.set_email(&eml),
         }
-        match user.wallet_address() {
+        match &user.wallet_address {
             None => (),
             Some(wa) => {
-                res.set_wallet_address(wa);
+                res.set_wallet_address(&wa);
             }
         }
-        match user.device() {
+        match &user.device {
             None => (),
-            Some(dvc) => res.set_device(dvc),
+            Some(dvc) => res.set_device(&dvc),
+        }
+        match &user.status {
+            None => (),
+            Some(sts) => {
+                let aux = UserStatus::parse(&sts);
+                match aux {
+                    None => {}
+                    Some(sts_val) => res.set_status(&sts_val),
+                }
+            }
         }
 
         let res = self.repository.update_user(&id, &res).await?;
@@ -120,20 +147,21 @@ impl UserManipulation for UsersService {
         Ok(())
     }
 
-    
-
-    async fn promote_user_to(&self, id: &String, promo: &promote_user ) -> ResultE<bool> {
+    async fn promote_user_to(&self, id: &String, promo: &promote_user) -> ResultE<bool> {
         let dbuser = self.repository.get_by_user_id(id).await?;
         let mut res: User = dbuser.clone();
         match promo {
-            promote_user::upgrade =>{ res.promote_to_admin();}
-            promote_user::downgrade =>{ res.downgrade_from_admin();}
+            promote_user::upgrade => {
+                res.promote_to_admin();
+            }
+            promote_user::downgrade => {
+                res.downgrade_from_admin();
+            }
         }
-        
+
         let res = self.repository.update_user(&id, &res).await?;
         Ok(res)
     }
-    
 }
 
 impl Clone for UsersService {

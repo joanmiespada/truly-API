@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::config::{Config, EnvironmentVariables};
 use crate::users::errors::users::{
-    DynamoDBError, UserAlreadyExistsError,  UserNoExistsError, 
+    DynamoDBError, UserAlreadyExistsError,  UserNoExistsError, UserParamNotAccepted, 
 };
 use crate::users::models::user::{User, UserRoles, UserStatus};
 use async_trait::async_trait;
@@ -34,7 +34,9 @@ static USERID_FIELD_NAME_PK: &str = "userID";
 static CREATIONTIME_FIELD_NAME: &str = "creationTime";
 static LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
 static ROLES_FIELD_NAME: &str = "userRoles";
-static STATUS_FIELD_NAME: &str = "status";
+static STATUS_FIELD_NAME: &str = "userStatus";
+
+static NULLABLE: &str = "__NULL__";
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -125,7 +127,7 @@ impl UsersRepo {
         Ok(usersqueried)
     }
 
-    async fn checks(&self, user: &User) -> ResultE<bool> {
+    async fn check_duplicates(&self, user: &User) -> ResultE<bool> {
         match user.email() {
             None => {}
             Some(email) => {
@@ -255,19 +257,19 @@ impl UserRepository for UsersRepo {
             }
         }*/
 
-        self.checks(user).await?;
+        self.check_duplicates(user).await?;
 
         let user_id_av = AttributeValue::S(user.user_id().clone());
         let device_av = AttributeValue::S(user.device().clone().unwrap_or_default());
         let creation_time_av = AttributeValue::S(iso8601(user.creation_time()));
         let update_time_av = AttributeValue::S(iso8601(user.creation_time()));
-        let email_av = AttributeValue::S(user.email().clone().unwrap_or_default());
+        let email_av = AttributeValue::S(user.email().clone().unwrap_or_else( || NULLABLE.to_string()));
         let password_av: AttributeValue;
         //let password_salt_av: AttributeValue;
 
         match password {
             None => {
-                password_av = AttributeValue::S("NULL".to_string());
+                password_av = AttributeValue::S( NULLABLE.to_string() ); //  "NULL".to_string());
                 //password_salt_av =  AttributeValue::S("NULL".to_string());
             }
             Some(pass) => {
@@ -278,7 +280,7 @@ impl UserRepository for UsersRepo {
         }
 
         let wallet_address_av =
-            AttributeValue::S(user.wallet_address().clone().unwrap_or_default());
+            AttributeValue::S(user.wallet_address().clone().unwrap_or_else( || NULLABLE.to_string()));
         let roles_av = AttributeValue::Ss(UserRoles::to_vec_str(user.roles()).clone());
 
         let status_av = AttributeValue::S(  user.status().to_string() );
@@ -453,6 +455,15 @@ impl UserRepository for UsersRepo {
         email: &String,
         password: &String,
     ) -> ResultE<User> {
+
+        if email == NULLABLE {
+            return Err(UserParamNotAccepted("email".to_string()).into());
+        }
+        if password == NULLABLE{
+            return Err(UserParamNotAccepted("password".to_string()).into());
+        }
+
+
         let email_av = AttributeValue::S(email.to_string());
 
         let mut filter = "".to_string();
@@ -505,7 +516,7 @@ impl UserRepository for UsersRepo {
     }
 
     async fn update_user(&self, id: &String, user: &User) -> ResultE<bool> {
-        self.checks(user).await?;
+        self.check_duplicates(user).await?;
         /*
         let mut res = self
             .get_by_filter(EMAIL_FIELD_NAME, user.email(), USERS_TABLE_INDEX_EMAIL)
@@ -555,8 +566,8 @@ impl UserRepository for UsersRepo {
         update_express.push_str(format!("{0} = :email, ", EMAIL_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :wa, ", WALLETADDRESS_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :lastup, ", LASTUPDATETIME_FIELD_NAME).as_str());
-        update_express.push_str(format!("{0} = :r_les ", ROLES_FIELD_NAME).as_str());
-        update_express.push_str(format!("{0} = :status ", STATUS_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :r_les, ", ROLES_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :_status ", STATUS_FIELD_NAME).as_str());
 
 
         let request = self
@@ -570,7 +581,7 @@ impl UserRepository for UsersRepo {
             .expression_attribute_values(":wa", wallet_address_av)
             .expression_attribute_values(":lastup", last_update_time_av)
             .expression_attribute_values(":r_les", roles_av)
-            .expression_attribute_values(":status", status_av);
+            .expression_attribute_values(":_status", status_av);
 
         match request.send().await {
             Ok(_) => Ok(true),
@@ -656,23 +667,24 @@ fn mapping_from_doc_to_user(doc: &HashMap<String, AttributeValue>, user: &mut Us
     match wallet_address_t {    
         None => {},
         Some(wallet_address) => {  user.set_wallet_address(wallet_address.as_s().unwrap() ); }
-        
     }
-
     let roles_t = doc.get(ROLES_FIELD_NAME); //.unwrap_or_else( || &AttributeValue::S("".to_string())).as_ss().unwrap();
     match roles_t {
         None=>{},
         Some(roles) => { user.set_roles(&UserRoles::from_vec_str(roles.as_ss().unwrap() ))}
     }
-
     let creation_time_t = doc.get(CREATIONTIME_FIELD_NAME);//.unwrap().as_s().unwrap();
     match creation_time_t  {
         None=> {},
         Some(creation_time) => { user.set_creation_time(&from_iso8601(creation_time.as_s().unwrap() ));    }
     }
-
     let status_t = doc.get(STATUS_FIELD_NAME).unwrap().as_s().unwrap();
-    user.set_status( &UserStatus::parse(status_t));
+    let aux = UserStatus::parse(status_t);
+    match aux {
+        Some(ut) =>{ user.set_status( &ut); }
+        None => {}
+    }
+    
 
     //user.set_creation_time(&from_iso8601(creation_time));
     //user.set_device(device);

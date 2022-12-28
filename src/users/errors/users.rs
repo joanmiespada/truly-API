@@ -43,7 +43,7 @@ impl std::error::Error for UserMismatchError {}
 
 impl Display for UserMismatchError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "users' key data might repeated in database: {}", self.0)
+        write!(f, "user's key data might repeated in database: {}", self.0)
     }
 }
 #[derive(Debug)]
@@ -53,6 +53,16 @@ impl std::error::Error for UserPasswordError {}
 
 impl Display for UserPasswordError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "users' password check: {}", self.0)
+        write!(f, "user's password check: {}", self.0)
+    }
+}
+#[derive(Debug)]
+pub struct UserParamNotAccepted(pub String);
+
+impl std::error::Error for UserParamNotAccepted{}
+
+impl Display for UserParamNotAccepted{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "user's data is unacceptable: {}", self.0)
     }
 }

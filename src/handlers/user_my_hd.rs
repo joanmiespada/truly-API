@@ -8,19 +8,23 @@ use crate::users::{
     services::users::{UserManipulation }, errors::users::{DynamoDBError, UserAlreadyExistsError, UserNoExistsError},
 };
 
-use super::{appstate::AppState, jwt_middleware::UID_HEAD_KEY};
+use super::{appstate::AppState, jwt_middleware::UID_HEAD_KEY, users_hd::{UpdateUser, _update_user}};
 
+/* 
 #[derive(Serialize,Deserialize)]
 pub struct UpdateMyUser {
     pub wallet_address: Option<String>, 
     pub device: Option<String>,
     pub email: Option<String>
-}
-pub async fn update_my_user(req: HttpRequest,state: web::Data<AppState>, payload: web::Json<UpdateMyUser> ) -> impl Responder {
-    let user_service = &state.user_service;
+}*/
+
+pub async fn update_my_user(req: HttpRequest,state: web::Data<AppState>, payload: web::Json<UpdateUser> ) -> impl Responder {
+    //let user_service = &state.user_service;
 
     let id = get_user_id(&req);
+    _update_user(state, payload, &id).await
 
+    /* 
     let mut temp_user = User::new();
     if let Some(email) = &payload.email {
         temp_user.set_email(email);
@@ -31,7 +35,8 @@ pub async fn update_my_user(req: HttpRequest,state: web::Data<AppState>, payload
     if let Some(devc) = &payload.device {
         temp_user.set_device(devc);
     }
-
+    */
+/* 
     let op_res = user_service.update_user(&id, &temp_user).await;
     match op_res {
         Err(e) => {
@@ -46,7 +51,7 @@ pub async fn update_my_user(req: HttpRequest,state: web::Data<AppState>, payload
         Ok(_) => { 
             HttpResponse::Ok().finish()
         }
-    }
+    }*/
 }
 
 pub async fn get_my_user(req: HttpRequest,state: web::Data<AppState>) -> impl Responder {

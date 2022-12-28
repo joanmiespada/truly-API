@@ -83,6 +83,7 @@ fn routes(app: &mut web::ServiceConfig) {
                 "/users/password_update/{id}",
                 web::post().to(users_hd::password_update_user), //.and(with_auth(UserRoles::Admin)),
             ),
+            
     )
     .service(
         web::scope("/auth")

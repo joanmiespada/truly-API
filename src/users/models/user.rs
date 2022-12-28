@@ -3,6 +3,10 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use uuid::Uuid;
 
+use crate::users::errors::users::UserParamNotAccepted;
+
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+
 pub trait Userer {
     fn check_login(&self) -> bool;
     fn promote_to_admin(&mut self);
@@ -172,10 +176,12 @@ impl Userer for User {
 }
 
 impl UserStatus {
-    pub fn parse(input: &str) -> UserStatus {
+    pub fn parse(input: &str) -> Option<UserStatus> {
+        //Result<UserStatus,String> {
         match input {
-            "Enabled" => return UserStatus::Enabled,
-            _ => return UserStatus::Disabled,
+            "Enabled" => Some(UserStatus::Enabled),
+            "Disabled" => Some(UserStatus::Disabled),
+            _ => None, // _ => Err("User status is incorrect".to_string() )
         }
     }
 }

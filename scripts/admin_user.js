@@ -35,7 +35,7 @@ async function create_adminuser() {
                 'password': {S: 'NULL' },
                 'device': { S: user_admin_device  },
                 'userRoles': { SS: ['Basic', 'Admin'] },
-                'status': { S: 'Enabled' },
+                'userStatus': { S: 'Enabled' },
             }
         };
         try {

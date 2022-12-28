@@ -3,8 +3,8 @@ use actix_web::{web, Responder, HttpResponse };
 use serde::{Deserialize, Serialize};
 
 use crate::users::{
-    models::user::{User},
-    services::users::{UserManipulation, promote_user }, errors::users::{DynamoDBError, UserAlreadyExistsError, UserNoExistsError, UserMismatchError },
+    models::user::{User, UserStatus},
+    services::users::{UserManipulation, promote_user, UpdatableFildsUser }, errors::users::{DynamoDBError, UserAlreadyExistsError, UserNoExistsError, UserMismatchError },
 };
 
 use super::appstate::AppState;
@@ -100,8 +100,8 @@ pub async fn add_user(state: web::Data<AppState>, payload: web::Json<NewUser>) -
     let op_res = user_service.add_user(&mut user, &payload.password).await;
     match op_res {
         Err(e) => {
-            if let Some(_) = e.downcast_ref::<DynamoDBError>() {
-                HttpResponse::ServiceUnavailable().finish()    
+            if let Some(err) = e.downcast_ref::<DynamoDBError>() {
+                HttpResponse::ServiceUnavailable().body(err.to_string())    
             } else if  let Some(err) = e.downcast_ref::<UserAlreadyExistsError>() {
                 HttpResponse::BadRequest().body(err.to_string())
             } else if  let Some(err) = e.downcast_ref::<UserMismatchError>() {
@@ -150,21 +150,30 @@ pub async fn get_user_by_filter(state: web::Data<AppState>, payload: web::Json<F
 
 #[derive(Serialize,Deserialize)]
 pub struct UpdateUser {
-    pub wallet_address: String, 
-    pub device: String,
-    pub email: String
+    pub wallet_address: Option<String>, 
+    pub device: Option<String>,
+    pub email: Option<String>,
+    pub status: Option<String>,
 }
 pub async fn update_user(state: web::Data<AppState>, payload: web::Json<UpdateUser>, path: web::Path<String>) -> impl Responder {
-    let user_service = &state.user_service;
 
     let id = path.into_inner();
+    _update_user(state, payload, &id).await
+}
 
-    let mut user = User::new();
-    user.set_email(&payload.email);
-    user.set_wallet_address(&payload.wallet_address);
-    user.set_device(&payload.device);
+pub async fn _update_user(state: web::Data<AppState>, payload: web::Json<UpdateUser>, id: &String /*path: web::Path<String>*/ ) -> impl Responder {
+    let user_service = &state.user_service;
 
-    let op_res = user_service.update_user(&id, &user).await;
+    //let id = path.into_inner();
+
+    let user_fields = UpdatableFildsUser {
+        device: payload.device.clone(),
+        email: payload.email.clone(),
+        wallet_address: payload.wallet_address.clone(),
+        status: payload.status.clone()
+    };
+
+    let op_res = user_service.update_user(&id, &user_fields).await;
     match op_res {
         Err(e) => {
             if let Some(_) = e.downcast_ref::<DynamoDBError>() {
@@ -180,6 +189,9 @@ pub async fn update_user(state: web::Data<AppState>, payload: web::Json<UpdateUs
         }
     }
 }
+
+
+
 #[derive(Serialize,Deserialize)]
 pub struct UpdatePasswordUser {
     pub password: String, 
@@ -249,6 +261,7 @@ pub async fn downgrade_user(state: web::Data<AppState>, path: web::Path<String>)
         }
     }
 }
+
 
 pub fn delete_user(state: web::Data<AppState>) -> impl Responder {
     HttpResponse::MethodNotAllowed().finish()
