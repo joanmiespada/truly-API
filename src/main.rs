@@ -5,27 +5,22 @@ use actix_cors::Cors;
 use actix_web::middleware::Logger;
 use actix_web::web;
 use actix_web::{http::header, App, HttpServer};
+use config::{ENV_VAR_MODE, ENV_VAR_MODE_HTTP_SERVER, ENV_VAR_MODE_LAMBDA};
+use futures_util::future::OrElse;
 use handlers::appstate::AppState;
-use handlers::{auth_middleware, jwt_middleware, login_hd, users_hd, user_my_hd};
+use handlers::{auth_middleware, jwt_middleware, login_hd, user_my_hd, users_hd};
 use tracing_actix_web::TracingLogger;
 
 mod config;
 mod handlers;
 mod users;
 
-#[actix_rt::main]
-async fn main() -> std::io::Result<()> {
-    let mut config = config::Config::new();
-    config.setup().await;
-
-    let user_repo = users::repositories::users::UsersRepo::new(&config);
-    let user_service = users::services::users::UsersService::new(user_repo);
-
-    let env = config.env_vars(); //.env_variables;//.as_ref().unwrap();
+async fn http_server(config: config::Config, user_service: UsersService) {
+    let env = config.env_vars();
     let server_address = format!("{}:{}", env.local_address, env.local_port);
 
     // Start http server
-    HttpServer::new(move || {
+    let _ = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(AppState {
                 user_service: user_service.clone(),
@@ -50,22 +45,39 @@ async fn main() -> std::io::Result<()> {
     .unwrap_or_else(|_| panic!("Could not bind server to address"))
     //.start();
     .run()
-    .await
+    .await;
+}
+
+//#[actix_rt::main]
+#[tokio::main]
+async fn main() {
+    let mut config = config::Config::new();
+    config.setup().await;
+
+    let user_repo = users::repositories::users::UsersRepo::new(&config);
+    let user_service = users::services::users::UsersService::new(user_repo);
+
+    if config.env_vars().mode ==  ENV_VAR_MODE_HTTP_SERVER {
+        http_server(config, user_service).await;
+    } else if config.env_vars().mode == ENV_VAR_MODE_LAMBDA {
+        lambda_main().await;
+    } else{
+        panic!("no mode set up at env vars");
+    }
 }
 
 fn routes(app: &mut web::ServiceConfig) {
-    app
-    .service(   
+    app.service(
         web::scope("/api")
             .wrap(jwt_middleware::Jwt)
-            .route("/user", web::get().to(user_my_hd::get_my_user)) 
+            .route("/user", web::get().to(user_my_hd::get_my_user))
             .route("/user", web::put().to(user_my_hd::update_my_user))
             .route(
                 "/user/password_update",
                 web::put().to(user_my_hd::password_update_my_user), //.and(with_auth(UserRoles::Admin)),
             ),
     )
-     .service(
+    .service(
         web::scope("/admin")
             .wrap(auth_middleware::Auth)
             .route("/users", web::get().to(users_hd::get_users))
@@ -83,7 +95,6 @@ fn routes(app: &mut web::ServiceConfig) {
                 "/users/password_update/{id}",
                 web::post().to(users_hd::password_update_user), //.and(with_auth(UserRoles::Admin)),
             ),
-            
     )
     .service(
         web::scope("/auth")
@@ -96,6 +107,7 @@ fn routes(app: &mut web::ServiceConfig) {
 // https://blog.logrocket.com/deploy-lambda-functions-rust/
 use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
 use users::models::user::UserRoles;
+use users::services::users::UsersService;
 /// This is the main body for the function.
 /// Write your code inside it.
 /// There are some code example in the following URLs:
@@ -113,8 +125,9 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
     Ok(resp)
 }
 
-#[tokio::main]
-async fn main2() -> Result<(), Error> {
+//#[actix_rt::main]
+//#[tokio::main]
+async fn lambda_main() {// -> Result<(), Error> {
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         // disable printing the name of the module in every log line.
@@ -123,5 +136,5 @@ async fn main2() -> Result<(), Error> {
         .without_time()
         .init();
 
-    run(service_fn(function_handler)).await
+   let _= run(service_fn(function_handler)).await;
 }

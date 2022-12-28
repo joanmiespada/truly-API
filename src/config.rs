@@ -8,7 +8,11 @@ use env_logger::Env;
 use serde::Deserialize;
 
 pub static ENV_VAR_ENVIRONMENT: &str = "ENVIRONMENT";
+pub static ENV_VAR_MODE: &str = "MODE";
+pub static ENV_VAR_MODE_LAMBDA: &str = "lambda";
+pub static ENV_VAR_MODE_HTTP_SERVER: &str = "httpserver";
 pub static DEV_ENV: &str= "development";
+pub static PROD_ENV: &str= "production";
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct EnvironmentVariables {
@@ -22,6 +26,7 @@ pub struct EnvironmentVariables {
     pub local_port: String,
     pub aws_region: String,
     pub aws_dynamodb_endpoint: String,
+    pub mode: String
 }
 
 #[derive(Clone, Debug)]
