@@ -61,12 +61,12 @@ where
         let mut uid: Option<String> = None;
         //println!("Hi from start. You requested: {}", req.path());
 
-        let aux = check_jwt_token(req.request());
+        let claim = check_jwt_token(req.request());
 
-        match aux {
-            Ok(_uid) => {
+        match claim {
+            Ok(clm) => {
                 jwt_token = true;
-                uid = Some(_uid);
+                uid = Some(clm.uid);
             }
             Err(e) => {
                 let (request, _pl) = req.into_parts();
@@ -82,9 +82,9 @@ where
         if jwt_token {
             //inyect as header the user ID
 
-            let head_value = HeaderValue::from_str( uid.unwrap().as_str()).unwrap();
+            let head_value = HeaderValue::from_str(uid.unwrap().as_str()).unwrap();
             let head_key = HeaderName::from_static(UID_HEAD_KEY);
-            req.headers_mut().append( head_key , head_value);
+            req.headers_mut().append(head_key, head_value);
             let fut = self.service.call(req);
 
             Box::pin(async move {
@@ -106,24 +106,21 @@ where
     }
 }
 
-pub fn check_jwt_token(request: &HttpRequest) -> Result<String, Error> {
+pub fn check_jwt_token(request: &HttpRequest) -> Result<Claims, Error> {
     let req_headers = request.headers();
-    //let basic_auth_header = req_headers.get(AUTHORIZATION);
 
     let header = match req_headers.get(AUTHORIZATION) {
         Some(v) => v,
         None =>
-        // Err(Error::NoAuthHeaderError),
         {
-            return Err(JWTSecurityError::from("jwt error".to_string()).into())
+            return Err(JWTSecurityError::from("jwt error: no auth header field".to_string()).into())
         }
     };
     let auth_header = match std::str::from_utf8(header.as_bytes()) {
         Ok(v) => v,
         Err(_) =>
-        // Err(Error::NoAuthHeaderError),
         {
-            return Err(JWTSecurityError::from("jwt error".to_string()).into())
+            return Err(JWTSecurityError::from("jwt error: no auth header field with value".to_string()).into())
         }
     };
     if !auth_header.starts_with(BEARER) {
@@ -142,56 +139,13 @@ pub fn check_jwt_token(request: &HttpRequest) -> Result<String, Error> {
         Err(e) => {
             return Err(JWTSecurityError::from("token present but invalid".to_string()).into())
         }
-        Ok(deco) => Ok(deco.claims.uid), /*let matches = deco
-                                             .claims
-                                             .roles
-                                             .into_iter()
-                                             .filter(|i| i.is_admin())
-                                             .count();
-                                         if matches == 0 {
-                                             return Err(JWTSecurityError::from("jwt error".to_string()).into());
-                                         }
-
-                                         Ok(true)*/
+        Ok(deco) => Ok(deco.claims),
     }
 }
 
-/*
 #[derive(Debug)]
-pub enum MyErrorTypes {
-    //#[error("wrong credentials")]
-    WrongCredentialsError,
-    //#[error("jwt token not valid")]
-    JWTTokenError,
-    //#[error("jwt token creation error")]
-    JWTTokenCreationError,
-    //#[error("no auth header")]
-    NoAuthHeaderError,
-    //#[error("invalid auth header")]
-    InvalidAuthHeaderError,
-    //#[error("no permission")]
-    NoPermissionError,
-    OtherError(String),
-}
-*/
-
-#[derive(Debug)] //, Display, Error)]
-                 //#[display(fmt = "my error: {}", name)]
 pub struct JWTSecurityError(String);
-//{
-//    pub name: Option<String>,
-//pub err_type: MyErrorTypes,
-//}
 
-impl JWTSecurityError {
-    pub fn message(&self) -> String {
-        self.0.clone()
-        /*        match &self.0 {
-            Some(c) => c.clone(),
-            None => String::from(""),
-        }*/
-    }
-}
 
 impl std::fmt::Display for JWTSecurityError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -201,23 +155,11 @@ impl std::fmt::Display for JWTSecurityError {
 
 impl From<String> for JWTSecurityError {
     fn from(err: String) -> JWTSecurityError {
-        JWTSecurityError {
-            0: err,
-            //err_type: MyErrorTypes::OtherError("ssdfd".to_string()),
-        }
+        JWTSecurityError { 0: err }
     }
 }
 
 impl ResponseError for JWTSecurityError {
-    /*fn status_code(&self) -> StatusCode {
-        match self.err_type {
-            JWTTokenCreationError => StatusCode::INTERNAL_SERVER_ERROR,
-            WrongCredentialsError => StatusCode::BAD_REQUEST,
-            JWTTokenError => StatusCode::INTERNAL_SERVER_ERROR,
-            NoAuthHeaderError => StatusCode::INTERNAL_SERVER_ERROR,
-        }
-    }*/
-
     fn error_response(&self) -> HttpResponse {
         HttpResponse::build(self.status_code()).json(self.0.clone())
     }

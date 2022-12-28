@@ -3,8 +3,8 @@ use actix_web::{web, Responder, HttpResponse };
 use serde::{Deserialize, Serialize};
 
 use crate::users::{
-    models::user::{User, UserStatus},
-    services::users::{UserManipulation, promote_user, UpdatableFildsUser }, errors::users::{DynamoDBError, UserAlreadyExistsError, UserNoExistsError, UserMismatchError },
+    models::user::{User },
+    services::users::{UserManipulation, PromoteUser, UpdatableFildsUser }, errors::users::{DynamoDBError, UserAlreadyExistsError, UserNoExistsError, UserMismatchError },
 };
 
 use super::appstate::AppState;
@@ -116,37 +116,7 @@ pub async fn add_user(state: web::Data<AppState>, payload: web::Json<NewUser>) -
         }
     }
 
-    //format!("{{'id':'{}'}}", new_id)
 }
-
-/* 
-#[derive(Serialize,Deserialize)]
-pub struct Filter {
-    pub field: String,
-    pub value: String
-}
-pub async fn get_user_by_filter(state: web::Data<AppState>, payload: web::Json<Filter>) -> impl Responder {
-    let user_service = &state.user_service;
-    let op_res = user_service.get_by_filter(&payload.field, &payload.value ).await;
-    match op_res {
-        Ok(users) => {
-            if users.len() == 0 {
-                HttpResponse::NoContent().finish()
-            }else{
-                 HttpResponse::Ok().json(users)    
-            }
-        },
-        Err(e) => {
-            if let Some(_) = e.downcast_ref::<DynamoDBError>() {
-                HttpResponse::ServiceUnavailable().finish()    
-            } else {
-                HttpResponse::InternalServerError().finish()    
-            }
-        }
-    }
-    
-}
-*/
 
 #[derive(Serialize,Deserialize)]
 pub struct UpdateUser {
@@ -161,10 +131,8 @@ pub async fn update_user(state: web::Data<AppState>, payload: web::Json<UpdateUs
     _update_user(state, payload, &id).await
 }
 
-pub async fn _update_user(state: web::Data<AppState>, payload: web::Json<UpdateUser>, id: &String /*path: web::Path<String>*/ ) -> impl Responder {
+pub async fn _update_user(state: web::Data<AppState>, payload: web::Json<UpdateUser>, id: &String ) -> impl Responder {
     let user_service = &state.user_service;
-
-    //let id = path.into_inner();
 
     let user_fields = UpdatableFildsUser {
         device: payload.device.clone(),
@@ -223,7 +191,7 @@ pub async fn promote_user(state: web::Data<AppState>, path: web::Path<String>) -
 
     let id = path.into_inner();
 
-    let op_res = user_service.promote_user_to(&id, &promote_user::upgrade ).await;
+    let op_res = user_service.promote_user_to(&id, &PromoteUser::Upgrade ).await;
     match op_res {
         Err(e) => {
             if let Some(_) = e.downcast_ref::<DynamoDBError>() {
@@ -245,7 +213,7 @@ pub async fn downgrade_user(state: web::Data<AppState>, path: web::Path<String>)
 
     let id = path.into_inner();
 
-    let op_res = user_service.promote_user_to(&id, &promote_user::downgrade ).await;
+    let op_res = user_service.promote_user_to(&id, &PromoteUser::Downgrade ).await;
     match op_res {
         Err(e) => {
             if let Some(_) = e.downcast_ref::<DynamoDBError>() {
@@ -262,8 +230,8 @@ pub async fn downgrade_user(state: web::Data<AppState>, path: web::Path<String>)
     }
 }
 
-
+/* 
 pub fn delete_user(state: web::Data<AppState>) -> impl Responder {
     HttpResponse::MethodNotAllowed().finish()
-}
+}*/
  

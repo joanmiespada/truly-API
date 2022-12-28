@@ -1,4 +1,4 @@
-
+/* 
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("wrong credentials")]
@@ -20,3 +20,4 @@ struct ErrorResponse {
     message: String,
     status: String,
 }
+*/

@@ -3,9 +3,6 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 use uuid::Uuid;
 
-use crate::users::errors::users::UserParamNotAccepted;
-
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 pub trait Userer {
     fn check_login(&self) -> bool;
@@ -168,20 +165,19 @@ impl Userer for User {
     fn downgrade_from_admin(&mut self) {
         if self.is_admin() {
             let aux = self.roles.clone();
-            let rolesWithoutAdmin: Vec<UserRoles> =
+            let roles_without_admin: Vec<UserRoles> =
                 aux.into_iter().filter(|x| !x.is_admin()).collect(); // .push(UserRoles::Admin);
-            self.roles = rolesWithoutAdmin.clone();
+            self.roles = roles_without_admin.clone();
         }
     }
 }
 
 impl UserStatus {
     pub fn parse(input: &str) -> Option<UserStatus> {
-        //Result<UserStatus,String> {
         match input {
             "Enabled" => Some(UserStatus::Enabled),
             "Disabled" => Some(UserStatus::Disabled),
-            _ => None, // _ => Err("User status is incorrect".to_string() )
+            _ => None, 
         }
     }
 }

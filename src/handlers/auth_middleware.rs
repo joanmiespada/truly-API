@@ -1,16 +1,13 @@
 use actix_web::{
     body::EitherBody,
     dev::{self, Service, ServiceRequest, ServiceResponse, Transform},
-    http::{header::AUTHORIZATION},
-    Error, HttpRequest, HttpResponse, ResponseError,
+    Error, HttpResponse,
 };
 use futures_util::future::LocalBoxFuture;
-use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use std::future::{ready, Ready};
 
-use crate::handlers::jwt_middleware::{ JWTSecurityError, BEARER };
 
-use super::login_hd::Claims;
+use super::{jwt_middleware::check_jwt_token};
 
 // There are two steps in middleware processing.
 // 1. Middleware initialization, middleware factory gets called with
@@ -59,11 +56,16 @@ where
 
         //println!("Hi from start. You requested: {}", req.path());
 
-        let aux = checkRoles(req.request());
+        let claim = check_jwt_token(req.request());
 
-        match aux {
-            Ok(_) => {
-                auth_flag = true;
+        match claim {
+            Ok(clm) => {
+                let matches = clm.roles.into_iter().filter(|i| i.is_admin()).count();
+                if matches == 0 {
+                    auth_flag = false;
+                } else {
+                    auth_flag = true;
+                }
             }
             Err(e) => {
                 let (request, _pl) = req.into_parts();
@@ -93,118 +95,3 @@ where
         }
     }
 }
-
-pub fn checkRoles(request: &HttpRequest) -> Result<bool, Error> {
-    let req_headers = request.headers();
-    //let basic_auth_header = req_headers.get(AUTHORIZATION);
-
-    let header = match req_headers.get(AUTHORIZATION) {
-        Some(v) => v,
-        None =>
-        // Err(Error::NoAuthHeaderError),
-        {
-            return Err(JWTSecurityError::from("jwt error".to_string()).into())
-        }
-    };
-    let auth_header = match std::str::from_utf8(header.as_bytes()) {
-        Ok(v) => v,
-        Err(_) =>
-        // Err(Error::NoAuthHeaderError),
-        {
-            return Err(JWTSecurityError::from("jwt error".to_string()).into())
-        }
-    };
-    if !auth_header.starts_with(BEARER) {
-        return Err(JWTSecurityError::from("jwt error".to_string()).into());
-    }
-    let jwt = auth_header.trim_start_matches(BEARER).to_owned();
-
-    //TODO: reading from env_vars instead of config
-    let jwt_secret = std::env::var("JWT_TOKEN_BASE").unwrap();
-    let decoded = decode::<Claims>(
-        &jwt,
-        &DecodingKey::from_secret(jwt_secret.as_bytes()),
-        &Validation::new(Algorithm::HS512),
-    );
-    match decoded {
-        Err(e) => return Err(JWTSecurityError::from("jwt error".to_string()).into()),
-        Ok(deco) => {
-            let matches = deco
-                .claims
-                .roles
-                .into_iter()
-                .filter(|i| i.is_admin())
-                .count();
-            if matches == 0 {
-                return Err(JWTSecurityError::from("jwt error".to_string()).into());
-            }
-
-            Ok(true)
-        }
-    }
-}
-
-/*
-#[derive(Debug)]
-pub enum MyErrorTypes {
-    //#[error("wrong credentials")]
-    WrongCredentialsError,
-    //#[error("jwt token not valid")]
-    JWTTokenError,
-    //#[error("jwt token creation error")]
-    JWTTokenCreationError,
-    //#[error("no auth header")]
-    NoAuthHeaderError,
-    //#[error("invalid auth header")]
-    InvalidAuthHeaderError,
-    //#[error("no permission")]
-    NoPermissionError,
-    OtherError(String),
-}
-*/
-
-// #[derive(Debug)] //, Display, Error)]
-//                  //#[display(fmt = "my error: {}", name)]
-// pub struct JWTSecurityError {
-//     pub name: Option<String>,
-//     //pub err_type: MyErrorTypes,
-// }
-
-// impl JWTSecurityError {
-//     pub fn message(&self) -> String {
-//         match &self.name {
-//             Some(c) => c.clone(),
-//             None => String::from(""),
-//         }
-//     }
-// }
-
-// impl std::fmt::Display for JWTSecurityError {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(f, "{:?}", self)
-//     }
-// }
-
-// impl From<String> for JWTSecurityError {
-//     fn from(err: String) -> JWTSecurityError {
-//         JWTSecurityError {
-//             name: Some(err),
-//             //err_type: MyErrorTypes::OtherError("ssdfd".to_string()),
-//         }
-//     }
-// }
-
-// impl ResponseError for JWTSecurityError {
-//     /*fn status_code(&self) -> StatusCode {
-//         match self.err_type {
-//             JWTTokenCreationError => StatusCode::INTERNAL_SERVER_ERROR,
-//             WrongCredentialsError => StatusCode::BAD_REQUEST,
-//             JWTTokenError => StatusCode::INTERNAL_SERVER_ERROR,
-//             NoAuthHeaderError => StatusCode::INTERNAL_SERVER_ERROR,
-//         }
-//     }*/
-
-//     fn error_response(&self) -> HttpResponse {
-//         HttpResponse::build(self.status_code()).json(self.name.clone())
-//     }
-// }

@@ -1,5 +1,3 @@
-use crate::config::EnvironmentVariables;
-use crate::users::errors::users::UserNoExistsError;
 use crate::users::models::user::{User, UserRoles, UserStatus, Userer};
 use crate::users::repositories::users::{UserRepository, UsersRepo};
 use async_trait::async_trait;
@@ -20,7 +18,7 @@ pub trait UserManipulation {
     async fn add_user(&self, user: &mut User, password: &Option<String>) -> ResultE<String>;
     //async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>>;
     async fn update_user(&self, id: &String, user: &UpdatableFildsUser) -> ResultE<bool>;
-    async fn promote_user_to(&self, id: &String, promo: &promote_user) -> ResultE<bool>;
+    async fn promote_user_to(&self, id: &String, promo: &PromoteUser) -> ResultE<bool>;
     async fn update_password(&self, id: &String, password: &String) -> ResultE<()>;
 }
 
@@ -34,9 +32,9 @@ impl UsersService {
         UsersService { repository: repo }
     }
 }
-pub enum promote_user {
-    downgrade,
-    upgrade,
+pub enum PromoteUser {
+    Downgrade,
+    Upgrade,
 }
 #[derive(Debug)]
 pub struct UpdatableFildsUser {
@@ -45,16 +43,7 @@ pub struct UpdatableFildsUser {
     pub device: Option<String>,
     pub status: Option<String>,
 }
-impl UpdatableFildsUser {
-    pub fn new() -> UpdatableFildsUser {
-        UpdatableFildsUser {
-            email: None,
-            wallet_address: None,
-            device: None,
-            status: None,
-        }
-    }
-}
+
 
 #[async_trait]
 impl UserManipulation for UsersService {
@@ -102,11 +91,6 @@ impl UserManipulation for UsersService {
         Ok(res)
     }
 
-    /*async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>> {
-        let res = self.repository.get_by_filter(field, value).await?;
-        Ok(res)
-    }*/
-
     #[tracing::instrument()]
     async fn update_user(&self, id: &String, user: &UpdatableFildsUser) -> ResultE<bool> {
         let dbuser = self.repository.get_by_user_id(id).await?;
@@ -147,14 +131,14 @@ impl UserManipulation for UsersService {
         Ok(())
     }
 
-    async fn promote_user_to(&self, id: &String, promo: &promote_user) -> ResultE<bool> {
+    async fn promote_user_to(&self, id: &String, promo: &PromoteUser) -> ResultE<bool> {
         let dbuser = self.repository.get_by_user_id(id).await?;
         let mut res: User = dbuser.clone();
         match promo {
-            promote_user::upgrade => {
+            PromoteUser::Upgrade => {
                 res.promote_to_admin();
             }
-            promote_user::downgrade => {
+            PromoteUser::Downgrade => {
                 res.downgrade_from_admin();
             }
         }
