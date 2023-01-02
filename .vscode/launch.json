@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch API",
+            "name": "lldb API",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/api",
@@ -15,7 +15,32 @@
             "env": {
                 "ENVIRONMENT":"development",
             }
-        }, 
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Cargo API",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=api",
+                    "--package=api"
+                ],
+                "filter": {
+                    "name": "api",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                // "user_arg1",
+                // "user_arg2"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "ENVIRONMENT":"development",
+            }
+        },
+         
         {
             "name": "Attach to API",
             "type": "lldb",
@@ -23,7 +48,7 @@
             "program": "${workspaceRoot}/target/debug/api",
         },
         {
-            "name": "Debug ALL unit tests in library 'mylib'", // https://gist.github.com/xanathar/c7c83e6d53b72dd4464f695607012629
+            "name": "Debug ALL unit tests in library 'api'", // https://gist.github.com/xanathar/c7c83e6d53b72dd4464f695607012629
             "type": "lldb",
             "request": "launch",
             "cargo": {
@@ -31,10 +56,10 @@
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=mylib"
+                    "--package=api"
                 ],
                 "filter": {
-                    "name": "mylib",
+                    "name": "api",
                     "kind": "lib"
                 }
             },

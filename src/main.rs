@@ -5,15 +5,17 @@ use actix_cors::Cors;
 use actix_web::middleware::Logger;
 use actix_web::web;
 use actix_web::{http::header, App, HttpServer};
-use config::{ENV_VAR_MODE, ENV_VAR_MODE_HTTP_SERVER, ENV_VAR_MODE_LAMBDA};
-use futures_util::future::OrElse;
+use config::{ ENV_VAR_MODE_HTTP_SERVER, ENV_VAR_MODE_LAMBDA};
 use handlers::appstate::AppState;
 use handlers::{auth_middleware, jwt_middleware, login_hd, user_my_hd, users_hd};
 use tracing_actix_web::TracingLogger;
 
+use users::services::users::UsersService;
+
 mod config;
 mod handlers;
 mod users;
+mod lambda;
 
 async fn http_server(config: config::Config, user_service: UsersService) {
     let env = config.env_vars();
@@ -50,20 +52,25 @@ async fn http_server(config: config::Config, user_service: UsersService) {
 
 //#[actix_rt::main]
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(),Box<dyn std::error::Error>> {
+     
     let mut config = config::Config::new();
     config.setup().await;
 
     let user_repo = users::repositories::users::UsersRepo::new(&config);
     let user_service = users::services::users::UsersService::new(user_repo);
 
-    if config.env_vars().mode ==  ENV_VAR_MODE_HTTP_SERVER {
-        http_server(config, user_service).await;
+    /*if config.env_vars().mode ==  ENV_VAR_MODE_HTTP_SERVER {
+        http_server(config, user_service).await
     } else if config.env_vars().mode == ENV_VAR_MODE_LAMBDA {
-        lambda_main().await;
+        lambda::lambda_main(&config, &user_service).await
     } else{
-        panic!("no mode set up at env vars");
-    }
+        panic!("no mode set up at env vars")
+    }*/
+
+    lambda::lambda_main(&config, &user_service).await
+    
+
 }
 
 fn routes(app: &mut web::ServiceConfig) {
@@ -103,38 +110,3 @@ fn routes(app: &mut web::ServiceConfig) {
     );
 }
 
-// -----------------------------------------------------------------------------------------------------
-// https://blog.logrocket.com/deploy-lambda-functions-rust/
-use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
-use users::models::user::UserRoles;
-use users::services::users::UsersService;
-/// This is the main body for the function.
-/// Write your code inside it.
-/// There are some code example in the following URLs:
-/// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
-async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
-    // Extract some useful information from the request
-
-    // Return something that implements IntoResponse.
-    // It will be serialized to the right response event automatically by the runtime
-    let resp = Response::builder()
-        .status(200)
-        .header("content-type", "text/html")
-        .body("Hello AWS Lambda HTTP request".into())
-        .map_err(Box::new)?;
-    Ok(resp)
-}
-
-//#[actix_rt::main]
-//#[tokio::main]
-async fn lambda_main() {// -> Result<(), Error> {
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
-        // disable printing the name of the module in every log line.
-        .with_target(false)
-        // disabling time is handy because CloudWatch will add the ingestion time.
-        .without_time()
-        .init();
-
-   let _= run(service_fn(function_handler)).await;
-}

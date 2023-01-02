@@ -10,5 +10,9 @@
 
 https://www.cargo-lambda.info/guide/getting-started.html#step-2-create-a-new-project
 
+- cargo lambda start
+- http://localhost:9000/lambda-url/api/... 
+
+- cargo lambda build --release
 - cargo lambda build --release --arm64
 - cargo lambda deploy --iam-role XXXXXX  --http
