@@ -1,18 +1,15 @@
 use actix_web::{
     body::EitherBody,
     dev::{self, Service, ServiceRequest, ServiceResponse, Transform},
-    http::header::{HeaderName , HeaderValue, AUTHORIZATION},
-    Error, HttpRequest, HttpResponse, ResponseError,
+    http::header::{HeaderMap, HeaderName, HeaderValue, AUTHORIZATION},
+    Error,  HttpResponse, 
 };
 use futures_util::future::LocalBoxFuture;
-use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
-//use lambda_http::http::HeaderValue;
 use std::future::{ready, Ready};
 
-pub const BEARER: &str = "Bearer ";
 pub const UID_HEAD_KEY: &str = "api-user-uid";
 
-use super::login_hd::Claims;
+use lib_util_jwt::{check_jwt_token, Claims };
 
 // There are two steps in middleware processing.
 // 1. Middleware initialization, middleware factory gets called with
@@ -59,23 +56,17 @@ where
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
         let mut jwt_token = false;
         let mut uid: Option<String> = None;
+        let mut error_message = "".to_string();
         //println!("Hi from start. You requested: {}", req.path());
 
-        let claim = check_jwt_token(req.request());
+        let req_headers = req.headers();
 
-        match claim {
-            Ok(clm) => {
+        let claim_ops = get_header_jwt(req_headers);
+        match claim_ops {
+            Err(e) => { error_message = e.clone() },
+            Ok(claims)=>{
                 jwt_token = true;
-                uid = Some(clm.uid);
-            }
-            Err(e) => {
-                let (request, _pl) = req.into_parts();
-                let res = HttpResponse::Forbidden()
-                    .body(e.to_string())
-                    .map_into_right_body();
-
-                let new_response = ServiceResponse::new(request, res);
-                return Box::pin(async move { Ok(new_response) });
+                uid = Some(claims.uid);
             }
         }
 
@@ -97,7 +88,7 @@ where
         } else {
             let (request, _pl) = req.into_parts();
             let res = HttpResponse::Forbidden()
-                .body("not allowed, login first")
+                .body(format!("not allowed, login first: {}", error_message))
                 .map_into_right_body();
 
             let new_response = ServiceResponse::new(request, res);
@@ -106,61 +97,28 @@ where
     }
 }
 
-pub fn check_jwt_token(request: &HttpRequest) -> Result<Claims, Error> {
-    let req_headers = request.headers();
+pub fn get_header_jwt(req_headers: &HeaderMap) -> Result<Claims, String> {
+    match req_headers.get(AUTHORIZATION) {
+        Some(header_v) => {
+            match std::str::from_utf8(header_v.as_bytes()) {
+                Ok(header_field_value) => {
+                    let jwt_secret = std::env::var("JWT_TOKEN_BASE").unwrap(); //TODO! Remove it here and inject config!!!
 
-    let header = match req_headers.get(AUTHORIZATION) {
-        Some(v) => v,
-        None =>
-        {
-            return Err(JWTSecurityError::from("jwt error: no auth header field".to_string()).into())
+                    let claim = check_jwt_token(&header_field_value.to_string(), &jwt_secret);
+
+                    match claim {
+                        Ok(clm) => {
+                            Ok(clm)
+                            //jwt_token = true;
+                            //uid = Some(clm.uid);
+                        }
+                        Err(e) => Err(e.to_string()),
+                    }
+                }
+                Err(_) => Err("jwt error: no auth header field with value valid".to_string()),
+            }
         }
-    };
-    let auth_header = match std::str::from_utf8(header.as_bytes()) {
-        Ok(v) => v,
-        Err(_) =>
-        {
-            return Err(JWTSecurityError::from("jwt error: no auth header field with value".to_string()).into())
-        }
-    };
-    if !auth_header.starts_with(BEARER) {
-        return Err(JWTSecurityError::from("jwt error".to_string()).into());
-    }
-    let jwt = auth_header.trim_start_matches(BEARER).to_owned();
-
-    //TODO: reading from env_vars instead of config
-    let jwt_secret = std::env::var("JWT_TOKEN_BASE").unwrap();
-    let decoded = decode::<Claims>(
-        &jwt,
-        &DecodingKey::from_secret(jwt_secret.as_bytes()),
-        &Validation::new(Algorithm::HS512),
-    );
-    match decoded {
-        Err(e) => {
-            return Err(JWTSecurityError::from("token present but invalid".to_string()).into())
-        }
-        Ok(deco) => Ok(deco.claims),
+        None => Err("jwt error: no auth header field present".to_string()),
     }
 }
 
-#[derive(Debug)]
-pub struct JWTSecurityError(String);
-
-
-impl std::fmt::Display for JWTSecurityError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "jwt error {:?}", self.0)
-    }
-}
-
-impl From<String> for JWTSecurityError {
-    fn from(err: String) -> JWTSecurityError {
-        JWTSecurityError { 0: err }
-    }
-}
-
-impl ResponseError for JWTSecurityError {
-    fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code()).json(self.0.clone())
-    }
-}
