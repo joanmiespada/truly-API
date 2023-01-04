@@ -26,7 +26,6 @@ pub struct EnvironmentVariables {
     pub local_port: String,
     pub aws_region: String,
     pub aws_dynamodb_endpoint: String,
-    pub mode: String
 }
 
 #[derive(Clone, Debug)]
@@ -45,7 +44,7 @@ impl Config {
 
         let check_env = std::env::var(ENV_VAR_ENVIRONMENT);//.unwrap_or_else("local");
         match check_env{
-            Err(e) =>  eprintln!("Not environment variable found! {}", e),
+            Err(e) =>  panic!("Not environment variable found! {}. Error: {}", ENV_VAR_ENVIRONMENT, e.to_string()),
             Ok(env)  => {
                 if env== DEV_ENV {
                     dotenv().ok();
@@ -58,7 +57,7 @@ impl Config {
                 //println!("{:#?}", env_vars);
                 self.env_variables = Some(env_vars.clone());
             }
-            Err(error) => eprintln!("{:#?}", error),
+            Err(error) => panic!("Environment variables is missing {:#?}", error),
         }
 
         let env = self.env_variables.as_ref().unwrap();

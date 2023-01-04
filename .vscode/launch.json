@@ -8,7 +8,7 @@
             "name": "lldb API",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceRoot}/target/debug/api",
+            "program": "${workspaceRoot}/target/debug/server_http",
             "args": [ "arg1", "arg2" ],
             "cwd": "${workspaceRoot}/target/debug",
             "preLaunchTask": "build",
@@ -23,11 +23,11 @@
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=api",
-                    "--package=api"
+                    "--bin=server_http",
+                    "--package=server_http"
                 ],
                 "filter": {
-                    "name": "api",
+                    "name": "server_http",
                     "kind": "bin"
                 }
             },
