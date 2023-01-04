@@ -1,8 +1,8 @@
 
 use async_trait::async_trait;
 
-use crate::users::errors::users::UserNoExistsError;
-use crate::users::models::user::UserRoles;
+use crate::errors::users::UserNoExistsError;
+use crate::models::user::UserRoles;
 
 use super::users::UserManipulation;
 use super::users::UsersService;

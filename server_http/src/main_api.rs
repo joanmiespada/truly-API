@@ -1,23 +1,25 @@
-extern crate derive_more;
-extern crate rustc_serialize;
+//extern crate derive_more;
+//extern crate rustc_serialize;
 
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
 use actix_web::web;
 use actix_web::{http::header, App, HttpServer};
-use config::{ ENV_VAR_MODE_HTTP_SERVER, ENV_VAR_MODE_LAMBDA};
+use lib_config::{ ENV_VAR_MODE_HTTP_SERVER, ENV_VAR_MODE_LAMBDA};
 use handlers::appstate::AppState;
 use handlers::{auth_middleware, jwt_middleware, login_hd, user_my_hd, users_hd};
 use tracing_actix_web::TracingLogger;
+use lib_config::{Config};
 
-use users::services::users::UsersService;
+use lib_users::services::users::UsersService;
+use lib_users::repositories::users::UsersRepo;
 
-mod config;
+//mod config;
 mod handlers;
-mod users;
-mod lambda;
+//mod users;
+//mod lambda;
 
-async fn http_server(config: config::Config, user_service: UsersService) {
+async fn http_server(config: Config, user_service: UsersService) {
     let env = config.env_vars();
     let server_address = format!("{}:{}", env.local_address, env.local_port);
 
@@ -50,15 +52,17 @@ async fn http_server(config: config::Config, user_service: UsersService) {
     .await;
 }
 
-//#[actix_rt::main]
-#[tokio::main]
-async fn main() -> Result<(),Box<dyn std::error::Error>> {
+#[actix_rt::main]
+//#[tokio::main]
+async fn main() { //-> Result<(),Box<dyn std::error::Error>> {
      
-    let mut config = config::Config::new();
+    let mut config = Config::new();
     config.setup().await;
 
-    let user_repo = users::repositories::users::UsersRepo::new(&config);
-    let user_service = users::services::users::UsersService::new(user_repo);
+    let user_repo = UsersRepo::new(&config);
+    let user_service = UsersService::new(user_repo);
+
+    http_server(config, user_service).await;
 
     /*if config.env_vars().mode ==  ENV_VAR_MODE_HTTP_SERVER {
         http_server(config, user_service).await
@@ -68,7 +72,7 @@ async fn main() -> Result<(),Box<dyn std::error::Error>> {
         panic!("no mode set up at env vars")
     }*/
 
-    lambda::lambda_main(&config, &user_service).await
+    //lambda::lambda_main(&config, &user_service).await
     
 
 }

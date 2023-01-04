@@ -2,17 +2,14 @@ use actix_web::{web, HttpResponse, Responder};
 use chrono::Utc;
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
-
-use crate::{
-    config,
-    users::{
+use lib_config::{Config};
+use lib_users::{
         errors::users::{DynamoDBError, UserNoExistsError},
         models::user::UserRoles,
-    },
 };
 
 use super::{appstate::AppState, jwt_middleware::JWTSecurityError};
-use crate::users::services::login::LoginOps;
+use lib_users::services::login::LoginOps;
 
 #[derive(Serialize, Deserialize)]
 pub struct LoginUser {
@@ -27,7 +24,7 @@ pub struct LoginResponse {
 
 pub async fn login(state: web::Data<AppState>, payload: web::Json<LoginUser>) -> impl Responder {
     let user_service = &state.user_service;
-    let conf = &state.app_config;
+    let conf: &lib_config::Config = &state.app_config;
 
     let op_res = user_service
         .login(&payload.device, &payload.email, &payload.password)
@@ -62,7 +59,7 @@ pub struct Claims {
 fn create_jwt(
     uid: &str,
     roles: &Vec<UserRoles>,
-    conf: &config::Config,
+    conf: &Config,
 ) -> Result<String, actix_web::Error> {
     let expiration = Utc::now()
         .checked_add_signed(chrono::Duration::hours(24))

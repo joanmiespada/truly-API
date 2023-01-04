@@ -3,7 +3,7 @@ use std::str::FromStr;
 use actix_web::{web, Responder, HttpResponse, HttpRequest  };
 use serde::{Deserialize, Serialize};
 
-use crate::users::{
+use lib_users::{
     services::users::{UserManipulation }, errors::users::{DynamoDBError,  UserNoExistsError},
 };
 
