@@ -9,7 +9,7 @@ name="lambda_login"
 path="src/lambda.rs"
 
 [package.metadata.lambda_login.env]
-ENVIRONMENT = "development"
+ENVIRONMENT = "development" # doesn't work! you need to use command line
 
 [dependencies]
 lib_users = { path = "../lib_users" }

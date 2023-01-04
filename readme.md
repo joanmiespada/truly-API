@@ -19,3 +19,8 @@ https://www.cargo-lambda.info/guide/getting-started.html#step-2-create-a-new-pro
 
 Rust toolchain update 
 - rustup update
+
+Run workspace with all lambdas
+ENVIRONMENT=development cargo lambda start
+
+ENVIRONMENT=development cargo run -p server_http
