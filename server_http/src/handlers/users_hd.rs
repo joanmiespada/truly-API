@@ -2,7 +2,7 @@
 use actix_web::{web, Responder, HttpResponse };
 use serde::{Deserialize, Serialize};
 
-use crate::users::{
+use lib_users::{
     models::user::{User },
     services::users::{UserManipulation, PromoteUser, UpdatableFildsUser }, errors::users::{DynamoDBError, UserAlreadyExistsError, UserNoExistsError, UserMismatchError },
 };

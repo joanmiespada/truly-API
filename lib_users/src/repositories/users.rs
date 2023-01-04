@@ -4,11 +4,11 @@ use argon2::{self};
 
 use uuid::Uuid;
 
-use crate::config::{Config, EnvironmentVariables};
-use crate::users::errors::users::{
+use lib_config::{Config, EnvironmentVariables};
+use crate::errors::users::{
     DynamoDBError, UserAlreadyExistsError, UserNoExistsError, UserParamNotAccepted,
 };
-use crate::users::models::user::{User, UserRoles, UserStatus};
+use crate::models::user::{User, UserRoles, UserStatus};
 use async_trait::async_trait;
 use aws_sdk_dynamodb::{
     model::{AttributeValue, Select},

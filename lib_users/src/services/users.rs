@@ -1,5 +1,5 @@
-use crate::users::models::user::{User, UserRoles, UserStatus, Userer};
-use crate::users::repositories::users::{UserRepository, UsersRepo};
+use crate::models::user::{User, UserRoles, UserStatus, Userer};
+use crate::repositories::users::{UserRepository, UsersRepo};
 use async_trait::async_trait;
 use uuid::Uuid;
 

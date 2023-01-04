@@ -1,12 +1,12 @@
 use actix_web::{
     body::EitherBody,
     dev::{self, Service, ServiceRequest, ServiceResponse, Transform},
-    http::header::{HeaderName, AUTHORIZATION},
+    http::header::{HeaderName , HeaderValue, AUTHORIZATION},
     Error, HttpRequest, HttpResponse, ResponseError,
 };
 use futures_util::future::LocalBoxFuture;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
-use lambda_http::http::HeaderValue;
+//use lambda_http::http::HeaderValue;
 use std::future::{ready, Ready};
 
 pub const BEARER: &str = "Bearer ";
