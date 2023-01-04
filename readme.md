@@ -16,3 +16,6 @@ https://www.cargo-lambda.info/guide/getting-started.html#step-2-create-a-new-pro
 - cargo lambda build --release
 - cargo lambda build --release --arm64
 - cargo lambda deploy --iam-role XXXXXX  --http
+
+Rust toolchain update 
+- rustup update

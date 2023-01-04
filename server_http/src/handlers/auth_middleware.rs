@@ -4,10 +4,10 @@ use actix_web::{
     Error, HttpResponse,
 };
 use futures_util::future::LocalBoxFuture;
+use lib_users::models::user::UserRoles;
 use std::future::{ready, Ready};
 
-
-use super::{jwt_middleware::check_jwt_token};
+use super::jwt_middleware::get_header_jwt;
 
 // There are two steps in middleware processing.
 // 1. Middleware initialization, middleware factory gets called with
@@ -56,11 +56,18 @@ where
 
         //println!("Hi from start. You requested: {}", req.path());
 
-        let claim = check_jwt_token(req.request());
+        let req_headers = req.headers();
 
-        match claim {
+        let claim_ops = get_header_jwt(req_headers);
+
+        match claim_ops {
             Ok(clm) => {
-                let matches = clm.roles.into_iter().filter(|i| i.is_admin()).count();
+                let matches = clm
+                    .roles
+                    .into_iter()
+                    .map(|i| UserRoles::deserialize(i.as_str()).unwrap() )
+                    .filter(|i| i.is_admin())
+                    .count();
                 if matches == 0 {
                     auth_flag = false;
                 } else {
@@ -69,7 +76,9 @@ where
             }
             Err(e) => {
                 let (request, _pl) = req.into_parts();
-                let res = HttpResponse::Forbidden().finish().map_into_right_body();
+                let res = HttpResponse::Forbidden()
+                    .body(e.to_string())
+                    .map_into_right_body();
 
                 let new_response = ServiceResponse::new(request, res);
                 return Box::pin(async move { Ok(new_response) });
