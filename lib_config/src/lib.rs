@@ -24,7 +24,7 @@ pub struct EnvironmentVariables {
     pub rust_log: String,
     pub local_address: String,
     pub local_port: String,
-    pub aws_region: String,
+    pub aws_region_endpoints: String,
     pub aws_dynamodb_endpoint: String,
 }
 
@@ -64,7 +64,7 @@ impl Config {
 
         let uri = Uri::from_str( env.aws_dynamodb_endpoint.as_str()  ).unwrap();
         let endpoint_resolver = Endpoint::immutable( uri  );
-        let region_provider = Region::new(env.aws_region.clone());
+        let region_provider = Region::new(env.aws_region_endpoints.clone());
         /*
         RegionProviderChain::first_try(env::var("local").ok().map(Region::new))
             .or_default_provider()

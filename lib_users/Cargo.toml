@@ -19,6 +19,7 @@ aws-config = "0.51.0"
 aws-sdk-dynamodb = "0.21.0"
 async-trait = "0.1.59"
 tracing = { version = "0.1", features = ["log"] }
+tokio =  { version="1.23.1", features = ["macros"] }
 
 
 [dependencies.uuid]

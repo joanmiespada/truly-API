@@ -24,3 +24,14 @@ Run workspace with all lambdas
 ENVIRONMENT=development cargo lambda start
 
 ENVIRONMENT=development cargo run -p server_http
+
+terraform steps: https://awstip.com/crud-operations-with-rust-on-aws-lambda-part-2-bd1feae2554b
+
+cargo lambda build --release --all-features --arm64 --output-format zip
+cargo lambda build --release --arm64 --output-format zip --workspace  --exclude server_http
+
+terraform init
+terraform plan
+terraform apply
+terraform apply --auto-approve
+terraform destroy
