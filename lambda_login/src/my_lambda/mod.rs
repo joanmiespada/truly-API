@@ -1,24 +1,18 @@
 
-// https://blog.logrocket.com/deploy-lambda-functions-rust/
 use lambda_http::{
      http::Method, http::StatusCode, lambda_runtime::Context,
-    run, service_fn,  IntoResponse, Request, RequestExt, Response,
+     service_fn,  IntoResponse, Request, RequestExt, Response,
 };
 use lib_users::errors::users::{DynamoDBError, UserNoExistsError};
 use lib_users::services::login::LoginOps;
 use lib_util_jwt::create_jwt;
-//use lib_util_jwt::create_jwt;
-use serde::Deserialize;
+use serde::{Deserialize };
 use serde_json::json;
-use std::error::Error;
-//use serde_json::json;
-//use tower_http::cors::{Any, CorsLayer};
-//use aws_lambda_events::encodings::Body;
-//use http::header::HeaderMap;
 
 use lib_config::Config;
-use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
+
+
 
 #[derive(Debug)]
 pub struct ApiLambdaError(pub String);
@@ -41,7 +35,7 @@ async fn function_handler(
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error>> {
     let _context = req.lambda_context();
-    let query_string = req.query_string_parameters().to_owned();
+    //let query_string = req.query_string_parameters().to_owned();
     //not_allowed(&req, &_context)
     //request.uri().path()
     match req.method() {
@@ -95,7 +89,7 @@ pub struct LoginPayload {
     pub device: Option<String>,
 }
 
-async fn login(
+pub async fn login(
     _req: &Request,
     _c: &Context,
     config: &Config,
@@ -104,7 +98,7 @@ async fn login(
     //let method_name = event.into_parts().0;
     let args = _req.payload::<LoginPayload>();
     match args{
-        Err(e) => build_resp("no correct payload attached to the request: either username and password, or device, are mandatories".to_string(), StatusCode::BAD_REQUEST ),
+        Err(_) => build_resp("no correct payload attached to the request: either username and password, or device, are mandatories".to_string(), StatusCode::BAD_REQUEST ),
         Ok(user_pass) => {
             match user_pass {
                 None => build_resp("username or password fields are empty".to_string(), StatusCode::BAD_REQUEST),
@@ -174,7 +168,7 @@ pub async fn lambda_main(
         }));*/
 
     //let resp = lambda_http::run(handler).await;
-    let resp = lambda_http::run(service_fn(|event: Request| {
+    let resp = lambda_http::run(service_fn(|event | {
         function_handler(config, user_service, event)
     }))
     .await;
@@ -187,13 +181,5 @@ pub async fn lambda_main(
     // return resp;
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut config = Config::new();
-    config.setup().await;
 
-    let user_repo = UsersRepo::new(&config);
-    let user_service = UsersService::new(user_repo);
 
-    lambda_main(&config, &user_service).await
-}

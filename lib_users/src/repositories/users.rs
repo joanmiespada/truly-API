@@ -251,7 +251,7 @@ impl UserRepository for UsersRepo {
         }
     }
 
-    async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<User>> {
+    async fn get_all(&self, _page_number: u32, _page_size: u32) -> ResultE<Vec<User>> {
         let mut usersqueried = Vec::new();
 
         let results = self.client.scan().table_name(USERS_TABLE_NAME).send().await;
