@@ -56,7 +56,7 @@ pub async fn password_update_my_user( req: HttpRequest, state: web::Data<AppStat
                 HttpResponse::InternalServerError().finish()    
             }
         },
-        Ok(iid) => { 
+        Ok(_) => { 
             HttpResponse::Ok().finish()
         }
     }

@@ -45,10 +45,10 @@ module "lambda_login" {
   resource_logs = aws_iam_role_policy_attachment.truly_lambda_logs
   resource_xray = aws_iam_role_policy_attachment.truly_lambda_XRAY
   resource_dynamodb = aws_iam_role_policy_attachment.truly_lambda_dynamodb
+  resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
   role = aws_iam_role.truly_lambda_execution_role.arn
 
   environment_flag = var.environment_flag
-  aws_region = var.aws_region
-  dynamodb_endpoint = var.dynamodb_endpoint
+  trace_log = var.trace_log
 
 }

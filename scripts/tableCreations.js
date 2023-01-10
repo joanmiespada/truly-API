@@ -8,24 +8,33 @@ const config = Config();
 
 import { schemas } from './tableDefinitions.js';
 
-async function createSchema() {
+async function createSchema(tablefilter) {
 
-    await Promise.all(schemas.map(async (schm) => {
+    await Promise.all(schemas
+        .filter( (f) => { 
+            if( tablefilter == undefined) 
+                return true
+            else if (f.TableName == tablefilter) 
+                return true
+            else
+                return false   
+        }) 
+        .map (async (schm) => {
 
-        try {
-            const data = await dynamodb.send(new DescribeTableCommand({ TableName: schm.TableName }));
-            console.log(`table ${schm.TableName} already exists`)
-        } catch (ex) {
-
-            console.log(`Creating table ${schm.TableName}...`);
             try {
-                const data = await dynamodb.send(new CreateTableCommand(schm));
-                console.log(`Table ${schm.TableName} created successfully`);
+                const data = await dynamodb.send(new DescribeTableCommand({ TableName: schm.TableName }));
+                console.log(`table ${schm.TableName} already exists`)
             } catch (ex) {
-                console.log(`table ${schm.TableName} creation failed`)
-                console.log(ex.message)
+
+                console.log(`Creating table ${schm.TableName}...`);
+                try {
+                    const data = await dynamodb.send(new CreateTableCommand(schm));
+                    console.log(`Table ${schm.TableName} created successfully`);
+                } catch (ex) {
+                    console.log(`table ${schm.TableName} creation failed`)
+                    console.log(ex.message)
+                }
             }
-        }
 
     }));
 
@@ -61,12 +70,15 @@ program
     .version('0.0.1')
     .option('-d, --delete','delete tables/schemas from Dynomodb')
     .option('-c, --create','create tables/schemas to Dynomodb')
+    .option('-t, --table <table name>', 'specific table name')
+
 
 program.parse(process.argv);
 
 const options= program.opts();
 if(options.delete)
     deleteSchema()
-if(options.create)
-    createSchema()
+if(options.create){
+    createSchema(options.table)
+}
 

@@ -5,13 +5,15 @@
   "main": "src/index.js",
   "scripts": {
     "createTables": "NODE_ENV=development node --inspect ./scripts/tableCreations.js --create",
-    "deleteTables": "NODE_ENV=development node --inspect ./scripts/tableCreations.js --delete", 
+    "deleteTables": "NODE_ENV=development node --inspect ./scripts/tableCreations.js --delete",
     "createAdminUser": "NODE_ENV=development node --inspect scripts/admin_user.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.218.0",
+    "@aws-sdk/client-secrets-manager": "^3.245.0",
+    "aws-sdk": "^2.1291.0",
     "commander": "^9.4.1",
     "dotenv": "^16.0.3",
     "web3": "^1.8.1"

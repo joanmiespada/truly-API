@@ -1,34 +1,49 @@
+# Pre-requistes 
+Rust toolchain update 
+- rustup update
 
-- aws dynamodb list-tables --endpoint-url http://localhost:8000 --region=local
+# Localstack status
+- http://localhost:4566/health
+# Create secrets
+
+- aws --endpoint-url=http://localhost:4566 --region=eu-central-1 secretsmanager create-secret --name "truly/api/secrets" --description "My test database secret created with the CLI" --secret-string file://./scripts/fake_secret.json
+- aws --endpoint-url=http://localhost:4566 --region=eu-central-1 secretsmanager get-secret-value  --secret-id "truly/api/secrets"
+
+# Create Tables and basic data
+
+- aws dynamodb list-tables    --endpoint-url http://localhost:4566 
+- aws dynamodb describe-table --endpoint-url http://localhost:4566 --table-name truly_users 
 
 - NODE_ENV=development node  ./scripts/tableCreations.js --delete 
 - NODE_ENV=development node  ./scripts/tableCreations.js --create
+- NODE_ENV=development node  ./scripts/tableCreations.js --create -t truly_users
 - NODE_ENV=development node  ./scripts/admin_user.js #create admin user
 
-- cargo build
-- cargo run
+# Compile and run server_http
+
+- cargo build --workspace  --exclude lambda_*
+
+- ENVIRONMENT=development cargo run -p server_http
+
+- open with postmand http://localhost:8080
+
+# Compile and run lambdas local dev
+Run workspace with all lambdas
+- ENVIRONMENT=development cargo lambda watch
+- open with postmand http://localhost:9000/lambda-url/lambda_login
 
 https://www.cargo-lambda.info/guide/getting-started.html#step-2-create-a-new-project
 
 - cargo lambda start
-- http://localhost:9000/lambda-url/api/... 
+- http://localhost:9000/lambda-url/xxxx/... 
 
-- cargo lambda build --release
-- cargo lambda build --release --arm64
-- cargo lambda deploy --iam-role XXXXXX  --http
+# compile lambdas for production
 
-Rust toolchain update 
-- rustup update
+- cargo lambda build --release --arm64 --output-format zip --workspace  --exclude server_*
 
-Run workspace with all lambdas
-ENVIRONMENT=development cargo lambda start
-
-ENVIRONMENT=development cargo run -p server_http
+# infrastructure in productions
 
 terraform steps: https://awstip.com/crud-operations-with-rust-on-aws-lambda-part-2-bd1feae2554b
-
-cargo lambda build --release --all-features --arm64 --output-format zip
-cargo lambda build --release --arm64 --output-format zip --workspace  --exclude server_http
 
 terraform init
 terraform plan

@@ -1,8 +1,30 @@
-version: '3.7'
+version: '3.8'
 services:
-  dynamodb-local:
-    image: amazon/dynamodb-local:latest
+  #dynamodb-local:
+  #  image: amazon/dynamodb-local:latest
+  #  ports:
+  #    - "8000:8000"
+  
+  localstack: #https://www.bitovi.com/blog/running-aws-resources-on-localstack
+    image: localstack/localstack:latest
     ports:
-      - "8000:8000"
+      - "4566:4566"            # LocalStack Gateway
+      #- "4510-4559:4510-4559"  # external services port range
+    environment:
+      - SERVICES=dynamodb,s3,lambda,iam,secretsmanager,sns
+      - DEBUG=1
+      - PORT_WEB_UI=8080
+      - LAMBDA_EXECUTOR=local
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_DEFAULT_REGION=eu-central-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - DATA_DIR=/tmp/localstack/data
+      - HOST_TMP_FOLDER=./.localstack
+    volumes:
+      - './.localstack:/tmp/localstack'
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - ./create-docker-resources.sh:/docker-entrypoint-initaws.d/create-docker-resources.sh
+
 
   

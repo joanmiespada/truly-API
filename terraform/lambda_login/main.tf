@@ -25,9 +25,7 @@ resource "aws_lambda_function" "truly_lambda_login" {
   environment {
     variables = {
       ENVIRONMENT = "${var.environment_flag}"
-      AWS_REGION_ENDPOINTS= "${var.aws_region}"
-      AWS_DYNAMODB_ENDPOINT= "${var.dynamodb_endpoint}"
-      RUST_LOG ="cargo_lambda=trace"
+      RUST_LOG = "${var.trace_log}" #"cargo_lambda=trace"
     }
   }
 
@@ -37,6 +35,7 @@ resource "aws_lambda_function" "truly_lambda_login" {
     //aws_iam_role_policy_attachment.truly_lambda_S3,
     //aws_iam_role_policy_attachment.truly_lambda_SNS,
     var.resource_xray,//aws_iam_role_policy_attachment.truly_lambda_XRAY,
+    var.resource_secretsman,
     aws_cloudwatch_log_group.truly_lambda_login_cloudwatch,
   ]
   

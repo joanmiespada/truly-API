@@ -19,10 +19,11 @@ variable "common_tags" { }
 variable "resource_logs" {}
 variable "resource_dynamodb" {}
 variable "resource_xray" {}
+variable "resource_secretsman" {}
 
 variable "role" {}
 
 
 variable "environment_flag" {}
-variable "aws_region" {}
-variable "dynamodb_endpoint" {}
+
+variable "trace_log" {}

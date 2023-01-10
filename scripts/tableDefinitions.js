@@ -73,7 +73,7 @@ var schemas = [
         "Tags": [
             {
                 "Key": "project",
-                "Value": "nftator"
+                "Value": "truly"
             }
         ]
 
@@ -106,7 +106,7 @@ var schemas = [
         "Tags": [
             {
                 "Key": "project",
-                "Value": "nftator"
+                "Value": "truly"
             }
         ]
 
@@ -138,7 +138,7 @@ var schemas = [
         "Tags": [
             {
                 "Key": "project",
-                "Value": "nftator"
+                "Value": "truly"
             }
         ]
 
@@ -170,7 +170,7 @@ var schemas = [
         "Tags": [
             {
                 "Key": "project",
-                "Value": "nftator"
+                "Value": "truly"
             }
         ]
 

@@ -19,7 +19,7 @@ use chrono::{
     Local,
 };
 
-static USERS_TABLE_NAME: &str = "users";
+static USERS_TABLE_NAME: &str = "truly_users";
 static USERS_TABLE_INDEX_EMAIL: &str = "email";
 static USERS_TABLE_INDEX_DEVICE: &str = "device";
 static USERS_TABLE_INDEX_WALLETADDRESS: &str = "walletAddress";
@@ -209,7 +209,7 @@ impl UserRepository for UsersRepo {
                 password_av = AttributeValue::S(NULLABLE.to_string());
             }
             Some(pass) => {
-                let hash = cypher_text(pass, &self.environment_vars.hmac_secret)?;
+                let hash = cypher_text(pass, &self.environment_vars.hmac_secret() )?;
                 password_av = AttributeValue::S(hash);
             }
         }
@@ -360,7 +360,7 @@ impl UserRepository for UsersRepo {
                 let password_ok = cypher_check(
                     &password,
                     &password_stored_hashed,
-                    &self.environment_vars.hmac_secret,
+                    self.environment_vars.hmac_secret(),
                 )?;
                 if password_ok {
                     let mut usr = User::new();
@@ -426,7 +426,7 @@ impl UserRepository for UsersRepo {
     }
 
     async fn update_password(&self, id: &String, password: &String) -> ResultE<()> {
-        let aux = &self.environment_vars.hmac_secret;
+        let aux = self.environment_vars.hmac_secret();
         let hash = cypher_text(password, aux)?;
         let password_av = AttributeValue::S(hash);
 
