@@ -180,7 +180,7 @@ pub async fn password_update_user(state: web::Data<AppState>, payload: web::Json
                 HttpResponse::InternalServerError().finish()    
             }
         },
-        Ok(iid) => { 
+        Ok(_) => { 
             HttpResponse::Ok().finish()
         }
     }

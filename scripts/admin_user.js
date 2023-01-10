@@ -13,11 +13,10 @@ import { schemas } from './tableDefinitions.js';
 
 async function create_adminuser() {
 
-    let secret = process.env.HMAC_SECRET;
-    let user_admin_email = process.env.ADMIN_USER_EMAIL;
-    //let user_admin_passw = process.env.ADMIN_USER_PASSWORD;
-    let user_admin_device = process.env.ADMIN_USER_DEVICE;
-    let user_admin_walletAddress = process.env.ADMIN_TRON_ADDRESS;
+    let user_admin_id = 'e8c9284b-a8e9-466d-87de-d2d3d8e1ab8f'
+    let user_admin_email = "dfcgw345f03ger@truly.camera"
+    let user_admin_device = "device-12DFFG34-12YUIO34-12QWE34-8790"
+    let user_admin_walletAddress = "00x00";
 
     //let cyphered = crypto.createHmac('sha256', secret)
     //var encrypt = cyphered.update(user_admin_passw); //, 'utf8', 'hex'); //.digest("hex");
@@ -26,9 +25,9 @@ async function create_adminuser() {
 
     await Promise.all([new Promise(async (resolve, error) => {
         var params = {
-            TableName: 'users',
+            TableName: config.dbSchemaNames.users ,
             Item: {
-                'userID': { S: 'e8c9284b-a8e9-466d-87de-d2d3d8e1ab8f' },
+                'userID': { S: user_admin_id },
                 'creationTime': { S: new Date().toISOString() },
                 'walletAddress': { S: user_admin_walletAddress },
                 'email': { S: user_admin_email },

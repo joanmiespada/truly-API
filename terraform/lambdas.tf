@@ -73,6 +73,19 @@ resource "aws_iam_role_policy_attachment" "truly_lambda_XRAY" {
   policy_arn = aws_iam_policy.truly_lambda_XRAY_policy.arn
 }
 
+// -------------- Secrets Manager -------------------
+resource "aws_iam_policy" "truly_lambda_SECRETSMAN_policy" {
+  name        = "truly_lambda_SECRETSMAN_policy"
+  path        = "/"
+  description = "IAM policy for Secrets Manager from a lambda within truly app"
+
+  policy = file("./role_policies/secretsman.json")
+}
+resource "aws_iam_role_policy_attachment" "truly_lambda_SECRETSMAN" {
+  role       = aws_iam_role.truly_lambda_execution_role.name
+  policy_arn = aws_iam_policy.truly_lambda_SECRETSMAN_policy.arn
+}
+
 // -------------- execution role -------------------
 resource "aws_iam_role_policy_attachment" "truly_lambda_execution_policy" {
   role       = aws_iam_role.truly_lambda_execution_role.name

@@ -5,15 +5,28 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "lldb API",
+            "name": "server_http development",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/server_http",
             "args": [ "arg1", "arg2" ],
             "cwd": "${workspaceRoot}/target/debug",
-            "preLaunchTask": "build",
+            "preLaunchTask": "build_server_http",
             "env": {
                 "ENVIRONMENT":"development",
+            }
+        },
+        {
+            "name": "server_http prod",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceRoot}/target/debug/server_http",
+            "args": [ "arg1", "arg2" ],
+            "cwd": "${workspaceRoot}/target/debug",
+            "preLaunchTask": "build_server_http",
+            "env": {
+                "ENVIRONMENT":"production",
+                "RUST_LOG":"actix_web=debug"
             }
         },
         {

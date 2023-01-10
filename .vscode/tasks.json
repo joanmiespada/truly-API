@@ -8,7 +8,29 @@
 {
     "version": "2.0.0",
     "tasks": [
-      {
+     {
+        "type": "shell",
+        "label": "build_server_http",
+        "args": ["build", "--workspace","--exclude","lambda_*"],
+        "command": "cargo",
+        "group": "build",
+        "problemMatcher": [
+          {
+            "owner": "rust",
+            "fileLocation": ["relative", "${workspaceRoot}"],
+            "pattern": {
+              "regexp": "^(.*):(\\d+):(\\d+):\\s+(\\d+):(\\d+)\\s+(warning|error):\\s+(.*)$",
+              "file": 1,
+              "line": 2,
+              "column": 3,
+              "endLine": 4,
+              "endColumn": 5,
+              "severity": 6,
+              "message": 7
+            }
+          }
+        ]
+      }, {
         "type": "shell",
         "label": "build",
         "args": ["build", "-v"],

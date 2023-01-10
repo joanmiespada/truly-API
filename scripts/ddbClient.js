@@ -7,9 +7,9 @@ const config = Config();
 
 let dynamodb;
 if (process.env.NODE_ENV === "development")
-    dynamodb = new DynamoDBClient({ endpoint: config.dbURL, region: config.dbRegion });
+    dynamodb = new DynamoDBClient({ endpoint: config.awsURL });
 else if (process.env.NODE_ENV === "production")
-    dynamodb = new DynamoDBClient( { endpoint: config.dbURL, region: config.dbRegion });
+    dynamodb = new DynamoDBClient( { region: config.awsRegion });
 else
     throw 'No NODE_ENV flag enabled'
 

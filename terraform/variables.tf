@@ -28,3 +28,8 @@ variable "truly_tag" {
   default = "truly"
 }
 
+variable "trace_log" {
+  description = "tracing lambdas"
+  type = string
+  default = "cargo_lambda=trace"
+}

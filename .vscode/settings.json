@@ -1,18 +1,3 @@
 {
-    "serverlessConsole.services": [
-        {
-            "type": "dynamodb",
-            "title": "owners",
-            "tableName": "owners",
-            "region": "local",
-            "endpoint": "http://localhost:8000"
-        },
-        {
-            "type": "dynamodb",
-            "title": "users",
-            "tableName": "users",
-            "region": "local",
-            "endpoint": "http://localhost:8000"
-        }
-    ]
+    "serverlessConsole.services": []
 }

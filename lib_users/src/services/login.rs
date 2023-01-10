@@ -1,6 +1,6 @@
 
 use async_trait::async_trait;
-
+use tracing::{debug, instrument};
 use crate::errors::users::UserNoExistsError;
 use crate::models::user::UserRoles;
 
@@ -27,7 +27,7 @@ pub trait LoginOps {
 #[async_trait]
 impl LoginOps for UsersService {
 
-    #[tracing::instrument()]
+    #[instrument]
     async fn login(
         &self,
         device: &Option<String>,
@@ -40,7 +40,7 @@ impl LoginOps for UsersService {
         };
 
         if let Some(dvc) = device {
-
+            debug!("calling repository");
             let usr = self.get_by_user_device(dvc).await?;
             llt.user_id = usr.user_id().clone();
             llt.roles = usr.roles().clone();

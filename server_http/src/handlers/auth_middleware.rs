@@ -52,7 +52,7 @@ where
     dev::forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        let mut auth_flag = false;
+        let auth_flag: bool;
 
         //println!("Hi from start. You requested: {}", req.path());
 

@@ -5,7 +5,7 @@ resource "aws_apigatewayv2_api" "truly_api" {
 
   cors_configuration {
     allow_origins = ["*"]
-    allow_methods = ["POST", "PUT", "GET"]
+    allow_methods = ["POST", "PUT", "GET", "DELETE"]
     allow_headers = ["content-type"]
     max_age = 300
   }

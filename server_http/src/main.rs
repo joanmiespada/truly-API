@@ -5,7 +5,6 @@ use actix_cors::Cors;
 use actix_web::middleware::Logger;
 use actix_web::web;
 use actix_web::{http::header, App, HttpServer};
-use lib_config::{ ENV_VAR_MODE_HTTP_SERVER, ENV_VAR_MODE_LAMBDA};
 use handlers::appstate::AppState;
 use handlers::{auth_middleware, jwt_middleware, login_hd, user_my_hd, users_hd};
 use tracing_actix_web::TracingLogger;
@@ -19,9 +18,14 @@ mod handlers;
 //mod users;
 //mod lambda;
 
+const DEFAULT_ADDRESS: &str  = "0.0.0.0";
+const DEFAULT_PORT: &str = "8080";
+
 async fn http_server(config: Config, user_service: UsersService) {
-    let env = config.env_vars();
-    let server_address = format!("{}:{}", env.local_address, env.local_port);
+
+    //env_logger::init_from_env(Env::default().default_filter_or("info"));
+    
+    let server_address = format!("{}:{}", DEFAULT_ADDRESS, DEFAULT_PORT);
 
     // Start http server
     let _ = HttpServer::new(move || {
