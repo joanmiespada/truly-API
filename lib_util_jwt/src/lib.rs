@@ -1,9 +1,6 @@
-/*use actix_web::{
-    body::EitherBody,
-    dev::{self, Service, ServiceRequest, ServiceResponse, Transform},
-    http::header::{HeaderName , HeaderValue, AUTHORIZATION},
-    Error, HttpRequest, HttpResponse, ResponseError,
-};*/
+
+use http::{HeaderMap, HeaderValue};
+use http::header::AUTHORIZATION;
 
 use chrono::Utc;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
@@ -102,3 +99,28 @@ impl ResponseError for JWTSecurityError {
         HttpResponse::build(self.status_code()).json(self.0.clone())
     }
 }*/
+pub fn get_header_jwt(
+    req_headers: &HeaderMap<HeaderValue>,
+    jwt_secret: &String
+) -> Result<Claims, String> {
+    match req_headers.get(AUTHORIZATION) {
+        Some(header_v) => {
+            match std::str::from_utf8(header_v.as_bytes()) {
+                Ok(header_field_value) => {
+                    //let jwt_secret =  config.env_vars().jwt_token_base();
+
+                    let claim = check_jwt_token(&header_field_value.to_string(), &jwt_secret);
+
+                    match claim {
+                        Ok(clm) => {
+                            Ok(clm)
+                        }
+                        Err(e) => Err(e.to_string()),
+                    }
+                }
+                Err(_) => Err("jwt error: no auth header field with value valid".to_string()),
+            }
+        }
+        None => Err("jwt error: no auth header field present".to_string()),
+    }
+}
