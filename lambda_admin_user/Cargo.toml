@@ -1,12 +1,11 @@
 [package]
-name="lambda_login"
+name="lambda_admin_user"
 version="0.0.1"
 edition = "2021"
 
 [[bin]]
-name="lambda_login"
+name="lambda_admin_user"
 path="src/main.rs"
-
 
 [dependencies]
 lib_users = { path = "../lib_users" }
@@ -21,5 +20,6 @@ serde_json = "1.0.89"
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3.16", default-features = false, features = ["fmt", "env-filter"] }
 tokio = { version = "1", features = ["full"] }
+
 
 

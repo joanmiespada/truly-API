@@ -1444,6 +1444,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "lambda_admin_user"
+version = "0.0.1"
+dependencies = [
+ "aws_lambda_events",
+ "lambda_http",
+ "lambda_runtime",
+ "lib_config",
+ "lib_users",
+ "lib_util_jwt",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "lambda_http"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
