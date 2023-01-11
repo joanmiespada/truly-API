@@ -1,9 +1,8 @@
-use aws_lambda_events::http::{HeaderMap, HeaderValue};
-use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response, http::header::AUTHORIZATION};
+use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response };
 use lib_config::Config;
 use lib_users::models::user::UserRoles;
 use lib_users::services::users::UsersService;
-use lib_util_jwt::{ check_jwt_token, Claims};
+use lib_util_jwt::{ get_header_jwt};
 use serde_json::json;
 use tracing::instrument;
 
@@ -23,10 +22,6 @@ mod password_update_user;
 mod promote_user;
 mod update_user;
 
-/// This is the main body for the function.
-/// Write your code inside it.
-/// There are some code example in the following URLs:
-/// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
 #[instrument]
 pub async fn function_handler(
     config: &Config,
@@ -102,7 +97,8 @@ fn check_jwt_token_as_admin(
     let auth_flag;
     let req_headers = req.headers();
 
-    let claim_ops = get_header_jwt(req_headers, config);
+    let jwt_secret =  config.env_vars().jwt_token_base();
+    let claim_ops = get_header_jwt(req_headers, jwt_secret);
 
     match claim_ops {
         Ok(clm) => {
@@ -124,7 +120,7 @@ fn check_jwt_token_as_admin(
     }
     Ok(auth_flag)
 }
-
+/* 
 fn get_header_jwt(
     req_headers: &HeaderMap<HeaderValue>,
     config: &Config,
@@ -149,4 +145,4 @@ fn get_header_jwt(
         }
         None => Err("jwt error: no auth header field present".to_string()),
     }
-}
+}*/

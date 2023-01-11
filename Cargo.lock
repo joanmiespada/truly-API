@@ -1534,6 +1534,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "lambda_user"
+version = "0.0.1"
+dependencies = [
+ "aws_lambda_events",
+ "lambda_http",
+ "lambda_runtime",
+ "lib_config",
+ "lib_users",
+ "lib_util_jwt",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "language-tags"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1582,6 +1600,7 @@ name = "lib_util_jwt"
 version = "0.0.1"
 dependencies = [
  "chrono",
+ "http",
  "jsonwebtoken",
  "serde",
  "serde_json",
