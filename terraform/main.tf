@@ -52,3 +52,33 @@ module "lambda_login" {
   trace_log = var.trace_log
 
 }
+
+module "lambda_user" {
+  source = "./lambda_user"
+
+  common_tags = local.common_tags 
+  resource_logs = aws_iam_role_policy_attachment.truly_lambda_logs
+  resource_xray = aws_iam_role_policy_attachment.truly_lambda_XRAY
+  resource_dynamodb = aws_iam_role_policy_attachment.truly_lambda_dynamodb
+  resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
+  role = aws_iam_role.truly_lambda_execution_role.arn
+
+  environment_flag = var.environment_flag
+  trace_log = var.trace_log
+
+}
+
+module "lambda_admin_user" {
+  source = "./lambda_admin_user"
+
+  common_tags = local.common_tags 
+  resource_logs = aws_iam_role_policy_attachment.truly_lambda_logs
+  resource_xray = aws_iam_role_policy_attachment.truly_lambda_XRAY
+  resource_dynamodb = aws_iam_role_policy_attachment.truly_lambda_dynamodb
+  resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
+  role = aws_iam_role.truly_lambda_execution_role.arn
+
+  environment_flag = var.environment_flag
+  trace_log = var.trace_log
+
+}
