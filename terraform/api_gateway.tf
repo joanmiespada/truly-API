@@ -34,17 +34,17 @@ resource "aws_apigatewayv2_integration" "truly_login_integration" {
 
 resource "aws_apigatewayv2_route" "truly_login_route" {
   api_id    = aws_apigatewayv2_api.truly_api.id
-  route_key = "POST /auth/login"
+  route_key =  "POST /auth/login"
   target    = "integrations/${aws_apigatewayv2_integration.truly_login_integration.id}"
 
 }
 
 resource "aws_lambda_permission" "truly_login_permission" {
   function_name = module.lambda_login.lambda.function_name   
-  #aws_lambda_function.truly_lambda_login.function_name
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/*/${split("/", aws_apigatewayv2_route.truly_login_route.route_key)[1]}"
+  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_login_route.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_login_route.route_key)[1]}"
+  //source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/POST/auth/login"
 
 }
 
