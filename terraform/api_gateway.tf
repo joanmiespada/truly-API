@@ -19,6 +19,7 @@ resource "aws_apigatewayv2_stage" "truly_stage" {
   tags = merge(local.common_tags,{})
 }
 
+//---------------- lambda login ----------------------------
 resource "aws_apigatewayv2_integration" "truly_login_integration" {
   api_id           = aws_apigatewayv2_api.truly_api.id
   integration_type = "AWS_PROXY"
@@ -34,7 +35,7 @@ resource "aws_apigatewayv2_integration" "truly_login_integration" {
 
 resource "aws_apigatewayv2_route" "truly_login_route" {
   api_id    = aws_apigatewayv2_api.truly_api.id
-  route_key =  "POST /auth/login"
+  route_key =  "POST /auth/{proxy+}"
   target    = "integrations/${aws_apigatewayv2_integration.truly_login_integration.id}"
 
 }
@@ -48,6 +49,67 @@ resource "aws_lambda_permission" "truly_login_permission" {
 
 }
 
+//---------------- lambda admin user ----------------------------
+resource "aws_apigatewayv2_integration" "truly_admin_user_integration" {
+  api_id           = aws_apigatewayv2_api.truly_api.id
+  integration_type = "AWS_PROXY"
+
+  connection_type    = "INTERNET"
+  description        = "Login methods"
+  integration_method = "POST"
+  integration_uri    = module.lambda_admin_user.lambda.invoke_arn
+
+  payload_format_version = "2.0"
+
+}
+
+resource "aws_apigatewayv2_route" "truly_admin_user_route" {
+  api_id    = aws_apigatewayv2_api.truly_api.id
+  route_key =  "ANY /admin/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.truly_admin_user_integration.id}"
+
+}
+
+resource "aws_lambda_permission" "truly_admin_user_permission" {
+  function_name = module.lambda_admin_user.lambda.function_name   
+  action        = "lambda:InvokeFunction"
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_admin_user_route.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_admin_user_route.route_key)[1]}"
+  //source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/POST/auth/login"
+
+}
+
+//---------------- lambda my user ----------------------------
+resource "aws_apigatewayv2_integration" "truly_user_integration" {
+  api_id           = aws_apigatewayv2_api.truly_api.id
+  integration_type = "AWS_PROXY"
+
+  connection_type    = "INTERNET"
+  description        = "Login methods"
+  integration_method = "POST"
+  integration_uri    = module.lambda_user.lambda.invoke_arn
+
+  payload_format_version = "2.0"
+
+}
+
+resource "aws_apigatewayv2_route" "truly_user_route" {
+  api_id    = aws_apigatewayv2_api.truly_api.id
+  route_key =  "ANY /api/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.truly_user_integration.id}"
+
+}
+
+resource "aws_lambda_permission" "truly_user_permission" {
+  function_name = module.lambda_user.lambda.function_name   
+  action        = "lambda:InvokeFunction"
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_user_route.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_user_route.route_key)[1]}"
+  //source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/POST/auth/login"
+
+}
+
+//---------------- register all lambdas below ----------------------------
 resource "aws_apigatewayv2_deployment" "truly_api_deployment" {
   api_id      = aws_apigatewayv2_api.truly_api.id
   description = "truly API deployment"
@@ -56,6 +118,10 @@ resource "aws_apigatewayv2_deployment" "truly_api_deployment" {
     redeployment = sha1(join(",", [
       jsonencode(aws_apigatewayv2_integration.truly_login_integration),
       jsonencode(aws_apigatewayv2_route.truly_login_route),
+      jsonencode(aws_apigatewayv2_integration.truly_admin_user_integration),
+      jsonencode(aws_apigatewayv2_route.truly_admin_user_route),
+      jsonencode(aws_apigatewayv2_integration.truly_user_integration),
+      jsonencode(aws_apigatewayv2_route.truly_user_route),
       ],
     ))
   }
