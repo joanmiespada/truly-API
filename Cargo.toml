@@ -4,6 +4,7 @@ members = [
     "lib_users",
     "lib_util_jwt",
     "lambda_login",
+    "lambda_admin_user",
     "server_http"
 ]
 
