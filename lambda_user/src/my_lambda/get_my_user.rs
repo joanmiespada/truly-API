@@ -21,7 +21,7 @@ pub async fn get_my_user(
 
     let op_res = user_service.get_by_user_id(&id).await;
     match op_res {
-        Ok(user) => build_resp( json!(user).to_string()  , StatusCode::ACCEPTED  ),
+        Ok(user) => build_resp( json!(user).to_string()  , StatusCode::OK  ),
         Err(e) => {
             if let Some(e) = e.downcast_ref::<DynamoDBError>() {
                 return build_resp(e.to_string(), StatusCode::SERVICE_UNAVAILABLE);

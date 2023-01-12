@@ -18,9 +18,10 @@ pub async fn get_user_by_id(
     _c: &Context,
     config: &Config,
     user_service: &UsersService,
+    id: &String
 ) -> Result<Response<String>, Box<dyn std::error::Error>> {
  
-    let id;
+    /*let id;
     
     match req.path_parameters().all("id") {
         None => { return build_resp("no id specified on url path".to_string(), StatusCode::BAD_REQUEST);},
@@ -31,10 +32,10 @@ pub async fn get_user_by_id(
                 Some(value) => id = value.to_string()
             }
         }
-    }
+    }*/
 
 
-    let op_res = user_service.get_by_user_id(&id).await;
+    let op_res = user_service.get_by_user_id(id).await;
     match op_res {
         Ok(user) => build_resp( json!(user).to_string()  , StatusCode::ACCEPTED  ),
         Err(e) => {

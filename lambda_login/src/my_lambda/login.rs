@@ -6,24 +6,28 @@ use lambda_http::{
 use lib_users::errors::users::{DynamoDBError, UserNoExistsError};
 use lib_users::services::login::LoginOps;
 use lib_util_jwt::create_jwt;
-use serde::{Deserialize, Serialize };
+use serde::{Deserialize };
 use serde_json::json;
-use tracing::{instrument};
+use tracing::{instrument, warn };
 use lib_config::Config;
 use lib_users::services::users::UsersService;
+use lib_users::validate_password;
 
 use crate::my_lambda::{build_resp };
+use validator::{Validate };
 
-
-#[derive(Debug, Deserialize,Serialize, Default)]
+#[derive(Debug, Deserialize, Validate )]
 pub struct LoginPayload {
     #[serde(default)]
+    #[validate(email)]
     pub email: Option<String>,
     #[serde(default)]
+    #[validate(length(min = 8, max=50), custom = "validate_password")]
     pub password: Option<String>,
     #[serde(default)]
     pub device: Option<String>,
 }
+
 
 
 #[instrument]
@@ -35,8 +39,6 @@ pub async fn login(
 ) -> Result<Response<String>, Box<dyn std::error::Error>> {
     //let method_name = event.into_parts().0;
     let args = _req.payload::<LoginPayload>();
-
-    println!("running the login...");
     
      match args{
          Err(_) => build_resp("no correct payload attached to the request: either username and password, or device, are mandatories".to_string(), StatusCode::BAD_REQUEST ),
@@ -44,21 +46,21 @@ pub async fn login(
              match user_pass {
                  None => build_resp("either email/password or device fields are empty".to_string(), StatusCode::BAD_REQUEST),
                  Some(payload) => {
-                    println!("payload received for login");
+                    //trace!("payload received for login");
                     let result = user_service.login(&payload.device, &payload.email, &payload.password).await;
-                    println!("login service called");
+                    //trace!("login service called");
                     match result {
                         Err(e) => {
                             if let Some(_) = e.downcast_ref::<DynamoDBError>() {
-                                println!("error: {}",e.to_string());
+                                warn!("error: {}",e.to_string());
                                 build_resp(e.to_string(), StatusCode::SERVICE_UNAVAILABLE)
                             } else if let Some(e) = e.downcast_ref::<UserNoExistsError>() {
-                                let aux2 = serde_json::to_string(&payload).unwrap();
-                                let aux1 = format!("error: {} --payload received: {}",e.to_string(), aux2 );
-                                println!("{}",aux1);
-                                build_resp(aux1, StatusCode::NOT_ACCEPTABLE)
+                                //let aux2 = serde_json::to_string(&payload).unwrap();
+                                //let aux1 = format!("error: {} --payload received: {}",e.to_string(), aux2 );
+                                //warn!("{}",aux1);
+                                build_resp(e.to_string(), StatusCode::NOT_ACCEPTABLE)
                             } else {
-                                println!("error: {}",e.to_string());
+                                warn!("error: {}",e.to_string());
                                 build_resp(e.to_string(), StatusCode::INTERNAL_SERVER_ERROR)
                             }
                         }
