@@ -57,7 +57,7 @@ pub async fn update_my_user(
             }
         }
         Ok(_) => {
-            build_resp("".to_string(), StatusCode::ACCEPTED)
+            build_resp("".to_string(), StatusCode::OK)
         }
     }
 }

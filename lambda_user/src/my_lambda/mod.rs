@@ -44,7 +44,7 @@ pub async fn function_handler(
         },
         &Method::PUT => match req.uri().path() {
             "/api/user" => update_my_user(&req, &context, config, user_service, &user_id).await,
-            "/user/password_update" => password_update_my_user(&req, &context, config, user_service, &user_id).await,
+            "/api/user/password_update" => password_update_my_user(&req, &context, config, user_service, &user_id).await,
             &_ => build_resp(
                 "method not allowed".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
@@ -65,7 +65,7 @@ fn build_resp(
     let res = Response::builder()
         .status(status_code)
         .header("content-type", "text/json")
-        .body(json!({ "message": msg }).to_string());
+        .body(msg);
     //.map_err(Box::new)?;
     match res {
         Err(e) => Err(ApiLambdaUserError { 0: e.to_string() }.into()),

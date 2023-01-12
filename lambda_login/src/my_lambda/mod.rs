@@ -10,7 +10,6 @@ use tracing::{instrument};
 use lib_config::Config;
 use lib_users::services::users::UsersService;
 use login::login;
-
 use self::signup::create_basic_user;
 
 #[derive(Debug)]
@@ -59,7 +58,7 @@ fn build_resp(
     let res = Response::builder()
         .status(status_code)
         .header("content-type", "text/json")
-        .body(json!({ "message": msg }).to_string());
+        .body(msg);
     //.map_err(Box::new)?;
     match res {
         Err(e) => Err(ApiLambdaError { 0: e.to_string() }.into()),

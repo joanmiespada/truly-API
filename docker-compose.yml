@@ -14,7 +14,7 @@ services:
       - SERVICES=dynamodb,s3,lambda,iam,secretsmanager,sns,apigateway,logs
       - DEBUG=1
       - PORT_WEB_UI=8080
-      - LAMBDA_EXECUTOR=local
+      - LAMBDA_EXECUTOR=docker
       - DOCKER_HOST=unix:///var/run/docker.sock
       - AWS_DEFAULT_REGION=eu-central-1
       - AWS_ACCESS_KEY_ID=test

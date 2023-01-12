@@ -1,10 +1,12 @@
-use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response };
+use std::str::FromStr;
+
+use lambda_http::Context;
+use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_config::Config;
 use lib_users::models::user::UserRoles;
 use lib_users::services::users::UsersService;
-use lib_util_jwt::{ get_header_jwt};
-use serde_json::json;
-use tracing::instrument;
+use lib_util_jwt::get_header_jwt;
+use tracing::{info, instrument, trace};
 
 use self::downgrade_user::downgrade_user;
 use self::error::ApiLambdaAdminUserError;
@@ -13,6 +15,7 @@ use self::get_users::get_users;
 use self::password_update_user::password_update_user;
 use self::promote_user::promote_user;
 use self::update_user::update_user;
+use matchit::Router;
 
 mod downgrade_user;
 pub mod error;
@@ -39,14 +42,31 @@ pub async fn function_handler(
         Ok(_) => {}
     }
 
+    let mut router = Router::new();
+    router.insert("/admin/users", Some("1"))?;
+    router.insert("/admin/users/:id", Some("2"))?;
+
+    //info!("{}",req.uri().path());
     match req.method() {
-        &Method::GET => match req.uri().path() {
-            "/admin/users" => get_users(&req, &context, config, user_service).await,
-            "/admin/users/{id}" => get_user_by_id(&req, &context, config, user_service).await,
-            &_ => build_resp(
+        &Method::GET => match router.at(req.uri().path()) {
+            Err(e) => build_resp(
                 "method not allowed".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
             ),
+            Ok(matched) => {
+                match matched.value.unwrap() {
+                    "1" => get_users(&req, &context, config, user_service).await,
+                    "2" => { 
+                        let aux = matched.params.get("id").unwrap().to_string();
+                        return get_user_by_id(&req, &context, config, user_service, &aux).await;
+                    },
+                    _ => build_resp(
+                        "method not allowed".to_string(),
+                        StatusCode::METHOD_NOT_ALLOWED,
+                    ),
+                }
+                
+            }
         },
         &Method::POST => match req.uri().path() {
             "/users/password_update/{id}" => {
@@ -81,7 +101,7 @@ fn build_resp(
     let res = Response::builder()
         .status(status_code)
         .header("content-type", "text/json")
-        .body(json!({ "message": msg }).to_string());
+        .body(msg);
     //.map_err(Box::new)?;
     match res {
         Err(e) => Err(ApiLambdaAdminUserError { 0: e.to_string() }.into()),
@@ -90,14 +110,11 @@ fn build_resp(
     //Ok(res)
 }
 
-fn check_jwt_token_as_admin(
-    req: &Request,
-    config: &Config,
-) -> Result<bool, String> {
+fn check_jwt_token_as_admin(req: &Request, config: &Config) -> Result<bool, String> {
     let auth_flag;
     let req_headers = req.headers();
 
-    let jwt_secret =  config.env_vars().jwt_token_base();
+    let jwt_secret = config.env_vars().jwt_token_base();
     let claim_ops = get_header_jwt(req_headers, jwt_secret);
 
     match claim_ops {
@@ -120,29 +137,3 @@ fn check_jwt_token_as_admin(
     }
     Ok(auth_flag)
 }
-/* 
-fn get_header_jwt(
-    req_headers: &HeaderMap<HeaderValue>,
-    config: &Config,
-) -> Result<Claims, String> {
-    match req_headers.get(AUTHORIZATION) {
-        Some(header_v) => {
-            match std::str::from_utf8(header_v.as_bytes()) {
-                Ok(header_field_value) => {
-                    let jwt_secret =  config.env_vars().jwt_token_base();
-
-                    let claim = check_jwt_token(&header_field_value.to_string(), &jwt_secret);
-
-                    match claim {
-                        Ok(clm) => {
-                            Ok(clm)
-                        }
-                        Err(e) => Err(e.to_string()),
-                    }
-                }
-                Err(_) => Err("jwt error: no auth header field with value valid".to_string()),
-            }
-        }
-        None => Err("jwt error: no auth header field present".to_string()),
-    }
-}*/

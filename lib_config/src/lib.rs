@@ -1,7 +1,7 @@
-use std::{str::FromStr };
+use std::str::FromStr;
 
 use actix_web::http::Uri;
-use aws_config::{SdkConfig, meta::region::RegionProviderChain};
+use aws_config::{meta::region::RegionProviderChain, SdkConfig};
 use dotenv::dotenv;
 use serde::Deserialize;
 
@@ -102,18 +102,22 @@ impl Config {
             RegionProviderChain::first_try(env::var("local").ok().map(Region::new))
                 .or_default_provider()
                 .or_else(Region::new("us-east-1")); */
+            let creden = aws_config::profile::ProfileFileCredentialsProvider::builder()
+                .profile_name("localstack");
             config = aws_config::from_env()
+                .credentials_provider(creden.build())
                 .region(region_provider)
                 .endpoint_resolver(endpoint_resolver.unwrap())
                 .load()
                 .await;
-        }else if env.environment == PROD_ENV {
-
+        } else if env.environment == PROD_ENV {
             let region_provider = RegionProviderChain::default_provider().or_else("eu-central-1");
             config = aws_config::from_env().region(region_provider).load().await;
-           
-        }else{
-            panic!("environment variable ENVIRONMENT configured wrongly: {}", env.environment)
+        } else {
+            panic!(
+                "environment variable ENVIRONMENT configured wrongly: {}",
+                env.environment
+            )
         }
         self.aws_config = Some(config);
 
