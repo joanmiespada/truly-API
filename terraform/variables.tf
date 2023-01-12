@@ -33,3 +33,9 @@ variable "trace_log" {
   type = string
   default = "cargo_lambda=trace"
 }
+
+variable "lambda_deploy_folder" {
+  description = "it helps to identify the correct folder lambda with infra arm64 or linux"
+  type = string
+  default = "../target/lambda_arm64/"
+}

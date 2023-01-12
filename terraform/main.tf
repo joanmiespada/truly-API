@@ -50,6 +50,8 @@ module "lambda_login" {
 
   environment_flag = var.environment_flag
   trace_log = var.trace_log
+  lambda_deploy_folder = var.lambda_deploy_folder
+
 
 }
 
@@ -65,7 +67,7 @@ module "lambda_user" {
 
   environment_flag = var.environment_flag
   trace_log = var.trace_log
-
+  lambda_deploy_folder = var.lambda_deploy_folder
 }
 
 module "lambda_admin_user" {
@@ -80,5 +82,6 @@ module "lambda_admin_user" {
 
   environment_flag = var.environment_flag
   trace_log = var.trace_log
+  lambda_deploy_folder = var.lambda_deploy_folder
 
 }
