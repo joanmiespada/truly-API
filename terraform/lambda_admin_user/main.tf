@@ -1,3 +1,7 @@
+locals {
+  lambda_file = "${var.lambda_deploy_folder}/${var.lambda_admin_user_file}"
+}
+
 resource "aws_cloudwatch_log_group" "truly_lambda_admin_user_cloudwatch" {
   name              = "/aws/lambda/${var.truly_lambda_admin_user_function_name}"
   retention_in_days = 5
@@ -10,8 +14,8 @@ resource "aws_lambda_function" "truly_lambda_admin_user" {
   function_name = var.truly_lambda_admin_user_function_name
   architectures = [ "arm64" ]
   memory_size = 512
-  source_code_hash = filebase64sha256(var.lambda_admin_user_file)
-  filename         =  var.lambda_admin_user_file 
+  source_code_hash = filebase64sha256(local.lambda_file)
+  filename         =  local.lambda_file 
   timeout = 60
   tracing_config {
     mode="Active"

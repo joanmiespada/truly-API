@@ -2,7 +2,7 @@
 variable "lambda_login_file" {
   description = "The binary zip file for the login lambda."
   type    = string
-  default = "../target/lambda/lambda_login/bootstrap.zip"
+  default = "lambda_login/bootstrap.zip"
 }
 
 variable "truly_lambda_login_function_name" {
@@ -27,3 +27,5 @@ variable "role" {}
 variable "environment_flag" {}
 
 variable "trace_log" {}
+
+variable "lambda_deploy_folder" {}

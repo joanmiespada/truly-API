@@ -28,6 +28,9 @@ Rust toolchain update
 - open with postmand http://localhost:8080
 
 # Compile and run lambdas local dev
+
+cargo build --release --workspace --exclude server_*
+
 Run workspace with all lambdas
 - ENVIRONMENT=development cargo lambda watch
 - open with postmand http://localhost:9000/lambda-url/lambda_login
@@ -39,7 +42,7 @@ https://www.cargo-lambda.info/guide/getting-started.html#step-2-create-a-new-pro
 
 # compile lambdas for production
 
-- cargo lambda build --release --arm64 --output-format zip --workspace  --exclude server_*
+- cargo lambda build --release --arm64 --output-format zip --workspace  --exclude server_* --lambda-dir target/lambda_arm64
 
 # infrastructure in productions
 

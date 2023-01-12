@@ -2,7 +2,7 @@
 variable "lambda_user_file" {
   description = "The binary zip file for the user lambda."
   type    = string
-  default = "../target/lambda/lambda_user/bootstrap.zip"
+  default = "lambda_user/bootstrap.zip"
 }
 
 variable "truly_lambda_user_function_name" {
@@ -27,3 +27,5 @@ variable "role" {}
 variable "environment_flag" {}
 
 variable "trace_log" {}
+
+variable "lambda_deploy_folder" {}
