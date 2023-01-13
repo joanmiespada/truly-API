@@ -19,6 +19,7 @@ pub struct EnvironmentVariables {
     //pub admin_account_userid: String,
     //pub admin_account_device: String,
     pub jwt_token_base: Option<String>,
+    pub jwt_token_time_exp_hours : Option<String>, 
     pub environment: String,
     pub hmac_secret: Option<String>,
     pub rust_log: String,
@@ -45,6 +46,13 @@ impl EnvironmentVariables {
         let aux = self.aws_endpoint.as_ref().unwrap();
         return aux;
     }
+
+    pub fn jwt_token_time_exp_hours (&self) -> &String {
+        let aux = &self.jwt_token_time_exp_hours.as_ref().unwrap();
+        return aux;
+    }
+
+
 }
 
 #[derive(Clone, Debug)]
@@ -86,10 +94,9 @@ impl Config {
 
         match envy::from_env::<EnvironmentVariables>() {
             Ok(env_vars) => {
-                //println!("{:#?}", env_vars);
                 self.env_variables = Some(env_vars.clone());
             }
-            Err(error) => panic!("Environment variables is missing {:#?}", error),
+            Err(error) => panic!("Environment variables are missing {:#?}", error),
         }
 
         let env = self.env_variables.as_ref().unwrap();

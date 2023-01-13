@@ -66,3 +66,14 @@ impl Display for UserParamNotAccepted{
         write!(f, "user's data is unacceptable: {}", self.0)
     }
 }
+
+#[derive(Debug)]
+pub struct UserStatusError(pub String);
+
+impl std::error::Error for UserStatusError{}
+
+impl Display for UserStatusError{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "user's status: {}", self.0)
+    }
+}

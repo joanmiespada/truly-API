@@ -2,19 +2,17 @@ use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, Request
 use lib_config::Config;
 use lib_users::models::user::UserRoles;
 use lib_users::services::users::UsersService;
-use lib_util_jwt::get_header_jwt;
-use tracing::instrument;
+use lib_util_jwt::{get_header_jwt, JWTSecurityError};
+use tracing::{instrument, info};
 
-use self::downgrade_user::downgrade_user;
 use self::error::ApiLambdaAdminUserError;
 use self::get_user_by_id::get_user_by_id;
 use self::get_users::get_users;
 use self::password_update_user::password_update_user;
-use self::promote_user::promote_user;
+use self::promote_user::{promote_user,downgrade_user };
 use self::update_user::update_user;
 use matchit::Router;
 
-mod downgrade_user;
 pub mod error;
 mod get_user_by_id;
 mod get_users;
@@ -34,9 +32,14 @@ pub async fn function_handler(
 
     match check_jwt_token_as_admin(&req, config) {
         Err(e) => {
-            return build_resp(e.to_string(), StatusCode::FORBIDDEN);
+            return build_resp(e.to_string(), StatusCode::UNAUTHORIZED);
         }
-        Ok(_) => {}
+        Ok(value) => {
+            match value{
+                false => {return build_resp("you aren't admin, please login as admin".to_string(), StatusCode::UNAUTHORIZED);}
+                _ =>{}
+            }
+        }
     }
 
     let mut router = Router::new();
@@ -129,15 +132,15 @@ fn build_resp(
     //Ok(res)
 }
 
-fn check_jwt_token_as_admin(req: &Request, config: &Config) -> Result<bool, String> {
+fn check_jwt_token_as_admin(req: &Request, config: &Config) -> Result<bool, JWTSecurityError> {
     let auth_flag;
     let req_headers = req.headers();
 
     let jwt_secret = config.env_vars().jwt_token_base();
     let claim_ops = get_header_jwt(req_headers, jwt_secret);
-
     match claim_ops {
         Ok(clm) => {
+            info!("{}", clm.to_string());
             let matches = clm
                 .roles
                 .into_iter()

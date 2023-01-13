@@ -2,26 +2,27 @@ use lambda_http::RequestExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::Config;
 use lib_users::errors::users::{DynamoDBError, UserNoExistsError};
-use lib_users::services::users::{UserManipulation, UsersService };
+use lib_users::services::users::{UserManipulation, UsersService};
+use lib_users::validate_password;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
+use validator::{Validate, ValidationError};
 
 use super::build_resp;
 
-
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize, Validate, Deserialize)]
 pub struct UpdatePasswordUser {
-    pub password: String, 
+    #[validate(length(min = 8, max = 50), custom = "validate_password")]
+    pub password: String,
 }
 #[instrument]
-pub async fn password_update_my_user (
+pub async fn password_update_my_user(
     req: &Request,
     _c: &Context,
     config: &Config,
     user_service: &UsersService,
     id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error>> {
-
     let new_password;
     match req.payload::<UpdatePasswordUser>() {
         Err(e) => {
@@ -31,25 +32,30 @@ pub async fn password_update_my_user (
             None => {
                 return build_resp("no payload found".to_string(), StatusCode::BAD_REQUEST);
             }
-            Some(payload) => {
-                new_password = payload.password.clone();
-            }
+            Some(payload) => match payload.validate() {
+                Err(e) => {
+                    return build_resp(e.to_string(), StatusCode::BAD_REQUEST);
+                }
+                Ok(_) => {
+                    new_password = payload.password.clone();
+                }
+            },
         },
     }
 
-    let op_res = user_service. update_password(&id, &new_password).await;
+    let op_res = user_service.update_password(&id, &new_password).await;
     match op_res {
         Err(e) => {
             if let Some(m) = e.downcast_ref::<DynamoDBError>() {
                 return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
-            } else if  let Some(m) = e.downcast_ref::<UserNoExistsError>() {
+            } else if let Some(m) = e.downcast_ref::<UserNoExistsError>() {
                 return build_resp(m.to_string(), StatusCode::NO_CONTENT);
+            } else if let Some(m) = e.downcast_ref::<ValidationError>() {
+                return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
             } else {
                 return build_resp("".to_string(), StatusCode::INTERNAL_SERVER_ERROR);
             }
-        },
-        Ok(_) => { 
-            build_resp("".to_string(), StatusCode::OK)
         }
+        Ok(_) => build_resp("".to_string(), StatusCode::OK),
     }
 }

@@ -10,8 +10,11 @@ use lib_config::Config;
 use serde::{Deserialize ,Serialize };
 use super::build_resp;
 
-#[derive(Debug,Serialize,Deserialize)]
+use validator::{Validate, ValidationError};
+use lib_users::validate_password;
+#[derive(Debug,Serialize,Validate,Deserialize)]
 pub struct UpdatePasswordUser {
+    #[validate(length(min = 8, max = 50), custom = "validate_password")]
     pub password: String, 
 }
 
@@ -35,7 +38,10 @@ pub async fn password_update_user (
                 return build_resp("no payload found".to_string(), StatusCode::BAD_REQUEST);
             }
             Some(payload) => {
-                new_password = payload.password.clone();
+                match payload.validate(){
+                    Err(e)=>{ return build_resp(e.to_string(), StatusCode::BAD_REQUEST);},
+                    Ok(_)=> {new_password = payload.password.clone();}
+                }
             }
         },
     }
@@ -49,6 +55,8 @@ pub async fn password_update_user (
             } else if  let Some(m) = e.downcast_ref::<UserNoExistsError>() {
                 return build_resp(m.to_string(), StatusCode::NO_CONTENT);
                 //HttpResponse::BadRequest().finish()
+            } else if let Some(m) = e.downcast_ref::<ValidationError>() {
+                return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
             } else {
                 return build_resp(e.to_string(), StatusCode::INTERNAL_SERVER_ERROR);
                 //HttpResponse::InternalServerError().finish()    

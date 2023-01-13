@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use uuid::Uuid;
+use validator::Validate;
 
 
 pub trait Userer {
@@ -62,13 +63,26 @@ pub enum UserStatus {
     Disabled,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+impl UserStatus{
+    pub fn is_disabled(&self) -> bool {
+        match *self {
+            UserStatus::Disabled => true,
+            _ => false,
+        }
+    }
+}
+
+#[derive(Clone, Serialize,Validate, Deserialize, Debug)]
 pub struct User {
+    #[validate(length( max=100))]
     user_id: String,
     creation_time: DateTime<Utc>,
+    #[validate(length( max=100))]
     wallet_address: Option<String>,
+    #[validate(email)]
     email: Option<String>,
     //password: String, // don't use it here!
+    #[validate(length( max=100))]
     device: Option<String>,
     roles: Vec<UserRoles>,
     status: UserStatus,

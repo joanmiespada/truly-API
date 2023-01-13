@@ -9,7 +9,7 @@ use lambda_http::{
 };
 use lib_config::Config;
 use lib_users::services::users::UsersService;
-use lib_util_jwt::get_header_jwt;
+use lib_util_jwt::{get_header_jwt, JWTSecurityError};
 use tracing::instrument;
 use self::get_my_user::get_my_user;
 use self::update_my_user::update_my_user;
@@ -28,7 +28,7 @@ pub async fn function_handler(
     let user_id;
     match check_jwt_token_as_user_logged(&req, config) {
         Err(e) => {
-            return build_resp(e.to_string(), StatusCode::FORBIDDEN);
+            return build_resp(e.to_string(), StatusCode::UNAUTHORIZED);
         }
         Ok(id) => user_id = id,
     }
@@ -43,7 +43,7 @@ pub async fn function_handler(
         },
         &Method::PUT => match req.uri().path() {
             "/api/user" => update_my_user(&req, &context, config, user_service, &user_id).await,
-            "/api/user/password_update" => password_update_my_user(&req, &context, config, user_service, &user_id).await,
+            "/api/user/password" => password_update_my_user(&req, &context, config, user_service, &user_id).await,
             &_ => build_resp(
                 "method not allowed".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
@@ -73,7 +73,7 @@ fn build_resp(
     //Ok(res)
 }
 
-fn check_jwt_token_as_user_logged(req: &Request, config: &Config) -> Result<String, String> {
+fn check_jwt_token_as_user_logged(req: &Request, config: &Config) -> Result<String, JWTSecurityError > {
     let user_id;
     let req_headers = req.headers();
 
