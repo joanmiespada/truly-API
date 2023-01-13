@@ -14,7 +14,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_uri}}/admin/users?pageNumber=0&pageSize=15",
+							"raw": "{{base_uri}}/admin/users?pageNumber=1&pageSize=15",
 							"host": [
 								"{{base_uri}}"
 							],
@@ -25,7 +25,7 @@
 							"query": [
 								{
 									"key": "pageNumber",
-									"value": "0"
+									"value": "1"
 								},
 								{
 									"key": "pageSize",
@@ -42,33 +42,70 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_uri}}/admin/users/39f3977a-88ef-4cab-8e25-a280f835e778",
+							"raw": "{{base_uri}}/admin/users/d490eb6d-6ba8-480b-a592-808aebfc4bb6",
 							"host": [
 								"{{base_uri}}"
 							],
 							"path": [
 								"admin",
 								"users",
-								"39f3977a-88ef-4cab-8e25-a280f835e778"
+								"d490eb6d-6ba8-480b-a592-808aebfc4bb6"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "User Update by Id",
+					"name": "User Update by Id Example1",
 					"request": {
 						"method": "PUT",
 						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"device\": \"34534-65656-sdjdjsd-sdferf-werw23422-1\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
-							"raw": "{{base_uri}}/admin/users/39f3977a-88ef-4cab-8e25-a280f835e778",
+							"raw": "{{base_uri}}/admin/users/4c0c16fa-8d93-4528-ac26-c93fd8b1062d",
 							"host": [
 								"{{base_uri}}"
 							],
 							"path": [
 								"admin",
 								"users",
-								"39f3977a-88ef-4cab-8e25-a280f835e778"
+								"4c0c16fa-8d93-4528-ac26-c93fd8b1062d"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "User Update by Id Example2",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"Disabled\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_uri}}/admin/users/4c0c16fa-8d93-4528-ac26-c93fd8b1062d",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"admin",
+								"users",
+								"4c0c16fa-8d93-4528-ac26-c93fd8b1062d"
 							]
 						}
 					},
@@ -79,15 +116,44 @@
 					"request": {
 						"method": "POST",
 						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
 						"url": {
-							"raw": "{{base_uri}}/admin/users/39f3977a-88ef-4cab-8e25-a280f835e778",
+							"raw": "{{base_uri}}/admin/users/upgrade/4c0c16fa-8d93-4528-ac26-c93fd8b1062d",
 							"host": [
 								"{{base_uri}}"
 							],
 							"path": [
 								"admin",
 								"users",
-								"39f3977a-88ef-4cab-8e25-a280f835e778"
+								"upgrade",
+								"4c0c16fa-8d93-4528-ac26-c93fd8b1062d"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Downgrade User by Id",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{base_uri}}/admin/users/downgrade/4c0c16fa-8d93-4528-ac26-c93fd8b1062d",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"admin",
+								"users",
+								"downgrade",
+								"4c0c16fa-8d93-4528-ac26-c93fd8b1062d"
 							]
 						}
 					},
@@ -98,8 +164,17 @@
 					"request": {
 						"method": "POST",
 						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"password\":\"aaaaaaaaabbbbbbbbaaaaabbabab\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
-							"raw": "{{base_uri}}/admin/users/password_update/39f3977a-88ef-4cab-8e25-a280f835e778",
+							"raw": "{{base_uri}}/admin/users/password_update/7949fef5-dc14-41cf-8170-744af1b2aec9",
 							"host": [
 								"{{base_uri}}"
 							],
@@ -107,7 +182,7 @@
 								"admin",
 								"users",
 								"password_update",
-								"39f3977a-88ef-4cab-8e25-a280f835e778"
+								"7949fef5-dc14-41cf-8170-744af1b2aec9"
 							]
 						}
 					},
@@ -119,7 +194,7 @@
 				"bearer": [
 					{
 						"key": "token",
-						"value": "{{admin_token}}",
+						"value": "{{jwt_token}}",
 						"type": "string"
 					}
 				]
@@ -158,7 +233,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"device\": \"1dysdius-sdjdjsd-qwerqwerqwer-werw23422\"\n}",
+									"raw": "{\n    \"device\": \"d7890-1234-1234-1234-1234-7980\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -185,7 +260,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"wallet_address\": \"0x10d00303030430d0dkdkkd\",\n    \"email\": \"foo1@foo.com\",\n    \"password\":\"123456789aA\",\n    \"device\": \"1dysdius-sdjdjsd-sdferf-werw23422\"\n}",
+									"raw": "{\n    \"wallet_address\": \"0x311231230000\",\n    \"email\": \"ab.b.@a.io\",\n    \"password\":\"Ay7pert&*fg\",\n    \"device\": \"d4567-1234-1234-1234-1234-4567\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -214,7 +289,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"device\":\"{{test_device}}\"\n}",
+							"raw": "{\n    \n    \"device\":\"device-12DFFG34-12YUIO34-12QWE34-8790\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -241,7 +316,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\":\"{{test_email}}\",\n    \"password\":\"{{test_password}}\"\n}",
+							"raw": "{\n    \"email\": \"a.a@a.com\",\n    \"password\":\"1234dkdidfFJ%$#\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -295,14 +370,13 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_uri}}/api/user/",
+							"raw": "{{base_uri}}/api/user",
 							"host": [
 								"{{base_uri}}"
 							],
 							"path": [
 								"api",
-								"user",
-								""
+								"user"
 							]
 						}
 					},
@@ -313,15 +387,23 @@
 					"request": {
 						"method": "PUT",
 						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\":\"fofofo@fofofo.com\",\n    \"wallet_address\":\"0x000000000000123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
-							"raw": "{{base_uri}}/api/user/",
+							"raw": "{{base_uri}}/api/user",
 							"host": [
 								"{{base_uri}}"
 							],
 							"path": [
 								"api",
-								"user",
-								""
+								"user"
 							]
 						}
 					},
@@ -332,15 +414,24 @@
 					"request": {
 						"method": "PUT",
 						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"password\":\"1234dkdSDF$%^\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
-							"raw": "{{base_uri}}/api/user/",
+							"raw": "{{base_uri}}/api/user/password",
 							"host": [
 								"{{base_uri}}"
 							],
 							"path": [
 								"api",
 								"user",
-								""
+								"password"
 							]
 						}
 					},
@@ -352,7 +443,7 @@
 				"bearer": [
 					{
 						"key": "token",
-						"value": "{{non_admin_token}}",
+						"value": "{{jwt_token}}",
 						"type": "string"
 					}
 				]
