@@ -1,8 +1,10 @@
 use crate::models::user::{User, UserRoles, UserStatus, Userer};
 use crate::repositories::users::{UserRepository, UsersRepo};
+use crate::validate_password;
 use async_trait::async_trait;
 use uuid::Uuid;
 
+use validator::Validate;
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 #[async_trait]
@@ -32,15 +34,20 @@ impl UsersService {
         UsersService { repository: repo }
     }
 }
+#[derive(Debug)]
 pub enum PromoteUser {
     Downgrade,
     Upgrade,
 }
-#[derive(Debug)]
+#[derive(Debug,Validate)]
 pub struct UpdatableFildsUser {
+    #[validate(email)]
     pub email: Option<String>,
+    #[validate(length(max=100))]
     pub wallet_address: Option<String>,
+    #[validate(length(max=100))]
     pub device: Option<String>,
+    #[validate(length(max=10))]
     pub status: Option<String>,
 }
 
@@ -84,17 +91,28 @@ impl UserManipulation for UsersService {
 
     #[tracing::instrument()]
     async fn add_user(&self, user: &mut User, password: &Option<String>) -> ResultE<String> {
+
+        match password {
+            None=> {},
+            Some(pass) => validate_password(pass)?
+        }
+
         let id = Uuid::new_v4();
         user.set_user_id(&id.to_string());
         user.roles_add(&UserRoles::Basic);
+        user.validate()?;
         let res = self.repository.add_user(user, password).await?;
         Ok(res)
     }
 
     #[tracing::instrument()]
     async fn update_user(&self, id: &String, user: &UpdatableFildsUser) -> ResultE<bool> {
+        
+        user.validate()?;
+        
         let dbuser = self.repository.get_by_user_id(id).await?;
         let mut res: User = dbuser.clone();
+
 
         match &user.email {
             None => (),
@@ -127,6 +145,8 @@ impl UserManipulation for UsersService {
 
     #[tracing::instrument()]
     async fn update_password(&self, id: &String, password: &String) -> ResultE<()> {
+
+        validate_password(password)?;
         _ = self.repository.update_password(id, password).await?;
         Ok(())
     }

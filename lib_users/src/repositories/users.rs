@@ -194,6 +194,7 @@ impl UsersRepo {
 #[async_trait]
 impl UserRepository for UsersRepo {
     async fn add_user(&self, user: &mut User, password: &Option<String>) -> ResultE<String> {
+
         self.check_duplicates(user).await?;
 
         let user_id_av = AttributeValue::S(user.user_id().clone());

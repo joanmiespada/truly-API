@@ -8,7 +8,7 @@ use lib_users::validate_password;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tracing::instrument;
-use validator::Validate;
+use validator::{Validate, ValidationError};
 
 #[derive(Debug, Deserialize, Validate, Default)]
 pub struct NewUser {
@@ -31,7 +31,7 @@ pub async fn create_basic_user(
     config: &Config,
     user_service: &UsersService,
 ) -> Result<Response<String>, Box<dyn std::error::Error>> {
-    println!("running!!!!");
+
     let mut user = User::new();
     let new_password;
     match _req.payload::<NewUser>() {
@@ -74,7 +74,9 @@ pub async fn create_basic_user(
             } else if let Some(err) = e.downcast_ref::<UserMismatchError>() {
                 //HttpResponse::BadRequest().body( err.to_string())
                 build_resp(err.to_string(), StatusCode::NOT_ACCEPTABLE)
-            } else {
+            }else if let Some(m) = e.downcast_ref::<ValidationError>() {
+                return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
+            }else {
                 //HttpResponse::InternalServerError().finish()
                 build_resp(e.to_string(), StatusCode::INTERNAL_SERVER_ERROR)
             }

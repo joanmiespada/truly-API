@@ -88,7 +88,7 @@ fn routes(app: &mut web::ServiceConfig) {
             .route("/user", web::get().to(user_my_hd::get_my_user))
             .route("/user", web::put().to(user_my_hd::update_my_user))
             .route(
-                "/user/password_update",
+                "/user/password",
                 web::put().to(user_my_hd::password_update_my_user), //.and(with_auth(UserRoles::Admin)),
             ),
     )

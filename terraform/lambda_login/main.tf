@@ -29,7 +29,8 @@ resource "aws_lambda_function" "truly_lambda_login" {
   environment {
     variables = {
       ENVIRONMENT = "${var.environment_flag}"
-      RUST_LOG = "${var.trace_log}" #"cargo_lambda=trace"
+      RUST_LOG = "${var.trace_log}"
+      JWT_TOKEN_TIME_EXP_HOURS = "${var.jwt_token_time_exp_hours}"
     }
   }
 

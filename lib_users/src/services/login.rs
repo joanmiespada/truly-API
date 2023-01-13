@@ -1,8 +1,8 @@
-
-use async_trait::async_trait;
-use tracing::{debug, instrument};
 use crate::errors::users::UserNoExistsError;
+use crate::errors::users::UserStatusError;
 use crate::models::user::UserRoles;
+use async_trait::async_trait;
+use tracing::instrument;
 
 use super::users::UserManipulation;
 use super::users::UsersService;
@@ -26,7 +26,6 @@ pub trait LoginOps {
 
 #[async_trait]
 impl LoginOps for UsersService {
-
     #[instrument]
     async fn login(
         &self,
@@ -38,26 +37,27 @@ impl LoginOps for UsersService {
             user_id: "".to_string(),
             roles: vec![],
         };
-
+        let usr;
         if let Some(dvc) = device {
-            debug!("calling repository");
-            let usr = self.get_by_user_device(dvc).await?;
-            llt.user_id = usr.user_id().clone();
-            llt.roles = usr.roles().clone();
-            return Ok(llt);
+            usr = self.get_by_user_device(dvc).await?;
         } else if let Some(eml) = email {
             // && let Some(pwd) = passw {
             match passw {
-                None => Err(UserNoExistsError("password is empty".to_string()).into()),
+                None => { return Err(UserNoExistsError("password is empty".to_string()).into());},
                 Some(pss) => {
-                    let usr = self.get_by_user_email_and_password(eml, pss).await?;
-                    llt.user_id = usr.user_id().clone();
-                    llt.roles = usr.roles().clone();
-                    return Ok(llt);
+                    usr = self.get_by_user_email_and_password(eml, pss).await?;
                 }
             }
         } else {
             return Err(UserNoExistsError("not correct parameters".to_string()).into());
+        }
+
+        if usr.status().is_disabled(){
+            return Err(UserStatusError("user has been disabled".to_string()).into());
+        } else {
+            llt.user_id = usr.user_id().clone();
+            llt.roles = usr.roles().clone();
+            return Ok(llt);
         }
     }
 }

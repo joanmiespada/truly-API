@@ -15,13 +15,21 @@ pub struct Claims {
     pub exp: usize,
 }
 
+impl std::fmt::Display for Claims {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "uid: {}, roles: {:?}, expire: {}", self.uid, self.roles, self.exp)
+    }
+}
+
 pub fn create_jwt(
     uid: &str,
     roles: &Vec<String>,
     token_secret: &String,
+    exp_hours: i64
 ) -> Result<String, JWTSecurityError> {
+
     let expiration = Utc::now()
-        .checked_add_signed(chrono::Duration::hours(24))
+        .checked_add_signed(chrono::Duration::hours(exp_hours))
         .expect("valid timestamp")
         .timestamp();
 
@@ -39,32 +47,13 @@ pub fn create_jwt(
     }
 }
 
-//pub fn check_jwt_token(request: &HttpRequest) -> Result<Claims, Error> {
 pub fn check_jwt_token(token: &String, token_secret: &String) -> Result<Claims, JWTSecurityError> {
-    /*
-    let req_headers = request.headers();
-
-    let header = match req_headers.get(AUTHORIZATION) {
-        Some(v) => v,
-        None =>
-        {
-            return Err(JWTSecurityError::from("jwt error: no auth header field".to_string()).into())
-        }
-    };
-    let auth_header = match std::str::from_utf8(header.as_bytes()) {
-        Ok(v) => v,
-        Err(_) =>
-        {
-            return Err(JWTSecurityError::from("jwt error: no auth header field with value".to_string()).into())
-        }
-    };*/
 
     if !token.starts_with(BEARER) {
         return Err(JWTSecurityError::from("jwt error".to_string()).into());
     }
     let jwt = token.trim_start_matches(BEARER).to_owned();
 
-    //let jwt_secret = std::env::var("JWT_TOKEN_BASE").unwrap();
     let decoded = decode::<Claims>(
         &jwt,
         &DecodingKey::from_secret(token_secret.as_bytes()),
@@ -72,9 +61,12 @@ pub fn check_jwt_token(token: &String, token_secret: &String) -> Result<Claims, 
     );
     match decoded {
         Err(_) => {
-            return Err(JWTSecurityError::from("token present but invalid".to_string()).into())
+            return Err(JWTSecurityError::from("token present but invalid, login again".to_string()).into())
         }
-        Ok(deco) => Ok(deco.claims),
+        Ok(deco) => {
+
+            return Ok(deco.claims);
+        }
     }
 }
 
@@ -93,16 +85,10 @@ impl From<String> for JWTSecurityError {
     }
 }
 
-/*
-impl ResponseError for JWTSecurityError {
-    fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code()).json(self.0.clone())
-    }
-}*/
 pub fn get_header_jwt(
     req_headers: &HeaderMap<HeaderValue>,
     jwt_secret: &String
-) -> Result<Claims, String> {
+) -> Result<Claims, JWTSecurityError> {
     match req_headers.get(AUTHORIZATION) {
         Some(header_v) => {
             match std::str::from_utf8(header_v.as_bytes()) {
@@ -115,12 +101,12 @@ pub fn get_header_jwt(
                         Ok(clm) => {
                             Ok(clm)
                         }
-                        Err(e) => Err(e.to_string()),
+                        Err(e) => Err(e),
                     }
                 }
-                Err(_) => Err("jwt error: no auth header field with value valid".to_string()),
+                Err(_) => Err(JWTSecurityError::from("jwt error: no auth header field with value valid".to_string()).into()),
             }
         }
-        None => Err("jwt error: no auth header field present".to_string()),
+        None => Err(JWTSecurityError::from("jwt error: no auth header field present".to_string()).into()) ,
     }
 }
