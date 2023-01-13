@@ -66,7 +66,7 @@ pub async fn get_users(
         Ok(vec_user) =>
         //HttpResponse::Ok().json(vec_user)
         {
-            return build_resp( json!(vec_user).to_string(), StatusCode::ACCEPTED );
+            return build_resp( json!(vec_user).to_string(), StatusCode::OK );
         }
     }
 }

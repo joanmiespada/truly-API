@@ -9,8 +9,7 @@ use lambda_http::{
 };
 use lib_config::Config;
 use lib_users::services::users::UsersService;
-use lib_util_jwt::{ get_header_jwt };
-use serde_json::json;
+use lib_util_jwt::get_header_jwt;
 use tracing::instrument;
 use self::get_my_user::get_my_user;
 use self::update_my_user::update_my_user;
