@@ -1,12 +1,9 @@
-use std::str::FromStr;
-
-use lambda_http::Context;
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_config::Config;
 use lib_users::models::user::UserRoles;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::get_header_jwt;
-use tracing::{info, instrument, trace};
+use tracing::instrument;
 
 use self::downgrade_user::downgrade_user;
 use self::error::ApiLambdaAdminUserError;
@@ -45,46 +42,68 @@ pub async fn function_handler(
     let mut router = Router::new();
     router.insert("/admin/users", Some("1"))?;
     router.insert("/admin/users/:id", Some("2"))?;
+    router.insert("/admin/users/password_update/:id", Some("3"))?;
+    router.insert("/admin/users/upgrade/:id", Some("4"))?;
+    router.insert("/admin/users/downgrade/:id", Some("5"))?;
 
     //info!("{}",req.uri().path());
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
-            Err(e) => build_resp(
+            Err(_) => build_resp(
                 "method not allowed".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
             ),
-            Ok(matched) => {
-                match matched.value.unwrap() {
-                    "1" => get_users(&req, &context, config, user_service).await,
-                    "2" => { 
-                        let aux = matched.params.get("id").unwrap().to_string();
-                        return get_user_by_id(&req, &context, config, user_service, &aux).await;
-                    },
-                    _ => build_resp(
-                        "method not allowed".to_string(),
-                        StatusCode::METHOD_NOT_ALLOWED,
-                    ),
+            Ok(matched) => match matched.value.unwrap() {
+                "1" => get_users(&req, &context, config, user_service).await,
+                "2" => {
+                    let id = matched.params.get("id").unwrap().to_string();
+                    return get_user_by_id(&req, &context, config, user_service, &id).await;
                 }
-                
-            }
+                _ => build_resp(
+                    "method not allowed".to_string(),
+                    StatusCode::METHOD_NOT_ALLOWED,
+                ),
+            },
         },
-        &Method::POST => match req.uri().path() {
-            "/users/password_update/{id}" => {
-                password_update_user(&req, &context, config, user_service).await
-            }
-            "/users/upgrade/{id}" => promote_user(&req, &context, config, user_service).await,
-            "/users/downgrade/{id}" => downgrade_user(&req, &context, config, user_service).await,
-            &_ => build_resp(
+        &Method::POST => match router.at(req.uri().path()) {
+            Err(_) => build_resp(
                 "method not allowed".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
             ),
+            Ok(matched) => match matched.value.unwrap() {
+                "3" => {
+                    let id = matched.params.get("id").unwrap().to_string();
+                    return password_update_user(&req, &context, config, user_service, &id).await;
+                }
+                "4" => {
+                    let id = matched.params.get("id").unwrap().to_string();
+                    return promote_user(&req, &context, config, user_service, &id).await;
+                }
+                "5" => {
+                    let id = matched.params.get("id").unwrap().to_string();
+                    return downgrade_user(&req, &context, config, user_service, &id).await;
+                }
+                _ => build_resp(
+                    "method not allowed".to_string(),
+                    StatusCode::METHOD_NOT_ALLOWED,
+                ),
+            },
         },
-        &Method::PUT => match req.uri().path() {
-            "/admin/users/{id}" => update_user(&req, &context, config, user_service).await,
-            &_ => build_resp(
+        &Method::PUT => match router.at(req.uri().path()) {
+            Err(_) => build_resp(
                 "method not allowed".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
             ),
+            Ok(matched) => match matched.value.unwrap() {
+                "2" => {
+                    let id = matched.params.get("id").unwrap().to_string();
+                    update_user(&req, &context, config, user_service, &id).await
+                }
+                &_ => build_resp(
+                    "method not allowed".to_string(),
+                    StatusCode::METHOD_NOT_ALLOWED,
+                ),
+            },
         },
         _ => build_resp(
             "http verb doesn't use it here".to_string(),
