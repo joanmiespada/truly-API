@@ -77,7 +77,14 @@ impl Config {
         }
     }
 
+    pub async fn setup_with_secrets(&mut self) {
+        self._setup_basic().await;
+        self.load_secrets().await;
+    }
     pub async fn setup(&mut self) {
+        self._setup_basic().await;
+    }
+    async fn _setup_basic(&mut self) {
         let check_env = std::env::var(ENV_VAR_ENVIRONMENT);
         match check_env {
             Err(e) => panic!(
@@ -128,7 +135,6 @@ impl Config {
         }
         self.aws_config = Some(config);
 
-        self.load_secrets().await;
 
         //env_logger::init_from_env(Env::default().default_filter_or("info"));
     }

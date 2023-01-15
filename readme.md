@@ -1,6 +1,7 @@
 # Pre-requistes 
 Rust toolchain update 
 - rustup update
+- docker-compose up -d
 
 # Localstack status
 - http://localhost:4566/health

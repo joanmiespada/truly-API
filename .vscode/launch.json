@@ -5,6 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "cmd_create_tables",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceRoot}/target/debug/command_tables",
+            "args": [ "--table", "owners" ],
+            "cwd": "${workspaceRoot}/target/debug",
+            "preLaunchTask": "build",
+            "env": {
+                "ENVIRONMENT":"development",
+            }
+        },
+        {
             "name": "server_http development",
             "type": "lldb",
             "request": "launch",

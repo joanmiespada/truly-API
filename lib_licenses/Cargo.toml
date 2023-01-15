@@ -1,0 +1,33 @@
+[package]
+name="lib_licenses"
+version="0.0.1"
+edition = "2021"
+
+[lib]
+name="lib_licenses"
+crate-type=["lib"]
+
+
+[dependencies]
+lib_config = { path = "../lib_config" }
+
+chrono = {version="0.4.23", features = ["serde"] }
+serde = { version = "1.0.149", features = ["derive"] }
+serde_json = "1.0.89"
+rust-argon2 = "1.0.0"
+aws-config = "0.52.0"
+aws-sdk-dynamodb = "0.22.0"
+async-trait = "0.1.59"
+tracing = { version = "0.1", features = ["log"] }
+validator = { version = "0.16", features = ["derive"] }
+http = "0.2.8"
+http-serde = "1.1.2"
+
+[dependencies.uuid]
+version = "1.2.2"
+features = [
+    "v4",                # Lets you generate random UUIDs
+    "fast-rng",          # Use a faster (but still sufficiently random) RNG
+    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
+    "serde"
+]

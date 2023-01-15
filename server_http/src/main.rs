@@ -61,7 +61,7 @@ async fn http_server(config: Config, user_service: UsersService) {
 async fn main() { //-> Result<(),Box<dyn std::error::Error>> {
      
     let mut config = Config::new();
-    config.setup().await;
+    config.setup_with_secrets().await;
 
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);

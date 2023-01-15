@@ -2,11 +2,14 @@
 
 members = [
     "lib_users",
+    "lib_config",
+    "lib_licenses",
     "lib_util_jwt",
     "lambda_login",
     "lambda_user",
     "lambda_admin_user",
-    "server_http"
+    "server_http",
+    "command_tables"
 ]
 
 
