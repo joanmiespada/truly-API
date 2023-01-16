@@ -1691,6 +1691,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "lambda_license"
+version = "0.0.1"
+dependencies = [
+ "aws_lambda_events",
+ "lambda_http",
+ "lambda_runtime",
+ "lib_config",
+ "lib_licenses",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "validator",
+]
+
+[[package]]
 name = "lambda_login"
 version = "0.0.1"
 dependencies = [

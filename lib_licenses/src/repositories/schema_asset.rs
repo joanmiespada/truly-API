@@ -2,8 +2,7 @@
 
 use aws_sdk_dynamodb::{model::{
     AttributeDefinition, KeySchemaElement, KeyType, ScalarAttributeType, BillingMode,
-}, Client, Error};
-use lib_config::Config;
+},  Error};
 
 pub const ASSETS_TABLE_NAME: &str = "truly_assets";
 pub const ASSETS_TABLE_INDEX_ID: &str = "assetId";
