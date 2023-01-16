@@ -509,6 +509,14 @@ fn mapping_from_doc_to_user(doc: &HashMap<String, AttributeValue>, user: &mut Us
             user.set_creation_time(&from_iso8601(creation_time.as_s().unwrap()));
         }
     }
+    
+    let last_update_time_t = doc.get( LASTUPDATETIME_FIELD_NAME);
+    match last_update_time_t {
+        None => {}
+        Some(last_update_time) => {
+            user.set_last_update_time(&from_iso8601(last_update_time.as_s().unwrap()));
+        }
+    }
     let status_t = doc.get(STATUS_FIELD_NAME).unwrap().as_s().unwrap();
     let aux = UserStatus::parse(status_t);
     match aux {

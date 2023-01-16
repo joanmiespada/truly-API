@@ -1,0 +1,333 @@
+use std::collections::HashMap;
+use std::str::FromStr;
+
+use http::Uri;
+use url::Url;
+use uuid::Uuid;
+
+use crate::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
+use crate::models::asset::{Asset, AssetStatus};
+use async_trait::async_trait;
+use aws_sdk_dynamodb::{model::AttributeValue, Client};
+use chrono::{
+    prelude::{DateTime, Utc},
+    Local,
+};
+use lib_config::Config;
+
+use super::schema_asset::{ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK};
+const URL_FIELD_NAME: &str = "url";
+const CREATIONTIME_FIELD_NAME: &str = "creationTime";
+const LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
+const STATUS_FIELD_NAME: &str = "assetStatus";
+
+const HASH_FIELD_NAME: &str = "hash";
+const LATITUDE_FIELD_NAME: &str = "latitude";
+const LONGITUDE_FIELD_NAME: &str = "longitude";
+const LICENSE_FIELD_NAME: &str = "license";
+
+static NULLABLE: &str = "__NULL__";
+
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+
+#[async_trait]
+pub trait AssetRepository {
+    async fn add(&self, asset: &mut Asset) -> ResultE<Uuid>;
+    async fn update(&self, id: &Uuid, ass: &Asset) -> ResultE<()>;
+    async fn get_by_id(&self, id: &Uuid) -> ResultE<Asset>;
+    async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Asset>>;
+}
+
+#[derive(Clone, Debug)]
+pub struct AssetRepo {
+    client: Client,
+}
+
+impl AssetRepo {
+    pub fn new(conf: &Config) -> AssetRepo {
+        AssetRepo {
+            client: Client::new(conf.aws_config()),
+        }
+    }
+    async fn _get_by_id(&self, id: &Uuid) -> ResultE<HashMap<String, AttributeValue>> {
+        let asset_id_av = AttributeValue::S(id.to_string());
+
+        let request = self
+            .client
+            .get_item()
+            .table_name(ASSETS_TABLE_NAME)
+            .key(ASSET_ID_FIELD_PK, asset_id_av);
+
+        let results = request.send().await;
+        match results {
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(AssetDynamoDBError(e.to_string()).into());
+            }
+            Ok(_) => {}
+        }
+        match results.unwrap().item {
+            None => Err(AssetNoExistsError("id doesn't exist".to_string()).into()),
+            Some(aux) => Ok(aux),
+        }
+    }
+}
+
+#[async_trait]
+impl AssetRepository for AssetRepo {
+    async fn add(&self, asset: &mut Asset) -> ResultE<Uuid> {
+        let id_av = AttributeValue::S(asset.id().to_string());
+        let url_av = AttributeValue::S(asset.url().clone().unwrap().to_string());
+        let creation_time_av = AttributeValue::S(iso8601(asset.creation_time()));
+        let update_time_av = AttributeValue::S(iso8601(asset.creation_time()));
+        let status_av = AttributeValue::S(asset.state().to_string());
+
+        let hash_av = AttributeValue::S(asset.hash().clone().unwrap().to_string());
+
+        let longitude_av;
+        match asset.longitude() {
+            Some(value) => longitude_av = AttributeValue::S(value.to_string()),
+            None => longitude_av = AttributeValue::S(NULLABLE.to_string()),
+        }
+        let latitude_av;
+        match asset.latitude() {
+            Some(value) => latitude_av = AttributeValue::S(value.to_string()),
+            None => latitude_av = AttributeValue::S(NULLABLE.to_string()),
+        }
+        let license_av;
+        match asset.license() {
+            Some(value) => license_av = AttributeValue::S(value.to_string()),
+            None => license_av = AttributeValue::S(NULLABLE.to_string()),
+        }
+        let request = self
+            .client
+            .put_item()
+            .table_name(ASSETS_TABLE_NAME)
+            .item(ASSET_ID_FIELD_PK, id_av)
+            .item(CREATIONTIME_FIELD_NAME, creation_time_av)
+            .item(LASTUPDATETIME_FIELD_NAME, update_time_av)
+            .item(URL_FIELD_NAME, url_av)
+            .item(HASH_FIELD_NAME, hash_av)
+            .item(LONGITUDE_FIELD_NAME, longitude_av)
+            .item(LATITUDE_FIELD_NAME, latitude_av)
+            .item(LICENSE_FIELD_NAME, license_av)
+            .item(STATUS_FIELD_NAME, status_av);
+
+        match request.send().await {
+            Ok(_) => Ok(asset.id().clone()),
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(AssetDynamoDBError(e.to_string()).into());
+            }
+        }
+    }
+
+    async fn get_all(&self, _page_number: u32, _page_size: u32) -> ResultE<Vec<Asset>> {
+        let mut queried = Vec::new();
+
+        let results = self
+            .client
+            .scan()
+            .table_name(ASSETS_TABLE_NAME)
+            .send()
+            .await;
+
+        match results {
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(AssetDynamoDBError(e.to_string()).into());
+            }
+            Ok(result) => {
+                if let Some(docs) = result.items {
+                    for doc in docs {
+                        let mut asset = Asset::new();
+
+                        mapping_from_doc_to_asset(&doc, &mut asset);
+
+                        queried.push(asset.clone());
+                    }
+                }
+            }
+        }
+
+        Ok(queried)
+    }
+
+    async fn get_by_id(&self, id: &Uuid) -> ResultE<Asset> {
+        let res = self._get_by_id(id).await?;
+        let mut asset = Asset::new();
+        mapping_from_doc_to_asset(&res, &mut asset);
+        Ok(asset)
+    }
+
+    async fn update(&self, id: &Uuid, asset: &Asset) -> ResultE<()> {
+        let last_update_time_av = AttributeValue::S(iso8601(&Utc::now()));
+        let id_av = AttributeValue::S(id.to_string());
+
+        let url = asset.url().clone().unwrap().to_string();
+        let url_av = AttributeValue::S(url);
+
+        let status_av: AttributeValue = AttributeValue::S(asset.state().to_string());
+
+        let hash_av = AttributeValue::S(asset.hash().clone().unwrap().to_string());
+
+        let longitude_av;
+        match asset.longitude() {
+            Some(value) => longitude_av = AttributeValue::S(value.to_string()),
+            None => longitude_av = AttributeValue::S(NULLABLE.to_string()),
+        }
+        let latitude_av;
+        match asset.latitude() {
+            Some(value) => latitude_av = AttributeValue::S(value.to_string()),
+            None => latitude_av = AttributeValue::S(NULLABLE.to_string()),
+        }
+        let license_av;
+        match asset.license() {
+            Some(value) => license_av = AttributeValue::S(value.to_string()),
+            None => license_av = AttributeValue::S(NULLABLE.to_string()),
+        }
+
+        let mut update_express = "set ".to_string();
+        update_express.push_str(format!("{0} = :url, ", URL_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :lastup, ", LASTUPDATETIME_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :_status ", STATUS_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :hash ", HASH_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :longitude ", LONGITUDE_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :latitude ", LATITUDE_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :license ", LICENSE_FIELD_NAME).as_str());
+
+        let request = self
+            .client
+            .update_item()
+            .table_name(ASSETS_TABLE_NAME)
+            .key(ASSET_ID_FIELD_PK, id_av)
+            .update_expression(update_express)
+            .expression_attribute_values(":url", url_av)
+            .expression_attribute_values(":lastup", last_update_time_av)
+            .expression_attribute_values(":hash", hash_av)
+            .expression_attribute_values(":longitude", longitude_av)
+            .expression_attribute_values(":latitude", latitude_av)
+            .expression_attribute_values(":license", license_av)
+            .expression_attribute_values(":_status", status_av);
+
+        match request.send().await {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(AssetDynamoDBError(e.to_string()).into());
+            }
+        }
+    }
+}
+
+fn iso8601(st: &DateTime<Utc>) -> String {
+    let dt: DateTime<Utc> = st.clone().into();
+    format!("{}", dt.format("%+"))
+}
+
+fn from_iso8601(st: &String) -> DateTime<Utc> {
+    let aux = st.parse::<DateTime<Utc>>().unwrap();
+    aux
+}
+fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut Asset) {
+    let _id = doc.get(ASSET_ID_FIELD_PK).unwrap();
+    let asset_id = _id.as_s().unwrap();
+    let uuid = Uuid::from_str(asset_id).unwrap();
+    asset.set_id(&uuid);
+
+    let _url = doc.get(URL_FIELD_NAME).unwrap();
+    let asset_url = _url.as_s().unwrap();
+    let url = Url::parse(asset_url).unwrap();
+    asset.set_url(&Some(url) );
+
+    let _hash = doc.get(HASH_FIELD_NAME).unwrap();
+    let asset_hash = _hash.as_s().unwrap();
+    asset.set_hash( &Some(asset_hash.to_string()));
+
+    let creation_time_t = doc.get(CREATIONTIME_FIELD_NAME);
+    match creation_time_t {
+        None => {}
+        Some(creation_time) => {
+            asset.set_creation_time(&from_iso8601(creation_time.as_s().unwrap()));
+        }
+    }
+
+    let last_update_time_t = doc.get(LASTUPDATETIME_FIELD_NAME);
+    match last_update_time_t {
+        None => {}
+        Some(last_update_time) => {
+            asset.set_last_update_time(&from_iso8601(last_update_time.as_s().unwrap()));
+        }
+    }
+
+    let longitude_t = doc.get(LONGITUDE_FIELD_NAME);
+    match longitude_t {
+        None => asset.set_longitude(&None),
+        Some(longi) => {
+            let val = longi.as_s().unwrap();
+            if val == NULLABLE {
+                asset.set_longitude(&None)
+            } else {
+                let f_val = f64::from_str(val);
+                match f_val {
+                    Err(_) => asset.set_longitude(&None),
+                    Ok(final_number) => asset.set_longitude(&Some(final_number)),
+                }
+            }
+        }
+    }
+
+    let latitude_t = doc.get(LATITUDE_FIELD_NAME);
+    match latitude_t {
+        None => asset.set_latitude(&None),
+        Some(lati) => {
+            let val = lati.as_s().unwrap();
+            if val == NULLABLE {
+                asset.set_latitude(&None)
+            } else {
+                let f_val = f64::from_str(val);
+                match f_val {
+                    Err(_) => asset.set_latitude(&None),
+                    Ok(final_number) => asset.set_latitude(&Some(final_number)),
+                }
+            }
+        }
+    }
+
+    let license_t = doc.get(LICENSE_FIELD_NAME);
+    match license_t {
+        None => asset.set_license(&None),
+        Some(lati) => {
+            let val = lati.as_s().unwrap();
+            if val == NULLABLE {
+                asset.set_license(&None)
+            } else {
+                asset.set_license(&Some(val.clone()))
+            }
+        }
+    }
+
+    let status_t = doc.get(STATUS_FIELD_NAME).unwrap().as_s().unwrap();
+    let aux = AssetStatus::from_str(status_t).unwrap();
+    asset.set_state(&aux);
+}

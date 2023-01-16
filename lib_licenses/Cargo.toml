@@ -22,6 +22,7 @@ tracing = { version = "0.1", features = ["log"] }
 validator = { version = "0.16", features = ["derive"] }
 http = "0.2.8"
 http-serde = "1.1.2"
+url = {version="2.3.1", features=["serde"] }
 
 [dependencies.uuid]
 version = "1.2.2"
@@ -31,3 +32,9 @@ features = [
     "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
     "serde"
 ]
+
+[dev-dependencies]
+aws-types = "0.52.0"
+spectral = "0.6.0"
+testcontainers = "0.14.0"
+tokio = { version="1.24.1", features=["macros"]}

@@ -142,6 +142,11 @@ impl Config {
         let aux = self.aws_config.as_ref().unwrap();
         return aux;
     }
+    pub fn set_aws_config(&mut self, cnf: &SdkConfig ) {
+        //let aux = self.aws_config.as_ref().unwrap();
+        //return aux;
+        self.aws_config = Some(cnf.clone());
+    }
     pub fn env_vars(&self) -> &EnvironmentVariables {
         let aux = self.env_variables.as_ref().unwrap();
         return aux;

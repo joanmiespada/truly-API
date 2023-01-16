@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "cmd_create_tables",
+            "name": "cmd_tables",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/command_tables",
-            "args": [ "--table", "owners" ],
+            "args": [ "--table", "owners", "--create" ],
             "cwd": "${workspaceRoot}/target/debug",
             "preLaunchTask": "build",
             "env": {
