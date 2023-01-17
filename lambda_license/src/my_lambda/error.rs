@@ -1,11 +1,11 @@
 
 
 #[derive(Debug)]
-pub struct ApiLambdaAssetError(pub String);
+pub struct ApiLambdaError(pub String);
 
-impl std::error::Error for ApiLambdaAssetError{}
+impl std::error::Error for ApiLambdaError{}
 
-impl std::fmt::Display for ApiLambdaAssetError{
+impl std::fmt::Display for ApiLambdaError{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "api lambda asset error: {}", self.0)
     }

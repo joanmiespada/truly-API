@@ -1,39 +1,19 @@
 use std::str::FromStr;
 
-use crate::{repositories::schema_asset::create_schema_assets, models::asset::Asset};
-use crate::repositories::assets::AssetRepo;
-use crate::services::assets::{AssetService, AssetManipulation};
-use aws_config::SdkConfig;
-use aws_sdk_dynamodb::{Client, Endpoint };
-use aws_types::Credentials;
-use http::Uri;
+use lib_licenses::{repositories::schema_asset::create_schema_assets, models::asset::Asset};  
+use lib_licenses::repositories::assets::AssetRepo;
+use lib_licenses::services::assets::{AssetService, AssetManipulation};
+use aws_sdk_dynamodb::{Client };
 use spectral::prelude::*;
 use testcontainers::*;
-use aws_config::meta::region::RegionProviderChain;
 use url::Url;
 
+use crate::common::build_dynamodb;
 
-async fn build_dynamodb(host_port: u16) -> SdkConfig {
-    let endpoint_uri = format!("http://127.0.0.1:{}", host_port);
-    let uri = Uri::from_str(&endpoint_uri).unwrap();
-    let endpoint_resolver = Endpoint::immutable_uri(uri);
-    let region_provider = RegionProviderChain::default_provider().or_else("eu-central-1");
-    let creds = Credentials::new("fakeKey", "fakeSecret", None, None, "test");
-
-    let shared_config = aws_config::from_env()
-        .region(region_provider)
-        .endpoint_resolver(endpoint_resolver.unwrap())
-        .credentials_provider(creds)
-        .load()
-        .await;
-
-    //Client::new(&shared_config)
-    return shared_config;
-}
 
 
 #[tokio::test]
-async fn assets_creation_table() {
+async fn creation_table() {
     //let _ = pretty_env_logger::try_init();
     let docker = clients::Cli::default();
     let node = docker.run(images::dynamodb_local::DynamoDb::default());
@@ -54,7 +34,7 @@ async fn assets_creation_table() {
 }
 
 #[tokio::test]
-async fn assets_add_assets() {
+async fn add_assets() {
     //let _ = pretty_env_logger::try_init();
     let docker = clients::Cli::default();
     let node = docker.run(images::dynamodb_local::DynamoDb::default());

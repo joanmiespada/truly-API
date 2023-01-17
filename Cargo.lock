@@ -1699,12 +1699,14 @@ dependencies = [
  "lambda_runtime",
  "lib_config",
  "lib_licenses",
+ "lib_util_jwt",
  "serde",
  "serde_json",
  "tokio",
  "tower-http",
  "tracing",
  "tracing-subscriber",
+ "url",
  "validator",
 ]
 
@@ -1817,6 +1819,7 @@ dependencies = [
  "http",
  "http-serde",
  "lib_config",
+ "lib_licenses",
  "rust-argon2",
  "serde",
  "serde_json",

@@ -1,23 +1,25 @@
 pub mod error;
-mod get_my_asset;
-mod update_my_asset;
+mod assets;
+mod owners;
 
 use lambda_http::{
     http::Method, http::StatusCode, IntoResponse, Request, RequestExt,
     Response,
 };
 use lib_config::Config;
-use lib_licenses::services::assets::AssetService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
 use tracing::instrument;
-use self::get_my_asset::{get_my_asset, get_my_assets_all};
-use self::update_my_asset::update_my_asset;
-use self::error::ApiLambdaUserError;
+use assets::get_my_asset::{get_my_asset, get_my_assets_all};
+use assets::update_my_asset::update_my_asset;
+use self::error::ApiLambdaError;
+use lib_licenses::services::assets::AssetService;
+use lib_licenses::services::owners::OwnerService;
 
 #[instrument]
 pub async fn function_handler(
     config: &Config,
-    user_service: &UsersService,
+    asset_service: &AssetService,
+    owners_service: &OwnerService,
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error>> {
     let context = req.lambda_context();
@@ -33,15 +35,15 @@ pub async fn function_handler(
 
     match req.method() {
         &Method::GET => match req.uri().path() {
-            "/api/asset" => get_my_assets_all(&req, &context, config, user_service, &user_id).await,
-            "/api/asset/:id" => get_my_asset(&req, &context, config, user_service, &user_id).await,
+            "/api/asset" => get_my_assets_all(&req, &context, config, asset_service, &user_id).await,
+            "/api/asset/:id" => get_my_asset(&req, &context, config, asset_service, &user_id).await,
             &_ => build_resp(
                 "method not allowed".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
             ),
         },
         &Method::POST => match req.uri().path() {
-            "/api/asset" => create_my_asset(&req, &context, config, user_service, &user_id).await,
+            "/api/asset" => create_my_asset(&req, &context, config, asset_service,owners_service, &user_id).await,
             &_ => build_resp(
                 "method not allowed".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
@@ -72,7 +74,7 @@ fn build_resp(
         .body(msg);
     //.map_err(Box::new)?;
     match res {
-        Err(e) => Err(ApiLambdaUserError { 0: e.to_string() }.into()),
+        Err(e) => Err(ApiLambdaError { 0: e.to_string() }.into()),
         Ok(resp) => Ok(resp),
     }
     //Ok(res)

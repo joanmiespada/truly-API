@@ -2,7 +2,10 @@ use lambda_http::service_fn;
 use lib_config::Config;
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::services::assets::AssetService;
-use my_lambda::{ error::ApiLambdaAssetError, function_handler};
+use lib_licenses::repositories::owners::OwnerRepo;
+use lib_licenses::services::owners::OwnerService;
+use my_lambda::{ error::ApiLambdaError, function_handler};
+
 
 mod my_lambda;
 
@@ -21,17 +24,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut config = Config::new();
     config.setup_with_secrets().await;
 
-    let repo = AssetRepo::new(&config);
-    let service = AssetService::new(repo);
+    let asset_repo = AssetRepo::new(&config);
+    let asset_service = AssetService::new(asset_repo);
+
+    let owners_repo = OwnerRepo::new(&config);
+    let owners_service = OwnerService::new(owners_repo);
+
 
 
     let resp = lambda_http::run(service_fn(|event | {
-        function_handler(&config, &service, event)
+        function_handler(&config, &asset_service, &owners_service, event)
     }))
     .await;
 
     match resp {
         Ok(r) => Ok(r),
-        Err(e) => Err(ApiLambdaAssetError { 0: e.to_string() }.into()),
+        Err(e) => Err(ApiLambdaError { 0: e.to_string() }.into()),
     }
 }

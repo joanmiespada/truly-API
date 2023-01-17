@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use http::Uri;
 use url::Url;
 use uuid::Uuid;
 
