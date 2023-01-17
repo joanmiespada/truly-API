@@ -7,7 +7,8 @@ use uuid::Uuid;
 use crate::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
 use crate::models::asset::{Asset, AssetStatus};
 use async_trait::async_trait;
-use aws_sdk_dynamodb::{model::AttributeValue, Client};
+use aws_sdk_dynamodb::model::{AttributeValue, Put, TransactWriteItem};
+use aws_sdk_dynamodb::Client;
 use chrono::{
     prelude::{DateTime, Utc},
     Local,
@@ -15,6 +16,7 @@ use chrono::{
 use lib_config::Config;
 
 use super::schema_asset::{ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK};
+use super::schema_owners::{OWNER_USER_ID_FIELD_PK, OWNERS_TABLE_NAME, OWNER_ASSET_ID_FIELD_PK};
 const URL_FIELD_NAME: &str = "url";
 const CREATIONTIME_FIELD_NAME: &str = "creationTime";
 const LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
@@ -31,7 +33,7 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 #[async_trait]
 pub trait AssetRepository {
-    async fn add(&self, asset: &mut Asset) -> ResultE<Uuid>;
+    async fn add(&self, asset: &mut Asset, user_id: &String) -> ResultE<Uuid>;
     async fn update(&self, id: &Uuid, ass: &Asset) -> ResultE<()>;
     async fn get_by_id(&self, id: &Uuid) -> ResultE<Asset>;
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Asset>>;
@@ -79,8 +81,9 @@ impl AssetRepo {
 
 #[async_trait]
 impl AssetRepository for AssetRepo {
-    async fn add(&self, asset: &mut Asset) -> ResultE<Uuid> {
-        let id_av = AttributeValue::S(asset.id().to_string());
+    async fn add(&self, asset: &mut Asset, user_id: &String) -> ResultE<Uuid> {
+        let asset_id_av = AttributeValue::S(asset.id().to_string());
+        let user_id_av = AttributeValue::S(user_id.clone());
         let url_av = AttributeValue::S(asset.url().clone().unwrap().to_string());
         let creation_time_av = AttributeValue::S(iso8601(asset.creation_time()));
         let update_time_av = AttributeValue::S(iso8601(asset.creation_time()));
@@ -105,17 +108,48 @@ impl AssetRepository for AssetRepo {
         }
         let request = self
             .client
-            .put_item()
-            .table_name(ASSETS_TABLE_NAME)
-            .item(ASSET_ID_FIELD_PK, id_av)
-            .item(CREATIONTIME_FIELD_NAME, creation_time_av)
-            .item(LASTUPDATETIME_FIELD_NAME, update_time_av)
-            .item(URL_FIELD_NAME, url_av)
-            .item(HASH_FIELD_NAME, hash_av)
-            .item(LONGITUDE_FIELD_NAME, longitude_av)
-            .item(LATITUDE_FIELD_NAME, latitude_av)
-            .item(LICENSE_FIELD_NAME, license_av)
-            .item(STATUS_FIELD_NAME, status_av);
+            .transact_write_items()
+            .transact_items(
+                TransactWriteItem::builder()
+                    .put(
+                        Put::builder()
+                            .item(ASSET_ID_FIELD_PK, asset_id_av.clone())
+                            .item(CREATIONTIME_FIELD_NAME, creation_time_av)
+                            .item(LASTUPDATETIME_FIELD_NAME, update_time_av)
+                            .item(URL_FIELD_NAME, url_av)
+                            .item(HASH_FIELD_NAME, hash_av)
+                            .item(LONGITUDE_FIELD_NAME, longitude_av)
+                            .item(LATITUDE_FIELD_NAME, latitude_av)
+                            .item(LICENSE_FIELD_NAME, license_av)
+                            .item(STATUS_FIELD_NAME, status_av)
+                            .table_name(ASSETS_TABLE_NAME)
+                            .build(),
+                    )
+                    .build(),
+            )
+            .transact_items(
+                TransactWriteItem::builder()
+                    .put(
+                        Put::builder()
+                            .item(OWNER_USER_ID_FIELD_PK, user_id_av)
+                            .item(OWNER_ASSET_ID_FIELD_PK, asset_id_av)
+                            .table_name(OWNERS_TABLE_NAME)
+                            .build(),
+                    )
+                    .build(),
+            );
+        /*
+        .put_item()
+        .table_name(ASSETS_TABLE_NAME)
+        .item(ASSET_ID_FIELD_PK, id_av)
+        .item(CREATIONTIME_FIELD_NAME, creation_time_av)
+        .item(LASTUPDATETIME_FIELD_NAME, update_time_av)
+        .item(URL_FIELD_NAME, url_av)
+        .item(HASH_FIELD_NAME, hash_av)
+        .item(LONGITUDE_FIELD_NAME, longitude_av)
+        .item(LATITUDE_FIELD_NAME, latitude_av)
+        .item(LICENSE_FIELD_NAME, license_av)
+        .item(STATUS_FIELD_NAME, status_av);*/
 
         match request.send().await {
             Ok(_) => Ok(asset.id().clone()),
@@ -257,11 +291,11 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
     let _url = doc.get(URL_FIELD_NAME).unwrap();
     let asset_url = _url.as_s().unwrap();
     let url = Url::parse(asset_url).unwrap();
-    asset.set_url(&Some(url) );
+    asset.set_url(&Some(url));
 
     let _hash = doc.get(HASH_FIELD_NAME).unwrap();
     let asset_hash = _hash.as_s().unwrap();
-    asset.set_hash( &Some(asset_hash.to_string()));
+    asset.set_hash(&Some(asset_hash.to_string()));
 
     let creation_time_t = doc.get(CREATIONTIME_FIELD_NAME);
     match creation_time_t {

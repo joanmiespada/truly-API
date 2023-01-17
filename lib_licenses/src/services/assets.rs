@@ -11,8 +11,9 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 #[async_trait]
 pub trait AssetManipulation {
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Asset>>;
-    async fn get_by_id(&self, id: &Uuid) -> ResultE<Asset>;
-    async fn add(&self, asset: &mut Asset) -> ResultE<Uuid>;
+    async fn get_by_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset>;
+    async fn get_by_user_id(&self, user_id: &String) -> ResultE<Asset>;
+    async fn add(&self, asset: &mut Asset, user_id: &String) -> ResultE<Uuid>;
     async fn update(&self, id: &Uuid, asset: &UpdatableFildsAsset) -> ResultE<()>;
 }
 
@@ -52,12 +53,12 @@ impl AssetManipulation for AssetService {
     }
 
     #[tracing::instrument()]
-    async fn add(&self, asset: &mut Asset) -> ResultE<Uuid> {
+    async fn add(&self, asset: &mut Asset, user_id: &String) -> ResultE<Uuid> {
 
         let id = Uuid::new_v4();
         asset.set_id(&id);
         asset.validate()?;
-        let res = self.repository.add(asset).await?;
+        let res = self.repository.add(asset, user_id).await?;
         Ok(res)
     }
 

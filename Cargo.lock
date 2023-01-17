@@ -1700,6 +1700,7 @@ dependencies = [
  "lib_config",
  "lib_licenses",
  "lib_util_jwt",
+ "matchit",
  "serde",
  "serde_json",
  "tokio",
@@ -1707,6 +1708,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "url",
+ "uuid",
  "validator",
 ]
 

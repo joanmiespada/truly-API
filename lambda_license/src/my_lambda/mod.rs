@@ -10,10 +10,12 @@ use lib_config::Config;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
 use tracing::instrument;
 use assets::get_my_asset::{get_my_asset, get_my_assets_all};
-use assets::update_my_asset::update_my_asset;
+//use self::assets::update_my_asset::update_my_asset;
+use self::assets::create_my_asset::create_my_asset;
 use self::error::ApiLambdaError;
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
+use matchit::Router;
 
 #[instrument]
 pub async fn function_handler(
@@ -33,29 +35,38 @@ pub async fn function_handler(
         Ok(id) => user_id = id,
     }
 
+    let mut router = Router::new();
+    router.insert("/api/asset", Some("1"))?;
+    router.insert("/api/asset/:id", Some("2"))?;
+
+
+
     match req.method() {
-        &Method::GET => match req.uri().path() {
-            "/api/asset" => get_my_assets_all(&req, &context, config, asset_service, &user_id).await,
-            "/api/asset/:id" => get_my_asset(&req, &context, config, asset_service, &user_id).await,
-            &_ => build_resp(
+        &Method::GET => match router.at(req.uri().path()) {
+            Err(_) => build_resp(
                 "method not allowed".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
             ),
+            Ok(matched) => match matched.value.unwrap() {
+                "1" => get_my_assets_all(&req, &context, config, asset_service,owners_service, &user_id).await ,
+                "2" => {
+                    let id = matched.params.get("id").unwrap().to_string();
+                    return get_my_asset(&req, &context, config, asset_service,owners_service, &id, &user_id).await;
+
+                }
+                _ => build_resp(
+                    "method not allowed".to_string(),
+                    StatusCode::METHOD_NOT_ALLOWED,
+                ),
+            },
         },
         &Method::POST => match req.uri().path() {
-            "/api/asset" => create_my_asset(&req, &context, config, asset_service,owners_service, &user_id).await,
+            "1" => create_my_asset(&req, &context, config, asset_service,owners_service, &user_id).await,
             &_ => build_resp(
                 "method not allowed".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
             ),
         },
-        /*&Method::PUT => match req.uri().path() {
-            "/api/asset" => update_my_asset(&req, &context, config, user_service, &user_id).await,
-            &_ => build_resp(
-                "method not allowed".to_string(),
-                StatusCode::METHOD_NOT_ALLOWED,
-            ),
-        },*/
         _ => build_resp(
             "http verb doesn't use it here".to_string(),
             StatusCode::METHOD_NOT_ALLOWED,

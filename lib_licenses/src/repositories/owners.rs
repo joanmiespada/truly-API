@@ -13,9 +13,9 @@ use chrono::{
 };
 use lib_config::Config;
 
-use super::schema_owners::{ASSET_ID_FIELD, OWNERS_TABLE_NAME, USER_ID_FIELD};
-const CREATIONTIME_FIELD_NAME: &str = "creationTime";
-const LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
+use super::schema_owners::{OWNER_ASSET_ID_FIELD_PK, OWNERS_TABLE_NAME, OWNER_USER_ID_FIELD_PK};
+pub const CREATIONTIME_FIELD_NAME: &str = "creationTime";
+pub const LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
 
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -24,9 +24,9 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 pub trait OwnerRepository {
     async fn add(&self, owner: &mut Owner) -> ResultE<()>;
     async fn update(&self, old_owner: &Owner, new_owner: &String) -> ResultE<()>;
-    async fn get_by_asset(&self, id: &Uuid) -> ResultE<Owner>;
-    async fn get_by_user(&self, id: &String) -> ResultE<Vec<Owner>>;
-    async fn check_exist(&self, owner: &Owner) -> ResultE<bool>;
+    async fn get_by_asset(&self, asset_id: &Uuid) -> ResultE<Owner>;
+    async fn get_by_user(&self, user_id: &String) -> ResultE<Vec<Owner>>;
+    async fn get_by_user_asset(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Owner>;
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Owner>>;
 }
 
@@ -55,8 +55,8 @@ impl OwnerRepository for OwnerRepo {
             .client
             .put_item()
             .table_name(OWNERS_TABLE_NAME)
-            .item(USER_ID_FIELD, user_id_av)
-            .item(ASSET_ID_FIELD, asset_id_av)
+            .item(OWNER_USER_ID_FIELD_PK, user_id_av)
+            .item(OWNER_ASSET_ID_FIELD_PK, asset_id_av)
             .item(CREATIONTIME_FIELD_NAME, creation_time_av)
             .item(LASTUPDATETIME_FIELD_NAME, update_time_av);
 
@@ -117,7 +117,7 @@ impl OwnerRepository for OwnerRepo {
             .client
             .get_item()
             .table_name(OWNERS_TABLE_NAME)
-            .key(USER_ID_FIELD, _id_av.clone());
+            .key(OWNER_USER_ID_FIELD_PK, _id_av.clone());
 
         let results = request.send().await;
         match results {
@@ -153,7 +153,7 @@ impl OwnerRepository for OwnerRepo {
             .client
             .get_item()
             .table_name(OWNERS_TABLE_NAME)
-            .key(USER_ID_FIELD, _id_av.clone());
+            .key(OWNER_USER_ID_FIELD_PK, _id_av.clone());
 
         let results = request.send().await;
         match results {
@@ -182,15 +182,15 @@ impl OwnerRepository for OwnerRepo {
         }
     }
 
-    async fn check_exist(&self, owner: &Owner) -> ResultE<bool>{
-        let asset_id_av = AttributeValue::S(owner.asset_id().to_string());
-        let user_id_av = AttributeValue::S(owner.user_id().clone());
+    async fn get_by_user_asset(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Owner>{
+        let asset_id_av = AttributeValue::S(asset_id.to_string());
+        let user_id_av = AttributeValue::S(user_id.clone());
         let request = self
             .client
             .get_item()
             .table_name(OWNERS_TABLE_NAME)
-            .key(USER_ID_FIELD, user_id_av.clone())
-            .key(ASSET_ID_FIELD, asset_id_av.clone());
+            .key(OWNER_USER_ID_FIELD_PK, user_id_av.clone())
+            .key(OWNER_ASSET_ID_FIELD_PK, asset_id_av.clone());
 
         let results = request.send().await;
         match results {
@@ -207,8 +207,13 @@ impl OwnerRepository for OwnerRepo {
         }
         match results.unwrap().item {
             None => Err(OwnerNoExistsError("id doesn't exist".to_string()).into()),
-            Some(_) => {
-                Ok(true)
+            Some(val) => {
+                let mut owner = Owner::new();
+
+                mapping_from_doc_to_owner(&aux, &mut owner);
+
+                Ok(owner)
+
             }
         }
     }
@@ -219,15 +224,15 @@ impl OwnerRepository for OwnerRepo {
         let user_id_av = AttributeValue::S(old_owner.user_id().clone());
         let new_owner_id_av = AttributeValue::S(new_owner.clone());
         let mut update_express = "set ".to_string();
-        update_express.push_str(format!("{0} = :new_owner, ", USER_ID_FIELD).as_str());
+        update_express.push_str(format!("{0} = :new_owner, ", OWNER_USER_ID_FIELD_PK).as_str());
         update_express.push_str(format!("{0} = :lastup, ", LASTUPDATETIME_FIELD_NAME).as_str());
 
         let request = self
             .client
             .update_item()
             .table_name(OWNERS_TABLE_NAME)
-            .key(USER_ID_FIELD, user_id_av)
-            .key(ASSET_ID_FIELD, asset_id_av)
+            .key(OWNER_USER_ID_FIELD_PK, user_id_av)
+            .key(OWNER_ASSET_ID_FIELD_PK, asset_id_av)
             .update_expression(update_express)
             .expression_attribute_values(":lastup", last_update_time_av)
             .expression_attribute_values(":new_owner", new_owner_id_av);
@@ -262,12 +267,12 @@ fn from_iso8601(st: &String) -> DateTime<Utc> {
     aux
 }
 fn mapping_from_doc_to_owner(doc: &HashMap<String, AttributeValue>, owner: &mut Owner) {
-    let user_id = doc.get(USER_ID_FIELD).unwrap();
+    let user_id = doc.get(OWNER_USER_ID_FIELD_PK).unwrap();
     let user_id = user_id.as_s().unwrap();
     //let uuid = Uuid::from_str(owner_id).unwrap();
     owner.set_user_id(&user_id);
 
-    let _asset_id = doc.get(ASSET_ID_FIELD).unwrap();
+    let _asset_id = doc.get(OWNER_ASSET_ID_FIELD_PK).unwrap();
     let asset_id = _asset_id.as_s().unwrap();
     let uuid = Uuid::from_str(asset_id).unwrap();
     owner.set_asset_id(&uuid);

@@ -5,27 +5,27 @@ use aws_sdk_dynamodb::{model::{
 },  Error};
 
 pub const OWNERS_TABLE_NAME: &str = "truly_owners";
-pub const USER_ID_FIELD: &str = "userId";
-pub const ASSET_ID_FIELD: &str = "assetId";
+pub const OWNER_USER_ID_FIELD_PK: &str = "userId";
+pub const OWNER_ASSET_ID_FIELD_PK: &str = "assetId";
 
 //pub async fn create_schema_owners(conf: &Config) -> Result<(),Error> {
 pub async fn create_schema_owners(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
 
     let ad1 = AttributeDefinition::builder()
-        .attribute_name(ASSET_ID_FIELD)
+        .attribute_name(OWNER_ASSET_ID_FIELD_PK)
         .attribute_type(ScalarAttributeType::S)
         .build();
     let ad2 = AttributeDefinition::builder()
-        .attribute_name(USER_ID_FIELD)
+        .attribute_name(OWNER_USER_ID_FIELD_PK)
         .attribute_type(ScalarAttributeType::S)
         .build();
 
     let ks1= KeySchemaElement::builder()
-        .attribute_name(USER_ID_FIELD)
+        .attribute_name(OWNER_USER_ID_FIELD_PK)
         .key_type(KeyType::Hash)
         .build();
     let ks2= KeySchemaElement::builder()
-        .attribute_name(ASSET_ID_FIELD)
+        .attribute_name(OWNER_ASSET_ID_FIELD_PK)
         .key_type(KeyType::Range)
         .build();
     

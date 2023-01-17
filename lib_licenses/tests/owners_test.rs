@@ -7,7 +7,6 @@ use lib_licenses::services::owners::{OwnerService, OwnerManipulation};
 use aws_sdk_dynamodb::{Client };
 use spectral::prelude::*;
 use testcontainers::*;
-use url::Url;
 use uuid::Uuid;
 
 use crate::common::build_dynamodb;

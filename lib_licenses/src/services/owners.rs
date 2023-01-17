@@ -14,6 +14,7 @@ pub trait OwnerManipulation {
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Owner>>;
     async fn get_by_user(&self, id: &String) -> ResultE<Vec<Owner>>;
     async fn get_by_asset(&self, id: &Uuid) -> ResultE<Owner>;
+    async fn get_by_user_asset_ids(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Owner>;
     async fn add(&self, owner: &mut Owner) -> ResultE<()>;
     async fn update(&self, current: &Owner, new_owner: &UpdatableFildsOwner) -> ResultE<()>;
 }
@@ -73,6 +74,11 @@ impl OwnerManipulation for OwnerService {
         self.repository.update(current_owner, &aux ).await?;
         
         Ok(())
+    }
+    
+    async fn get_by_user_asset_ids(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Owner>{
+
+        self.repository.get_by_user_asset_ids(asset_id).await?
     }
 }
 

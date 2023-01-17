@@ -3,9 +3,8 @@ use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::Config;
 use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
 use lib_licenses::models::asset::Asset;
-use lib_licenses::models::owner::Owner;
-use lib_licenses::services::owners::{ OwnerManipulation, OwnerService };
-use lib_licenses::services::assets::{AssetManipulation, AssetService, UpdatableFildsAsset};
+use lib_licenses::services::owners::OwnerService;
+use lib_licenses::services::assets::{AssetManipulation, AssetService};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 use url::Url;
@@ -22,6 +21,7 @@ pub struct CreateAsset {
     //pub status: Option<String>, //forbidden, only by admins. Roles idem, only admin can change it
 }
 
+#[instrument]
 pub async fn create_my_asset(
     req: &Request,
     _c: &Context,
@@ -52,8 +52,7 @@ pub async fn create_my_asset(
         },
     }
 
-    let mut op_res = asset_service.add(&mut asset_fields).await;
-    let mut new_asset_id;
+    let op_res = asset_service.add(&mut asset_fields, id).await;
     match op_res {
         Err(e) => {
             if let Some(m) = e.downcast_ref::<AssetDynamoDBError>() {
@@ -66,16 +65,7 @@ pub async fn create_my_asset(
                 return build_resp("".to_string(), StatusCode::INTERNAL_SERVER_ERROR);
             }
         }
-        Ok(val) => new_asset_id=val,// build_resp("".to_string(), StatusCode::OK),
+        Ok(val) => build_resp(val.to_string(), StatusCode::OK),
     }
-
-    let mut owner = Owner::new();
-    owner.set_asset_id(&new_asset_id);
-    owner.set_user_id(id);
-
-    let op_res1 = owner_service.add(&mut owner).await;
-
-    build_resp( owner.to_string(), StatusCode::OK)
-    
 
 }
