@@ -63,7 +63,9 @@ async fn add_assets() {
     as1.set_hash(&Some(hash1));
     as1.set_license(&Some(lic1));
 
-    let new_op = service.add(&mut as1).await;
+    let user = String::from_str("user1").unwrap();
+
+    let new_op = service.add(&mut as1,&user).await;
 
     assert_that!(&new_op).is_ok();
     

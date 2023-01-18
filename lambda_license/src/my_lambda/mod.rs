@@ -2,6 +2,8 @@ pub mod error;
 mod assets;
 mod owners;
 
+use std::str::FromStr;
+
 use lambda_http::{
     http::Method, http::StatusCode, IntoResponse, Request, RequestExt,
     Response,
@@ -16,6 +18,7 @@ use self::error::ApiLambdaError;
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
 use matchit::Router;
+use uuid::Uuid;
 
 #[instrument]
 pub async fn function_handler(
@@ -51,7 +54,8 @@ pub async fn function_handler(
                 "1" => get_my_assets_all(&req, &context, config, asset_service,owners_service, &user_id).await ,
                 "2" => {
                     let id = matched.params.get("id").unwrap().to_string();
-                    return get_my_asset(&req, &context, config, asset_service,owners_service, &id, &user_id).await;
+                    let asset_id = Uuid::from_str(id.as_str())?;
+                    return get_my_asset(&req, &context, config, asset_service,owners_service, &asset_id, &user_id).await;
 
                 }
                 _ => build_resp(

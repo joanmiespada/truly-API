@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use crate::errors::asset;
 use crate::models::asset::{Asset, AssetStatus };
 use crate::repositories::assets::{AssetRepository, AssetRepo};
 use async_trait::async_trait;
@@ -11,10 +12,11 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 #[async_trait]
 pub trait AssetManipulation {
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Asset>>;
-    async fn get_by_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset>;
-    async fn get_by_user_id(&self, user_id: &String) -> ResultE<Asset>;
+    async fn get_by_id(&self, asset_id: &Uuid) -> ResultE<Asset>;
+    async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>>;
+    async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset>;
     async fn add(&self, asset: &mut Asset, user_id: &String) -> ResultE<Uuid>;
-    async fn update(&self, id: &Uuid, asset: &UpdatableFildsAsset) -> ResultE<()>;
+    async fn update(&self, asset_id: &Uuid, asset: &UpdatableFildsAsset) -> ResultE<()>;
 }
 
 #[derive(Debug)]
@@ -93,6 +95,16 @@ impl AssetManipulation for AssetService {
     
     }
 
+    #[tracing::instrument()]
+    async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>>{
+        let res = self.repository.get_by_user_id(user_id).await?;
+        Ok(res)
+    }
+    #[tracing::instrument()]
+    async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset> {
+        let res = self.repository.get_by_user_asset_id( asset_id ,user_id).await?;
+        Ok(res)
+    }
     
 }
 

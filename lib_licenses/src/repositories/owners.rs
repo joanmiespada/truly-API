@@ -210,7 +210,7 @@ impl OwnerRepository for OwnerRepo {
             Some(val) => {
                 let mut owner = Owner::new();
 
-                mapping_from_doc_to_owner(&aux, &mut owner);
+                mapping_from_doc_to_owner(&val, &mut owner);
 
                 Ok(owner)
 
@@ -266,7 +266,7 @@ fn from_iso8601(st: &String) -> DateTime<Utc> {
     let aux = st.parse::<DateTime<Utc>>().unwrap();
     aux
 }
-fn mapping_from_doc_to_owner(doc: &HashMap<String, AttributeValue>, owner: &mut Owner) {
+pub fn mapping_from_doc_to_owner(doc: &HashMap<String, AttributeValue>, owner: &mut Owner) {
     let user_id = doc.get(OWNER_USER_ID_FIELD_PK).unwrap();
     let user_id = user_id.as_s().unwrap();
     //let uuid = Uuid::from_str(owner_id).unwrap();

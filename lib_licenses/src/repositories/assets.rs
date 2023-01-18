@@ -5,7 +5,9 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
+use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
 use crate::models::asset::{Asset, AssetStatus};
+use crate::models::owner::Owner;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::model::{AttributeValue, Put, TransactWriteItem};
 use aws_sdk_dynamodb::Client;
@@ -15,6 +17,7 @@ use chrono::{
 };
 use lib_config::Config;
 
+use super::owners::mapping_from_doc_to_owner;
 use super::schema_asset::{ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK};
 use super::schema_owners::{OWNER_USER_ID_FIELD_PK, OWNERS_TABLE_NAME, OWNER_ASSET_ID_FIELD_PK};
 const URL_FIELD_NAME: &str = "url";
@@ -37,6 +40,8 @@ pub trait AssetRepository {
     async fn update(&self, id: &Uuid, ass: &Asset) -> ResultE<()>;
     async fn get_by_id(&self, id: &Uuid) -> ResultE<Asset>;
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Asset>>;
+    async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>>;
+    async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset>;
 }
 
 #[derive(Clone, Debug)]
@@ -270,6 +275,84 @@ impl AssetRepository for AssetRepo {
                 return Err(AssetDynamoDBError(e.to_string()).into());
             }
         }
+    }
+
+    async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>>{
+        let mut queried = Vec::new();
+        let _id_av = AttributeValue::S(user_id.to_string());
+        let request = self
+            .client
+            .get_item()
+            .table_name(OWNERS_TABLE_NAME)
+            .key(OWNER_USER_ID_FIELD_PK, _id_av.clone());
+
+        let results = request.send().await;
+        match results {
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(OwnerDynamoDBError(e.to_string()).into());
+            }
+            Ok(_) => {}
+        }
+
+        let mut own = Owner::new();
+        match results.unwrap().item {
+            None =>{ return Err(OwnerNoExistsError("id doesn't exist".to_string()).into()); },
+            Some(aux) => {
+                mapping_from_doc_to_owner(&aux, &mut own);
+            }
+        }
+        let res = self._get_by_id( own.asset_id()).await?;
+        let mut asset = Asset::new();
+        mapping_from_doc_to_asset(&res, &mut asset);
+        queried.push(asset.clone());
+        //Esto debe de ser un bucle!!!
+        Ok(queried)
+
+    }
+    async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset>{
+        
+        let user_id_av = AttributeValue::S(user_id.to_string());
+        let asset_id_av = AttributeValue::S(asset_id.to_string());
+        let request = self
+            .client
+            .get_item()
+            .table_name(OWNERS_TABLE_NAME)
+            .key(OWNER_USER_ID_FIELD_PK, user_id_av.clone())
+            .key(OWNER_ASSET_ID_FIELD_PK, asset_id_av.clone());
+
+        let results = request.send().await;
+        match results {
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(OwnerDynamoDBError(e.to_string()).into());
+            }
+            Ok(_) => {}
+        }
+
+        let mut own = Owner::new();
+        match results.unwrap().item {
+            None =>{ return Err(OwnerNoExistsError("id doesn't exist".to_string()).into()); },
+            Some(aux) => {
+                mapping_from_doc_to_owner(&aux, &mut own);
+            }
+        }
+        let res = self._get_by_id( own.asset_id()).await?;
+        let mut asset = Asset::new();
+        mapping_from_doc_to_asset(&res, &mut asset);
+        //Esto debe de ser un bucle!!!
+        Ok(asset)
+
     }
 }
 

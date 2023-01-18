@@ -78,7 +78,8 @@ impl OwnerManipulation for OwnerService {
     
     async fn get_by_user_asset_ids(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Owner>{
 
-        self.repository.get_by_user_asset_ids(asset_id).await?
+        let res = self.repository.get_by_user_asset(asset_id,user_id).await?;
+        Ok(res)
     }
 }
 
