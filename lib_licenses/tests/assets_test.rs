@@ -143,7 +143,7 @@ async fn check_ownership() {
             assert_that!(&new_op).is_ok();
         }
     }
-
+ 
     let mut total = service.get_all(0, 100).await.unwrap();
     assert_eq!(total.len(), 6);
 
@@ -153,8 +153,8 @@ async fn check_ownership() {
     total = service.get_by_user_id(&"user2".to_string()).await.unwrap();
     assert_eq!(total.len(), 3);
 
-    let asset_id1 = Uuid::from_str(&"7b3834b6-267f-4fa4-ae65-a632d7701689").unwrap();
-    let user1 = String::from_str(&"user1").unwrap();
+    let asset_id1 = Uuid::from_str(&"f6e11b16-48a6-4e01-8439-509320cce02e").unwrap();
+    let user1 = String::from_str(&"user3").unwrap();
     let asset1 = service
         .get_by_user_asset_id(
             &asset_id1,

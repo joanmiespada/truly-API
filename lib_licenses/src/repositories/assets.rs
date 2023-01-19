@@ -9,7 +9,7 @@ use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
 use crate::models::asset::{Asset, AssetStatus};
 use crate::models::owner::Owner;
 use async_trait::async_trait;
-use aws_sdk_dynamodb::model::{AttributeValue, Put, TransactWriteItem};
+use aws_sdk_dynamodb::model::{AttributeValue, Put, Select, TransactWriteItem};
 use aws_sdk_dynamodb::Client;
 use chrono::{
     prelude::{DateTime, Utc},
@@ -19,7 +19,7 @@ use lib_config::Config;
 
 use super::owners::mapping_from_doc_to_owner;
 use super::schema_asset::{ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK};
-use super::schema_owners::{OWNER_USER_ID_FIELD_PK, OWNERS_TABLE_NAME, OWNER_ASSET_ID_FIELD_PK};
+use super::schema_owners::{OWNERS_TABLE_NAME, OWNER_ASSET_ID_FIELD_PK, OWNER_USER_ID_FIELD_PK};
 const URL_FIELD_NAME: &str = "url";
 const CREATIONTIME_FIELD_NAME: &str = "creationTime";
 const LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
@@ -277,15 +277,24 @@ impl AssetRepository for AssetRepo {
         }
     }
 
-    async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>>{
+    async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>> {
         let mut queried = Vec::new();
-        let _id_av = AttributeValue::S(user_id.to_string());
+        let user_id_av = AttributeValue::S(user_id.to_string());
+
+        let mut filter = "".to_string();
+        filter.push_str(OWNER_USER_ID_FIELD_PK);
+        filter.push_str(" = :value");
+
         let request = self
             .client
-            .get_item()
+            .query()
             .table_name(OWNERS_TABLE_NAME)
-            .key(OWNER_USER_ID_FIELD_PK, _id_av.clone());
+            .key_condition_expression(filter)
+            .expression_attribute_values(":value".to_string(), user_id_av);
+            //.select(Select::AllProjectedAttributes);
+        //.key(OWNER_USER_ID_FIELD_PK, _id_av.clone());
 
+        let mut assets_list = Vec::new();
         let results = request.send().await;
         match results {
             Err(e) => {
@@ -297,34 +306,64 @@ impl AssetRepository for AssetRepo {
                 tracing::error!(mssag);
                 return Err(OwnerDynamoDBError(e.to_string()).into());
             }
-            Ok(_) => {}
-        }
-
-        let mut own = Owner::new();
-        match results.unwrap().item {
-            None =>{ return Err(OwnerNoExistsError("id doesn't exist".to_string()).into()); },
-            Some(aux) => {
-                mapping_from_doc_to_owner(&aux, &mut own);
+            Ok(data) => {
+                let op_items = data.items();
+                match op_items {
+                    None => {
+                        return Err(OwnerNoExistsError("id doesn't exist".to_string()).into());
+                    }
+                    Some(aux) => {
+                        for doc in aux {
+                            let mut own = Owner::new();
+                            mapping_from_doc_to_owner(&doc, &mut own);
+                            assets_list.push(own.clone());
+                        }
+                    }
+                }
             }
         }
-        let res = self._get_by_id( own.asset_id()).await?;
-        let mut asset = Asset::new();
-        mapping_from_doc_to_asset(&res, &mut asset);
-        queried.push(asset.clone());
-        //Esto debe de ser un bucle!!!
-        Ok(queried)
-
-    }
-    async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset>{
         
+
+        for ass in assets_list {
+            let res = self._get_by_id(ass.asset_id()).await?;
+            let mut asset = Asset::new();
+            mapping_from_doc_to_asset(&res, &mut asset);
+            queried.push(asset.clone());
+        }
+        Ok(queried)
+    }
+
+    async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset> {
         let user_id_av = AttributeValue::S(user_id.to_string());
         let asset_id_av = AttributeValue::S(asset_id.to_string());
+
+        // let mut filter = "".to_string();
+        // filter.push_str(OWNER_USER_ID_FIELD_PK);
+        // filter.push_str(" = :User_id_value, ");
+        // filter.push_str(OWNER_ASSET_ID_FIELD_PK);
+        // filter.push_str(" = :asset_id_value");
+
+        let mut filter = HashMap::new();
+        filter.insert(":v1".to_string(), user_id_av.clone());
+        filter.insert(":v2".to_string(), asset_id_av.clone());
+        let express = format!("{} = :v1 and {} = :v2",OWNER_USER_ID_FIELD_PK,OWNER_ASSET_ID_FIELD_PK);
+
+
         let request = self
             .client
-            .get_item()
+            .query()
+            //.get_item()
             .table_name(OWNERS_TABLE_NAME)
-            .key(OWNER_USER_ID_FIELD_PK, user_id_av.clone())
-            .key(OWNER_ASSET_ID_FIELD_PK, asset_id_av.clone());
+            .set_key_condition_expression(Some(express))
+            //.set_expression_attribute_names(input)
+            .set_expression_attribute_values(Some(filter));
+            //.set_key(Some(filter));
+            //.key_condition_expression(filter);
+            
+            //.expression_attribute_values(":v1".to_string(), user_id_av)
+            //.expression_attribute_values(":v2".to_string(), asset_id_av);
+            //.key(OWNER_USER_ID_FIELD_PK, user_id_av.clone());
+            //.key(OWNER_ASSET_ID_FIELD_PK, asset_id_av.clone());
 
         let results = request.send().await;
         match results {
@@ -341,18 +380,21 @@ impl AssetRepository for AssetRepo {
         }
 
         let mut own = Owner::new();
-        match results.unwrap().item {
-            None =>{ return Err(OwnerNoExistsError("id doesn't exist".to_string()).into()); },
+        match results.unwrap().items {
+            None => {
+                return Err(OwnerNoExistsError("owner doesn't exist".to_string()).into());
+            }
             Some(aux) => {
-                mapping_from_doc_to_owner(&aux, &mut own);
+                if aux.len()!=1 {
+                    return Err(OwnerNoExistsError("owner doesn't exist".to_string()).into());
+                }
+                mapping_from_doc_to_owner(&aux[0], &mut own);
             }
         }
-        let res = self._get_by_id( own.asset_id()).await?;
+        let res = self._get_by_id(own.asset_id()).await?;
         let mut asset = Asset::new();
         mapping_from_doc_to_asset(&res, &mut asset);
-        //Esto debe de ser un bucle!!!
         Ok(asset)
-
     }
 }
 
