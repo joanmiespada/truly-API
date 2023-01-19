@@ -9,11 +9,11 @@ lib_config = { path = "../lib_config" }
 lib_licenses = { path = "../lib_licenses" }
 
 chrono = {version="0.4.23", features = ["serde"] }
-serde = { version = "1.0.149", features = ["derive"] }
-serde_json = "1.0.89"
+serde = { version = "1.0.152", features = ["derive"] }
+serde_json = "1.0.91"
 aws-config = "0.52.0"
 aws-sdk-dynamodb = "0.22.0"
-async-trait = "0.1.59"
+async-trait = "0.1.61"
 validator = { version = "0.16", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 structopt = "0.3.26"

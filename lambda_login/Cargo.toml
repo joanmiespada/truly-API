@@ -15,9 +15,9 @@ lib_util_jwt = { path = "../lib_util_jwt" }
 tower-http = { version="0.3.5", features=["full"]  }
 lambda_http = { version = "0.7", features = ["apigw_rest"]}
 lambda_runtime = "0.7"
-aws_lambda_events = { version = "0.7.2", features = ["apigw", "alb"] }
-serde = { version = "1.0.149", features = ["derive"] }
-serde_json = "1.0.89"
+aws_lambda_events = { version = "0.7.3", features = ["apigw", "alb"] }
+serde = { version = "1.0.152", features = ["derive"] }
+serde_json = "1.0.91"
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3.16", default-features = false, features = ["fmt", "env-filter"] }
 tokio = { version = "1", features = ["full"] }
