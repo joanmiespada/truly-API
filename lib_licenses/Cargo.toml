@@ -19,8 +19,8 @@ chrono = {version="0.4.23", features = ["serde"] }
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.91"
 rust-argon2 = "1.0.0"
-aws-config = "0.52.0"
-aws-sdk-dynamodb = "0.22.0"
+aws-config = "0.53.0"
+aws-sdk-dynamodb = "0.23.0"
 async-trait = "0.1.61"
 tracing = { version = "0.1", features = ["log"] }
 validator = { version = "0.16", features = ["derive"] }
@@ -38,7 +38,7 @@ features = [
 ]
 
 [dev-dependencies]
-aws-types = "0.52.0"
+aws-types = "0.53.0"
 spectral = "0.6.0"
 testcontainers = "0.14.0"
 tokio = { version="1.24.2", features=["macros"]}

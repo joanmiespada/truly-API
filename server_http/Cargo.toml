@@ -14,8 +14,8 @@ lib_util_jwt = { path = "../lib_util_jwt" }
 
 actix-web = "4.2.1"
 actix-rt = "2.7.0"
-aws-config = "0.52.0"
-aws-sdk-dynamodb = "0.22.0"
+aws-config = "0.53.0"
+aws-sdk-dynamodb = "0.23.0"
 async-trait = "0.1.61"
 chrono = "0.4.23"
 serde = { version = "1.0.152", features = ["derive"] }

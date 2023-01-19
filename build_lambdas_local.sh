@@ -1,5 +1,5 @@
 #!/bin/bash
-cargo build --release --workspace --exclude server_*
+cargo build --release --workspace --exclude server_* --exclude command_*
 
 rm -rf target/lambda_local
 mkdir target/lambda_local

@@ -1,6 +1,4 @@
-use std::str::FromStr;
 
-use actix_web::http::Uri;
 use aws_config::{meta::region::RegionProviderChain, SdkConfig};
 use dotenv::dotenv;
 use serde::Deserialize;
@@ -109,8 +107,8 @@ impl Config {
         let env = self.env_variables.as_ref().unwrap();
         let config: SdkConfig;
         if env.environment == DEV_ENV {
-            let uri = Uri::from_str(env.aws_endpoint()).unwrap();
-            let endpoint_resolver = aws_sdk_dynamodb::Endpoint::immutable_uri(uri);
+            //let uri = Uri::from_str(env.aws_endpoint()).unwrap();
+            //let endpoint_resolver = aws_sdk_dynamodb::Endpoint::immutable_uri(uri);
             let region_provider = aws_sdk_dynamodb::Region::new(env.aws_region().clone());
             /*
             RegionProviderChain::first_try(env::var("local").ok().map(Region::new))
@@ -121,7 +119,8 @@ impl Config {
             config = aws_config::from_env()
                 .credentials_provider(creden.build())
                 .region(region_provider)
-                .endpoint_resolver(endpoint_resolver.unwrap())
+                .endpoint_url(env.aws_endpoint().clone())
+                //.endpoint_resolver(endpoint_resolver.unwrap())
                 .load()
                 .await;
         } else if env.environment == PROD_ENV {
