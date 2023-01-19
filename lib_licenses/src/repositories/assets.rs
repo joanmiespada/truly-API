@@ -342,21 +342,25 @@ impl AssetRepository for AssetRepo {
         // filter.push_str(" = :User_id_value, ");
         // filter.push_str(OWNER_ASSET_ID_FIELD_PK);
         // filter.push_str(" = :asset_id_value");
+        let mut filter2 = HashMap::new();
+        filter2.insert(OWNER_USER_ID_FIELD_PK.to_string(), user_id_av);
+        filter2.insert(OWNER_ASSET_ID_FIELD_PK.to_string(), asset_id_av);
 
-        let mut filter = HashMap::new();
-        filter.insert(":v1".to_string(), user_id_av.clone());
-        filter.insert(":v2".to_string(), asset_id_av.clone());
-        let express = format!("{} = :v1 and {} = :v2",OWNER_USER_ID_FIELD_PK,OWNER_ASSET_ID_FIELD_PK);
+        // let mut filter = HashMap::new();
+        // filter.insert(":v1".to_string(), user_id_av.clone());
+        // filter.insert(":v2".to_string(), asset_id_av.clone());
+        // let express = format!("{} = :v1 and {} = :v2",OWNER_USER_ID_FIELD_PK,OWNER_ASSET_ID_FIELD_PK);
 
 
         let request = self
             .client
-            .query()
-            //.get_item()
+            //.query()
+            .get_item()
             .table_name(OWNERS_TABLE_NAME)
-            .set_key_condition_expression(Some(express))
+            .set_key(Some(filter2));
+            //.set_key_condition_expression(Some(express))
             //.set_expression_attribute_names(input)
-            .set_expression_attribute_values(Some(filter));
+            //.set_expression_attribute_values(Some(filter));
             //.set_key(Some(filter));
             //.key_condition_expression(filter);
             
@@ -380,15 +384,12 @@ impl AssetRepository for AssetRepo {
         }
 
         let mut own = Owner::new();
-        match results.unwrap().items {
+        match results.unwrap().item {
             None => {
                 return Err(OwnerNoExistsError("owner doesn't exist".to_string()).into());
             }
             Some(aux) => {
-                if aux.len()!=1 {
-                    return Err(OwnerNoExistsError("owner doesn't exist".to_string()).into());
-                }
-                mapping_from_doc_to_owner(&aux[0], &mut own);
+                mapping_from_doc_to_owner(&aux, &mut own);
             }
         }
         let res = self._get_by_id(own.asset_id()).await?;

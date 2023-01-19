@@ -12,13 +12,14 @@ pub const OWNER_ASSET_ID_FIELD_PK: &str = "assetId";
 pub async fn create_schema_owners(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
 
     let ad1 = AttributeDefinition::builder()
-        .attribute_name(OWNER_ASSET_ID_FIELD_PK)
-        .attribute_type(ScalarAttributeType::S)
-        .build();
-    let ad2 = AttributeDefinition::builder()
         .attribute_name(OWNER_USER_ID_FIELD_PK)
         .attribute_type(ScalarAttributeType::S)
         .build();
+    let ad2 = AttributeDefinition::builder()
+        .attribute_name(OWNER_ASSET_ID_FIELD_PK)
+        .attribute_type(ScalarAttributeType::S)
+        .build();
+    
 
     let ks1= KeySchemaElement::builder()
         .attribute_name(OWNER_USER_ID_FIELD_PK)

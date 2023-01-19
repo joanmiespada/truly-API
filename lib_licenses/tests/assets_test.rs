@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::env;
 use std::str::FromStr;
 
 use aws_sdk_dynamodb::Client;
@@ -10,7 +9,6 @@ use lib_licenses::{models::asset::Asset, repositories::schema_asset::create_sche
 use spectral::prelude::*;
 use testcontainers::*;
 use url::Url;
-use uuid::Uuid;
 
 use crate::common::build_dynamodb;
 
@@ -71,29 +69,31 @@ async fn add_assets() {
     assert_that!(&new_op).is_ok();
 }
 
-fn list_of_assets() -> HashMap<String, Vec<String>> {
+
+
+fn list_of_assets() -> HashMap<String, Vec<Url>> {
     let mut aux = HashMap::new();
 
     aux.insert(
         "user1".to_string(),
         vec![
-            "7b3834b6-267f-4fa4-ae65-a632d7701689".to_string(), 
-            "deb0fc6c-cd94-43b2-9b04-93bdb3bc28cf".to_string(),
+                Url::parse("http://1.com/sdf1.png").unwrap(),
+                Url::parse("http://2.com/sdf2.png").unwrap()
         ],
     );
 
     aux.insert(
         "user2".to_string(),
         vec![
-            "b1c5dbfd-a727-402d-b301-e07890ef914a".to_string(),
-            "da5589ea-adc7-4ccb-ab30-342e0ed20395".to_string(),
-            "62381466-013d-4893-b083-d7ee180ecbb8".to_string(),
+                Url::parse("http://3.com/sdf3.png").unwrap(),
+                Url::parse("http://4.com/sdf4.png").unwrap(),
+                Url::parse("http://5.com/sdf5.png").unwrap()
         ],
     );
     aux.insert(
         "user3".to_string(),
         vec![
-            "f6e11b16-48a6-4e01-8439-509320cce02e".to_string(), 
+                Url::parse("http://6.com/sdf6.png").unwrap()
         ],
     );
 
@@ -124,44 +124,53 @@ async fn check_ownership() {
     let service = AssetService::new(repo);
 
     let payload = list_of_assets();
-
+    let mut list_of_ids = HashMap::new();
     for user in payload {
         for ass in user.1 {
-            let url1: Url = Url::parse("http://www.file1.com/test1.mp4").unwrap();
+            let username = user.0.clone();
+            let url1: Url = ass;
             let hash1: String = "hash1234".to_string();
             let lic1: String = String::from_str("lic1").unwrap();
 
             let mut as1 = Asset::new();
-            //as1.set_id(&Uuid::from_str(ass.as_str()).unwrap());
             as1.set_url(&Some(url1));
             as1.set_hash(&Some(hash1));
             as1.set_license(&Some(lic1));
 
-            println!("adding user: {} with asset: {}", user.0, ass);
-            let new_op = service.add(&mut as1, &user.0).await;
-
+            let new_op = service.add(&mut as1, &username).await;
             assert_that!(&new_op).is_ok();
+
+            let new_id = new_op.unwrap().clone();
+            println!("added user: {} with asset: {}", username, new_id.to_string());
+            list_of_ids.insert(new_id, username);
+
         }
     }
- 
+  
     let mut total = service.get_all(0, 100).await.unwrap();
     assert_eq!(total.len(), 6);
+    for doc in total {
+        println!("id: {}",doc.id().to_string())
+    }
 
     total = service.get_by_user_id(&"user1".to_string()).await.unwrap();
     assert_eq!(total.len(), 2);
 
     total = service.get_by_user_id(&"user2".to_string()).await.unwrap();
     assert_eq!(total.len(), 3);
-
-    let asset_id1 = Uuid::from_str(&"f6e11b16-48a6-4e01-8439-509320cce02e").unwrap();
-    let user1 = String::from_str(&"user3").unwrap();
+    
+    let mut test1212 = list_of_ids.iter().next().unwrap();
     let asset1 = service
         .get_by_user_asset_id(
-            &asset_id1,
-            &user1
-     ).await.unwrap();
-     assert_eq!(asset1.id().clone(), asset_id1 );
+            test1212.0,
+            test1212.1
+     ).await;
+     
+    assert_that(&asset1).is_ok();
 
+    test1212 = list_of_ids.iter().next().unwrap();
+    let ass = service.get_by_id(test1212.0).await;
+    assert_that(&ass).is_ok();
 
 
 
