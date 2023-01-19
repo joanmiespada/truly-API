@@ -1,14 +1,15 @@
 [package]
-name="lambda_admin_user"
+name="lambda_admin"
 version="0.0.1"
 edition = "2021"
 
 [[bin]]
-name="lambda_admin_user"
+name="lambda_admin"
 path="src/main.rs"
 
 [dependencies]
 lib_users = { path = "../lib_users" }
+lib_licenses = { path = "../lib_licenses" }
 lib_config = { path = "../lib_config" }
 lib_util_jwt = { path = "../lib_util_jwt" }
 tower-http = { version="0.3.5", features=["full"]  }

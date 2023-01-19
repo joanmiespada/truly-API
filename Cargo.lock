@@ -1675,13 +1675,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "lambda_admin_user"
+name = "lambda_admin"
 version = "0.0.1"
 dependencies = [
  "aws_lambda_events",
  "lambda_http",
  "lambda_runtime",
  "lib_config",
+ "lib_licenses",
  "lib_users",
  "lib_util_jwt",
  "matchit",

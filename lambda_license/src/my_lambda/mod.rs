@@ -55,7 +55,7 @@ pub async fn function_handler(
                 "2" => {
                     let id = matched.params.get("id").unwrap().to_string();
                     let asset_id = Uuid::from_str(id.as_str())?;
-                    return get_any_asset(&req, &context, config, asset_service,owners_service, &asset_id).await;
+                    return get_my_asset(&req, &context, config, asset_service,owners_service, &asset_id, &user_id).await;
 
                 }
                 _ => build_resp(

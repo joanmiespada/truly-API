@@ -1,17 +1,17 @@
 
-variable "lambda_admin_user_file" {
+variable "lambda_admin_file" {
   description = "The binary zip file for the admin user lambda."
   type    = string
-  default = "lambda_admin_user/bootstrap.zip"
+  default = "lambda_admin/bootstrap.zip"
 }
 
-variable "truly_lambda_admin_user_function_name" {
-  default = "truly_admin_user"
+variable "truly_lambda_admin_function_name" {
+  default = "truly_admin"
   type    = string
 }
 
 variable "service_name" {
-  default = "admin_user"
+  default = "admin"
   type    = string
 }
 

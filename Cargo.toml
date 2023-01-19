@@ -8,7 +8,7 @@ members = [
     "lambda_login",
     "lambda_user",
     "lambda_license",
-    "lambda_admin_user",
+    "lambda_admin",
     "server_http",
     "command_tables"
 ]

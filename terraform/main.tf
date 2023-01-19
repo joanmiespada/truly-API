@@ -70,8 +70,24 @@ module "lambda_user" {
   lambda_deploy_folder = var.lambda_deploy_folder
 }
 
-module "lambda_admin_user" {
-  source = "./lambda_admin_user"
+module "lambda_admin" {
+  source = "./lambda_admin"
+
+  common_tags = local.common_tags 
+  resource_logs = aws_iam_role_policy_attachment.truly_lambda_logs
+  resource_xray = aws_iam_role_policy_attachment.truly_lambda_XRAY
+  resource_dynamodb = aws_iam_role_policy_attachment.truly_lambda_dynamodb
+  resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
+  role = aws_iam_role.truly_lambda_execution_role.arn
+
+  environment_flag = var.environment_flag
+  trace_log = var.trace_log
+  lambda_deploy_folder = var.lambda_deploy_folder
+
+}
+
+module "lambda_licenses" {
+  source = "./lambda_licenses"
 
   common_tags = local.common_tags 
   resource_logs = aws_iam_role_policy_attachment.truly_lambda_logs
