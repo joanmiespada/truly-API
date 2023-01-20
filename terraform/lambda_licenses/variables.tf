@@ -29,3 +29,17 @@ variable "environment_flag" {}
 variable "trace_log" {}
 
 variable "lambda_deploy_folder" {}
+
+variable "blockchain_url" {
+  type = string
+  default = "https://localhost:1234"
+  description = "endpoint from our blockchain gateway"
+  
+}
+
+variable "contract_address" {
+  type = string
+  default = ""
+  description = "hex direction where is our contract in the blockchain"
+  
+}

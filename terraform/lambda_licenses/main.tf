@@ -28,6 +28,8 @@ resource "aws_lambda_function" "truly_lambda_licenses" {
     variables = {
       ENVIRONMENT = "${var.environment_flag}"
       RUST_LOG = "${var.trace_log}"
+      BLOCKCHAIN_URL = "${var.blockchain_url}"
+      CONTRACT_ADDRESS = "${var.contract_address}"
     }
   }
 

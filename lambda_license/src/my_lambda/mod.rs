@@ -1,20 +1,20 @@
-pub mod error;
 mod assets;
+pub mod error;
 mod owners;
+mod nft;
 
 use std::str::FromStr;
 
-use lambda_http::{
-    http::Method, http::StatusCode, IntoResponse, Request, RequestExt,
-    Response,
-};
+use assets::get_my_asset::{get_my_asset, get_my_assets_all};
+use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_config::Config;
+use lib_licenses::services::nfts::NFTsService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
 use tracing::instrument;
-use assets::get_my_asset::{get_my_asset, get_my_assets_all};
 //use self::assets::update_my_asset::update_my_asset;
 use self::assets::create_my_asset::create_my_asset;
 use self::error::ApiLambdaError;
+use self::nft::create_my_nft;
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
 use matchit::Router;
@@ -25,6 +25,7 @@ pub async fn function_handler(
     config: &Config,
     asset_service: &AssetService,
     owners_service: &OwnerService,
+    blockchain_service: &NFTsService,
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error>> {
     let context = req.lambda_context();
@@ -41,8 +42,7 @@ pub async fn function_handler(
     let mut router = Router::new();
     router.insert("/api/asset", Some("1"))?;
     router.insert("/api/asset/:id", Some("2"))?;
-
-
+    router.insert("/api/nft/:id", Some("3"))?;
 
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
@@ -51,12 +51,30 @@ pub async fn function_handler(
                 StatusCode::METHOD_NOT_ALLOWED,
             ),
             Ok(matched) => match matched.value.unwrap() {
-                "1" => get_my_assets_all(&req, &context, config, asset_service,owners_service, &user_id).await ,
+                "1" => {
+                    get_my_assets_all(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        owners_service,
+                        &user_id,
+                    )
+                    .await
+                }
                 "2" => {
                     let id = matched.params.get("id").unwrap().to_string();
                     let asset_id = Uuid::from_str(id.as_str())?;
-                    return get_my_asset(&req, &context, config, asset_service,owners_service, &asset_id, &user_id).await;
-
+                    return get_my_asset(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        owners_service,
+                        &asset_id,
+                        &user_id,
+                    )
+                    .await;
                 }
                 _ => build_resp(
                     "method not allowed".to_string(),
@@ -64,12 +82,43 @@ pub async fn function_handler(
                 ),
             },
         },
-        &Method::POST => match req.uri().path() {
-            "1" => create_my_asset(&req, &context, config, asset_service,owners_service, &user_id).await,
-            &_ => build_resp(
+        &Method::POST => match router.at(req.uri().path()) {
+            Err(_) => build_resp(
                 "method not allowed".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
             ),
+            Ok(matched) => match matched.value.unwrap() {
+                "1" => {
+                    create_my_asset(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        owners_service,
+                        &user_id,
+                    )
+                    .await
+                }
+                "3" => {
+                    let id = matched.params.get("id").unwrap().to_string();
+                    let asset_id = Uuid::from_str(id.as_str())?;
+                    return create_my_nft(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        owners_service,
+                        blockchain_service,
+                        &asset_id,
+                        &user_id,
+                    )
+                    .await;
+                }
+                &_ => build_resp(
+                    "method not allowed".to_string(),
+                    StatusCode::METHOD_NOT_ALLOWED,
+                ),
+            },
         },
         _ => build_resp(
             "http verb doesn't use it here".to_string(),
@@ -95,7 +144,10 @@ fn build_resp(
     //Ok(res)
 }
 
-fn check_jwt_token_as_user_logged(req: &Request, config: &Config) -> Result<String, JWTSecurityError > {
+fn check_jwt_token_as_user_logged(
+    req: &Request,
+    config: &Config,
+) -> Result<String, JWTSecurityError> {
     let user_id;
     let req_headers = req.headers();
 

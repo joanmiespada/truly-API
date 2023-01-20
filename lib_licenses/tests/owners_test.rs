@@ -36,6 +36,7 @@ async fn creation_table() {
 
 #[tokio::test]
 async fn add_owners() {
+    
     //let _ = pretty_env_logger::try_init();
     let docker = clients::Cli::default();
     let node = docker.run(images::dynamodb_local::DynamoDb::default());

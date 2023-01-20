@@ -25,6 +25,9 @@ pub struct EnvironmentVariables {
     //pub local_port: String,
     pub aws_region: Option<String>,
     pub aws_endpoint: Option<String>,
+
+    pub blockchain_url: Option<String>,
+    pub contract_address: Option<String>,
 }
 
 impl EnvironmentVariables {
@@ -46,7 +49,17 @@ impl EnvironmentVariables {
     }
 
     pub fn jwt_token_time_exp_hours (&self) -> &String {
-        let aux = &self.jwt_token_time_exp_hours.as_ref().unwrap();
+        let aux = self.jwt_token_time_exp_hours.as_ref().unwrap();
+        return aux;
+    }
+
+    pub fn blockchain_url(&self) -> &String {
+        let aux = self.blockchain_url.as_ref().unwrap();
+        return aux;
+    }
+    
+    pub fn contract_address(&self) -> &String {
+        let aux = self.contract_address.as_ref().unwrap();
         return aux;
     }
 
