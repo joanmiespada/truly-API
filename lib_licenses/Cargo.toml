@@ -12,6 +12,7 @@ crate-type=["lib"]
 name="integration"
 path="tests/lib.rs"
 
+
 [dependencies]
 lib_config = { path = "../lib_config" }
 
