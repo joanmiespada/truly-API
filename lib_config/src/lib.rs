@@ -28,6 +28,7 @@ pub struct EnvironmentVariables {
 
     pub blockchain_url: Option<String>,
     pub contract_address: Option<String>,
+    pub contract_owner: Option<String>,
 }
 
 impl EnvironmentVariables {
@@ -58,9 +59,26 @@ impl EnvironmentVariables {
         return aux;
     }
     
+    pub fn set_blockchain_url(&mut self, new_url: String) {
+        self.blockchain_url = Some(new_url.clone());
+    }
+    
     pub fn contract_address(&self) -> &String {
         let aux = self.contract_address.as_ref().unwrap();
         return aux;
+    }
+    
+    pub fn set_contract_address(&mut self, new_addres: String) {
+        self.contract_address = Some(new_addres.clone());
+    }
+    
+    pub fn contract_owner(&self) -> &String {
+        let aux = self.contract_owner.as_ref().unwrap();
+        return aux;
+    }
+    
+    pub fn set_contract_owner(&mut self, new_address: String) {
+        self.contract_owner = Some(new_address.clone());
     }
 
 
@@ -162,6 +180,9 @@ impl Config {
     pub fn env_vars(&self) -> &EnvironmentVariables {
         let aux = self.env_variables.as_ref().unwrap();
         return aux;
+    }
+    pub fn set_env_vars(&mut self, new_data: &EnvironmentVariables ) {
+        self.env_variables = Some(new_data.clone() )
     }
 
     async fn load_secrets(&mut self) {
