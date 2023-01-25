@@ -5,6 +5,8 @@ use lib_licenses::repositories::{assets::AssetRepo, ganache::GanacheRepo};
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::nfts::NFTsService;
 use lib_licenses::services::owners::OwnerService;
+use lib_users::repositories::users::UsersRepo;
+use lib_users::services::users::UsersService;
 use my_lambda::{error::ApiLambdaError, function_handler};
 
 mod my_lambda;
@@ -31,12 +33,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let blockchain = GanacheRepo::new(&config);
     let blockchain_service = NFTsService::new(blockchain);
 
+    let user_repo = UsersRepo::new(&config);
+    let user_service = UsersService::new(user_repo);
+
     let resp = lambda_http::run(service_fn(|event| {
         function_handler(
             &config, 
             &asset_service, 
             &owners_service,
-            &blockchain_service, 
+            &blockchain_service,
+            &user_service, 
             event)
     }))
     .await;

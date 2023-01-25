@@ -2,7 +2,7 @@ use actix_web::{web, HttpResponse, Responder};
 use lib_util_jwt::create_jwt;
 use serde::{Deserialize, Serialize};
 use lib_users::{
-        errors::users::{DynamoDBError, UserNoExistsError},
+        errors::users::{UserDynamoDBError, UserNoExistsError},
 };
 
 use super::{appstate::AppState};
@@ -28,7 +28,7 @@ pub async fn login(state: web::Data<AppState>, payload: web::Json<LoginUser>) ->
         .await;
     match op_res {
         Err(e) => {
-            if let Some(_) = e.downcast_ref::<DynamoDBError>() {
+            if let Some(_) = e.downcast_ref::<UserDynamoDBError>() {
                 HttpResponse::ServiceUnavailable().finish()
             } else if let Some(e) = e.downcast_ref::<UserNoExistsError>() {
                 HttpResponse::NotAcceptable().body(e.to_string())

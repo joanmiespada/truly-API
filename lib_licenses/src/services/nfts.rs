@@ -11,7 +11,7 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 #[async_trait]
 pub trait NFTsManipulation {
-    async fn add(&self, asset_id: &Uuid, user_address: &String, hash_file: &String, price: &u64 ) -> ResultE<()>;
+    async fn add(&self, asset_id: &Uuid, user_address: &String, hash_file: &String, price: &u64 ) -> ResultE<String>;
     async fn get(&self, asset_id: &Uuid) -> ResultE<NTFContentInfo>;
 }
 
@@ -29,9 +29,9 @@ impl NFTsService {
 impl NFTsManipulation for NFTsService {
 
     #[tracing::instrument()]
-    async fn add(&self, asset_id: &Uuid, user_address: &String, hash_file: &String, price: &u64 ) -> ResultE<()> {
-        self.0.add(asset_id, user_address, hash_file, price).await?;
-        Ok(())
+    async fn add(&self, asset_id: &Uuid, user_address: &String, hash_file: &String, price: &u64 ) -> ResultE<String> {
+        let aux = self.0.add(asset_id, user_address, hash_file, price).await?;
+        Ok(aux)
     }
     
     #[tracing::instrument()]

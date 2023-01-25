@@ -23,6 +23,10 @@ pub struct Asset {
     #[validate(length( max=1000))]
     license: Option<String>,
 
+    #[validate(length( max=1000))]
+    minted_tx: Option<String>,
+
+
 }
 
 impl fmt::Display for Asset {
@@ -42,7 +46,8 @@ impl Asset {
             hash: None,
             latitude: None,
             longitude: None,
-            license: None
+            license: None,
+            minted_tx: None,
         }
     }
 
@@ -103,6 +108,13 @@ impl Asset {
     }
     pub fn set_license(&mut self, val: &Option<String>) {
         self.license = val.clone()
+    }
+    
+    pub fn minted_tx(&self) -> &Option<String> {
+        &self.minted_tx
+    }
+    pub fn set_minted_tx(&mut self, val: &Option<String>) {
+        self.minted_tx = val.clone()
     }
 
 }

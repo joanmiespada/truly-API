@@ -2,7 +2,7 @@ use lambda_http::{
       http::StatusCode, lambda_runtime::Context,
        Request,  Response,
 };
-use lib_users::errors::users::{DynamoDBError, UserNoExistsError};
+use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError};
 use lib_users::services::users::{UsersService, UserManipulation, PromoteUser};
 use tracing::instrument;
 use lib_config::Config;
@@ -47,7 +47,7 @@ async fn downgrade_upgrade_user (
     let op_res = user_service.promote_user_to(id, grade ).await;
     match op_res {
         Err(e) => {
-            if let Some(e) = e.downcast_ref::<DynamoDBError>() {
+            if let Some(e) = e.downcast_ref::<UserDynamoDBError>() {
                 return build_resp(e.to_string(), StatusCode::SERVICE_UNAVAILABLE);
             } else if  let Some(e) = e.downcast_ref::<UserNoExistsError>() {
                 return build_resp(e.to_string(), StatusCode::NO_CONTENT);

@@ -13,13 +13,13 @@ impl Display for UserAlreadyExistsError {
 }
 
 #[derive(Debug,Clone)]
-pub struct DynamoDBError(pub String);
+pub struct UserDynamoDBError(pub String);
 
 
-impl std::error::Error for DynamoDBError {}
+impl std::error::Error for UserDynamoDBError {}
 
 
-impl Display for DynamoDBError {
+impl Display for UserDynamoDBError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "database error: {}", self.0)
     }

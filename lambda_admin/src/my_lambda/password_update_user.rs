@@ -3,7 +3,7 @@ use lambda_http::{
       http::StatusCode, lambda_runtime::Context,
        Request,  Response,
 };
-use lib_users::errors::users::{DynamoDBError, UserNoExistsError};
+use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError};
 use lib_users::services::users::{UsersService, UserManipulation};
 use tracing::{instrument};
 use lib_config::Config;
@@ -49,7 +49,7 @@ pub async fn password_update_user (
     let op_res = user_service. update_password(id, &new_password).await;
     match op_res {
         Err(e) => {
-            if let Some(m) = e.downcast_ref::<DynamoDBError>() {
+            if let Some(m) = e.downcast_ref::<UserDynamoDBError>() {
                 return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
                 //HttpResponse::ServiceUnavailable().finish()    
             } else if  let Some(m) = e.downcast_ref::<UserNoExistsError>() {

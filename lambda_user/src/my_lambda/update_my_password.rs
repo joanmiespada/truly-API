@@ -1,7 +1,7 @@
 use lambda_http::RequestExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::Config;
-use lib_users::errors::users::{DynamoDBError, UserNoExistsError};
+use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError};
 use lib_users::services::users::{UserManipulation, UsersService};
 use lib_users::validate_password;
 use serde::{Deserialize, Serialize};
@@ -46,7 +46,7 @@ pub async fn password_update_my_user(
     let op_res = user_service.update_password(&id, &new_password).await;
     match op_res {
         Err(e) => {
-            if let Some(m) = e.downcast_ref::<DynamoDBError>() {
+            if let Some(m) = e.downcast_ref::<UserDynamoDBError>() {
                 return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
             } else if let Some(m) = e.downcast_ref::<UserNoExistsError>() {
                 return build_resp(m.to_string(), StatusCode::NO_CONTENT);

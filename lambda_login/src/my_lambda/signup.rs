@@ -1,7 +1,7 @@
 use crate::my_lambda::build_resp;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, RequestExt, Response};
 use lib_config::Config;
-use lib_users::errors::users::{DynamoDBError, UserAlreadyExistsError, UserMismatchError};
+use lib_users::errors::users::{UserDynamoDBError, UserAlreadyExistsError, UserMismatchError};
 use lib_users::models::user::User;
 use lib_users::services::users::{UserManipulation, UsersService};
 use lib_users::validate_password;
@@ -65,7 +65,7 @@ pub async fn create_basic_user(
     let op_res = user_service.add_user(&mut user, &new_password).await;
     match op_res {
         Err(e) => {
-            if let Some(err) = e.downcast_ref::<DynamoDBError>() {
+            if let Some(err) = e.downcast_ref::<UserDynamoDBError>() {
                 //HttpResponse::ServiceUnavailable().body(err.to_string())
                 build_resp(err.to_string(), StatusCode::SERVICE_UNAVAILABLE)
             } else if let Some(err) = e.downcast_ref::<UserAlreadyExistsError>() {

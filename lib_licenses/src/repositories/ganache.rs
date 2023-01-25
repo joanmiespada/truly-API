@@ -136,7 +136,7 @@ impl NFTsRepository for GanacheRepo {
             }
             Ok(transact) => transact,
         };
-        let tx_str = format!("tx: {:?}", tx);
+        let tx_str = format!("blockchain: ganache | tx: {:?}", tx);
         Ok(tx_str)
     }
 

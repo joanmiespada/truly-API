@@ -29,6 +29,7 @@ const HASH_FIELD_NAME: &str = "hash";
 const LATITUDE_FIELD_NAME: &str = "latitude";
 const LONGITUDE_FIELD_NAME: &str = "longitude";
 const LICENSE_FIELD_NAME: &str = "license";
+const MINTED_FIELD_NAME: &str = "minted";
 
 static NULLABLE: &str = "__NULL__";
 
@@ -239,6 +240,11 @@ impl AssetRepository for AssetRepo {
             Some(value) => license_av = AttributeValue::S(value.to_string()),
             None => license_av = AttributeValue::S(NULLABLE.to_string()),
         }
+        let minted_tx_av;
+        match asset.minted_tx() {
+            Some(value) => minted_tx_av = AttributeValue::S(value.to_string()),
+            None => minted_tx_av = AttributeValue::S(NULLABLE.to_string()),
+        }
 
         let mut update_express = "set ".to_string();
         update_express.push_str(format!("{0} = :url, ", URL_FIELD_NAME).as_str());
@@ -248,6 +254,7 @@ impl AssetRepository for AssetRepo {
         update_express.push_str(format!("{0} = :longitude ", LONGITUDE_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :latitude ", LATITUDE_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :license ", LICENSE_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :minted_tx ", MINTED_FIELD_NAME).as_str());
 
         let request = self
             .client
@@ -261,6 +268,7 @@ impl AssetRepository for AssetRepo {
             .expression_attribute_values(":longitude", longitude_av)
             .expression_attribute_values(":latitude", latitude_av)
             .expression_attribute_values(":license", license_av)
+            .expression_attribute_values(":minted_tx", minted_tx_av)
             .expression_attribute_values(":_status", status_av);
 
         match request.send().await {

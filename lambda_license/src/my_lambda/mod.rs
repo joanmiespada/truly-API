@@ -9,10 +9,12 @@ use assets::get_my_asset::{get_my_asset, get_my_assets_all};
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_config::Config;
 use lib_licenses::services::nfts::NFTsService;
+use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
 use tracing::instrument;
 //use self::assets::update_my_asset::update_my_asset;
 use self::assets::create_my_asset::create_my_asset;
+use crate::my_lambda::create_my_nft::create_my_nft;
 use self::error::ApiLambdaError;
 use self::nft::create_my_nft;
 use lib_licenses::services::assets::AssetService;
@@ -26,6 +28,7 @@ pub async fn function_handler(
     asset_service: &AssetService,
     owners_service: &OwnerService,
     blockchain_service: &NFTsService,
+    user_service: &UsersService,
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error>> {
     let context = req.lambda_context();
@@ -99,9 +102,11 @@ pub async fn function_handler(
                     )
                     .await
                 }
+                 
                 "3" => {
                     let id = matched.params.get("id").unwrap().to_string();
                     let asset_id = Uuid::from_str(id.as_str())?;
+                     
                     return create_my_nft(
                         &req,
                         &context,
@@ -109,11 +114,13 @@ pub async fn function_handler(
                         asset_service,
                         owners_service,
                         blockchain_service,
+                        user_service,
                         &asset_id,
                         &user_id,
                     )
                     .await;
                 }
+
                 &_ => build_resp(
                     "method not allowed".to_string(),
                     StatusCode::METHOD_NOT_ALLOWED,

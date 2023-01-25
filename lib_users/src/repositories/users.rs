@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use lib_config::{Config, EnvironmentVariables};
 use crate::errors::users::{
-    DynamoDBError, UserAlreadyExistsError, UserNoExistsError, UserParamNotAccepted,
+    UserDynamoDBError, UserAlreadyExistsError, UserNoExistsError, UserParamNotAccepted,
 };
 use crate::models::user::{User, UserRoles, UserStatus};
 use async_trait::async_trait;
@@ -98,7 +98,7 @@ impl UsersRepo {
                     e
                 );
                 tracing::error!(mssag);
-                return Err(DynamoDBError(e.to_string()).into());
+                return Err(UserDynamoDBError(e.to_string()).into());
             }
             Ok(items) => {
                 let docus = items.items().unwrap();
@@ -180,7 +180,7 @@ impl UsersRepo {
                     e
                 );
                 tracing::error!(mssag);
-                return Err(DynamoDBError(e.to_string()).into());
+                return Err(UserDynamoDBError(e.to_string()).into());
             }
             Ok(_) => {}
         }
@@ -247,7 +247,7 @@ impl UserRepository for UsersRepo {
                     e
                 );
                 tracing::error!(mssag);
-                return Err(DynamoDBError(e.to_string()).into());
+                return Err(UserDynamoDBError(e.to_string()).into());
             }
         }
     }
@@ -265,7 +265,7 @@ impl UserRepository for UsersRepo {
                     e
                 );
                 tracing::error!(mssag);
-                return Err(DynamoDBError(e.to_string()).into());
+                return Err(UserDynamoDBError(e.to_string()).into());
             }
             Ok(result) => {
                 if let Some(docs) = result.items {
@@ -343,7 +343,7 @@ impl UserRepository for UsersRepo {
                     e
                 );
                 tracing::error!(mssag);
-                return Err(DynamoDBError(e.to_string()).into());
+                return Err(UserDynamoDBError(e.to_string()).into());
             }
             Ok(items) => {
                 let docus = items.items().unwrap();
@@ -421,7 +421,7 @@ impl UserRepository for UsersRepo {
                     e
                 );
                 tracing::error!(mssag);
-                return Err(DynamoDBError(e.to_string()).into());
+                return Err(UserDynamoDBError(e.to_string()).into());
             }
         }
     }
@@ -456,7 +456,7 @@ impl UserRepository for UsersRepo {
                     e
                 );
                 tracing::error!(mssag);
-                return Err(DynamoDBError(e.to_string()).into());
+                return Err(UserDynamoDBError(e.to_string()).into());
             }
         }
     }

@@ -4,7 +4,7 @@ use actix_web::{web, Responder, HttpResponse, HttpRequest  };
 use serde::{Deserialize, Serialize};
 
 use lib_users::{
-    services::users::{UserManipulation }, errors::users::{DynamoDBError,  UserNoExistsError},
+    services::users::{UserManipulation }, errors::users::{UserDynamoDBError,  UserNoExistsError},
 };
 
 use super::{appstate::AppState, jwt_middleware::UID_HEAD_KEY, users_hd::{UpdateUser, _update_user}};
@@ -24,7 +24,7 @@ pub async fn get_my_user(req: HttpRequest,state: web::Data<AppState>) -> impl Re
     match op_res {
         Ok(user) => HttpResponse::Ok().json(user),
         Err(e) => {
-            if let Some(_) = e.downcast_ref::<DynamoDBError>() {
+            if let Some(_) = e.downcast_ref::<UserDynamoDBError>() {
                 HttpResponse::ServiceUnavailable().finish()   
             } else if  let Some(_) = e.downcast_ref::< UserNoExistsError>() {
                 HttpResponse::NoContent().finish()
@@ -48,7 +48,7 @@ pub async fn password_update_my_user( req: HttpRequest, state: web::Data<AppStat
     let op_res = user_service. update_password(&id, &payload.password).await;
     match op_res {
         Err(e) => {
-            if let Some(_) = e.downcast_ref::<DynamoDBError>() {
+            if let Some(_) = e.downcast_ref::<UserDynamoDBError>() {
                 HttpResponse::ServiceUnavailable().finish()    
             } else if  let Some(_) = e.downcast_ref::<UserNoExistsError>() {
                 HttpResponse::BadRequest().finish()

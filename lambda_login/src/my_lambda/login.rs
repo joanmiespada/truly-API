@@ -3,7 +3,7 @@ use lambda_http::{
       http::StatusCode, lambda_runtime::Context,
       Request, RequestExt, Response,
 };
-use lib_users::errors::users::{DynamoDBError, UserNoExistsError, UserStatusError};
+use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError, UserStatusError};
 use lib_users::services::login::LoginOps;
 use lib_util_jwt::create_jwt;
 use serde::Deserialize;
@@ -52,7 +52,7 @@ pub async fn login(
                     let result = user_service.login(&payload.device, &payload.email, &payload.password).await;
                     match result {
                         Err(e) => {
-                            if let Some(_) = e.downcast_ref::<DynamoDBError>() {
+                            if let Some(_) = e.downcast_ref::<UserDynamoDBError>() {
                                 build_resp(e.to_string(), StatusCode::SERVICE_UNAVAILABLE)
                             } else if let Some(e) = e.downcast_ref::<UserNoExistsError>() {
                                 build_resp(e.to_string(), StatusCode::NOT_ACCEPTABLE)
