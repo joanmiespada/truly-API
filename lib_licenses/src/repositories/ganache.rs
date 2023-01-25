@@ -1,13 +1,15 @@
 use async_trait::async_trait;
+use ethers::prelude::k256::elliptic_curve::bigint::ByteArray;
 use lib_config::Config;
 use log::{debug, trace};
-use std::str::FromStr;
+use serde::{Serialize, Deserialize};
+use std::{str::FromStr, fmt};
 use uuid::Uuid;
 
 use chrono::{format::format, DateTime, NaiveDateTime, Utc};
 
 use web3::{
-    contract::{Contract, Options},
+    contract::{Contract, Options, tokens::Detokenize},
     ethabi::Address,
     transports::Http,
     types::{Block, BlockId, BlockNumber, H256, U256},
@@ -31,7 +33,7 @@ pub trait NFTsRepository {
         hash_file: &String,
         price: &u64,
     ) -> ResultE<String>;
-    async fn get(&self, asset_id: &Uuid) -> ResultE<String>;
+    async fn get(&self, asset_id: &Uuid) -> ResultE<GanacheContentInfo>;
 }
 
 #[derive(Clone, Debug)]
@@ -66,14 +68,17 @@ impl NFTsRepository for GanacheRepo {
         asset_id: &Uuid,
         user_address: &String,
         hash_file: &String,
-        price: &u64,
+        prc: &u64,
     ) -> ResultE<String> {
         let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
         let web3 = web3::Web3::new(transport);
 
         let to = Address::from_str(user_address.as_str()).unwrap();
         let token = asset_id.to_string();
-        let price = U256::from_str(price.to_string().as_str()).unwrap();
+        let price = U256::from_dec_str((*prc).to_string().as_str()).unwrap();
+
+        let price22 = price.as_u64();
+
 
         let contract_op = Contract::from_json(
             web3.eth(),
@@ -135,7 +140,7 @@ impl NFTsRepository for GanacheRepo {
         Ok(tx_str)
     }
 
-    async fn get(&self, asset_id: &Uuid) -> ResultE<String> {
+    async fn get(&self, asset_id: &Uuid) -> ResultE<GanacheContentInfo> {
         let token = asset_id.to_string();
 
         let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
@@ -161,7 +166,7 @@ impl NFTsRepository for GanacheRepo {
             Options::default(),
             None,
         );
-        let call_contract_op: Result<String, web3::contract::Error> = caller.await;
+        let call_contract_op: Result<GanacheContentInfo, web3::contract::Error> = caller.await;
         let res = match call_contract_op {
             Err(e) => {
                 return Err(AssetBlockachainError(e.to_string()).into());
@@ -197,4 +202,79 @@ pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
             latest_block.total_difficulty.unwrap()
         );
     return latest_block;
+}
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct GanacheContentInfo {
+    pub hashFile: String,
+    pub uri: String,
+    pub price: u64,
+    pub state: ContentState,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub enum ContentState {
+    Active,
+    Inactive
+}
+impl fmt::Debug for ContentState{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Active => write!(f, "Active"),
+            Self::Inactive => write!(f, "Inactive"),
+        }
+    }
+}
+
+impl fmt::Display for ContentState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Active => write!(f, "Active"),
+            Self::Inactive => write!(f, "Inactive"),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ParseContentStateError;
+impl std::str::FromStr for ContentState {
+    type Err = ParseContentStateError;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        match input {
+            "Active" => Ok(ContentState::Active),
+            "Inactive" => Ok(ContentState::Inactive),
+            _ => Err(ParseContentStateError), 
+        }
+    }
+}
+
+impl Detokenize for GanacheContentInfo {
+    fn from_tokens(tokens: Vec<web3::ethabi::Token>) -> Result<Self, web3::contract::Error>
+    where
+        Self: Sized {
+
+        let mut hashFile= "".to_string();
+        let mut uri ="".to_string();
+        let mut state= ContentState::Active;
+        let mut price = 0;
+        let mut i=0;
+        for token in tokens{
+            debug!("{:?}", token);
+            match i {
+               0 => hashFile = token.into_string().unwrap(),
+               1 => uri =  token.into_string().unwrap(),
+               2 => price = token.into_uint().unwrap().as_u64(),
+               3 => state = ContentState::from_str( token.into_string().unwrap().as_str()).unwrap() ,
+               _ => {}
+            }
+            ;
+            i+=1;
+        }    
+        //let t = tokens[0].clone(); // .iter().next().unwrap().into_string().unwrap().clone();
+        Ok(Self{ 
+            hashFile,
+            uri,
+            price,
+            state
+        })
+    }
 }

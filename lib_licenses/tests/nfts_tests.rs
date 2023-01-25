@@ -7,7 +7,7 @@ use hex::ToHex;
 use lib_config::Config;
 use lib_licenses::{
     repositories::ganache::{block_status, GanacheRepo},
-    services::nfts::{NFTsManipulation, NFTsService},
+    services::nfts::{NFTsManipulation, NFTsService, NTFState},
 };
 use serde::{Deserialize, Serialize};
 use spectral::{assert_that, result::ResultAssertions};
@@ -44,13 +44,7 @@ async fn ganache_bootstrap_get_balance_test() {
     drop(ganache)
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
-struct GetContent {
-    hashFile: String,
-    uri: String,
-    price: U256,
-    state: String,
-}
+
 
 #[tokio::test]
 async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
@@ -113,15 +107,17 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
 
     assert_that!(&mint_op).is_ok();
 
-    std::thread::sleep(std::time::Duration::from_secs(2));
+    //std::thread::sleep(std::time::Duration::from_secs(2));
 
     let check_op = service.get(&token).await;
 
     assert_that!(&check_op).is_ok();
 
-    let hash_recovered = check_op.unwrap();
+    let content = check_op.unwrap();
 
-    assert_eq!(hash_recovered, hash_file);
+    assert_eq!(content.hashFile, hash_file);
+    assert_eq!(content.price, price);
+    assert_eq!(content.state,  NTFState::Active);
 
     drop(ganache);
     Ok(())
