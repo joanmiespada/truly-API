@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use lib_config::Config;
-use log::{trace, debug};
+use log::{debug, trace};
 use std::str::FromStr;
 use uuid::Uuid;
 
@@ -44,28 +44,23 @@ pub struct GanacheRepo {
 
 impl GanacheRepo {
     pub fn new(conf: &Config) -> GanacheRepo {
-        
         let mut aux = conf.env_vars().contract_address();
-        let contract_address_position =
-            Address::from_str( aux.as_str() ).unwrap();
+        let contract_address_position = Address::from_str(aux.as_str()).unwrap();
 
         aux = conf.env_vars().contract_owner();
-        let contract_owner_position =
-            Address::from_str( aux.as_str() ).unwrap();
+        let contract_owner_position = Address::from_str(aux.as_str()).unwrap();
 
         GanacheRepo {
             //web3: gateway,
             url: conf.env_vars().blockchain_url().to_owned(),
             contract_address: contract_address_position,
-            contract_owner: contract_owner_position 
+            contract_owner: contract_owner_position,
         }
     }
 }
 
 #[async_trait]
 impl NFTsRepository for GanacheRepo {
-    
-
     async fn add(
         &self,
         asset_id: &Uuid,
@@ -73,8 +68,7 @@ impl NFTsRepository for GanacheRepo {
         hash_file: &String,
         price: &u64,
     ) -> ResultE<String> {
-       
-        let transport = web3::transports::Http::new(self.url.as_str() ).unwrap();
+        let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
         let web3 = web3::Web3::new(transport);
 
         let to = Address::from_str(user_address.as_str()).unwrap();
@@ -92,10 +86,26 @@ impl NFTsRepository for GanacheRepo {
             }
             Ok(cnt) => cnt,
         };
+        let estimate_call =
+            contract.estimate_gas(
+                CONTRACT_METHOD_MINTING, 
+                (to.clone(), token.clone(), hash_file.clone(), price.clone()),
+                self.contract_owner.clone(), //self.contract_address.clone(), //account_owner,
+                Options::default());
+
+        let estimate_op = estimate_call.await;
+
+        let cost_gas:U256 = match estimate_op {
+            Err(e) => {
+                return Err(AssetBlockachainError(e.to_string()).into());
+            }
+            Ok(gas) => gas,
+        };
+
         //30000000,
         //236197632
         let tx_options = Options {
-            gas: Some(U256::from_str("400000").unwrap()), //250.000 weis  30.000.000 //with 400.000 gas units works!
+            gas: Some(cost_gas),// Some(U256::from_str("400000").unwrap()), //250.000 weis  30.000.000 //with 400.000 gas units works!
             gas_price: None, // Some(U256::from_str("10000000").unwrap()), //10.000.000 weis
             value: None,
             condition: None,
@@ -128,7 +138,7 @@ impl NFTsRepository for GanacheRepo {
     async fn get(&self, asset_id: &Uuid) -> ResultE<String> {
         let token = asset_id.to_string();
 
-        let transport = web3::transports::Http::new(self.url.as_str() ).unwrap();
+        let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
         let web3 = web3::Web3::new(transport);
 
         //let contract_address = addr.clone();
@@ -159,11 +169,10 @@ impl NFTsRepository for GanacheRepo {
             Ok(cnt) => cnt,
         };
         Ok(res)
-
     }
 }
 
-pub async fn block_status(client: & Web3<Http>) -> Block<H256> {
+pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
     let latest_block = client
         .eth()
         .block(BlockId::Number(BlockNumber::Latest))
