@@ -109,7 +109,7 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
 
     let content = check_op.unwrap();
 
-    assert_eq!(content.hashFile, hash_file);
+    assert_eq!(content.hash_file, hash_file);
     assert_eq!(content.price, price);
     assert_eq!(content.state,  NTFState::Active);
 

@@ -38,7 +38,7 @@ impl NFTsManipulation for NFTsService {
     async fn get(&self, asset_id: &Uuid) -> ResultE<NTFContentInfo> {
         let aux =self.0.get(asset_id).await?;
         let res = NTFContentInfo{
-            hashFile: aux.hashFile,
+            hash_file: aux.hashFile,
             uri: aux.uri,
             price: aux.price,
             state : NTFState::from_str( &aux.state.to_string()).unwrap()
@@ -50,7 +50,7 @@ impl NFTsManipulation for NFTsService {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct NTFContentInfo {
-    pub hashFile: String,
+    pub hash_file: String,
     pub uri: String,
     pub price: u64,
     pub state: NTFState,

@@ -198,7 +198,7 @@ pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
     return latest_block;
 }
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct GanacheContentInfo {
+pub struct GanacheContentInfo { //field names coming from Solidity
     pub hashFile: String,
     pub uri: String,
     pub price: u64,
