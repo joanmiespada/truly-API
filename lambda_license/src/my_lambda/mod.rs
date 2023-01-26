@@ -30,7 +30,10 @@ pub async fn function_handler(
     blockchain_service: &NFTsService,
     user_service: &UsersService,
     req: Request,
-) -> Result<impl IntoResponse, Box<dyn std::error::Error>> {
+) -> Result<impl IntoResponse, Box<dyn std::error::Error + Send + Sync>> {
+
+
+
     let context = req.lambda_context();
     //let query_string = req.query_string_parameters().to_owned();
     //request.uri().path()
@@ -47,61 +50,61 @@ pub async fn function_handler(
     router.insert("/api/asset/:id", Some("2"))?;
     router.insert("/api/nft/:id", Some("3"))?;
 
-    match req.method() {
+     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
             Err(_) => build_resp(
                 "method not allowed".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
             ),
             Ok(matched) => match matched.value.unwrap() {
-                "1" => {
-                    get_my_assets_all(
-                        &req,
-                        &context,
-                        config,
-                        asset_service,
-                        owners_service,
-                        &user_id,
-                    )
-                    .await
-                }
-                "2" => {
-                    let id = matched.params.get("id").unwrap().to_string();
-                    let asset_id = Uuid::from_str(id.as_str())?;
-                    return get_my_asset(
-                        &req,
-                        &context,
-                        config,
-                        asset_service,
-                        owners_service,
-                        &asset_id,
-                        &user_id,
-                    )
-                    .await;
-                }
+                // "1" => {
+                //     get_my_assets_all(
+                //         &req,
+                //         &context,
+                //         config,
+                //         asset_service,
+                //         owners_service,
+                //         &user_id,
+                //     )
+                //     .await
+                // }
+                // "2" => {
+                //     let id = matched.params.get("id").unwrap().to_string();
+                //     let asset_id = Uuid::from_str(id.as_str())?;
+                //     return get_my_asset(
+                //         &req,
+                //         &context,
+                //         config,
+                //         asset_service,
+                //         owners_service,
+                //         &asset_id,
+                //         &user_id,
+                //     )
+                //     .await;
+                // }
                 _ => build_resp(
                     "method not allowed".to_string(),
                     StatusCode::METHOD_NOT_ALLOWED,
                 ),
             },
-        },
+         },
         &Method::POST => match router.at(req.uri().path()) {
             Err(_) => build_resp(
                 "method not allowed".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
             ),
             Ok(matched) => match matched.value.unwrap() {
-                "1" => {
-                    create_my_asset(
-                        &req,
-                        &context,
-                        config,
-                        asset_service,
-                        owners_service,
-                        &user_id,
-                    )
-                    .await
-                }
+                // "1" => {
+                //     create_my_asset(
+                //         &req,
+                //         &context,
+                //         config,
+                //         asset_service,
+                //         owners_service,
+                //         &user_id,
+                //     )
+                //     .await
+                // }
                  
                 "3" => {
                     let id = matched.params.get("id").unwrap().to_string();
@@ -137,7 +140,7 @@ pub async fn function_handler(
 fn build_resp(
     msg: String,
     status_code: StatusCode,
-) -> Result<Response<String>, Box<dyn std::error::Error>> {
+) -> Result<Response<String>, Box<dyn std::error::Error +Send + Sync >> {
     //} Response<Body> {
     let res = Response::builder()
         .status(status_code)

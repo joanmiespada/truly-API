@@ -6,12 +6,12 @@ use async_trait::async_trait;
 use uuid::Uuid;
 
 use validator::Validate;
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
 
 #[async_trait]
 pub trait AssetManipulation {
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Asset>>;
-    async fn get_by_id(&self, asset_id: &Uuid) -> ResultE<Asset>;
+    async fn get_by_id(&self, asset_id: &Uuid) -> std::result::Result<Asset, Box<dyn std::error::Error + Sync + Send >>; // ResultE<Asset>;
     async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>>;
     async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset>;
     async fn add(&self, asset: &mut Asset, user_id: &String) -> ResultE<Uuid>;
@@ -47,7 +47,7 @@ impl AssetManipulation for AssetService {
     }
 
     #[tracing::instrument()]
-    async fn get_by_id(&self, id: &Uuid) -> ResultE<Asset> {
+    async fn get_by_id(&self, id: &Uuid) -> std::result::Result<Asset, Box<dyn std::error::Error + Sync + Send >>{
         let res = self.repository.get_by_id(id).await?;
         Ok(res)
     }

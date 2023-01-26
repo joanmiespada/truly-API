@@ -18,7 +18,7 @@ pub const CREATIONTIME_FIELD_NAME: &str = "creationTime";
 pub const LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
 
 
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
 
 #[async_trait]
 pub trait OwnerRepository {

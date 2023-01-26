@@ -7,7 +7,7 @@ use tracing::instrument;
 use super::users::UserManipulation;
 use super::users::UsersService;
 
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
 
 pub struct LoginInfo {
     pub user_id: String,

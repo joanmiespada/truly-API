@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::repositories::ganache::{GanacheRepo, NFTsRepository, GanacheContentInfo};
 
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
 
 #[async_trait]
 pub trait NFTsManipulation {

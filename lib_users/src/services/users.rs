@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use uuid::Uuid;
 
 use validator::Validate;
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
 
 #[async_trait]
 pub trait UserManipulation {

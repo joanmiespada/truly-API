@@ -36,7 +36,7 @@ static STATUS_FIELD_NAME: &str = "userStatus";
 
 static NULLABLE: &str = "__NULL__";
 
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
 
 #[async_trait]
 pub trait UserRepository {

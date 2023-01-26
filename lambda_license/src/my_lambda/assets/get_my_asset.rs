@@ -18,7 +18,7 @@ pub async fn get_my_asset(
     owner_service: &OwnerService,
     asset_id: &Uuid,
     user_id: &String,
-) -> Result<Response<String>, Box<dyn std::error::Error>> {
+) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     let op_res = asset_service.get_by_user_asset_id(asset_id, user_id).await;
     match op_res {
         Ok(assets) => build_resp(json!(assets).to_string(), StatusCode::OK),
@@ -45,7 +45,7 @@ pub async fn get_my_assets_all(
     asset_service: &AssetService,
     owner_service: &OwnerService,
     user_id: &String,
-) -> Result<Response<String>, Box<dyn std::error::Error>> {
+) -> Result<Response<String>, Box<dyn std::error::Error +Send + Sync >> {
     let op_res = asset_service.get_by_user_id(&user_id).await;
     match op_res {
         Ok(user) => build_resp(json!(user).to_string(), StatusCode::OK),

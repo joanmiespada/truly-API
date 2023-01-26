@@ -37,12 +37,12 @@ pub async fn create_my_nft(
     user_service: &UsersService,
     asset_id: &Uuid,
     user_id: &String,
-) -> Result<Response<String>, Box<dyn std::error::Error>> {
+) -> Result<Response<String>, Box<dyn std::error::Error + Send+ Sync >> {
  
     let price: u64;
     let hash:String;
     let user_address:String;
-
+    
     match req.payload::<CreateNFT>() {
         Err(e) => {
             return build_resp(e.to_string(), StatusCode::BAD_REQUEST);
@@ -97,8 +97,7 @@ pub async fn create_my_nft(
         },
     }
    
-/* 
-   user_address = "".to_string(); 
+ 
     let owner_op = owner_service.get_by_user_asset_ids(asset_id, user_id).await;
 
     match owner_op {
@@ -140,7 +139,7 @@ pub async fn create_my_nft(
        Ok(_)=> {} 
         
     }
-*/
+    
     let transaction = "".to_string();
     return build_resp(transaction, StatusCode::OK);
 

@@ -9,7 +9,7 @@ use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
 use crate::models::asset::{Asset, AssetStatus};
 use crate::models::owner::Owner;
 use async_trait::async_trait;
-use aws_sdk_dynamodb::model::{AttributeValue, Put, Select, TransactWriteItem};
+use aws_sdk_dynamodb::model::{AttributeValue, Put,  TransactWriteItem};
 use aws_sdk_dynamodb::Client;
 use chrono::{
     prelude::{DateTime, Utc},
@@ -33,7 +33,7 @@ const MINTED_FIELD_NAME: &str = "minted";
 
 static NULLABLE: &str = "__NULL__";
 
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
 
 #[async_trait]
 pub trait AssetRepository {
@@ -56,7 +56,8 @@ impl AssetRepo {
             client: Client::new(conf.aws_config()),
         }
     }
-    async fn _get_by_id(&self, id: &Uuid) -> ResultE<HashMap<String, AttributeValue>> {
+    //async fn _get_by_id(&self, id: &Uuid) -> ResultE<HashMap<String, AttributeValue>> {
+    async fn _get_by_id(&self, id: &Uuid) -> Result<HashMap<String, AttributeValue>, Box<dyn std::error::Error + Sync + Send > > {
         let asset_id_av = AttributeValue::S(id.to_string());
 
         let request = self
@@ -207,7 +208,7 @@ impl AssetRepository for AssetRepo {
         Ok(queried)
     }
 
-    async fn get_by_id(&self, id: &Uuid) -> ResultE<Asset> {
+    async fn get_by_id(&self, id: &Uuid) -> std::result::Result<Asset, Box<dyn std::error::Error + Sync + Send >> {
         let res = self._get_by_id(id).await?;
         let mut asset = Asset::new();
         mapping_from_doc_to_asset(&res, &mut asset);

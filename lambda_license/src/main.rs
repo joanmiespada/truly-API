@@ -47,6 +47,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }))
     .await;
 
+
     match resp {
         Ok(r) => Ok(r),
         Err(e) => Err(ApiLambdaError { 0: e.to_string() }.into()),

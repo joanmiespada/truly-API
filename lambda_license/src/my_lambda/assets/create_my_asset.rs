@@ -29,7 +29,7 @@ pub async fn create_my_asset(
     asset_service: &AssetService,
     owner_service: &OwnerService,
     id: &String,
-) -> Result<Response<String>, Box<dyn std::error::Error>> {
+) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync >> {
     let mut asset_fields;
     match req.payload::<CreateAsset>() {
         Err(e) => {
