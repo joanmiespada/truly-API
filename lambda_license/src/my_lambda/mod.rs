@@ -5,7 +5,6 @@ mod nft;
 
 use std::str::FromStr;
 
-use assets::get_my_asset::{get_my_asset, get_my_assets_all};
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_config::Config;
 use lib_licenses::services::nfts::NFTsService;
@@ -14,6 +13,7 @@ use lib_util_jwt::{get_header_jwt, JWTSecurityError};
 use tracing::instrument;
 //use self::assets::update_my_asset::update_my_asset;
 use self::assets::create_my_asset::create_my_asset;
+use self::assets::get_my_asset::{get_my_assets_all, get_my_asset };
 use crate::my_lambda::create_my_nft::create_my_nft;
 use self::error::ApiLambdaError;
 use self::nft::create_my_nft;
@@ -57,31 +57,31 @@ pub async fn function_handler(
                 StatusCode::METHOD_NOT_ALLOWED,
             ),
             Ok(matched) => match matched.value.unwrap() {
-                // "1" => {
-                //     get_my_assets_all(
-                //         &req,
-                //         &context,
-                //         config,
-                //         asset_service,
-                //         owners_service,
-                //         &user_id,
-                //     )
-                //     .await
-                // }
-                // "2" => {
-                //     let id = matched.params.get("id").unwrap().to_string();
-                //     let asset_id = Uuid::from_str(id.as_str())?;
-                //     return get_my_asset(
-                //         &req,
-                //         &context,
-                //         config,
-                //         asset_service,
-                //         owners_service,
-                //         &asset_id,
-                //         &user_id,
-                //     )
-                //     .await;
-                // }
+                "1" => {
+                    get_my_assets_all(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        owners_service,
+                        &user_id,
+                    )
+                    .await
+                }
+                "2" => {
+                    let id = matched.params.get("id").unwrap().to_string();
+                    let asset_id = Uuid::from_str(id.as_str())?;
+                    return get_my_asset(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        owners_service,
+                        &asset_id,
+                        &user_id,
+                    )
+                    .await;
+                }
                 _ => build_resp(
                     "method not allowed".to_string(),
                     StatusCode::METHOD_NOT_ALLOWED,
@@ -94,17 +94,17 @@ pub async fn function_handler(
                 StatusCode::METHOD_NOT_ALLOWED,
             ),
             Ok(matched) => match matched.value.unwrap() {
-                // "1" => {
-                //     create_my_asset(
-                //         &req,
-                //         &context,
-                //         config,
-                //         asset_service,
-                //         owners_service,
-                //         &user_id,
-                //     )
-                //     .await
-                // }
+                "1" => {
+                    create_my_asset(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        owners_service,
+                        &user_id,
+                    )
+                    .await
+                }
                  
                 "3" => {
                     let id = matched.params.get("id").unwrap().to_string();

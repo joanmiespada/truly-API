@@ -1,24 +1,18 @@
 use core::time;
-use std::{env, str::FromStr, time::Duration};
+use std::{env, str::FromStr};
 
-use chrono::{DateTime, NaiveDateTime, Utc};
-use ethers::utils::Ganache; // signers::{LocalWallet, Signer}, providers::{Provider, Middleware}, types::U256};
-use hex::ToHex;
+use ethers::utils::Ganache;
 use lib_config::Config;
 use lib_licenses::{
     repositories::ganache::{block_status, GanacheRepo},
     services::nfts::{NFTsManipulation, NFTsService, NTFState},
 };
-use serde::{Deserialize, Serialize};
 use spectral::{assert_that, result::ResultAssertions};
-//use hex_literal::hex;
 
 use uuid::Uuid;
 use web3::{
-    contract::{tokens::Tokenizable, Contract, Options},
-    transports::Http,
-    types::{Address, Block, BlockId, BlockNumber, H160, H256, U256},
-    Error, Web3,
+    contract::{Contract, Options},
+    types::{H160, U256}
 };
 
 const MNEMONIC_TEST: &str =
@@ -51,7 +45,7 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
     env::set_var("RUST_LOG", "debug");
     env::set_var("ENVIRONMENT", "development");
 
-    env_logger::builder().is_test(true).try_init();
+    env_logger::builder().is_test(true).init();
 
     let mut config = Config::new();
     config.setup().await;
@@ -127,7 +121,7 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
 async fn create_simple_contract_test() -> web3::Result<()> {
     env::set_var("RUST_LOG", "debug");
     env::set_var("ENVIRONMENT", "development");
-    env_logger::builder().is_test(true).try_init();
+    env_logger::builder().is_test(true).init();
     let mut config = Config::new();
     config.setup().await;
 
@@ -138,7 +132,7 @@ async fn create_simple_contract_test() -> web3::Result<()> {
     let web3 = web3::Web3::new(transport);
 
     let accounts_op = web3.eth().accounts().await;
-    let user_account = format!("{:?}", accounts_op.clone().unwrap()[9]);
+    //let user_account = format!("{:?}", accounts_op.clone().unwrap()[9]);
     let contract_owner_account_str = format!("{:?}", accounts_op.clone().unwrap()[0]);
     let contract_owner = H160::from_str(contract_owner_account_str.as_str()).unwrap();
 
@@ -179,7 +173,7 @@ async fn create_simple_contract_test() -> web3::Result<()> {
 
     let estimate_call = contract.estimate_gas(
         "set",
-        (value),
+        value,
         contract_owner,
         Options::default(),
     );
@@ -238,7 +232,7 @@ async fn create_simple_contract_test() -> web3::Result<()> {
     Ok(())
 }
 
-fn wei_to_eth(wei_val: U256) -> f64 {
+fn _wei_to_eth(wei_val: U256) -> f64 {
     let res = wei_val.as_u128() as f64;
     res / 1_000_000_000_000_000_000.0
 }

@@ -1,12 +1,11 @@
 use async_trait::async_trait;
-use ethers::prelude::k256::elliptic_curve::bigint::ByteArray;
 use lib_config::Config;
-use log::{debug, trace};
+use log::debug;
 use serde::{Serialize, Deserialize};
 use std::{str::FromStr, fmt};
 use uuid::Uuid;
 
-use chrono::{format::format, DateTime, NaiveDateTime, Utc};
+use chrono::{ DateTime, NaiveDateTime, Utc};
 
 use web3::{
     contract::{Contract, Options, tokens::Detokenize},
@@ -77,9 +76,6 @@ impl NFTsRepository for GanacheRepo {
         let token = asset_id.to_string();
         let price = U256::from_dec_str((*prc).to_string().as_str()).unwrap();
 
-        let price22 = price.as_u64();
-
-
         let contract_op = Contract::from_json(
             web3.eth(),
             self.contract_address.clone(),
@@ -107,8 +103,6 @@ impl NFTsRepository for GanacheRepo {
             Ok(gas) => gas,
         };
 
-        //30000000,
-        //236197632
         let tx_options = Options {
             gas: Some(cost_gas),// Some(U256::from_str("400000").unwrap()), //250.000 weis  30.000.000 //with 400.000 gas units works!
             gas_price: None, // Some(U256::from_str("10000000").unwrap()), //10.000.000 weis

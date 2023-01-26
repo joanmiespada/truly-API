@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 
-use crate::repositories::ganache::{GanacheRepo, NFTsRepository, GanacheContentInfo};
+use crate::repositories::ganache::{GanacheRepo, NFTsRepository };
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
 

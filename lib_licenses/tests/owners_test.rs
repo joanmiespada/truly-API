@@ -1,4 +1,3 @@
-use std::str::FromStr;
 
 use lib_licenses::models::owner::Owner;
 use lib_licenses::repositories::schema_owners::create_schema_owners;

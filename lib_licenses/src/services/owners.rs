@@ -1,6 +1,5 @@
 
 
-use crate::errors::owner::OwnerAlreadyExistsError;
 use crate::models::owner::Owner;
 use crate::repositories::owners::{OwnerRepository, OwnerRepo};
 use async_trait::async_trait;
