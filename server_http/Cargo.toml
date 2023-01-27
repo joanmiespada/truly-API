@@ -11,6 +11,8 @@ path="src/main.rs"
 lib_users = { path = "../lib_users" }
 lib_config = { path = "../lib_config" }
 lib_util_jwt = { path = "../lib_util_jwt" }
+lib_licenses = {path = "../lib_licenses"}
+
 
 actix-web = "4.2.1"
 actix-rt = "2.7.0"

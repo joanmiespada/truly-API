@@ -6,25 +6,25 @@ use actix_web::middleware::Logger;
 use actix_web::web;
 use actix_web::{http::header, App, HttpServer};
 use handlers::appstate::AppState;
-use handlers::{auth_middleware, jwt_middleware, login_hd, user_my_hd, users_hd};
+use handlers::{asset_hd, auth_middleware, jwt_middleware, login_hd, user_my_hd, users_hd};
+use lib_config::Config;
+use lib_licenses::repositories::assets::AssetRepo;
+use lib_licenses::services::assets::AssetService;
 use tracing_actix_web::TracingLogger;
-use lib_config::{Config};
 
-use lib_users::services::users::UsersService;
 use lib_users::repositories::users::UsersRepo;
+use lib_users::services::users::UsersService;
 
 //mod config;
 mod handlers;
 //mod users;
-//mod lambda;
 
-const DEFAULT_ADDRESS: &str  = "0.0.0.0";
+const DEFAULT_ADDRESS: &str = "0.0.0.0";
 const DEFAULT_PORT: &str = "8080";
 
-async fn http_server(config: Config, user_service: UsersService) {
-
+async fn http_server(config: Config, user_service: UsersService, asset_service: AssetService) {
     //env_logger::init_from_env(Env::default().default_filter_or("info"));
-    
+
     let server_address = format!("{}:{}", DEFAULT_ADDRESS, DEFAULT_PORT);
 
     // Start http server
@@ -33,6 +33,7 @@ async fn http_server(config: Config, user_service: UsersService) {
             .app_data(web::Data::new(AppState {
                 user_service: user_service.clone(),
                 app_config: config.clone(),
+                asset_service: asset_service.clone(),
             }))
             .wrap(
                 Cors::default()
@@ -57,33 +58,28 @@ async fn http_server(config: Config, user_service: UsersService) {
 }
 
 #[actix_rt::main]
-//#[tokio::main]
-async fn main() { //-> Result<(),Box<dyn std::error::Error>> {
-     
+async fn main() {
+    //-> Result<(),Box<dyn std::error::Error>> {
+
     let mut config = Config::new();
     config.setup_with_secrets().await;
 
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);
 
-    http_server(config, user_service).await;
+    let asset_repo = AssetRepo::new(&config);
+    let asset_service = AssetService::new(asset_repo);
 
-    /*if config.env_vars().mode ==  ENV_VAR_MODE_HTTP_SERVER {
-        http_server(config, user_service).await
-    } else if config.env_vars().mode == ENV_VAR_MODE_LAMBDA {
-        lambda::lambda_main(&config, &user_service).await
-    } else{
-        panic!("no mode set up at env vars")
-    }*/
-
-    //lambda::lambda_main(&config, &user_service).await
-    
-
+    http_server(config, user_service, asset_service).await;
 }
 
 fn routes(app: &mut web::ServiceConfig) {
     app.service(
         web::scope("/api")
+            .route(
+                "/asset/{id}",
+                web::get().to(asset_hd::get_asset_by_token_id),
+            )
             .wrap(jwt_middleware::Jwt)
             .route("/user", web::get().to(user_my_hd::get_my_user))
             .route("/user", web::put().to(user_my_hd::update_my_user))
@@ -117,4 +113,3 @@ fn routes(app: &mut web::ServiceConfig) {
             .route("/signup", web::post().to(users_hd::add_user)), //.route("/logout", web::post().to(login_hd::logout)),
     );
 }
-
