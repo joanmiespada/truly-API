@@ -9,14 +9,14 @@ crate-type=["lib"]
 
 
 [dependencies]
-actix-web = "4.2.1"
-aws-sdk-dynamodb = "0.23.0"
-aws-config = "0.53.0"
+actix-web = "4.3.0"
+aws-sdk-dynamodb = "0.24.0"
+aws-config = "0.54.1"
 env_logger = "0.10.0"
 dotenv = "0.15.0"
 envy = "0.4.2"
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.91"
-aws-sdk-secretsmanager = "0.23.0"
+aws-sdk-secretsmanager = "0.24.0"
 
 

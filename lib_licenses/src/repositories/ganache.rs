@@ -11,9 +11,11 @@ use web3::{
     contract::{Contract, Options, tokens::Detokenize},
     ethabi::Address,
     transports::Http,
-    types::{Block, BlockId, BlockNumber, H256, U256},
+    types::{Block, BlockId, BlockNumber, H256, H160, U256},
     Web3,
 };
+
+use crate::errors::nft::NftUserAddressMalformedError;
 
 const CONTRACT_METHOD_MINTING: &'static str = "mint";
 const CONTRACT_METHOD_GET_CONTENT_BY_TOKEN: &'static str = "getContentByToken";
@@ -72,7 +74,13 @@ impl NFTsRepository for GanacheRepo {
         let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
         let web3 = web3::Web3::new(transport);
 
-        let to = Address::from_str(user_address.as_str()).unwrap();
+        let to:H160;
+        let to_op = Address::from_str(user_address.as_str());
+        match to_op {
+            Err(e)=>{ return Err( NftUserAddressMalformedError(e.to_string()).into() );}, 
+            Ok(addr) => {to = addr.to_owned();}
+        }
+
         let token = asset_id.to_string();
         let price = U256::from_dec_str((*prc).to_string().as_str()).unwrap();
 
@@ -180,7 +188,7 @@ pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
         .unwrap();
 
     let timestamp = latest_block.timestamp.as_u64() as i64;
-    let naive = NaiveDateTime::from_timestamp(timestamp, 0);
+    let naive = NaiveDateTime::from_timestamp_opt(timestamp, 0).unwrap();
     let utc_dt: DateTime<Utc> = DateTime::from_utc(naive, Utc);
 
     debug!(
@@ -198,6 +206,7 @@ pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
     return latest_block;
 }
 #[derive(Clone, Serialize, Deserialize, Debug)]
+#[allow(non_snake_case)]
 pub struct GanacheContentInfo { //field names coming from Solidity
     pub hashFile: String,
     pub uri: String,
@@ -242,6 +251,7 @@ impl std::str::FromStr for ContentState {
 }
 
 impl Detokenize for GanacheContentInfo {
+    #[allow(non_snake_case)]
     fn from_tokens(tokens: Vec<web3::ethabi::Token>) -> Result<Self, web3::contract::Error>
     where
         Self: Sized {

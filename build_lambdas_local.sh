@@ -15,9 +15,9 @@ cd target/lambda_local/lambda_user
 zip -j bootstrap.zip bootstrap 
 cd ../../..
 
-mkdir target/lambda_local/lambda_admin_user
-cp target/release/lambda_admin_user target/lambda_local/lambda_admin_user/bootstrap
-cd target/lambda_local/lambda_admin_user
+mkdir target/lambda_local/lambda_admin
+cp target/release/lambda_admin target/lambda_local/lambda_admin/bootstrap
+cd target/lambda_local/lambda_admin
 zip -j bootstrap.zip bootstrap 
 cd ../../..
 

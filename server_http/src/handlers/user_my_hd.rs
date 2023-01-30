@@ -62,7 +62,7 @@ pub async fn password_update_my_user( req: HttpRequest, state: web::Data<AppStat
     }
 }
 
-fn get_user_id(req: &HttpRequest) -> String{
+pub fn get_user_id(req: &HttpRequest) -> String{
     let id = req.headers().get(UID_HEAD_KEY).unwrap();
     let id_aux = id.to_str().unwrap();
     let id_fin = String::from_str(id_aux).unwrap();

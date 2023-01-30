@@ -6,11 +6,16 @@ use actix_web::middleware::Logger;
 use actix_web::web;
 use actix_web::{http::header, App, HttpServer};
 use handlers::appstate::AppState;
-use handlers::{asset_hd, auth_middleware, jwt_middleware, login_hd, user_my_hd, users_hd};
+use handlers::{asset_hd, auth_middleware, jwt_middleware, login_hd, nft_hd, user_my_hd, users_hd};
 use lib_config::Config;
 use lib_licenses::repositories::assets::AssetRepo;
+use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::services::assets::AssetService;
+use lib_licenses::services::owners::OwnerService;
 use tracing_actix_web::TracingLogger;
+
+use lib_licenses::repositories::ganache::GanacheRepo;
+use lib_licenses::services::nfts::NFTsService;
 
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
@@ -22,7 +27,13 @@ mod handlers;
 const DEFAULT_ADDRESS: &str = "0.0.0.0";
 const DEFAULT_PORT: &str = "8080";
 
-async fn http_server(config: Config, user_service: UsersService, asset_service: AssetService) {
+async fn http_server(
+    config: Config,
+    user_service: UsersService,
+    asset_service: AssetService,
+    owner_service: OwnerService,
+    blockchain_service: NFTsService,
+) {
     //env_logger::init_from_env(Env::default().default_filter_or("info"));
 
     let server_address = format!("{}:{}", DEFAULT_ADDRESS, DEFAULT_PORT);
@@ -34,6 +45,8 @@ async fn http_server(config: Config, user_service: UsersService, asset_service: 
                 user_service: user_service.clone(),
                 app_config: config.clone(),
                 asset_service: asset_service.clone(),
+                owner_service: owner_service.clone(),
+                blockchain_service: blockchain_service.clone()
             }))
             .wrap(
                 Cors::default()
@@ -70,7 +83,20 @@ async fn main() {
     let asset_repo = AssetRepo::new(&config);
     let asset_service = AssetService::new(asset_repo);
 
-    http_server(config, user_service, asset_service).await;
+    let owners_repo = OwnerRepo::new(&config);
+    let owners_service = OwnerService::new(owners_repo);
+
+    let blockchain = GanacheRepo::new(&config);
+    let blockchain_service = NFTsService::new(blockchain);
+
+    http_server(
+        config,
+        user_service,
+        asset_service,
+        owners_service,
+        blockchain_service,
+    )
+    .await;
 }
 
 fn routes(app: &mut web::ServiceConfig) {
@@ -81,12 +107,14 @@ fn routes(app: &mut web::ServiceConfig) {
                 web::get().to(asset_hd::get_asset_by_token_id),
             )
             .wrap(jwt_middleware::Jwt)
+            .route("/asset", web::get().to(asset_hd::get_all_my_assets))
             .route("/user", web::get().to(user_my_hd::get_my_user))
             .route("/user", web::put().to(user_my_hd::update_my_user))
             .route(
                 "/user/password",
                 web::put().to(user_my_hd::password_update_my_user), //.and(with_auth(UserRoles::Admin)),
-            ),
+            )
+            .route("/nft/{id}", web::post().to(nft_hd::add_nft)),
     )
     .service(
         web::scope("/admin")

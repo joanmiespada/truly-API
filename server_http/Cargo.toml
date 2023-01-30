@@ -14,11 +14,11 @@ lib_util_jwt = { path = "../lib_util_jwt" }
 lib_licenses = {path = "../lib_licenses"}
 
 
-actix-web = "4.2.1"
-actix-rt = "2.7.0"
-aws-config = "0.53.0"
-aws-sdk-dynamodb = "0.23.0"
-async-trait = "0.1.61"
+actix-web = "4.3.0"
+actix-rt = "2.8.0"
+aws-config = "0.54.1"
+aws-sdk-dynamodb = "0.24.0"
+async-trait = "0.1.63"
 chrono = "0.4.23"
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.91"

@@ -10,8 +10,6 @@ use lib_config::Config;
 use lib_licenses::services::nfts::NFTsService;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
-use tracing::instrument;
-//use self::assets::update_my_asset::update_my_asset;
 use self::assets::create_my_asset::create_my_asset;
 use self::assets::get_my_asset::{ get_my_assets_all};
 use self::assets::get_asset::{ get_asset};
@@ -30,7 +28,7 @@ fn jwt_mandatory(req: &Request, config: &Config) -> Result<String, Response< Str
     }
 }
 
-#[instrument]
+#[tracing::instrument]
 pub async fn function_handler(
     config: &Config,
     asset_service: &AssetService,
@@ -78,6 +76,7 @@ pub async fn function_handler(
                     .await
                 }
                 "2" => {
+                    // public, not required jwt token
                     let id = matched.params.get("id").unwrap().to_string();
                     let asset_id = Uuid::from_str(id.as_str())?;
                     return get_asset(
@@ -87,7 +86,6 @@ pub async fn function_handler(
                         asset_service,
                         owners_service,
                         &asset_id,
-                        //&user_id,
                     )
                     .await;
                 }
