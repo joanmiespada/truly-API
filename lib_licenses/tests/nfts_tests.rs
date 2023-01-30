@@ -1,6 +1,11 @@
-use core::time;
 use std::{env, str::FromStr};
-
+use lib_licenses::repositories::assets::AssetRepo;
+use lib_licenses::repositories::owners::OwnerRepo;
+use lib_licenses::repositories::schema_owners::create_schema_owners;
+use lib_licenses::services::assets::{AssetManipulation, AssetService};
+use lib_licenses::services::owners::{OwnerService};
+use lib_licenses::{models::asset::Asset, repositories::schema_asset::create_schema_assets};
+use std::time::Duration;
 use ethers::utils::Ganache;
 use lib_config::Config;
 use lib_licenses::{
@@ -8,12 +13,14 @@ use lib_licenses::{
     services::nfts::{NFTsManipulation, NFTsService, NTFState},
 };
 use spectral::{assert_that, result::ResultAssertions};
-
-use uuid::Uuid;
+use url::Url;
 use web3::{
     contract::{Contract, Options},
     types::{H160, U256}
 };
+use testcontainers::*;
+use aws_sdk_dynamodb::Client;
+use crate::build_dynamodb;
 
 const MNEMONIC_TEST: &str =
     "myth like bonus scare over problem client lizard pioneer submit female collect"; //from $ganache --deterministic command
@@ -50,6 +57,48 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
     let mut config = Config::new();
     config.setup().await;
 
+    //create dynamodb
+    let docker = clients::Cli::default();
+    let node = docker.run(images::dynamodb_local::DynamoDb::default());
+    let host_port = node.get_host_port_ipv4(8000);
+
+    let shared_config = build_dynamodb(host_port).await;
+    let client = Client::new(&shared_config);
+
+    let creation1 = create_schema_assets(&client).await;
+    assert_that(&creation1).is_ok();
+
+    let creation2 = create_schema_owners(&client).await;
+    assert_that(&creation2).is_ok();
+
+    config.set_aws_config(&shared_config);
+
+    //create fake asset
+
+    let repo_ow = OwnerRepo::new(&config);
+    let owner_service = OwnerService::new(repo_ow);
+
+    let repo_as = AssetRepo::new(&config);
+    let asset_service = AssetService::new(repo_as);
+
+    let asset_url: Url = Url::parse("http://www.file1.com/test1.mp4").unwrap();
+    let asset_hash: String = "hash1234".to_string();
+    let asset_license: String = String::from_str("license - open shared social networks - forbiden mass media").unwrap();
+
+    let mut as1 = Asset::new();
+    as1.set_url(&Some(asset_url));
+    as1.set_hash(&Some(asset_hash));
+    as1.set_license(&Some(asset_license));
+
+    let user_id = String::from_str("user1234-1234-1234-1234").unwrap();
+
+    let new_asset_op = asset_service.add(&mut as1, &user_id).await;
+
+    assert_that!(&new_asset_op).is_ok();
+    as1.set_id( &new_asset_op.unwrap()  );
+
+    //create contract and deploy
+
     let ganache = Ganache::new().mnemonic(MNEMONIC_TEST).spawn();
     let url = ganache.endpoint();
 
@@ -64,7 +113,7 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
     let contract_deploy_op = Contract::deploy(web3.eth(), include_bytes!("../res/LightNFT.abi"))
         .unwrap()
         .confirmations(0)
-        .poll_interval(time::Duration::from_secs(10))
+        .poll_interval(Duration::from_secs(10))
         //.options(Options::default())
         .options(Options::with(|opt| {
             //    opt.value       = Some(U256::from_str("1").unwrap()); //Some(0.into());
@@ -89,21 +138,20 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
     config.set_env_vars(&new_configuration);
 
     let repo = GanacheRepo::new(&config);
-    let service = NFTsService::new(repo);
+    let nft_service = NFTsService::new(repo, asset_service.clone(), owner_service.clone() );
 
-    let token = Uuid::new_v4();
     let hash_file = "hash1234".to_string();
     let price: u64 = 2000;
 
-    let mint_op = service
-        .add(&token, &user_account.to_string(), &hash_file, &price)
+    let mint_op = nft_service
+        .add( as1.id(), &user_id, &user_account.to_string(), &price)
         .await;
 
     assert_that!(&mint_op).is_ok();
 
     //std::thread::sleep(std::time::Duration::from_secs(2));
 
-    let check_op = service.get(&token).await;
+    let check_op = nft_service.get(as1.id()).await;
 
     assert_that!(&check_op).is_ok();
 
@@ -113,7 +161,6 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
     assert_eq!(content.price, price);
     assert_eq!(content.state,  NTFState::Active);
 
-    drop(ganache);
     Ok(())
 }
 
@@ -141,7 +188,7 @@ async fn create_simple_contract_test() -> web3::Result<()> {
     let contract_deploy_op = Contract::deploy(web3.eth(), include_bytes!("../res/SimpleTest.abi"))
         .unwrap()
         .confirmations(0)
-        .poll_interval(time::Duration::from_secs(10))
+        .poll_interval(Duration::from_secs(10))
         //.options(Options::default())
         .options(Options::with(|opt| {
             //    opt.value       = Some(U256::from_str("1").unwrap()); //Some(0.into());

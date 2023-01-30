@@ -23,7 +23,7 @@ impl std::fmt::Display for Claims {
 
 pub fn create_jwt(
     uid: &str,
-    roles: &Vec<String>,
+    roles: Vec<String>,
     token_secret: &String,
     exp_hours: i64
 ) -> Result<String, JWTSecurityError> {
@@ -35,7 +35,7 @@ pub fn create_jwt(
 
     let claims = Claims {
         uid: uid.to_owned(),
-        roles: roles.clone(),
+        roles,//.clone(),
         exp: expiration as usize,
     };
     let header = Header::new(Algorithm::HS512);
@@ -43,14 +43,14 @@ pub fn create_jwt(
     let jwt = encode(&header, &claims, &key);
     match jwt {
         Ok(x) => Ok(x),
-        Err(_) => Err(JWTSecurityError::from("fail creating a token".to_string()).into()),
+        Err(_) => Err(JWTSecurityError::from("fail creating a token".to_string())),
     }
 }
 
-pub fn check_jwt_token(token: &String, token_secret: &String) -> Result<Claims, JWTSecurityError> {
+pub fn check_jwt_token(token: &str, token_secret: &String) -> Result<Claims, JWTSecurityError> {
 
     if !token.starts_with(BEARER) {
-        return Err(JWTSecurityError::from("jwt error".to_string()).into());
+        return Err(JWTSecurityError::from("jwt error".to_string()));
     }
     let jwt = token.trim_start_matches(BEARER).to_owned();
 
@@ -60,28 +60,25 @@ pub fn check_jwt_token(token: &String, token_secret: &String) -> Result<Claims, 
         &Validation::new(Algorithm::HS512),
     );
     match decoded {
-        Err(_) => {
-            return Err(JWTSecurityError::from("token present but invalid, login again".to_string()).into())
-        }
-        Ok(deco) => {
-
-            return Ok(deco.claims);
-        }
+        Err(_) => Err(JWTSecurityError::from("token present but invalid, login again".to_string())),
+        Ok(deco) => Ok(deco.claims)
     }
 }
 
 #[derive(Debug)]
-pub struct JWTSecurityError(String);
+pub struct JWTSecurityError {
+    message: String
+}
 
 impl std::fmt::Display for JWTSecurityError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "jwt error {:?}", self.0)
+        write!(f, "jwt error {:?}", self.message)
     }
 }
 
 impl From<String> for JWTSecurityError {
     fn from(err: String) -> JWTSecurityError {
-        JWTSecurityError { 0: err }
+        JWTSecurityError { message: err }
     }
 }
 
@@ -95,7 +92,7 @@ pub fn get_header_jwt(
                 Ok(header_field_value) => {
                     //let jwt_secret =  config.env_vars().jwt_token_base();
 
-                    let claim = check_jwt_token(&header_field_value.to_string(), &jwt_secret);
+                    let claim = check_jwt_token(header_field_value, jwt_secret);
 
                     match claim {
                         Ok(clm) => {
@@ -104,9 +101,9 @@ pub fn get_header_jwt(
                         Err(e) => Err(e),
                     }
                 }
-                Err(_) => Err(JWTSecurityError::from("jwt error: no auth header field with value valid".to_string()).into()),
+                Err(_) => Err(JWTSecurityError::from("jwt error: no auth header field with value valid".to_string())),
             }
         }
-        None => Err(JWTSecurityError::from("jwt error: no auth header field present".to_string()).into()) ,
+        None => Err(JWTSecurityError::from("jwt error: no auth header field present".to_string())) ,
     }
 }

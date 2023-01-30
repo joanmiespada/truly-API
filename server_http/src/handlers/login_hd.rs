@@ -40,7 +40,7 @@ pub async fn login(state: web::Data<AppState>, payload: web::Json<LoginUser>) ->
             let roles: Vec<String> = log_inf.roles.into_iter().map(|ur| ur.to_string()).collect();
             let token_secret = conf.env_vars().jwt_token_base();
             let exp_hours =  conf.env_vars().jwt_token_time_exp_hours().parse::<i64>().unwrap();
-            let token_creation_ops = create_jwt(&log_inf.user_id, &roles, token_secret, exp_hours);
+            let token_creation_ops = create_jwt(&log_inf.user_id, roles, token_secret, exp_hours);
             match token_creation_ops {
                 Err(_) => HttpResponse::InternalServerError().finish(),
                 Ok(token) => HttpResponse::Ok().json(&LoginResponse { token }),

@@ -81,13 +81,13 @@ async fn main() {
     let user_service = UsersService::new(user_repo);
 
     let asset_repo = AssetRepo::new(&config);
-    let asset_service = AssetService::new(asset_repo);
+    let asset_service = AssetService::new(asset_repo.to_owned() );
 
     let owners_repo = OwnerRepo::new(&config);
-    let owners_service = OwnerService::new(owners_repo);
+    let owners_service = OwnerService::new(owners_repo.to_owned());
 
     let blockchain = GanacheRepo::new(&config);
-    let blockchain_service = NFTsService::new(blockchain);
+    let blockchain_service = NFTsService::new(blockchain, asset_service.to_owned(), owners_service.to_owned() );
 
     http_server(
         config,

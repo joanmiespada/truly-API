@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::repositories::ganache::{GanacheRepo, NFTsRepository};
-use crate::services::assets::{AssetService, AssetManipulation};
-use crate::services::owners::{OwnerService, OwnerManipulation};
+use crate::services::assets::{AssetManipulation, AssetService};
+use crate::services::owners::{OwnerManipulation, OwnerService};
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
@@ -17,19 +17,29 @@ pub trait NFTsManipulation {
         asset_id: &Uuid,
         user_id: &String,
         user_address: &String,
-        asset_service: &AssetService,
-        owner_service: &OwnerService,
         price: &u64,
     ) -> ResultE<String>;
     async fn get(&self, asset_id: &Uuid) -> ResultE<NTFContentInfo>;
 }
 
 #[derive(Debug)]
-pub struct NFTsService(GanacheRepo);
+pub struct NFTsService {
+    blockchain: GanacheRepo,
+    asset_service: AssetService,
+    owner_service: OwnerService,
+}
 
 impl NFTsService {
-    pub fn new(repo: GanacheRepo) -> NFTsService {
-        NFTsService(repo)
+    pub fn new(
+        repo: GanacheRepo,
+        asset_service: AssetService,
+        owner_service: OwnerService,
+    ) -> NFTsService {
+        NFTsService {
+            blockchain: repo,
+            asset_service: asset_service,
+            owner_service: owner_service,
+        }
     }
 }
 
@@ -41,13 +51,11 @@ impl NFTsManipulation for NFTsService {
         asset_id: &Uuid,
         user_id: &String,
         user_wallet_address: &String,
-        asset_service: &AssetService,
-        owner_service: &OwnerService,
         price: &u64,
     ) -> ResultE<String> {
         //let hash_file;
 
-        let asset = asset_service.get_by_id(asset_id).await?;
+        let asset = self.asset_service.get_by_id(asset_id).await?;
         let hash_file = asset.hash().to_owned().unwrap();
 
         // match hash_op {
@@ -70,7 +78,7 @@ impl NFTsManipulation for NFTsService {
         //     Ok(asset) => hash_file = asset.hash().to_owned().unwrap(),
         // }
 
-        owner_service
+        self.owner_service
             .get_by_user_asset_ids(asset_id, user_id)
             .await?;
 
@@ -92,7 +100,7 @@ impl NFTsManipulation for NFTsService {
         // }
 
         let transaction = self
-            .0
+            .blockchain
             .add(asset_id, user_wallet_address, &hash_file, price)
             .await?;
 
@@ -110,7 +118,7 @@ impl NFTsManipulation for NFTsService {
         //     Ok(tx) => tx,
         // };
 
-        let stamp_op = asset_service.minted(asset_id, &transaction).await;
+        let stamp_op = self.asset_service.minted(asset_id, &transaction).await;
         match stamp_op {
             Err(e) => {
                 //TODO! implement dead queue letter!!!!
@@ -131,7 +139,7 @@ impl NFTsManipulation for NFTsService {
 
     #[tracing::instrument()]
     async fn get(&self, asset_id: &Uuid) -> ResultE<NTFContentInfo> {
-        let aux = self.0.get(asset_id).await?;
+        let aux = self.blockchain.get(asset_id).await?;
         let res = NTFContentInfo {
             hash_file: aux.hashFile,
             uri: aux.uri,
@@ -146,12 +154,13 @@ impl Clone for NFTsService {
     #[tracing::instrument()]
     fn clone(&self) -> NFTsService {
         let aux = NFTsService {
-            0: self.0.clone(),
+            blockchain: self.blockchain.clone(),
+            owner_service: self.owner_service.clone(),
+            asset_service: self.asset_service.clone()
         };
         return aux;
     }
 }
-
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct NTFContentInfo {

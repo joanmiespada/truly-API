@@ -31,22 +31,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let owners_service = OwnerService::new(owners_repo);
 
     let blockchain = GanacheRepo::new(&config);
-    let blockchain_service = NFTsService::new(blockchain);
+    let blockchain_service = NFTsService::new(
+        blockchain,
+        asset_service.to_owned(),
+        owners_service.to_owned(),
+    );
 
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);
 
     let resp = lambda_http::run(service_fn(|event| {
         function_handler(
-            &config, 
-            &asset_service, 
+            &config,
+            &asset_service,
             &owners_service,
             &blockchain_service,
-            &user_service, 
-            event)
+            &user_service,
+            event,
+        )
     }))
     .await;
-
 
     match resp {
         Ok(r) => Ok(r),

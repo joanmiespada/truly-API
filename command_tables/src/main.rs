@@ -5,6 +5,7 @@ use lib_licenses::repositories::schema_asset;
 use structopt::StructOpt;
 use std::process ;
 
+#[allow(unused_variables)]
 async fn command(
     Opt {
         table,

@@ -8,7 +8,7 @@ use spectral::prelude::*;
 use testcontainers::*;
 use uuid::Uuid;
 
-use crate::common::build_dynamodb;
+use crate::build_dynamodb;
 
 
 

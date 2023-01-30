@@ -10,7 +10,7 @@ use spectral::prelude::*;
 use testcontainers::*;
 use url::Url;
 
-use crate::common::build_dynamodb;
+use crate::build_dynamodb;
 
 #[tokio::test]
 async fn creation_table() {

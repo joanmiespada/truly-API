@@ -78,8 +78,8 @@ pub async fn create_my_nft(
         asset_id, 
         user_id, 
         &user_address,
-        asset_service,
-        owner_service,
+        //asset_service,
+        //owner_service,
         &price).await;
     
     let transaction = match op_res {

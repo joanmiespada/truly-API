@@ -6,6 +6,7 @@ use async_trait::async_trait;
 use uuid::Uuid;
 
 use validator::Validate;
+
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
 
 #[async_trait]
@@ -22,11 +23,12 @@ pub trait AssetManipulation {
 #[derive(Debug)]
 pub struct AssetService {
     repository: AssetRepo,
+    //owner_service: OwnerService,
 }
 
 impl AssetService {
-    pub fn new(repo: AssetRepo) -> AssetService {
-        AssetService { repository: repo }
+    pub fn new(repo: AssetRepo ) -> AssetService {//,owner_service: OwnerService
+        AssetService { repository: repo,} // owner_service: owner_service.clone() }
     }
 }
 
@@ -119,6 +121,7 @@ impl Clone for AssetService {
     fn clone(&self) -> AssetService {
         let aux = AssetService {
             repository: self.repository.clone(),
+            //owner_service: self.owner_service.clone()
         };
         return aux;
     }

@@ -1,15 +1,16 @@
 {
-    "serverlessConsole.services": [],
-    "rust-analyzer.checkOnSave.overrideCommand": [
-        "cargo",
-        "+nightly",
-        "clippy",
-        "--all",
-        "--all-targets",
-        "--all-features",
-        "--message-format=json",
-        "--",
-        "-D",
-        "clippy::all"
-    ]
+    "editor.formatOnSave": true,   
+    // "serverlessConsole.services": [],
+    // "rust-analyzer.checkOnSave.overrideCommand": [
+    //     "cargo",
+    //     "+nightly",
+    //     "clippy",
+    //     "--all",
+    //     "--all-targets",
+    //     "--all-features",
+    //     "--message-format=json",
+    //     "--",
+    //     "-D",
+    //     "clippy::all"
+    // ]
 }

@@ -17,8 +17,6 @@ pub struct NewNFT {
 
 pub async fn add_nft(req: HttpRequest,state: web::Data<AppState>, payload: web::Json<NewNFT>,path: web::Path<String> ) -> impl Responder {
     let user_service = &state.user_service;
-    let asset_service = &state.asset_service;
-    let owner_service = &state.owner_service;
     let blockchain_service = &state.blockchain_service;
 
     let user_address: String;
@@ -62,8 +60,6 @@ pub async fn add_nft(req: HttpRequest,state: web::Data<AppState>, payload: web::
             &asset_id,
             &user_id,
             &user_address,
-            asset_service,
-            owner_service,
             &payload.price,
         )
         .await;
