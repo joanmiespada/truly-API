@@ -53,86 +53,25 @@ impl NFTsManipulation for NFTsService {
         user_wallet_address: &String,
         price: &u64,
     ) -> ResultE<String> {
-        //let hash_file;
-
         let asset = self.asset_service.get_by_id(asset_id).await?;
         let hash_file = asset.hash().to_owned().unwrap();
-
-        // match hash_op {
-        //     Err(e) => {
-        //         return Err(e);
-
-        //         // if let Some(m) = e.downcast_ref::<AssetDynamoDBError>() {
-        //         //     return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
-        //         // } else if let Some(m) = e.downcast_ref::<AssetNoExistsError>() {
-        //         //     return build_resp(m.to_string(), StatusCode::NO_CONTENT);
-        //         // } else if let Some(m) = e.downcast_ref::<ValidationError>() {
-        //         //     return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
-        //         // } else {
-        //         //     return build_resp(
-        //         //         "unknown error finding the asset to be minted".to_string(),
-        //         //         StatusCode::INTERNAL_SERVER_ERROR,
-        //         //     );
-        //         // }
-        //     }
-        //     Ok(asset) => hash_file = asset.hash().to_owned().unwrap(),
-        // }
 
         self.owner_service
             .get_by_user_asset_ids(asset_id, user_id)
             .await?;
-
-        // match owner_op {
-        //     Err(e) => {
-        //         return Err(e);
-        //         // if let Some(m) = e.downcast_ref::<OwnerDynamoDBError>() {
-        //         //     return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
-        //         // } else if let Some(m) = e.downcast_ref::<OwnerNoExistsError>() {
-        //         //     return build_resp(m.to_string(), StatusCode::NO_CONTENT);
-        //         // } else {
-        //         //     return build_resp(
-        //         //         "unknown error finding the ownership between user and asset".to_string(),
-        //         //         StatusCode::INTERNAL_SERVER_ERROR,
-        //         //     );
-        //         // }
-        //     }
-        //     Ok(_) => {}
-        // }
 
         let transaction = self
             .blockchain
             .add(asset_id, user_wallet_address, &hash_file, price)
             .await?;
 
-        // let transaction = match op_res {
-        //     Err(e) => {
-        //         if let Some(m) = e.downcast_ref::<AssetBlockachainError>() {
-        //             return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
-        //         } else {
-        //             return build_resp(
-        //                 "unknonw error working with the blockchain".to_string(),
-        //                 StatusCode::INTERNAL_SERVER_ERROR,
-        //             );
-        //         }
-        //     }
-        //     Ok(tx) => tx,
-        // };
-
         let stamp_op = self.asset_service.minted(asset_id, &transaction).await;
         match stamp_op {
             Err(e) => {
                 //TODO! implement dead queue letter!!!!
                 return Err(e);
-                // if let Some(m) = e.downcast_ref::<AssetDynamoDBError>() {
-                //     return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
-                // } else {
-                //     return build_resp(
-                //         "unknonw error when storing the tx on asset, after minting it".to_string(),
-                //         StatusCode::INTERNAL_SERVER_ERROR,
-                //     );
-                // }
             }
-            Ok(_) => {} //Ok(aux)
+            Ok(_) => {}
         }
         Ok(transaction)
     }
@@ -156,7 +95,7 @@ impl Clone for NFTsService {
         let aux = NFTsService {
             blockchain: self.blockchain.clone(),
             owner_service: self.owner_service.clone(),
-            asset_service: self.asset_service.clone()
+            asset_service: self.asset_service.clone(),
         };
         return aux;
     }

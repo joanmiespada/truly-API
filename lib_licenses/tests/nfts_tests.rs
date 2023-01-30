@@ -1,26 +1,26 @@
-use std::{env, str::FromStr};
+use crate::build_dynamodb;
+use aws_sdk_dynamodb::Client;
+use ethers::utils::Ganache;
+use lib_config::Config;
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
 use lib_licenses::services::assets::{AssetManipulation, AssetService};
-use lib_licenses::services::owners::{OwnerService};
+use lib_licenses::services::owners::OwnerService;
 use lib_licenses::{models::asset::Asset, repositories::schema_asset::create_schema_assets};
-use std::time::Duration;
-use ethers::utils::Ganache;
-use lib_config::Config;
 use lib_licenses::{
     repositories::ganache::{block_status, GanacheRepo},
     services::nfts::{NFTsManipulation, NFTsService, NTFState},
 };
 use spectral::{assert_that, result::ResultAssertions};
+use std::time::Duration;
+use std::{env, str::FromStr};
+use testcontainers::*;
 use url::Url;
 use web3::{
     contract::{Contract, Options},
-    types::{H160, U256}
+    types::{H160, U256},
 };
-use testcontainers::*;
-use aws_sdk_dynamodb::Client;
-use crate::build_dynamodb;
 
 const MNEMONIC_TEST: &str =
     "myth like bonus scare over problem client lizard pioneer submit female collect"; //from $ganache --deterministic command
@@ -44,8 +44,6 @@ async fn ganache_bootstrap_get_balance_test() {
     assert_that!(&ibalance_op).is_ok();
     drop(ganache)
 }
-
-
 
 #[tokio::test]
 async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
@@ -83,7 +81,8 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
 
     let asset_url: Url = Url::parse("http://www.file1.com/test1.mp4").unwrap();
     let asset_hash: String = "hash1234".to_string();
-    let asset_license: String = String::from_str("license - open shared social networks - forbiden mass media").unwrap();
+    let asset_license: String =
+        String::from_str("license - open shared social networks - forbiden mass media").unwrap();
 
     let mut as1 = Asset::new();
     as1.set_url(&Some(asset_url));
@@ -95,7 +94,6 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
     let new_asset_op = asset_service.add(&mut as1, &user_id).await;
 
     assert_that!(&new_asset_op).is_ok();
-    as1.set_id( &new_asset_op.unwrap()  );
 
     //create contract and deploy
 
@@ -138,18 +136,16 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
     config.set_env_vars(&new_configuration);
 
     let repo = GanacheRepo::new(&config);
-    let nft_service = NFTsService::new(repo, asset_service.clone(), owner_service.clone() );
+    let nft_service = NFTsService::new(repo, asset_service.clone(), owner_service.clone());
 
-    let hash_file = "hash1234".to_string();
     let price: u64 = 2000;
 
     let mint_op = nft_service
-        .add( as1.id(), &user_id, &user_account.to_string(), &price)
+        .add(as1.id(), &user_id, &user_account.to_string(), &price)
         .await;
 
     assert_that!(&mint_op).is_ok();
-
-    //std::thread::sleep(std::time::Duration::from_secs(2));
+    let tx_in_chain = mint_op.unwrap();
 
     let check_op = nft_service.get(as1.id()).await;
 
@@ -157,9 +153,17 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
 
     let content = check_op.unwrap();
 
-    assert_eq!(content.hash_file, hash_file);
+    assert_eq!(content.hash_file, as1.hash().as_deref().unwrap());
     assert_eq!(content.price, price);
-    assert_eq!(content.state,  NTFState::Active);
+    assert_eq!(content.state, NTFState::Active);
+
+    let tx_op = asset_service.get_by_id(as1.id()).await;
+
+    assert_that!(&tx_op).is_ok();
+
+    let content_minted = tx_op.unwrap();
+
+    assert_eq!(tx_in_chain, content_minted.minted_tx().as_deref().unwrap());
 
     Ok(())
 }
@@ -202,7 +206,7 @@ async fn create_simple_contract_test() -> web3::Result<()> {
 
     let contract_address_str = format!("{:?}", contract_deploy_op.unwrap().address());
 
-        //block_status(&web3).await;
+    //block_status(&web3).await;
 
     let contract_address = H160::from_str(contract_address_str.as_str()).unwrap();
 
@@ -218,23 +222,17 @@ async fn create_simple_contract_test() -> web3::Result<()> {
 
     let value = U256::from_str("24").unwrap();
 
-    let estimate_call = contract.estimate_gas(
-        "set",
-        value,
-        contract_owner,
-        Options::default(),
-    );
+    let estimate_call = contract.estimate_gas("set", value, contract_owner, Options::default());
 
     let estimate_op = estimate_call.await;
 
     assert_that!(&estimate_op).is_ok();
 
-    let cost_gas:U256 = estimate_op.unwrap().into();
-
+    let cost_gas: U256 = estimate_op.unwrap().into();
 
     let tx_options = Options {
-        gas: Some(cost_gas),  //Some(U256::from_str("400000").unwrap()), //1.000.000 weis
-        gas_price: None, // Some(U256::from_str("10000000").unwrap()), //100 weis
+        gas: Some(cost_gas), //Some(U256::from_str("400000").unwrap()), //1.000.000 weis
+        gas_price: None,     // Some(U256::from_str("10000000").unwrap()), //100 weis
         value: None,
         condition: None,
         transaction_type: None,

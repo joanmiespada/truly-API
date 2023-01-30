@@ -9,7 +9,7 @@ use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
 use crate::models::asset::{Asset, AssetStatus};
 use crate::models::owner::Owner;
 use async_trait::async_trait;
-use aws_sdk_dynamodb::model::{AttributeValue, Put,  TransactWriteItem};
+use aws_sdk_dynamodb::model::{AttributeValue, Put, TransactWriteItem};
 use aws_sdk_dynamodb::Client;
 use chrono::{
     prelude::{DateTime, Utc},
@@ -20,12 +20,12 @@ use lib_config::Config;
 use super::owners::mapping_from_doc_to_owner;
 use super::schema_asset::{ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK};
 use super::schema_owners::{OWNERS_TABLE_NAME, OWNER_ASSET_ID_FIELD_PK, OWNER_USER_ID_FIELD_PK};
-const URL_FIELD_NAME: &str = "url";
+const URL_FIELD_NAME: &str = "uri";
 const CREATIONTIME_FIELD_NAME: &str = "creationTime";
 const LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
 const STATUS_FIELD_NAME: &str = "assetStatus";
 
-const HASH_FIELD_NAME: &str = "hash";
+const HASH_FIELD_NAME: &str = "hash_uri";
 const LATITUDE_FIELD_NAME: &str = "latitude";
 const LONGITUDE_FIELD_NAME: &str = "longitude";
 const LICENSE_FIELD_NAME: &str = "license";
@@ -33,7 +33,7 @@ const MINTED_FIELD_NAME: &str = "minted";
 
 static NULLABLE: &str = "__NULL__";
 
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
 #[async_trait]
 pub trait AssetRepository {
@@ -57,7 +57,10 @@ impl AssetRepo {
         }
     }
     //async fn _get_by_id(&self, id: &Uuid) -> ResultE<HashMap<String, AttributeValue>> {
-    async fn _get_by_id(&self, id: &Uuid) -> Result<HashMap<String, AttributeValue>, Box<dyn std::error::Error + Sync + Send > > {
+    async fn _get_by_id(
+        &self,
+        id: &Uuid,
+    ) -> Result<HashMap<String, AttributeValue>, Box<dyn std::error::Error + Sync + Send>> {
         let asset_id_av = AttributeValue::S(id.to_string());
 
         let request = self
@@ -159,7 +162,16 @@ impl AssetRepository for AssetRepo {
         .item(STATUS_FIELD_NAME, status_av);*/
 
         match request.send().await {
-            Ok(_) => Ok(asset.id().clone()),
+            Ok(stored) => {
+                let mssag = format!(
+                    "Stored new item at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    "".to_string()
+                );
+                tracing::debug!(mssag);
+
+                return Ok(asset.id().clone());
+            }
             Err(e) => {
                 let mssag = format!(
                     "Error at [{}] - {} ",
@@ -208,7 +220,10 @@ impl AssetRepository for AssetRepo {
         Ok(queried)
     }
 
-    async fn get_by_id(&self, id: &Uuid) -> std::result::Result<Asset, Box<dyn std::error::Error + Sync + Send >> {
+    async fn get_by_id(
+        &self,
+        id: &Uuid,
+    ) -> std::result::Result<Asset, Box<dyn std::error::Error + Sync + Send>> {
         let res = self._get_by_id(id).await?;
         let mut asset = Asset::new();
         mapping_from_doc_to_asset(&res, &mut asset);
@@ -248,13 +263,13 @@ impl AssetRepository for AssetRepo {
         }
 
         let mut update_express = "set ".to_string();
-        update_express.push_str(format!("{0} = :url, ", URL_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :_url, ", URL_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :lastup, ", LASTUPDATETIME_FIELD_NAME).as_str());
-        update_express.push_str(format!("{0} = :_status ", STATUS_FIELD_NAME).as_str());
-        update_express.push_str(format!("{0} = :hash ", HASH_FIELD_NAME).as_str());
-        update_express.push_str(format!("{0} = :longitude ", LONGITUDE_FIELD_NAME).as_str());
-        update_express.push_str(format!("{0} = :latitude ", LATITUDE_FIELD_NAME).as_str());
-        update_express.push_str(format!("{0} = :license ", LICENSE_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :_status, ", STATUS_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :_hash, ", HASH_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :longitude, ", LONGITUDE_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :latitude, ", LATITUDE_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :license, ", LICENSE_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :minted_tx ", MINTED_FIELD_NAME).as_str());
 
         let request = self
@@ -263,9 +278,9 @@ impl AssetRepository for AssetRepo {
             .table_name(ASSETS_TABLE_NAME)
             .key(ASSET_ID_FIELD_PK, id_av)
             .update_expression(update_express)
-            .expression_attribute_values(":url", url_av)
+            .expression_attribute_values(":_url", url_av)
             .expression_attribute_values(":lastup", last_update_time_av)
-            .expression_attribute_values(":hash", hash_av)
+            .expression_attribute_values(":_hash", hash_av)
             .expression_attribute_values(":longitude", longitude_av)
             .expression_attribute_values(":latitude", latitude_av)
             .expression_attribute_values(":license", license_av)
@@ -273,12 +288,21 @@ impl AssetRepository for AssetRepo {
             .expression_attribute_values(":_status", status_av);
 
         match request.send().await {
-            Ok(_) => Ok(()),
+            Ok(stamp) => {
+                let mssag = format!(
+                    "Record updated at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    "".to_string()
+                );
+                tracing::debug!(mssag);
+
+                Ok(())
+            }
             Err(e) => {
                 let mssag = format!(
                     "Error at [{}] - {} ",
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
-                    e
+                    e.to_string()
                 );
                 tracing::error!(mssag);
                 return Err(AssetDynamoDBError(e.to_string()).into());
@@ -300,7 +324,7 @@ impl AssetRepository for AssetRepo {
             .table_name(OWNERS_TABLE_NAME)
             .key_condition_expression(filter)
             .expression_attribute_values(":value".to_string(), user_id_av);
-            //.select(Select::AllProjectedAttributes);
+        //.select(Select::AllProjectedAttributes);
         //.key(OWNER_USER_ID_FIELD_PK, _id_av.clone());
 
         let mut assets_list = Vec::new();
@@ -331,7 +355,6 @@ impl AssetRepository for AssetRepo {
                 }
             }
         }
-        
 
         for ass in assets_list {
             let res = self._get_by_id(ass.asset_id()).await?;
@@ -360,23 +383,22 @@ impl AssetRepository for AssetRepo {
         // filter.insert(":v2".to_string(), asset_id_av.clone());
         // let express = format!("{} = :v1 and {} = :v2",OWNER_USER_ID_FIELD_PK,OWNER_ASSET_ID_FIELD_PK);
 
-
         let request = self
             .client
             //.query()
             .get_item()
             .table_name(OWNERS_TABLE_NAME)
             .set_key(Some(filter2));
-            //.set_key_condition_expression(Some(express))
-            //.set_expression_attribute_names(input)
-            //.set_expression_attribute_values(Some(filter));
-            //.set_key(Some(filter));
-            //.key_condition_expression(filter);
-            
-            //.expression_attribute_values(":v1".to_string(), user_id_av)
-            //.expression_attribute_values(":v2".to_string(), asset_id_av);
-            //.key(OWNER_USER_ID_FIELD_PK, user_id_av.clone());
-            //.key(OWNER_ASSET_ID_FIELD_PK, asset_id_av.clone());
+        //.set_key_condition_expression(Some(express))
+        //.set_expression_attribute_names(input)
+        //.set_expression_attribute_values(Some(filter));
+        //.set_key(Some(filter));
+        //.key_condition_expression(filter);
+
+        //.expression_attribute_values(":v1".to_string(), user_id_av)
+        //.expression_attribute_values(":v2".to_string(), asset_id_av);
+        //.key(OWNER_USER_ID_FIELD_PK, user_id_av.clone());
+        //.key(OWNER_ASSET_ID_FIELD_PK, asset_id_av.clone());
 
         let results = request.send().await;
         match results {
@@ -491,6 +513,19 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
                 asset.set_license(&None)
             } else {
                 asset.set_license(&Some(val.clone()))
+            }
+        }
+    }
+
+    let tx_minted = doc.get(MINTED_FIELD_NAME);
+    match tx_minted {
+        None => asset.set_minted_tx(&None),
+        Some(lati) => {
+            let val = lati.as_s().unwrap();
+            if val == NULLABLE {
+                asset.set_minted_tx(&None)
+            } else {
+                asset.set_minted_tx(&Some(val.clone()))
             }
         }
     }
