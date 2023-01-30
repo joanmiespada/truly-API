@@ -1,5 +1,5 @@
 {
-    "editor.formatOnSave": true,
+    //"editor.formatOnSave": true,
     "rust-analyzer.cargo.allFeatures": true,
     // "serverlessConsole.services": [],
     // "rust-analyzer.checkOnSave.overrideCommand": [

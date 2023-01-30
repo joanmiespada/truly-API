@@ -12,6 +12,7 @@ use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
+use log::debug;
 use tracing_actix_web::TracingLogger;
 
 use lib_licenses::repositories::ganache::GanacheRepo;
@@ -20,9 +21,7 @@ use lib_licenses::services::nfts::NFTsService;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
 
-//mod config;
 mod handlers;
-//mod users;
 
 const DEFAULT_ADDRESS: &str = "0.0.0.0";
 const DEFAULT_PORT: &str = "8080";
@@ -34,9 +33,9 @@ async fn http_server(
     owner_service: OwnerService,
     blockchain_service: NFTsService,
 ) {
-    //env_logger::init_from_env(Env::default().default_filter_or("info"));
-
     let server_address = format!("{}:{}", DEFAULT_ADDRESS, DEFAULT_PORT);
+
+    debug!("Server up and running {}", server_address);
 
     // Start http server
     let _ = HttpServer::new(move || {
@@ -73,6 +72,13 @@ async fn http_server(
 #[actix_rt::main]
 async fn main() {
     //-> Result<(),Box<dyn std::error::Error>> {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        // disable printing the name of the module in every log line.
+        .with_target(false)
+        // disabling time is handy because CloudWatch will add the ingestion time.
+        .without_time()
+        .init();
 
     let mut config = Config::new();
     config.setup_with_secrets().await;
@@ -111,6 +117,8 @@ fn routes(app: &mut web::ServiceConfig) {
                 web::get().to(asset_hd::get_asset_by_token_id),
             )
             .wrap(jwt_middleware::Jwt)
+            .route("/asset", web::post().to(asset_hd::create_my_asset))
+            .route("/nft/{id}", web::post().to(asset_hd::create_my_nft))
             .route("/asset", web::get().to(asset_hd::get_all_my_assets))
             .route("/user", web::get().to(user_my_hd::get_my_user))
             .route("/user", web::put().to(user_my_hd::update_my_user))
