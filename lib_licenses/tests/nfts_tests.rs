@@ -135,7 +135,7 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
     new_configuration.set_contract_owner(contract_owner_account);
     config.set_env_vars(&new_configuration);
 
-    let repo = GanacheRepo::new(&config);
+    let repo = GanacheRepo::new(&config).unwrap();
     let nft_service = NFTsService::new(repo, asset_service.clone(), owner_service.clone());
 
     let price: u64 = 2000;

@@ -1,8 +1,8 @@
 
 variable "lambda_licenses_file" {
   description = "The binary zip file for the user lambda."
-  type    = string
-  default = "lambda_user/bootstrap.zip"
+  type        = string
+  default     = "lambda_user/bootstrap.zip"
 }
 
 variable "truly_lambda_licenses_function_name" {
@@ -15,7 +15,7 @@ variable "service_name" {
   type    = string
 }
 
-variable "common_tags" { }
+variable "common_tags" {}
 variable "resource_logs" {}
 variable "resource_dynamodb" {}
 variable "resource_xray" {}
@@ -31,15 +31,22 @@ variable "trace_log" {}
 variable "lambda_deploy_folder" {}
 
 variable "blockchain_url" {
-  type = string
-  default = "https://localhost:1234"
+  type        = string
+  default     = "https://localhost:1234"
   description = "endpoint from our blockchain gateway"
-  
+
 }
 
 variable "contract_address" {
-  type = string
-  default = ""
+  type        = string
+  default     = ""
   description = "hex direction where is our contract in the blockchain"
-  
+
+}
+
+variable "contract_owner" {
+  type        = string
+  default     = ""
+  description = "hex direction from account user who deployed the contract in the blockchain"
+
 }

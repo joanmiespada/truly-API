@@ -46,7 +46,7 @@ async fn http_server(
                 app_config: config.clone(),
                 asset_service: asset_service.clone(),
                 owner_service: owner_service.clone(),
-                blockchain_service: blockchain_service.clone()
+                blockchain_service: blockchain_service.clone(),
             }))
             .wrap(
                 Cors::default()
@@ -81,13 +81,17 @@ async fn main() {
     let user_service = UsersService::new(user_repo);
 
     let asset_repo = AssetRepo::new(&config);
-    let asset_service = AssetService::new(asset_repo.to_owned() );
+    let asset_service = AssetService::new(asset_repo.to_owned());
 
     let owners_repo = OwnerRepo::new(&config);
     let owners_service = OwnerService::new(owners_repo.to_owned());
 
-    let blockchain = GanacheRepo::new(&config);
-    let blockchain_service = NFTsService::new(blockchain, asset_service.to_owned(), owners_service.to_owned() );
+    let blockchain = GanacheRepo::new(&config).unwrap();
+    let blockchain_service = NFTsService::new(
+        blockchain,
+        asset_service.to_owned(),
+        owners_service.to_owned(),
+    );
 
     http_server(
         config,

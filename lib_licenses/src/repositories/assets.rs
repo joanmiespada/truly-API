@@ -162,11 +162,12 @@ impl AssetRepository for AssetRepo {
         .item(STATUS_FIELD_NAME, status_av);*/
 
         match request.send().await {
-            Ok(stored) => {
+            Ok(_stored) => {
                 let mssag = format!(
-                    "Stored new item at [{}] - {} ",
+                    "Stored new item [{}] - user id: {} asset id: {} ",
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
-                    "".to_string()
+                    user_id,
+                    asset.id().to_string()
                 );
                 tracing::debug!(mssag);
 
@@ -288,11 +289,11 @@ impl AssetRepository for AssetRepo {
             .expression_attribute_values(":_status", status_av);
 
         match request.send().await {
-            Ok(stamp) => {
+            Ok(_updated) => {
                 let mssag = format!(
-                    "Record updated at [{}] - {} ",
+                    "Record updated at [{}] - item id: {} ",
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
-                    "".to_string()
+                    id.to_string()
                 );
                 tracing::debug!(mssag);
 

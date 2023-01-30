@@ -30,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let owners_repo = OwnerRepo::new(&config);
     let owners_service = OwnerService::new(owners_repo);
 
-    let blockchain = GanacheRepo::new(&config);
+    let blockchain = GanacheRepo::new(&config).unwrap();
     let blockchain_service = NFTsService::new(
         blockchain,
         asset_service.to_owned(),

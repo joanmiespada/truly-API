@@ -1,17 +1,17 @@
 use async_trait::async_trait;
 use lib_config::Config;
 use log::debug;
-use serde::{Serialize, Deserialize};
-use std::{str::FromStr, fmt};
+use serde::{Deserialize, Serialize};
+use std::{fmt, str::FromStr};
 use uuid::Uuid;
 
-use chrono::{ DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 
 use web3::{
-    contract::{Contract, Options, tokens::Detokenize},
+    contract::{tokens::Detokenize, Contract, Options},
     ethabi::Address,
     transports::Http,
-    types::{Block, BlockId, BlockNumber, H256, H160, U256},
+    types::{Block, BlockId, BlockNumber, H160, H256, U256},
     Web3,
 };
 
@@ -22,8 +22,7 @@ const CONTRACT_METHOD_GET_CONTENT_BY_TOKEN: &'static str = "getContentByToken";
 
 use crate::errors::asset::AssetBlockachainError;
 
-
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 #[async_trait]
 pub trait NFTsRepository {
     //async
@@ -46,19 +45,30 @@ pub struct GanacheRepo {
 }
 
 impl GanacheRepo {
-    pub fn new(conf: &Config) -> GanacheRepo {
+    pub fn new(conf: &Config) -> Result<GanacheRepo, String> {
+        let contract_address_position;
         let mut aux = conf.env_vars().contract_address();
-        let contract_address_position = Address::from_str(aux.as_str()).unwrap();
-
+        let contract_address_position_op = Address::from_str(aux.as_str()); //.unwrap();
+        match contract_address_position_op {
+            Err(e) => {
+                return Err(e.to_string());
+            }
+            Ok(val) => contract_address_position = val,
+        }
+        let contract_owner_position;
         aux = conf.env_vars().contract_owner();
-        let contract_owner_position = Address::from_str(aux.as_str()).unwrap();
+        let contract_owner_position_op = Address::from_str(aux.as_str()); //.unwrap();
+        match contract_owner_position_op {
+            Err(e) => return Err(e.to_string()),
+            Ok(val) => contract_owner_position = val,
+        }
 
-        GanacheRepo {
+        Ok(GanacheRepo {
             //web3: gateway,
             url: conf.env_vars().blockchain_url().to_owned(),
             contract_address: contract_address_position,
             contract_owner: contract_owner_position,
-        }
+        })
     }
 }
 
@@ -74,11 +84,15 @@ impl NFTsRepository for GanacheRepo {
         let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
         let web3 = web3::Web3::new(transport);
 
-        let to:H160;
+        let to: H160;
         let to_op = Address::from_str(user_address.as_str());
         match to_op {
-            Err(e)=>{ return Err( NftUserAddressMalformedError(e.to_string()).into() );}, 
-            Ok(addr) => {to = addr.to_owned();}
+            Err(e) => {
+                return Err(NftUserAddressMalformedError(e.to_string()).into());
+            }
+            Ok(addr) => {
+                to = addr.to_owned();
+            }
         }
 
         let token = asset_id.to_string();
@@ -95,16 +109,16 @@ impl NFTsRepository for GanacheRepo {
             }
             Ok(cnt) => cnt,
         };
-        let estimate_call =
-            contract.estimate_gas(
-                CONTRACT_METHOD_MINTING, 
-                (to.clone(), token.clone(), hash_file.clone(), price.clone()),
-                self.contract_owner.clone(), //self.contract_address.clone(), //account_owner,
-                Options::default());
+        let estimate_call = contract.estimate_gas(
+            CONTRACT_METHOD_MINTING,
+            (to.clone(), token.clone(), hash_file.clone(), price.clone()),
+            self.contract_owner.clone(), //self.contract_address.clone(), //account_owner,
+            Options::default(),
+        );
 
         let estimate_op = estimate_call.await;
 
-        let cost_gas:U256 = match estimate_op {
+        let cost_gas: U256 = match estimate_op {
             Err(e) => {
                 return Err(AssetBlockachainError(e.to_string()).into());
             }
@@ -112,8 +126,8 @@ impl NFTsRepository for GanacheRepo {
         };
 
         let tx_options = Options {
-            gas: Some(cost_gas),// Some(U256::from_str("400000").unwrap()), //250.000 weis  30.000.000 //with 400.000 gas units works!
-            gas_price: None, // Some(U256::from_str("10000000").unwrap()), //10.000.000 weis
+            gas: Some(cost_gas), // Some(U256::from_str("400000").unwrap()), //250.000 weis  30.000.000 //with 400.000 gas units works!
+            gas_price: None,     // Some(U256::from_str("10000000").unwrap()), //10.000.000 weis
             value: None,
             condition: None,
             transaction_type: None,
@@ -207,7 +221,8 @@ pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
 }
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[allow(non_snake_case)]
-pub struct GanacheContentInfo { //field names coming from Solidity
+pub struct GanacheContentInfo {
+    //field names coming from Solidity
     pub hashFile: String,
     pub uri: String,
     pub price: u64,
@@ -217,9 +232,9 @@ pub struct GanacheContentInfo { //field names coming from Solidity
 #[derive(Clone, Serialize, Deserialize)]
 pub enum ContentState {
     Active,
-    Inactive
+    Inactive,
 }
-impl fmt::Debug for ContentState{
+impl fmt::Debug for ContentState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Active => write!(f, "Active"),
@@ -245,7 +260,7 @@ impl std::str::FromStr for ContentState {
         match input {
             "Active" => Ok(ContentState::Active),
             "Inactive" => Ok(ContentState::Inactive),
-            _ => Err(ParseContentStateError), 
+            _ => Err(ParseContentStateError),
         }
     }
 }
@@ -254,31 +269,30 @@ impl Detokenize for GanacheContentInfo {
     #[allow(non_snake_case)]
     fn from_tokens(tokens: Vec<web3::ethabi::Token>) -> Result<Self, web3::contract::Error>
     where
-        Self: Sized {
-
-        let mut hashFile= "".to_string();
-        let mut uri ="".to_string();
-        let mut state= ContentState::Active;
+        Self: Sized,
+    {
+        let mut hashFile = "".to_string();
+        let mut uri = "".to_string();
+        let mut state = ContentState::Active;
         let mut price = 0;
-        let mut i=0;
-        for token in tokens{
+        let mut i = 0;
+        for token in tokens {
             debug!("{:?}", token);
             match i {
-               0 => hashFile = token.into_string().unwrap(),
-               1 => uri =  token.into_string().unwrap(),
-               2 => price = token.into_uint().unwrap().as_u64(),
-               3 => state = ContentState::from_str( token.into_string().unwrap().as_str()).unwrap() ,
-               _ => {}
-            }
-            ;
-            i+=1;
-        }    
+                0 => hashFile = token.into_string().unwrap(),
+                1 => uri = token.into_string().unwrap(),
+                2 => price = token.into_uint().unwrap().as_u64(),
+                3 => state = ContentState::from_str(token.into_string().unwrap().as_str()).unwrap(),
+                _ => {}
+            };
+            i += 1;
+        }
         //let t = tokens[0].clone(); // .iter().next().unwrap().into_string().unwrap().clone();
-        Ok(Self{ 
+        Ok(Self {
             hashFile,
             uri,
             price,
-            state
+            state,
         })
     }
 }
