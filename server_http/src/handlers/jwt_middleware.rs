@@ -7,6 +7,7 @@ use actix_web::{
 use futures_util::future::LocalBoxFuture;
 use std::future::{ready, Ready};
 
+use lib_config::{Config, EnvironmentVariables};
 pub const UID_HEAD_KEY: &str = "api-user-uid";
 
 use lib_util_jwt::{check_jwt_token, Claims };
@@ -15,7 +16,17 @@ use lib_util_jwt::{check_jwt_token, Claims };
 // 1. Middleware initialization, middleware factory gets called with
 //    next service in chain as parameter.
 // 2. Middleware's call method gets called with normal request.
-pub struct Jwt;
+pub struct Jwt; //{
+    //environment_vars: EnvironmentVariables
+//}
+
+//impl Jwt{
+//    pub fn new() -> Jwt {
+//        Jwt { 
+           // environment_vars: cnf.env_vars().clone(),
+//        }
+//    }
+//}
 
 // Middleware factory is `Transform` trait
 // `S` - type of the next service
@@ -103,6 +114,7 @@ pub fn get_header_jwt(req_headers: &HeaderMap) -> Result<Claims, String> {
             match std::str::from_utf8(header_v.as_bytes()) {
                 Ok(header_field_value) => {
                     let jwt_secret = std::env::var("JWT_TOKEN_BASE").unwrap(); //TODO! Remove it here and inject config!!!
+                    //let jwt_secret = .unwrap(); //TODO! Remove it here and inject config!!!
 
                     let claim = check_jwt_token(&header_field_value.to_string(), &jwt_secret);
 

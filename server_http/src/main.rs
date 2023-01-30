@@ -60,7 +60,7 @@ async fn http_server(
             //.wrap(Logger::new("%a %{User-Agent}i"))
             .wrap(TracingLogger::default())
             .wrap(Logger::default())
-            .configure(routes)
+            .configure( |srv_conf |{ routes(srv_conf ,&config) })
     })
     .bind(server_address) //?
     .unwrap_or_else(|_| panic!("Could not bind server to address"))
@@ -109,24 +109,24 @@ async fn main() {
     .await;
 }
 
-fn routes(app: &mut web::ServiceConfig) {
+fn routes(app: &mut web::ServiceConfig, config: &Config) {
     app.service(
         web::scope("/api")
             .route(
                 "/asset/{id}",
                 web::get().to(asset_hd::get_asset_by_token_id),
             )
-            .wrap(jwt_middleware::Jwt)
-            .route("/asset", web::post().to(asset_hd::create_my_asset))
-            .route("/nft/{id}", web::post().to(asset_hd::create_my_nft))
-            .route("/asset", web::get().to(asset_hd::get_all_my_assets))
-            .route("/user", web::get().to(user_my_hd::get_my_user))
-            .route("/user", web::put().to(user_my_hd::update_my_user))
-            .route(
-                "/user/password",
-                web::put().to(user_my_hd::password_update_my_user), //.and(with_auth(UserRoles::Admin)),
-            )
-            .route("/nft/{id}", web::post().to(nft_hd::add_nft)),
+            .wrap( jwt_middleware::Jwt)
+                .route("/asset", web::post().to(asset_hd::create_my_asset))
+                .route("/nft/{id}", web::post().to(asset_hd::create_my_nft))
+                .route("/asset", web::get().to(asset_hd::get_all_my_assets))
+                .route("/user", web::get().to(user_my_hd::get_my_user))
+                .route("/user", web::put().to(user_my_hd::update_my_user))
+                .route(
+                    "/user/password",
+                    web::put().to(user_my_hd::password_update_my_user), //.and(with_auth(UserRoles::Admin)),
+                )
+                .route("/nft/{id}", web::post().to(nft_hd::add_nft)),
     )
     .service(
         web::scope("/admin")
