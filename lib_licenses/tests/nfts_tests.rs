@@ -5,7 +5,7 @@ use lib_config::Config;
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
-use lib_licenses::services::assets::{AssetManipulation, AssetService};
+use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::services::owners::OwnerService;
 use lib_licenses::{models::asset::Asset, repositories::schema_asset::create_schema_assets};
 use lib_licenses::{
@@ -84,16 +84,21 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
     let asset_license: String =
         String::from_str("license - open shared social networks - forbiden mass media").unwrap();
 
-    let mut as1 = Asset::new();
-    as1.set_url(&Some(asset_url));
-    as1.set_hash(&Some(asset_hash));
-    as1.set_license(&Some(asset_license));
+    let mut as0 = CreatableFildsAsset{
+        url: asset_url.to_string(),
+        hash: asset_hash,
+        license: asset_license,
+        longitude: None,
+        latitude: None
+    };
 
     let user_id = String::from_str("user1234-1234-1234-1234").unwrap();
 
-    let new_asset_op = asset_service.add(&mut as1, &user_id).await;
+    let new_asset_op = asset_service.add(&mut as0, &user_id).await;
 
     assert_that!(&new_asset_op).is_ok();
+
+    let as1 = asset_service.get_by_id( &new_asset_op.unwrap()  ).await.unwrap();
 
     //create contract and deploy
 

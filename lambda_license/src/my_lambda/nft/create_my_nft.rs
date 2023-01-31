@@ -3,6 +3,7 @@ use lambda_http::RequestExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::Config;
 use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError, AssetBlockachainError};
+use lib_licenses::errors::nft::NftUserAddressMalformedError;
 use lib_licenses::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
@@ -20,6 +21,7 @@ pub struct CreateNFT {
     //#[validate(length(max = 1000))]
     //pub hash: String,
     pub price: u64,
+    pub asset_id: Uuid
     //#[validate(length(max = 100))]
     //pub user_blockchain_address: String,
 }
@@ -32,11 +34,12 @@ pub async fn create_my_nft(
     owner_service: &OwnerService,
     blockchain_service: &NFTsService,
     user_service: &UsersService,
-    asset_id: &Uuid,
+    //asset_id: &Uuid,
     user_id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send+ Sync >> {
  
     let price: u64;
+    let asset_id: Uuid;
     let user_address:String;
     
     match req.payload::<CreateNFT>() {
@@ -53,6 +56,7 @@ pub async fn create_my_nft(
                 }
                 Ok(_) => {
                     price = payload.price;
+                    asset_id = payload.asset_id;
                 }
             },
         },
@@ -75,7 +79,7 @@ pub async fn create_my_nft(
     }
 
     let op_res = blockchain_service.add(
-        asset_id, 
+        &asset_id, 
         user_id, 
         &user_address,
         //asset_service,
@@ -94,6 +98,8 @@ pub async fn create_my_nft(
                 return build_resp(m.to_string(), StatusCode::NO_CONTENT);
             } else if let Some(m) = e.downcast_ref::<OwnerNoExistsError>() {
                 return build_resp(m.to_string(), StatusCode::NO_CONTENT);
+            } else if let Some(m) = e.downcast_ref::<NftUserAddressMalformedError>() {
+                return build_resp(m.to_string(), StatusCode::NOT_ACCEPTABLE);
             } else {
                 return build_resp("unknonw error working with the blockchain".to_string(), StatusCode::INTERNAL_SERVER_ERROR);
             }

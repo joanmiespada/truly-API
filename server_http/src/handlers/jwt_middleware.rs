@@ -7,7 +7,6 @@ use actix_web::{
 use futures_util::future::LocalBoxFuture;
 use std::future::{ready, Ready};
 
-use lib_config::{Config, EnvironmentVariables};
 pub const UID_HEAD_KEY: &str = "api-user-uid";
 
 use lib_util_jwt::{check_jwt_token, Claims };

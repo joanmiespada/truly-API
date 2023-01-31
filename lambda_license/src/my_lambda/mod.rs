@@ -51,7 +51,7 @@ pub async fn function_handler(
     let mut router = Router::new();
     router.insert("/api/asset", Some("1"))?;
     router.insert("/api/asset/:id", Some("2"))?;
-    router.insert("/api/nft/:id", Some("3"))?;
+    router.insert("/api/nft", Some("3"))?;
 
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
@@ -118,8 +118,8 @@ pub async fn function_handler(
                 }
 
                 "3" => {
-                    let id = matched.params.get("id").unwrap().to_string();
-                    let asset_id = Uuid::from_str(id.as_str())?;
+                    //let id = matched.params.get("id").unwrap().to_string();
+                    //let asset_id = Uuid::from_str(id.as_str())?;
 
                     match jwt_mandatory(&req, config){
                         Err(e) => { return Ok(e);},
@@ -134,7 +134,7 @@ pub async fn function_handler(
                         owners_service,
                         blockchain_service,
                         user_service,
-                        &asset_id,
+                        //&asset_id,
                         &user_id,
                     )
                     .await;

@@ -3,19 +3,24 @@ use std::str::FromStr;
 use crate::models::asset::{Asset, AssetStatus};
 use crate::repositories::assets::{AssetRepo, AssetRepository};
 use async_trait::async_trait;
+use serde::{Deserialize, Serialize};
+use url::Url;
 use uuid::Uuid;
 
 use validator::Validate;
 
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
 #[async_trait]
 pub trait AssetManipulation {
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Asset>>;
-    async fn get_by_id(&self, asset_id: &Uuid) -> std::result::Result<Asset, Box<dyn std::error::Error + Sync + Send >>; // ResultE<Asset>;
+    async fn get_by_id(
+        &self,
+        asset_id: &Uuid,
+    ) -> std::result::Result<Asset, Box<dyn std::error::Error + Sync + Send>>; // ResultE<Asset>;
     async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>>;
     async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset>;
-    async fn add(&self, asset: &mut Asset, user_id: &String) -> ResultE<Uuid>;
+    async fn add(&self, creation_asset: &CreatableFildsAsset, user_id: &String) -> ResultE<Uuid>;
     async fn update(&self, asset_id: &Uuid, asset: &UpdatableFildsAsset) -> ResultE<()>;
     async fn minted(&self, asset_id: &Uuid, transaction: &String) -> ResultE<()>;
 }
@@ -27,8 +32,9 @@ pub struct AssetService {
 }
 
 impl AssetService {
-    pub fn new(repo: AssetRepo ) -> AssetService {//,owner_service: OwnerService
-        AssetService { repository: repo,} // owner_service: owner_service.clone() }
+    pub fn new(repo: AssetRepo) -> AssetService {
+        //,owner_service: OwnerService
+        AssetService { repository: repo } // owner_service: owner_service.clone() }
     }
 }
 
@@ -40,6 +46,18 @@ pub struct UpdatableFildsAsset {
     pub status: Option<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Validate, Clone)]
+pub struct CreatableFildsAsset {
+    #[validate(length(max = 100))]
+    pub license: String,
+    pub url: String,
+    #[validate(length(max = 100))]
+    pub hash: String,
+
+    pub latitude: Option<f64>,
+    pub longitude: Option<f64>,
+}
+
 #[async_trait]
 impl AssetManipulation for AssetService {
     #[tracing::instrument()]
@@ -49,17 +67,30 @@ impl AssetManipulation for AssetService {
     }
 
     #[tracing::instrument()]
-    async fn get_by_id(&self, id: &Uuid) -> std::result::Result<Asset, Box<dyn std::error::Error + Sync + Send >>{
+    async fn get_by_id(
+        &self,
+        id: &Uuid,
+    ) -> std::result::Result<Asset, Box<dyn std::error::Error + Sync + Send>> {
         let res = self.repository.get_by_id(id).await?;
         Ok(res)
     }
 
     #[tracing::instrument()]
-    async fn add(&self, asset: &mut Asset, user_id: &String) -> ResultE<Uuid> {
-        let id = Uuid::new_v4();
-        asset.set_id(&id);
-        asset.validate()?;
-        let res = self.repository.add(asset, user_id).await?;
+    async fn add(&self, creation_asset: &CreatableFildsAsset, user_id: &String) -> ResultE<Uuid> {
+        creation_asset.validate()?;
+
+        let mut asset = Asset::new();
+        asset.set_state(&AssetStatus::Enabled);
+        asset.set_id(&Uuid::new_v4());
+        let aux = creation_asset.url.clone();
+        asset.set_url(&Some(url::Url::parse(aux.as_str())?));
+        asset.set_hash(&Some(creation_asset.hash.clone()));
+        asset.set_license(&Some(creation_asset.license.clone()));
+
+        asset.set_longitude(&creation_asset.longitude);
+        asset.set_latitude(&creation_asset.latitude);
+
+        let res = self.repository.add(&asset, user_id).await?;
         Ok(res)
     }
 
