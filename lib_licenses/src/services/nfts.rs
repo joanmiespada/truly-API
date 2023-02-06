@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::repositories::ganache::{GanacheRepo, NFTsRepository};
+use crate::repositories::keypairs::{KeyPairRepo, KeyPairRepository};
 use crate::services::assets::{AssetManipulation, AssetService};
 use crate::services::owners::{OwnerManipulation, OwnerService};
 
@@ -16,15 +17,16 @@ pub trait NFTsManipulation {
         &self,
         asset_id: &Uuid,
         user_id: &String,
-        user_address: &String,
         price: &u64,
     ) -> ResultE<String>;
     async fn get(&self, asset_id: &Uuid) -> ResultE<NTFContentInfo>;
+    //async fn create_account()->   ResultE<(String, String, String)>;
 }
 
 #[derive(Debug)]
 pub struct NFTsService {
     blockchain: GanacheRepo,
+    keys_repo: KeyPairRepo,
     asset_service: AssetService,
     owner_service: OwnerService,
 }
@@ -32,11 +34,13 @@ pub struct NFTsService {
 impl NFTsService {
     pub fn new(
         repo: GanacheRepo,
+        keys_repo: KeyPairRepo,
         asset_service: AssetService,
         owner_service: OwnerService,
     ) -> NFTsService {
         NFTsService {
             blockchain: repo,
+            keys_repo:keys_repo,
             asset_service: asset_service,
             owner_service: owner_service,
         }
@@ -50,7 +54,6 @@ impl NFTsManipulation for NFTsService {
         &self,
         asset_id: &Uuid,
         user_id: &String,
-        user_wallet_address: &String,
         price: &u64,
     ) -> ResultE<String> {
         let asset = self.asset_service.get_by_id(asset_id).await?;
@@ -60,9 +63,11 @@ impl NFTsManipulation for NFTsService {
             .get_by_user_asset_ids(asset_id, user_id)
             .await?;
 
+        let user_wallet_address = self.keys_repo.get_or_create(user_id).await?;
+
         let transaction = self
             .blockchain
-            .add(asset_id, user_wallet_address, &hash_file, price)
+            .add(asset_id, &user_wallet_address, &hash_file, price)
             .await?;
 
         let stamp_op = self.asset_service.minted(asset_id, &transaction).await;
@@ -87,6 +92,13 @@ impl NFTsManipulation for NFTsService {
         };
         Ok(res)
     }
+
+
+    // async fn create_account(&self)-> ResultE<(String, String, String)>{
+
+    //     let aux = self.blockchain.create_account().await?;
+    //     Ok(("".to_string(),"".to_string(),"".to_string()))
+    // }
 }
 
 impl Clone for NFTsService {
@@ -94,6 +106,7 @@ impl Clone for NFTsService {
     fn clone(&self) -> NFTsService {
         let aux = NFTsService {
             blockchain: self.blockchain.clone(),
+            keys_repo: self.keys_repo.clone(),
             owner_service: self.owner_service.clone(),
             asset_service: self.asset_service.clone(),
         };

@@ -28,7 +28,9 @@ pub struct EnvironmentVariables {
 
     pub blockchain_url: Option<String>,
     pub contract_address: Option<String>,
-    pub contract_owner: Option<String>,
+    pub contract_owner_address: Option<String>,
+    pub contract_owner_public_key: Option<String>,
+    pub contract_owner_private_key: Option<String>, 
 }
 
 impl EnvironmentVariables {
@@ -67,20 +69,32 @@ impl EnvironmentVariables {
         let aux = self.contract_address.as_ref().unwrap();
         return aux;
     }
-    
     pub fn set_contract_address(&mut self, new_addres: String) {
         self.contract_address = Some(new_addres.clone());
     }
     
-    pub fn contract_owner(&self) -> &String {
-        let aux = self.contract_owner.as_ref().unwrap();
+    pub fn contract_owner_public_key(&self) -> &String {
+        let aux = self.contract_owner_public_key.as_ref().unwrap();
+        return aux;
+    } 
+    pub fn set_contract_owner_public_key(&mut self, value: String) {
+        self.contract_owner_public_key = Some(value.clone());
+    }
+    pub fn contract_owner_private_key(&self) -> &String {
+        let aux = self.contract_owner_private_key.as_ref().unwrap();
         return aux;
     }
-    
-    pub fn set_contract_owner(&mut self, new_address: String) {
-        self.contract_owner = Some(new_address.clone());
+    pub fn set_contract_owner_private_key(&mut self, value: String) {
+        self.contract_owner_private_key = Some(value.clone());
     }
 
+    pub fn contract_owner_address(&self) -> &String {
+        let aux = self.contract_owner_address.as_ref().unwrap();
+        return aux;
+    }
+    pub fn set_contract_owner_address(&mut self, value: String) {
+        self.contract_owner_address = Some(value.clone());
+    }
 
 }
 
@@ -96,6 +110,7 @@ struct Secrets {
     hmac_secret: String,
     #[serde(rename = "JWT_TOKEN_BASE")]
     jwt_token_base: String,
+
 }
 
 impl Config {
@@ -165,9 +180,9 @@ impl Config {
         }
         self.aws_config = Some(config);
 
-
-        //env_logger::init_from_env(Env::default().default_filter_or("info"));
     }
+
+
     pub fn aws_config(&self) -> &SdkConfig {
         let aux = self.aws_config.as_ref().unwrap();
         return aux;
@@ -206,4 +221,5 @@ impl Config {
             }
         }
     }
+
 }

@@ -10,6 +10,11 @@ Rust toolchain update
 - aws --endpoint-url=http://localhost:4566 --region=eu-central-1 secretsmanager create-secret --name "truly/api/secrets" --description "My test database secret created with the CLI" --secret-string file://./scripts/fake_secret.json
 - aws --endpoint-url=http://localhost:4566 --region=eu-central-1 secretsmanager get-secret-value  --secret-id "truly/api/secrets"
 
+- aws --endpoint-url=http://localhost:4566 --region=eu-central-1 kms create-key --key-spec ECC_SECG_P256K1 --key-usage SIGN_VERIFY
+- aws --endpoint-url=http://localhost:4566 --region=eu-central-1 kms list-keys
+- aws --endpoint-url=http://localhost:4566 --region=eu-central-1 kms describe-key --key-id <>
+- aws --endpoint-url=http://localhost:4566 --region=eu-central-1 kms get-public-key --key-id <>
+
 # Create Tables and basic data
 
 - aws dynamodb list-tables    --endpoint-url http://localhost:4566 

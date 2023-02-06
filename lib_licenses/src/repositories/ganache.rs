@@ -2,23 +2,25 @@ use async_trait::async_trait;
 use lib_config::Config;
 use log::debug;
 use serde::{Deserialize, Serialize};
-use std::{fmt, str::FromStr};
+use std::{fmt, str::FromStr, sync::{Arc, Mutex}};
 use uuid::Uuid;
-
+use snowflake::SnowflakeIdGenerator;
+use mac_address::get_mac_address;
+use secp256k1::SecretKey;
 use chrono::{DateTime, NaiveDateTime, Utc};
 
 use web3::{
     contract::{tokens::Detokenize, Contract, Options},
-    ethabi::Address,
     transports::Http,
-    types::{Block, BlockId, BlockNumber, H160, H256, U256},
+    types::{Address, Block, BlockId, BlockNumber, H160, H256, U256},
     Web3,
 };
 
-use crate::errors::nft::NftUserAddressMalformedError;
+use crate::errors::nft::{NftUserAddressMalformedError, NftBlockChainNonceMalformedError, NftBlockChainSecretOwnerMalformedError};
 
 const CONTRACT_METHOD_MINTING: &'static str = "mint";
 const CONTRACT_METHOD_GET_CONTENT_BY_TOKEN: &'static str = "getContentByToken";
+const CONFIRMATIONS: usize = 0;
 
 use crate::errors::asset::AssetBlockachainError;
 
@@ -34,6 +36,7 @@ pub trait NFTsRepository {
         price: &u64,
     ) -> ResultE<String>;
     async fn get(&self, asset_id: &Uuid) -> ResultE<GanacheContentInfo>;
+    //async fn create_account(&self) -> ResultE<(String, String, String)>;
 }
 
 #[derive(Clone, Debug)]
@@ -42,6 +45,8 @@ pub struct GanacheRepo {
     url: String,
     contract_address: Address,
     contract_owner: Address,
+
+    //counter : Arc<Mutex<i32>>
 }
 
 impl GanacheRepo {
@@ -56,7 +61,7 @@ impl GanacheRepo {
             Ok(val) => contract_address_position = val,
         }
         let contract_owner_position;
-        aux = conf.env_vars().contract_owner();
+        aux = conf.env_vars().contract_owner_address();
         let contract_owner_position_op = Address::from_str(aux.as_str()); //.unwrap();
         match contract_owner_position_op {
             Err(e) => return Err(e.to_string()),
@@ -68,6 +73,7 @@ impl GanacheRepo {
             url: conf.env_vars().blockchain_url().to_owned(),
             contract_address: contract_address_position,
             contract_owner: contract_owner_position,
+            //counter: Arc::new(Mutex::new(1))
         })
     }
 }
@@ -109,6 +115,8 @@ impl NFTsRepository for GanacheRepo {
             }
             Ok(cnt) => cnt,
         };
+
+        //Estimate gas to consume
         let estimate_call = contract.estimate_gas(
             CONTRACT_METHOD_MINTING,
             (to.clone(), token.clone(), hash_file.clone(), price.clone()),
@@ -124,27 +132,62 @@ impl NFTsRepository for GanacheRepo {
             }
             Ok(gas) => gas,
         };
+        //request current gas price status
+        let gas_price_op = web3.eth().gas_price().await;
+        let gas_price: U256 = match gas_price_op {
+            Err(e) => {
+                return Err(AssetBlockachainError(e.to_string()).into());
+            }
+            Ok(gas) => gas,
+        };
+
+        
+        //let nonce = U256::from(1); //  
+        //let nonce = generate_nonce(&self.counter )?;
+       // debug!("nonce calculated: {}", nonce);
 
         let tx_options = Options {
             gas: Some(cost_gas), // Some(U256::from_str("400000").unwrap()), //250.000 weis  30.000.000 //with 400.000 gas units works!
-            gas_price: None,     // Some(U256::from_str("10000000").unwrap()), //10.000.000 weis
+            gas_price: Some(gas_price), // None,     // Some(U256::from_str("10000000").unwrap()), //10.000.000 weis
             value: None,
             condition: None,
             transaction_type: None,
-            nonce: None,
+            nonce: None, // Some(nonce),
             access_list: None,
             max_fee_per_gas: None,
             max_priority_fee_per_gas: None,
         };
         //block_status(&web3).await;
         debug!("calling from {}", self.contract_address.to_string());
-        let caller = contract.call(
+        
+        // let caller = contract.call( //working with Ganache! 
+        //     CONTRACT_METHOD_MINTING,
+        //     (to.clone(), token.clone(), hash_file.clone(), price.clone()),
+        //     self.contract_owner.clone(), //self.contract_address.clone(), //account_owner,
+        //     //Options::default(),
+        //     tx_options,
+        // );
+        let secret_key;
+        let secret_key_op = SecretKey::from_str("4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d");
+        match secret_key_op{
+            Err(_)=> { return Err( NftBlockChainSecretOwnerMalformedError.into() );  },
+            Ok(val) => { secret_key = val}
+        }
+        //let key: web3::signing::Key = web3::signing::Keya
+        //web3.accounts().sign_transaction(tx, key)
+        //web3::signing::
+        let caller = contract.signed_call_with_confirmations ( //working with INFURA and others!
             CONTRACT_METHOD_MINTING,
             (to.clone(), token.clone(), hash_file.clone(), price.clone()),
-            self.contract_owner.clone(), //self.contract_address.clone(), //account_owner,
-            //Options::default(),
             tx_options,
+            //self.contract_owner.clone(), //self.contract_address.clone(), //account_owner,
+            CONFIRMATIONS,
+            &secret_key 
+
+            //Options::default(),
+            //tx_options,
         );
+
         let call_contract_op = caller.await;
         let tx = match call_contract_op {
             Err(e) => {
@@ -191,6 +234,9 @@ impl NFTsRepository for GanacheRepo {
         };
         Ok(res)
     }
+    //fn create_account(&self) -> ResultE<(String, String, String)> {
+    //    let (secret_key, pub_key) = generate_keypair();
+   // }
 }
 
 pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
@@ -295,4 +341,48 @@ impl Detokenize for GanacheContentInfo {
             state,
         })
     }
+}
+
+/* 
+fn generate_keypair() -> SecretKey {
+    //let secp = secp256k1::Secp256k1::new();
+    //let mut rng = rngs::StdRng::seed_from_u64(111); //TODO!!!! ojo!!!!!!!!!
+    //secp.generate_keypair(&mut rng)
+
+
+    let secp = Secp256k1::new();
+    let secret_key = SecretKey::new(&mut rand::thread_rng());
+    return secret_key;
+}*/
+
+
+fn generate_nonce(counter : &Arc<Mutex<i32>> ) -> Result<U256, NftBlockChainNonceMalformedError>  {
+//generate unique nonce number
+        let machine_id:i32;
+        match get_mac_address() {
+            Ok(Some(ma)) => {
+                debug!("MAC addr = {}", ma);
+                debug!("bytes = {:?}", ma.bytes());
+                let original = ma.bytes();
+                let original2 = [ original[0],original[1],original[2],original[3]];
+                let num = i32::from_be_bytes( original2 );
+                machine_id = num;
+
+            }
+            Ok(None) => { return Err(NftBlockChainNonceMalformedError("no mac address found to choose the nodeId".to_string()).into() ) },// println!("No MAC address found."),
+            Err(e) => { return Err(NftBlockChainNonceMalformedError(e.to_string()).into() ) },
+        }
+        let counter_id:i32;
+        {
+            let data = Arc::clone(counter);
+            let mut cont = data.lock().unwrap();
+            counter_id = (*cont).clone();
+            *cont +=1;
+        }
+        let mut id_generator_generator = SnowflakeIdGenerator::new( machine_id, counter_id);
+        let id = id_generator_generator.real_time_generate();
+        let nonce = U256::from(id);
+        
+        Ok(nonce)
+
 }

@@ -4,7 +4,6 @@ use crate::models::asset::{Asset, AssetStatus};
 use crate::repositories::assets::{AssetRepo, AssetRepository};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use url::Url;
 use uuid::Uuid;
 
 use validator::Validate;

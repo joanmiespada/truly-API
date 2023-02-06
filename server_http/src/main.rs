@@ -9,6 +9,7 @@ use handlers::appstate::AppState;
 use handlers::{asset_hd, auth_middleware, jwt_middleware, login_hd, nft_hd, user_my_hd, users_hd};
 use lib_config::Config;
 use lib_licenses::repositories::assets::AssetRepo;
+use lib_licenses::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
@@ -92,9 +93,11 @@ async fn main() {
     let owners_repo = OwnerRepo::new(&config);
     let owners_service = OwnerService::new(owners_repo.to_owned());
 
+    let key_repo= KeyPairRepo::new(&config);
     let blockchain = GanacheRepo::new(&config).unwrap();
     let blockchain_service = NFTsService::new(
         blockchain,
+        key_repo.to_owned(),
         asset_service.to_owned(),
         owners_service.to_owned(),
     );

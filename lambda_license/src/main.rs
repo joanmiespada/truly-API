@@ -1,5 +1,6 @@
 use lambda_http::service_fn;
 use lib_config::Config;
+use lib_licenses::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::repositories::{assets::AssetRepo, ganache::GanacheRepo};
 use lib_licenses::services::assets::AssetService;
@@ -30,9 +31,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let owners_repo = OwnerRepo::new(&config);
     let owners_service = OwnerService::new(owners_repo);
 
+    let key_repo= KeyPairRepo::new(&config);
     let blockchain = GanacheRepo::new(&config).unwrap();
     let blockchain_service = NFTsService::new(
         blockchain,
+        key_repo,
         asset_service.to_owned(),
         owners_service.to_owned(),
     );

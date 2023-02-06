@@ -2,24 +2,11 @@ use lambda_http::RequestExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::Config;
 use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
-use lib_licenses::models::asset::Asset;
 use lib_licenses::services::owners::OwnerService;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
-use serde::{Deserialize, Serialize};
 use tracing::instrument;
-use url::Url;
-use validator::{Validate, ValidationError};
-
+use validator::ValidationError;
 use crate::my_lambda::build_resp;
-
-// #[derive(Debug, Serialize, Validate, Deserialize)]
-// pub struct CreateAsset {
-//     #[validate(length(max = 100))]
-//     pub url: String,
-//     #[validate(length(max = 100))]
-//     pub license: String,
-//     //pub status: Option<String>, //forbidden, only by admins. Roles idem, only admin can change it
-//}
 
 #[instrument]
 pub async fn create_my_asset(
@@ -31,7 +18,7 @@ pub async fn create_my_asset(
     id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync >> {
     let asset_fields;
-    match req.payload::<CreatableFildsAsset>() { //CreateAsset
+    match req.payload::<CreatableFildsAsset>() { 
         Err(e) => {
             return build_resp(e.to_string(), StatusCode::BAD_REQUEST);
         }
@@ -41,16 +28,6 @@ pub async fn create_my_asset(
             }
             Some(payload) =>  asset_fields = payload.clone()
             
-            // match payload.validate() {
-            //     Err(e) => {
-            //         return build_resp(e.to_string(), StatusCode::BAD_REQUEST);
-            //     }
-            //     Ok(_) => {
-            //         asset_fields = Asset::new();
-            //         asset_fields.set_url(&Some(Url::parse(&payload.url).unwrap()));
-            //         asset_fields.set_license(&Some(payload.license));
-            //     }
-            // },
         },
     }
 

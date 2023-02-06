@@ -1,16 +1,24 @@
 use crate::build_dynamodb;
 use aws_sdk_dynamodb::Client;
+use chrono::Utc;
 use ethers::utils::Ganache;
 use lib_config::Config;
+use lib_licenses::models::keypair::KeyPair;
 use lib_licenses::repositories::assets::AssetRepo;
+use lib_licenses::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
+use lib_licenses::repositories::schema_asset::create_schema_assets;
+use lib_licenses::repositories::schema_keypairs::create_schema_keypairs;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::services::owners::OwnerService;
-use lib_licenses::{models::asset::Asset, repositories::schema_asset::create_schema_assets};
 use lib_licenses::{
     repositories::ganache::{block_status, GanacheRepo},
     services::nfts::{NFTsManipulation, NFTsService, NTFState},
+};
+use secp256k1::{
+    rand::{rngs, SeedableRng},
+    Message, PublicKey, SecretKey, Signature,
 };
 use spectral::{assert_that, result::ResultAssertions};
 use std::time::Duration;
@@ -19,8 +27,10 @@ use testcontainers::*;
 use url::Url;
 use web3::{
     contract::{Contract, Options},
+    signing::keccak256,
     types::{H160, U256},
 };
+//use secp256k1::key::{PublicKey as PubKey, SecretKey as PrivKey};
 
 const MNEMONIC_TEST: &str =
     "myth like bonus scare over problem client lizard pioneer submit female collect"; //from $ganache --deterministic command
@@ -69,6 +79,9 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
     let creation2 = create_schema_owners(&client).await;
     assert_that(&creation2).is_ok();
 
+    let creation3 = create_schema_keypairs(&client).await;
+    assert_that(&creation3).is_ok();
+
     config.set_aws_config(&shared_config);
 
     //create fake asset
@@ -84,12 +97,12 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
     let asset_license: String =
         String::from_str("license - open shared social networks - forbiden mass media").unwrap();
 
-    let mut as0 = CreatableFildsAsset{
+    let mut as0 = CreatableFildsAsset {
         url: asset_url.to_string(),
         hash: asset_hash,
         license: asset_license,
         longitude: None,
-        latitude: None
+        latitude: None,
     };
 
     let user_id = String::from_str("user1234-1234-1234-1234").unwrap();
@@ -98,7 +111,10 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
 
     assert_that!(&new_asset_op).is_ok();
 
-    let as1 = asset_service.get_by_id( &new_asset_op.unwrap()  ).await.unwrap();
+    let as1 = asset_service
+        .get_by_id(&new_asset_op.unwrap())
+        .await
+        .unwrap();
 
     //create contract and deploy
 
@@ -108,8 +124,39 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
     let http = web3::transports::Http::new(url.as_str())?;
     let web3 = web3::Web3::new(http);
     let accounts_op = web3.eth().accounts().await;
-    let user_account = format!("{:?}", accounts_op.clone().unwrap()[9]);
-    let contract_owner_account = format!("{:?}", accounts_op.clone().unwrap()[0]);
+
+    //Create accounts
+
+    //   Create contract owner account
+    let secp = secp256k1::Secp256k1::new();
+
+    let mut rng = rngs::StdRng::seed_from_u64(1);
+    let contract_owner_key_pair = secp.generate_keypair(&mut rng);
+    let contract_owner_public = contract_owner_key_pair.1.serialize();
+    let hash = keccak256(&contract_owner_public[1..65]);
+    let contract_owner_address = format!("0x{}", hex::encode(&hash[12..32]));
+    let contract_owner_private = contract_owner_key_pair.0;
+    let contract_owner_private_key = format!("{}", contract_owner_key_pair.0.display_secret());
+    let contract_owner_public_key = format!("{:?}", contract_owner_key_pair.1);
+    /*
+    let contractor = KeyPair {
+        user_id: "owner".to_string(),
+        creation_time: Utc::now(),
+        last_update_time: Utc::now(),
+        address: contract_owner_address,
+        public_key: contract_owner_key_pair.1.to_string(),
+        private_key: contract_owner_key_pair.0.into()
+    };*/
+
+    //let secrets_manager = SecretsManager::new(Default::default(), "http://localhost:4566".parse().unwrap());
+
+    //let request = secrets_manager.put_secret_value(Default::default(), "contract_owner_public_key", SecretValue::Plaintext( contract_owner_public_key.to_owned()));
+
+    //let user_account = format!("{:?}", accounts_op.clone().unwrap()[9]); //to be deleted
+    //let contract_owner_address = format!("{:?}", accounts_op.clone().unwrap()[0]);
+
+    let gas_price = web3.eth().gas_price().await.unwrap();
+    let chain_id = web3.eth().chain_id().await.unwrap().as_u64();
 
     let bytecode = include_str!("../res/LightNFT.bin").trim_end();
 
@@ -121,13 +168,15 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
         .options(Options::with(|opt| {
             //    opt.value       = Some(U256::from_str("1").unwrap()); //Some(0.into());
             //opt.gas_price   = Some(U256::from_str("2000000000").unwrap());
+            opt.gas_price = Some(gas_price);
             opt.gas = Some(U256::from_str("1000000").unwrap());
         }))
-        .execute(
-            bytecode,
-            (),
-            H160::from_str(contract_owner_account.as_str()).unwrap(),
-        )
+        // .execute(
+        //     bytecode,
+        //     (),
+        //     H160::from_str(contract_owner_account.as_str()).unwrap(),
+        // )
+        .sign_with_key_and_execute(bytecode, (), &contract_owner_private, Some(chain_id))
         .await;
 
     assert_that!(&contract_deploy_op).is_ok();
@@ -137,17 +186,25 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
     let mut new_configuration = config.env_vars().clone();
     new_configuration.set_blockchain_url(url);
     new_configuration.set_contract_address(contract_address);
-    new_configuration.set_contract_owner(contract_owner_account);
+    new_configuration.set_contract_owner_address(contract_owner_address);
+    new_configuration.set_contract_owner_public_key(contract_owner_public_key);
+    new_configuration.set_contract_owner_private_key(contract_owner_private_key);
     config.set_env_vars(&new_configuration);
 
-    let repo = GanacheRepo::new(&config).unwrap();
-    let nft_service = NFTsService::new(repo, asset_service.clone(), owner_service.clone());
+    let blockchain = GanacheRepo::new(&config).unwrap();
+
+    let keys_repo = KeyPairRepo::new(&config);
+
+    let nft_service = NFTsService::new(
+        blockchain,
+        keys_repo,
+        asset_service.clone(),
+        owner_service.clone(),
+    );
 
     let price: u64 = 2000;
 
-    let mint_op = nft_service
-        .add(as1.id(), &user_id, &user_account.to_string(), &price)
-        .await;
+    let mint_op = nft_service.add(as1.id(), &user_id, &price).await;
 
     assert_that!(&mint_op).is_ok();
     let tx_in_chain = mint_op.unwrap();

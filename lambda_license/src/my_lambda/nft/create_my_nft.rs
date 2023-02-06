@@ -7,8 +7,7 @@ use lib_licenses::errors::nft::NftUserAddressMalformedError;
 use lib_licenses::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
-use lib_users::services::users::{UsersService, UserManipulation};
-use lib_users::errors::users::{UserNoExistsError, UserDynamoDBError};
+use lib_users::services::users::UsersService;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::{Validate};
@@ -40,7 +39,7 @@ pub async fn create_my_nft(
  
     let price: u64;
     let asset_id: Uuid;
-    let user_address:String;
+    //let user_address:String;
     
     match req.payload::<CreateNFT>() {
         Err(e) => {
@@ -62,26 +61,26 @@ pub async fn create_my_nft(
         },
     }
 
-    let user_op =  user_service.get_by_user_id(user_id).await;
-    match user_op {
-        Err(e) => {
-            if let Some(m) = e.downcast_ref::<UserDynamoDBError>() {
-                return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
-            } else if let Some(m) = e.downcast_ref::<UserNoExistsError>() {
-                return build_resp(m.to_string(), StatusCode::NO_CONTENT);
-            } else {
-                return build_resp("unknown error finding the user".to_string(), StatusCode::INTERNAL_SERVER_ERROR);
-            }
-        }
-        Ok(user) => {
-            user_address = user.wallet_address().to_owned().unwrap();
-        },
-    }
+    // let user_op =  user_service.get_by_user_id(user_id).await;
+    // match user_op {
+    //     Err(e) => {
+    //         if let Some(m) = e.downcast_ref::<UserDynamoDBError>() {
+    //             return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
+    //         } else if let Some(m) = e.downcast_ref::<UserNoExistsError>() {
+    //             return build_resp(m.to_string(), StatusCode::NO_CONTENT);
+    //         } else {
+    //             return build_resp("unknown error finding the user".to_string(), StatusCode::INTERNAL_SERVER_ERROR);
+    //         }
+    //     }
+    //     Ok(user) => {
+    //         user_address = user.wallet_address().to_owned().unwrap();
+    //     },
+    // }
 
     let op_res = blockchain_service.add(
         &asset_id, 
         user_id, 
-        &user_address,
+        //&user_address,
         //asset_service,
         //owner_service,
         &price).await;

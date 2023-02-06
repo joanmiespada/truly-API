@@ -28,10 +28,13 @@ validator = { version = "0.16", features = ["derive"] }
 http = "0.2.8"
 http-serde = "1.1.2"
 url = {version="2.3.1", features=["serde"] }
-ethers = "1.0.2"
 hex = "0.4.3"
-web3 = "0.18.0"
+web3 = {version="0.18.0", features=["signing" ]}
 hex-literal = "0.3.4"
+rs-snowflake = "0.6.0"
+mac_address = "1.1.4"
+secp256k1 = { version = "0.21", features = ["recovery"] }
+rand = "0.8.5"
 
 [dependencies.uuid]
 version = "1.2.2"
@@ -47,6 +50,10 @@ env_logger = "0.10.0"
 aws-types = "0.54.1"
 spectral = "0.6.0"
 testcontainers = "0.14.0"
-tokio = { version="1.24.2", features=["macros"]}
+tokio = { version="1.24.2", features=["full"]}
 lib_config = { path = "../lib_config" }
 lib_licenses = { path= "./"}
+ethers = "1.0.2"
+secp256k1 = {version="0.21", features=["rand"] }
+
+

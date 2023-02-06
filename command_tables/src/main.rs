@@ -1,7 +1,7 @@
 use aws_sdk_dynamodb::error::ResourceNotFoundException;
 use aws_sdk_dynamodb::{Error, Client};
 use lib_config::Config;
-use lib_licenses::repositories::schema_asset;
+use lib_licenses::repositories::{schema_asset,schema_keypairs,schema_owners };
 use structopt::StructOpt;
 use std::process ;
 
@@ -21,20 +21,29 @@ async fn command(
     let er = ResourceNotFoundException::builder().build();
     
     match table.unwrap().as_str() {
-        /* "owners" => {
+         "owners" => {
             if create {
-                schema_owners::create_schema_owners(&config).await?
+                schema_owners::create_schema_owners(&client).await?
             } else if delete {
-                schema_owners::delete_schema_owners(&config).await?
+                schema_owners::delete_schema_owners(&client).await?
             } else {
                 return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er));
             }
-        } */
+        } 
         "assets" => {
             if create {
                 schema_asset::create_schema_assets(&client).await?
             } else if delete {
                 schema_asset::delete_schema_assets(&client).await?
+            } else {
+                return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er));
+            }
+        }
+        "keypairs" => {
+            if create {
+                schema_keypairs::create_schema_keypairs(&client).await?
+            } else if delete {
+                schema_keypairs::delete_schema_keypairs(&client).await?
             } else {
                 return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er));
             }
