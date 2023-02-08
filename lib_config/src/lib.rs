@@ -4,33 +4,27 @@ use dotenv::dotenv;
 use serde::Deserialize;
 
 pub static ENV_VAR_ENVIRONMENT: &str = "ENVIRONMENT";
-pub static ENV_VAR_MODE: &str = "MODE";
-pub static ENV_VAR_MODE_LAMBDA: &str = "lambda";
-pub static ENV_VAR_MODE_HTTP_SERVER: &str = "httpserver";
 pub static DEV_ENV: &str = "development";
 pub static PROD_ENV: &str = "production";
 
-const SECRETS_MANAGER_KEYS: &str = "truly/api/secrets";
+pub const SECRETS_MANAGER_KEYS: &str = "truly/api/secrets";
+pub const SECRETS_MANAGER_SECRET_KEY: &str = "truly/api/secret_key";
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct EnvironmentVariables {
-    //pub admin_account_userid: String,
-    //pub admin_account_device: String,
     pub jwt_token_base: Option<String>,
     pub jwt_token_time_exp_hours : Option<String>, 
     pub environment: String,
     pub hmac_secret: Option<String>,
     pub rust_log: String,
-    //pub local_address: String,
-    //pub local_port: String,
     pub aws_region: Option<String>,
     pub aws_endpoint: Option<String>,
 
     pub blockchain_url: Option<String>,
     pub contract_address: Option<String>,
     pub contract_owner_address: Option<String>,
-    pub contract_owner_public_key: Option<String>,
-    pub contract_owner_private_key: Option<String>, 
+
+    kms_key_id: Option<String>
 }
 
 impl EnvironmentVariables {
@@ -73,20 +67,20 @@ impl EnvironmentVariables {
         self.contract_address = Some(new_addres.clone());
     }
     
-    pub fn contract_owner_public_key(&self) -> &String {
-        let aux = self.contract_owner_public_key.as_ref().unwrap();
-        return aux;
-    } 
-    pub fn set_contract_owner_public_key(&mut self, value: String) {
-        self.contract_owner_public_key = Some(value.clone());
-    }
-    pub fn contract_owner_private_key(&self) -> &String {
-        let aux = self.contract_owner_private_key.as_ref().unwrap();
-        return aux;
-    }
-    pub fn set_contract_owner_private_key(&mut self, value: String) {
-        self.contract_owner_private_key = Some(value.clone());
-    }
+    // pub fn contract_owner_public_key(&self) -> &String {
+    //     let aux = self.contract_owner_public_key.as_ref().unwrap();
+    //     return aux;
+    // } 
+    // pub fn set_contract_owner_public_key(&mut self, value: String) {
+    //     self.contract_owner_public_key = Some(value.clone());
+    // }
+    // pub fn contract_owner_private_key(&self) -> &String {
+    //     let aux = self.contract_owner_private_key.as_ref().unwrap();
+    //     return aux;
+    // }
+    // pub fn set_contract_owner_private_key(&mut self, value: String) {
+    //     self.contract_owner_private_key = Some(value.clone());
+    // }
 
     pub fn contract_owner_address(&self) -> &String {
         let aux = self.contract_owner_address.as_ref().unwrap();
@@ -94,6 +88,14 @@ impl EnvironmentVariables {
     }
     pub fn set_contract_owner_address(&mut self, value: String) {
         self.contract_owner_address = Some(value.clone());
+    }
+    
+    pub fn kms_key_id(&self) -> &String {
+        let aux = self.kms_key_id.as_ref().unwrap();
+        return aux;
+    }
+    pub fn set_kms_key_id(&mut self, value: String) {
+        self.kms_key_id = Some(value.clone());
     }
 
 }
@@ -202,7 +204,7 @@ impl Config {
 
     async fn load_secrets(&mut self) {
         let client = aws_sdk_secretsmanager::Client::new(self.aws_config());
-        let resp = client
+        let mut resp = client
             .get_secret_value()
             .secret_id(SECRETS_MANAGER_KEYS)
             .send()
@@ -220,6 +222,23 @@ impl Config {
                 m_env.jwt_token_base = Some(secrets.jwt_token_base);
             }
         }
+        //check secret key is stored
+        resp = client
+            .get_secret_value()
+            .secret_id( SECRETS_MANAGER_SECRET_KEY)
+            .send()
+            .await;
+
+        match resp {
+            Err(e) => {
+                panic!("secret key for contract owner couldn't find: {}", e.to_string())
+            }
+            Ok(scr) => {
+                let _value = scr.secret_string().unwrap();
+            }
+        }
+
+
     }
 
 }

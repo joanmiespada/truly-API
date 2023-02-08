@@ -50,3 +50,9 @@ variable "contract_owner" {
   description = "hex direction from account user who deployed the contract in the blockchain"
 
 }
+
+variable "kms_cypher_owner" {
+  type      = string
+  default = "2d460536-1dc9-436c-a97b-0bad3f8906c7"
+  description = "kms cypher for secret keys"
+}

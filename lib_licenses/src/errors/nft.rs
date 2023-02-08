@@ -30,7 +30,19 @@ impl std::error::Error for NftBlockChainSecretOwnerMalformedError{}
 
 impl Display for NftBlockChainSecretOwnerMalformedError{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "private key secret for owner error")
+        write!(f, "private key secret for asset owner error")
     }
 }
 
+
+
+#[derive(Debug)]
+pub struct HydrateMasterSecretKeyError;
+
+impl std::error::Error for HydrateMasterSecretKeyError{}
+
+impl Display for HydrateMasterSecretKeyError{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "master private key secret for contract owner error")
+    }
+}

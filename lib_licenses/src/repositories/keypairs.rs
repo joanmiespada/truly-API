@@ -8,14 +8,10 @@ use chrono::{
     prelude::{DateTime, Utc},
     Local,
 };
-use rand::prelude::*;
 use lib_config::Config;
-use rand::thread_rng;
-use secp256k1::rand::prelude::*;
-use secp256k1::rand::{SeedableRng};
-use secp256k1::rand::rngs::{SmallRng};
-use secp256k1::rand::{rngs };
+use secp256k1::rand::{ SeedableRng, rngs};
 use web3::signing::keccak256;
+//use rand::{prelude::*, SeedableRng};
 
 use super::schema_keypairs::{
     KEYPAIRS_ADDRESS_FIELD, KEYPAIRS_PRIVATE_FIELD, KEYPAIRS_PUBLIC_FIELD, KEYPAIRS_TABLE_NAME,
@@ -30,7 +26,7 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 pub trait KeyPairRepository {
     async fn add(&self, keypair: &KeyPair) -> ResultE<()>;
     async fn get_by_id(&self, user_id: &String) -> ResultE<KeyPair>;
-    async fn get_or_create(&self, user_id: &String) -> ResultE<String>;
+    async fn get_or_create(&self, user_id: &String) -> ResultE<KeyPair>;
 }
 
 #[derive(Clone, Debug)]
@@ -114,11 +110,11 @@ impl KeyPairRepository for KeyPairRepo {
         }
     }
 
-    async fn get_or_create(&self, user_id: &String) -> ResultE<String> {
+    async fn get_or_create(&self, user_id: &String) -> ResultE<KeyPair> {
         let get_op = self.get_by_id(user_id).await;
         match get_op {
             Ok(value) => {
-                return Ok(value.address().clone());
+                return Ok(value.clone());
             }
             Err(e) => {
                 if let Some(_) = e.downcast_ref::<KeyPairDynamoDBError>() {
@@ -126,15 +122,18 @@ impl KeyPairRepository for KeyPairRepo {
                 } else if let Some(_) = e.downcast_ref::<KeyPairNoExistsError>() {
                     let secp = secp256k1::Secp256k1::new();
 
+
+                    //let mut rng = rand_hc::Hc128Rng::from_entropy();
                     let mut rng = rngs::StdRng::seed_from_u64( rand::random::<u64>() );
+
                     let contract_owner_key_pair = secp.generate_keypair(&mut rng);
                     let contract_owner_public = contract_owner_key_pair.1.serialize();
-                    let hash = keccak256(&contract_owner_public[1..65]);
+                    let hash = keccak256(&contract_owner_public[1..32]);
                     let user_address = format!("0x{}", hex::encode(&hash[12..32]));
                     //let user_private = contract_owner_key_pair.0;
                     let user_private_key =
                         format!("{}", contract_owner_key_pair.0.display_secret());
-                    let user_public_key = format!("{:?}", contract_owner_key_pair.1);
+                    let user_public_key = format!("{}", contract_owner_key_pair.1);
 
                     let mut user_key = KeyPair::new();
                     user_key.set_user_id(user_id);
@@ -144,7 +143,7 @@ impl KeyPairRepository for KeyPairRepo {
 
                     self.add(&user_key).await?;
 
-                    return Ok(user_address);
+                    return Ok(user_key);
                 } else {
                     return Err(KeyPairDynamoDBError(
                         "unexpected issue creating user address".to_string(),

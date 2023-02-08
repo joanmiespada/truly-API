@@ -1,13 +1,20 @@
 use async_trait::async_trait;
-use lib_config::Config;
+use aws_config::SdkConfig;
+use aws_sdk_kms::types::Blob;
+use aws_sdk_kms::Client;
+use chrono::{DateTime, NaiveDateTime, Utc};
+use lib_config::{Config, SECRETS_MANAGER_SECRET_KEY};
 use log::debug;
-use serde::{Deserialize, Serialize};
-use std::{fmt, str::FromStr, sync::{Arc, Mutex}};
-use uuid::Uuid;
-use snowflake::SnowflakeIdGenerator;
 use mac_address::get_mac_address;
 use secp256k1::SecretKey;
-use chrono::{DateTime, NaiveDateTime, Utc};
+use serde::{Deserialize, Serialize};
+use snowflake::SnowflakeIdGenerator;
+use std::{
+    fmt,
+    str::FromStr,
+    sync::{Arc, Mutex},
+};
+use uuid::Uuid;
 
 use web3::{
     contract::{tokens::Detokenize, Contract, Options},
@@ -16,7 +23,14 @@ use web3::{
     Web3,
 };
 
-use crate::errors::nft::{NftUserAddressMalformedError, NftBlockChainNonceMalformedError, NftBlockChainSecretOwnerMalformedError};
+use crate::errors::nft::HydrateMasterSecretKeyError;
+use crate::{
+    errors::nft::{
+        NftBlockChainNonceMalformedError, NftBlockChainSecretOwnerMalformedError,
+        NftUserAddressMalformedError,
+    },
+    models::keypair::KeyPair,
+};
 
 const CONTRACT_METHOD_MINTING: &'static str = "mint";
 const CONTRACT_METHOD_GET_CONTENT_BY_TOKEN: &'static str = "getContentByToken";
@@ -27,32 +41,30 @@ use crate::errors::asset::AssetBlockachainError;
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 #[async_trait]
 pub trait NFTsRepository {
-    //async
     async fn add(
         &self,
         asset_id: &Uuid,
-        user_address: &String,
+        user_key: &KeyPair,
         hash_file: &String,
         price: &u64,
     ) -> ResultE<String>;
+
     async fn get(&self, asset_id: &Uuid) -> ResultE<GanacheContentInfo>;
-    //async fn create_account(&self) -> ResultE<(String, String, String)>;
 }
 
 #[derive(Clone, Debug)]
 pub struct GanacheRepo {
-    //web3: Web3<Http>,
     url: String,
     contract_address: Address,
     contract_owner: Address,
-
-    //counter : Arc<Mutex<i32>>
+    kms_key_id: String,
+    aws: SdkConfig,
 }
 
 impl GanacheRepo {
     pub fn new(conf: &Config) -> Result<GanacheRepo, String> {
         let contract_address_position;
-        let mut aux = conf.env_vars().contract_address();
+        let aux = conf.env_vars().contract_address();
         let contract_address_position_op = Address::from_str(aux.as_str()); //.unwrap();
         match contract_address_position_op {
             Err(e) => {
@@ -61,20 +73,75 @@ impl GanacheRepo {
             Ok(val) => contract_address_position = val,
         }
         let contract_owner_position;
-        aux = conf.env_vars().contract_owner_address();
-        let contract_owner_position_op = Address::from_str(aux.as_str()); //.unwrap();
+        let aux2 = conf.env_vars().contract_owner_address();
+        let contract_owner_position_op = Address::from_str(aux2.as_str()); //.unwrap();
         match contract_owner_position_op {
             Err(e) => return Err(e.to_string()),
             Ok(val) => contract_owner_position = val,
         }
 
         Ok(GanacheRepo {
-            //web3: gateway,
             url: conf.env_vars().blockchain_url().to_owned(),
             contract_address: contract_address_position,
             contract_owner: contract_owner_position,
-            //counter: Arc::new(Mutex::new(1))
+            kms_key_id: conf.env_vars().kms_key_id().to_owned(),
+            aws: conf.aws_config().to_owned(),
         })
+    }
+
+    async fn decrypt_contract_owner_secret_key(&self) -> ResultE<SecretKey> {
+        use base64::{
+            alphabet,
+            engine::{self, general_purpose},
+            Engine as _,
+        };
+
+        let client = aws_sdk_secretsmanager::Client::new(&self.aws);
+        let scr = client
+            .get_secret_value()
+            .secret_id(SECRETS_MANAGER_SECRET_KEY)
+            .send()
+            .await?;
+
+        let secret_key_cyphered_b64 = scr.secret_string().unwrap();
+
+        let secret_key_cyphered = general_purpose::STANDARD
+            .decode(secret_key_cyphered_b64)
+            .unwrap();
+
+        let data = aws_sdk_kms::types::Blob::new(secret_key_cyphered);
+
+        let client = aws_sdk_kms::Client::new(&self.aws);
+
+        let resp;
+        let resp_op = client
+            .decrypt()
+            .key_id(self.kms_key_id.to_owned())
+            .ciphertext_blob(data)
+            .send()
+            .await;
+        match resp_op {
+            Err(e) => {
+                return Err(e.into());
+            }
+            Ok(val) => resp = val,
+        }
+
+        let inner = resp.plaintext.unwrap();
+        let bytes = inner.as_ref();
+
+        let secret_key_raw = String::from_utf8(bytes.to_vec()).unwrap(); // .expect("Could not convert to UTF-8");
+
+        let secret_key: SecretKey;
+        let secret_key_op = SecretKey::from_str(secret_key_raw.as_str());
+        match secret_key_op {
+            Err(e) => {
+                return Err(e.into());
+            }
+            Ok(val) => secret_key = val,
+        }
+
+        Ok(secret_key)
     }
 }
 
@@ -83,7 +150,7 @@ impl NFTsRepository for GanacheRepo {
     async fn add(
         &self,
         asset_id: &Uuid,
-        user_address: &String,
+        user_key: &KeyPair,
         hash_file: &String,
         prc: &u64,
     ) -> ResultE<String> {
@@ -91,7 +158,7 @@ impl NFTsRepository for GanacheRepo {
         let web3 = web3::Web3::new(transport);
 
         let to: H160;
-        let to_op = Address::from_str(user_address.as_str());
+        let to_op = Address::from_str(user_key.address().as_str());
         match to_op {
             Err(e) => {
                 return Err(NftUserAddressMalformedError(e.to_string()).into());
@@ -141,10 +208,9 @@ impl NFTsRepository for GanacheRepo {
             Ok(gas) => gas,
         };
 
-        
-        //let nonce = U256::from(1); //  
+        //let nonce = U256::from(1); //
         //let nonce = generate_nonce(&self.counter )?;
-       // debug!("nonce calculated: {}", nonce);
+        // debug!("nonce calculated: {}", nonce);
 
         let tx_options = Options {
             gas: Some(cost_gas), // Some(U256::from_str("400000").unwrap()), //250.000 weis  30.000.000 //with 400.000 gas units works!
@@ -159,33 +225,42 @@ impl NFTsRepository for GanacheRepo {
         };
         //block_status(&web3).await;
         debug!("calling from {}", self.contract_address.to_string());
-        
-        // let caller = contract.call( //working with Ganache! 
+
+        // let caller = contract.call( //working with Ganache!
         //     CONTRACT_METHOD_MINTING,
         //     (to.clone(), token.clone(), hash_file.clone(), price.clone()),
         //     self.contract_owner.clone(), //self.contract_address.clone(), //account_owner,
         //     //Options::default(),
         //     tx_options,
         // );
-        let secret_key;
-        let secret_key_op = SecretKey::from_str("4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d");
-        match secret_key_op{
-            Err(_)=> { return Err( NftBlockChainSecretOwnerMalformedError.into() );  },
-            Ok(val) => { secret_key = val}
-        }
+        // let secret_key;
+        // let secret_key_op = SecretKey::from_str( &user_key.private_key().as_str() );  //SecretKey::from_str("4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d");
+        // match secret_key_op{
+        //     Err(_)=> { return Err( NftBlockChainSecretOwnerMalformedError.into() );  },
+        //     Ok(val) => { secret_key = val}
+        // }
         //let key: web3::signing::Key = web3::signing::Keya
         //web3.accounts().sign_transaction(tx, key)
         //web3::signing::
-        let caller = contract.signed_call_with_confirmations ( //working with INFURA and others!
+        let contract_owner_private_key;
+        let contract_owner_private_key_op = self.decrypt_contract_owner_secret_key().await;
+        match contract_owner_private_key_op {
+            Err(_) => {
+                return Err(HydrateMasterSecretKeyError {}.into());
+            }
+            Ok(value) => contract_owner_private_key = value,
+        }
+
+        let caller = contract.signed_call_with_confirmations(
+            //working with INFURA and others!
             CONTRACT_METHOD_MINTING,
             (to.clone(), token.clone(), hash_file.clone(), price.clone()),
             tx_options,
             //self.contract_owner.clone(), //self.contract_address.clone(), //account_owner,
             CONFIRMATIONS,
-            &secret_key 
-
-            //Options::default(),
-            //tx_options,
+            //&secret_key
+            &contract_owner_private_key, //Options::default(),
+                                         //tx_options,
         );
 
         let call_contract_op = caller.await;
@@ -195,7 +270,8 @@ impl NFTsRepository for GanacheRepo {
             }
             Ok(transact) => transact,
         };
-        let tx_str = format!("blockchain: ganache | tx: {:?}", tx);
+        let tx_str = format!("blockchain: ganache | tx: {} blockNum: {:?} gasUsed: {:?} effectiveGasPrice: {:?} from: {} to: {:?} ", 
+                                                    tx.transaction_hash, tx.block_number, tx.gas_used, tx.effective_gas_price, tx.from, tx.to );
         Ok(tx_str)
     }
 
@@ -236,7 +312,7 @@ impl NFTsRepository for GanacheRepo {
     }
     //fn create_account(&self) -> ResultE<(String, String, String)> {
     //    let (secret_key, pub_key) = generate_keypair();
-   // }
+    // }
 }
 
 pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
@@ -343,7 +419,7 @@ impl Detokenize for GanacheContentInfo {
     }
 }
 
-/* 
+/*
 fn generate_keypair() -> SecretKey {
     //let secp = secp256k1::Secp256k1::new();
     //let mut rng = rngs::StdRng::seed_from_u64(111); //TODO!!!! ojo!!!!!!!!!
@@ -355,34 +431,36 @@ fn generate_keypair() -> SecretKey {
     return secret_key;
 }*/
 
-
-fn generate_nonce(counter : &Arc<Mutex<i32>> ) -> Result<U256, NftBlockChainNonceMalformedError>  {
-//generate unique nonce number
-        let machine_id:i32;
-        match get_mac_address() {
-            Ok(Some(ma)) => {
-                debug!("MAC addr = {}", ma);
-                debug!("bytes = {:?}", ma.bytes());
-                let original = ma.bytes();
-                let original2 = [ original[0],original[1],original[2],original[3]];
-                let num = i32::from_be_bytes( original2 );
-                machine_id = num;
-
-            }
-            Ok(None) => { return Err(NftBlockChainNonceMalformedError("no mac address found to choose the nodeId".to_string()).into() ) },// println!("No MAC address found."),
-            Err(e) => { return Err(NftBlockChainNonceMalformedError(e.to_string()).into() ) },
+fn generate_nonce(counter: &Arc<Mutex<i32>>) -> Result<U256, NftBlockChainNonceMalformedError> {
+    //generate unique nonce number
+    let machine_id: i32;
+    match get_mac_address() {
+        Ok(Some(ma)) => {
+            debug!("MAC addr = {}", ma);
+            debug!("bytes = {:?}", ma.bytes());
+            let original = ma.bytes();
+            let original2 = [original[0], original[1], original[2], original[3]];
+            let num = i32::from_be_bytes(original2);
+            machine_id = num;
         }
-        let counter_id:i32;
-        {
-            let data = Arc::clone(counter);
-            let mut cont = data.lock().unwrap();
-            counter_id = (*cont).clone();
-            *cont +=1;
-        }
-        let mut id_generator_generator = SnowflakeIdGenerator::new( machine_id, counter_id);
-        let id = id_generator_generator.real_time_generate();
-        let nonce = U256::from(id);
-        
-        Ok(nonce)
+        Ok(None) => {
+            return Err(NftBlockChainNonceMalformedError(
+                "no mac address found to choose the nodeId".to_string(),
+            )
+            .into())
+        } // println!("No MAC address found."),
+        Err(e) => return Err(NftBlockChainNonceMalformedError(e.to_string()).into()),
+    }
+    let counter_id: i32;
+    {
+        let data = Arc::clone(counter);
+        let mut cont = data.lock().unwrap();
+        counter_id = (*cont).clone();
+        *cont += 1;
+    }
+    let mut id_generator_generator = SnowflakeIdGenerator::new(machine_id, counter_id);
+    let id = id_generator_generator.real_time_generate();
+    let nonce = U256::from(id);
 
+    Ok(nonce)
 }

@@ -1,8 +1,14 @@
 use crate::build_dynamodb;
-use aws_sdk_dynamodb::Client;
+use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_dynamodb::{Client, Region};
 use chrono::Utc;
-use ethers::utils::Ganache;
-use lib_config::Config;
+use ethers::prelude::*;
+use ethers::providers::{Http, Provider};
+use ethers::signers::{LocalWallet, Signer};
+use ethers::utils::{hex::ToHex, secret_key_to_address, Ganache};
+use ethers_solc::Solc;
+use hex_literal::hex;
+use lib_config::{Config, SECRETS_MANAGER_SECRET_KEY};
 use lib_licenses::models::keypair::KeyPair;
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::keypairs::KeyPairRepo;
@@ -20,16 +26,23 @@ use secp256k1::{
     rand::{rngs, SeedableRng},
     Message, PublicKey, SecretKey, Signature,
 };
+use serde_json::to_string;
 use spectral::{assert_that, result::ResultAssertions};
 use std::time::Duration;
 use std::{env, str::FromStr};
+use std::{path::Path, sync::Arc};
 use testcontainers::*;
 use url::Url;
+use web3::signing::SecretKeyRef;
 use web3::{
     contract::{Contract, Options},
     signing::keccak256,
     types::{H160, U256},
 };
+use aws_sdk_kms::types::Blob;
+use base64::{Engine as _, engine::{self, general_purpose}, alphabet};
+
+
 //use secp256k1::key::{PublicKey as PubKey, SecretKey as PrivKey};
 
 const MNEMONIC_TEST: &str =
@@ -49,29 +62,241 @@ async fn ganache_bootstrap_get_balance_test() {
 
     let accounts_op = web3.eth().accounts().await;
     assert_that!(&accounts_op).is_ok();
-    let accounts = accounts_op.unwrap();
-    let ibalance_op = web3.eth().balance(accounts[0], None).await;
-    assert_that!(&ibalance_op).is_ok();
+    let mut accounts = accounts_op.unwrap();
+    accounts.push("00a329c0648769a73afac7f9381e08fb43dbea72".parse().unwrap());
+
+    println!("Accounts: {:?}", accounts);
+    for account in accounts {
+        let balance = web3.eth().balance(account, None).await.unwrap();
+        println!("Balance of {:?}: {}", account, balance);
+    }
+    //let ibalance_op = web3.eth().balance(accounts[0], None).await;
+    //assert_that!(&ibalance_op).is_ok();
+
+    //let mut wallet = web3.eth().accounts().await;
+
     drop(ganache)
 }
 
+async fn deploy_contract_web3(
+    url: &str,
+    contract_owner_address: String,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let http = web3::transports::Http::new(url)?;
+    let web3 = web3::Web3::new(http);
+
+    let gas_price = web3.eth().gas_price().await.unwrap();
+    //let chain_id = web3.eth().chain_id().await.unwrap().as_u64();
+
+    let bytecode = include_str!("../res/LightNFT.bin").trim_end();
+    let abi = include_bytes!("../res/LightNFT.abi");
+
+    let contract_deploy_op = Contract::deploy(web3.eth(), abi)
+        .unwrap()
+        .confirmations(0)
+        .poll_interval(Duration::from_secs(10))
+        //.options(Options::default())
+        .options(Options::with(|opt| {
+            //    opt.value       = Some(U256::from_str("1").unwrap()); //Some(0.into());
+            //opt.gas_price   = Some(U256::from_str("2000000000").unwrap());
+            opt.gas_price = Some(gas_price);
+            opt.gas = Some(U256::from_str("1000000").unwrap()); //only execute: 1000000
+        }))
+        .execute(
+            bytecode,
+            (),
+            H160::from_str(&contract_owner_address).unwrap(),
+        )
+        //.sign_with_key_and_execute(bytecode, (), &contract_owner_private, Some(chain_id))
+        .await;
+
+    assert_that!(&contract_deploy_op).is_ok();
+
+    let contract_address = format!("{:?}", contract_deploy_op.unwrap().address());
+
+    return Ok(contract_address);
+}
+
+async fn deploy_contract_ethers(
+    url: &str,
+    wallet: &LocalWallet,
+) -> Result<String, Box<dyn std::error::Error>> {
+    type Client = SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>;
+
+    //use std::fs::File;
+    //use std::io::prelude::*;
+
+    let provider = Provider::<Http>::try_from(url.clone())?;
+
+    let ethers_client = SignerMiddleware::new(provider.clone(), wallet.clone());
+    let file = format!("{}/res/LightNFT.sol", env!("CARGO_MANIFEST_DIR"));
+    //let file = format!("../res/LightNFT.sol");
+    let source = Path::new(&file);
+
+    // let mut file_handler = File::open(source)?;
+    // let mut content = String::new();
+    // file_handler.read_to_string(&mut content)?;
+    // drop(file_handler);
+
+    let compiled = Solc::default().compile_source(source)?;
+    //.expect("Could not compile contracts");
+    // let compiled;
+    // match compiled_op {
+    //     Err(e) => { return Err(e.into()); },
+    //     Ok(val)=> { compiled=val;}
+    // }
+
+    let (abi, bytecode, _runtime_bytecode) = compiled
+        .find("LightNFT")
+        //.unwrap()
+        .expect("could not find contract")
+        .into_parts_or_default();
+
+    let factory = ContractFactory::new(abi, bytecode, Arc::new(ethers_client.clone()));
+
+    let contract = factory.deploy(())?.send().await?;
+
+    let addr = contract.address();
+
+    let addr_string = format!("{:#?}", addr);
+    return Ok(addr_string);
+}
+
+// async fn create_kms_cypher_key(config: &Config) -> Result<String, Box<dyn std::error::Error>>{
+
+//     let aws = config.aws_config();
+
+//     let client = aws_sdk_kms::Client::new(aws);
+
+//     let resp = client.create_key().send().await?;
+
+//     let key_id = resp
+//         .key_metadata
+//         .unwrap()
+//         .key_id
+//         .unwrap_or_else(|| String::from("No ID!"));
+    
+//     Ok(key_id)
+    
+// }
+
+async fn store_secret_key(
+    info_to_be_encrypted: &str,
+    kms_key_id: &str,
+    config: &Config,
+) -> Result<(), Box<dyn std::error::Error>> {
+
+        let aws = config.aws_config();
+
+    let client = aws_sdk_kms::Client::new(aws);
+        
+    let blob = Blob::new(info_to_be_encrypted.as_bytes());
+    let resp_op = client
+        .encrypt()
+        .key_id(kms_key_id.clone())
+        .plaintext(blob)
+        .send()
+        .await;
+    let resp = resp_op.unwrap();
+
+    let blob = resp.ciphertext_blob.expect("Could not get encrypted text");
+    let bytes = blob.as_ref();
+
+    //let value = base64::encode(bytes);
+    let value = general_purpose::STANDARD.encode(bytes);
+
+    let client2 = aws_sdk_secretsmanager::Client::new(aws);
+
+    client2
+        .put_secret_value()
+        .secret_id(SECRETS_MANAGER_SECRET_KEY)
+        .secret_string(value)
+        .send()
+        .await?;
+
+    Ok(())
+}
+
+async fn restore_secret_key(
+    kms_key_id: &str,
+    config: &Config,
+) -> Result<String, Box<dyn std::error::Error>> {
+        
+    let aws = config.aws_config();
+
+    let client = aws_sdk_secretsmanager::Client::new(&aws);
+        let scr = client
+            .get_secret_value()
+            .secret_id(SECRETS_MANAGER_SECRET_KEY)
+            .send()
+            .await?;
+
+        let secret_key_cyphered = scr.secret_string().unwrap();
+
+        let value = general_purpose::STANDARD.decode( secret_key_cyphered ).unwrap();
+
+
+        let client2 = aws_sdk_kms::Client::new(&aws);
+
+        let data = aws_sdk_kms::types::Blob::new(value);
+
+        let resp;
+        let resp_op = client2
+            .decrypt()
+            .key_id(kms_key_id.to_owned())
+            .ciphertext_blob(data.to_owned() )
+            .send()
+            .await;
+        match resp_op {
+            Err(e) => {
+                return Err(e.into());
+            }
+            Ok(val) => resp = val,
+        }
+
+        let inner = resp.plaintext.unwrap();
+        let bytes = inner.as_ref();
+
+        let secret_key_raw = String::from_utf8(bytes.to_vec()).unwrap(); // .expect("Could not convert to UTF-8");
+
+        // let secret_key: SecretKey;
+        // let secret_key_op = SecretKey::from_str(secret_key_raw.as_str());
+        // match secret_key_op {
+        //     Err(e) => {
+        //         return Err(e.into());
+        //     }
+        //     Ok(val) => secret_key = val,
+        // }
+
+        Ok(secret_key_raw)
+
+
+}
+
+
 #[tokio::test]
-async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
+async fn create_contract_and_mint_nft_test() -> Result<(), Box<dyn std::error::Error>> {
     env::set_var("RUST_LOG", "debug");
     env::set_var("ENVIRONMENT", "development");
 
     env_logger::builder().is_test(true).init();
 
     let mut config = Config::new();
-    config.setup().await;
+    config.setup_with_secrets().await;
 
-    //create dynamodb
+
+    //let secret: &str = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // secret key
+    //let key_id = config.env_vars().kms_key_id();
+    //store_secret_key(secret, key_id, &config).await?;
+    
+    //create dynamodb tables against testcontainers.
+
     let docker = clients::Cli::default();
     let node = docker.run(images::dynamodb_local::DynamoDb::default());
     let host_port = node.get_host_port_ipv4(8000);
 
     let shared_config = build_dynamodb(host_port).await;
-    let client = Client::new(&shared_config);
+    let client = aws_sdk_dynamodb::Client::new(&shared_config);
 
     let creation1 = create_schema_assets(&client).await;
     assert_that(&creation1).is_ok();
@@ -84,13 +309,24 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
 
     config.set_aws_config(&shared_config);
 
-    //create fake asset
+    // bootstrap dependencies
 
-    let repo_ow = OwnerRepo::new(&config);
+    let repo_ow = OwnerRepo::new(&config.clone());
     let owner_service = OwnerService::new(repo_ow);
 
-    let repo_as = AssetRepo::new(&config);
+    let repo_as = AssetRepo::new(&config.clone());
     let asset_service = AssetService::new(repo_as);
+
+    let repo_keys = KeyPairRepo::new(&config.clone());
+
+    //restore connection dependencies to work with localstack
+    config = Config::new();
+    config.setup_with_secrets().await;
+
+
+    let mut new_configuration = config.env_vars().clone();
+
+    //create fake test asset and user
 
     let asset_url: Url = Url::parse("http://www.file1.com/test1.mp4").unwrap();
     let asset_hash: String = "hash1234".to_string();
@@ -116,88 +352,51 @@ async fn create_contract_and_mint_nft_test() -> web3::Result<()> {
         .await
         .unwrap();
 
-    //create contract and deploy
+    //Create contract owner account
 
     let ganache = Ganache::new().mnemonic(MNEMONIC_TEST).spawn();
+
+    //Ethers
+    // let aux_wallet: LocalWallet = ganache.keys()[0].clone().into();
+    // let contract_owner_wallet = aux_wallet.with_chain_id( "1337".parse::<u64>()? );
+    // let contract_owner_address  = format!("{:#?}", contract_owner_wallet.address());
+
+    //Web3
+    let secret: &str = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // secret key
+    let key_id = config.env_vars().kms_key_id();
+    store_secret_key(secret, key_id, &config).await?;
+    let contract_owner_address = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1".to_string();
+    //let contract_owner_private_key = SecretKey::from_str(secret).unwrap();
+    //let contract_owner_private_key = SecretKeyRef::new(&contract_owner_private_key);
+    //let p :SecretKey = SecretKey::from_str(private_key_0).unwrap();
+    //let p_aux: LocalWallet = LocalWallet::from_str(private_key_0 ).unwrap(); //  p.clone().into();
+
+    // let wallet: LocalWallet = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
+    //     .parse::<LocalWallet>()?
+    //     .with_chain_id(....);
+
+    //let contract_owner_private_key = format!("{:?}", ganache.keys()[0] );
+
+    //create contract and deploy to blockchain
     let url = ganache.endpoint();
 
-    let http = web3::transports::Http::new(url.as_str())?;
-    let web3 = web3::Web3::new(http);
-    let accounts_op = web3.eth().accounts().await;
+    let contract_address =
+        deploy_contract_web3(url.as_str(), contract_owner_address.clone()).await?;
+    //let contract_address = deploy_contract_ethers(url.as_str(), &contract_owner_wallet).await?;
 
-    //Create accounts
-
-    //   Create contract owner account
-    let secp = secp256k1::Secp256k1::new();
-
-    let mut rng = rngs::StdRng::seed_from_u64(1);
-    let contract_owner_key_pair = secp.generate_keypair(&mut rng);
-    let contract_owner_public = contract_owner_key_pair.1.serialize();
-    let hash = keccak256(&contract_owner_public[1..65]);
-    let contract_owner_address = format!("0x{}", hex::encode(&hash[12..32]));
-    let contract_owner_private = contract_owner_key_pair.0;
-    let contract_owner_private_key = format!("{}", contract_owner_key_pair.0.display_secret());
-    let contract_owner_public_key = format!("{:?}", contract_owner_key_pair.1);
-    /*
-    let contractor = KeyPair {
-        user_id: "owner".to_string(),
-        creation_time: Utc::now(),
-        last_update_time: Utc::now(),
-        address: contract_owner_address,
-        public_key: contract_owner_key_pair.1.to_string(),
-        private_key: contract_owner_key_pair.0.into()
-    };*/
-
-    //let secrets_manager = SecretsManager::new(Default::default(), "http://localhost:4566".parse().unwrap());
-
-    //let request = secrets_manager.put_secret_value(Default::default(), "contract_owner_public_key", SecretValue::Plaintext( contract_owner_public_key.to_owned()));
-
-    //let user_account = format!("{:?}", accounts_op.clone().unwrap()[9]); //to be deleted
-    //let contract_owner_address = format!("{:?}", accounts_op.clone().unwrap()[0]);
-
-    let gas_price = web3.eth().gas_price().await.unwrap();
-    let chain_id = web3.eth().chain_id().await.unwrap().as_u64();
-
-    let bytecode = include_str!("../res/LightNFT.bin").trim_end();
-
-    let contract_deploy_op = Contract::deploy(web3.eth(), include_bytes!("../res/LightNFT.abi"))
-        .unwrap()
-        .confirmations(0)
-        .poll_interval(Duration::from_secs(10))
-        //.options(Options::default())
-        .options(Options::with(|opt| {
-            //    opt.value       = Some(U256::from_str("1").unwrap()); //Some(0.into());
-            //opt.gas_price   = Some(U256::from_str("2000000000").unwrap());
-            opt.gas_price = Some(gas_price);
-            opt.gas = Some(U256::from_str("1000000").unwrap());
-        }))
-        // .execute(
-        //     bytecode,
-        //     (),
-        //     H160::from_str(contract_owner_account.as_str()).unwrap(),
-        // )
-        .sign_with_key_and_execute(bytecode, (), &contract_owner_private, Some(chain_id))
-        .await;
-
-    assert_that!(&contract_deploy_op).is_ok();
-
-    let contract_address = format!("{:?}", contract_deploy_op.unwrap().address());
-
-    let mut new_configuration = config.env_vars().clone();
-    new_configuration.set_blockchain_url(url);
+    new_configuration.set_blockchain_url(url.clone());
     new_configuration.set_contract_address(contract_address);
-    new_configuration.set_contract_owner_address(contract_owner_address);
-    new_configuration.set_contract_owner_public_key(contract_owner_public_key);
-    new_configuration.set_contract_owner_private_key(contract_owner_private_key);
+    new_configuration.set_contract_owner_address(contract_owner_address.clone());
+    //new_configuration.set_contract_owner_public_key(contract_owner_public_key);
+    //new_configuration.set_contract_owner_private_key("contract_owner_private_key".to_string());
     config.set_env_vars(&new_configuration);
 
-    let blockchain = GanacheRepo::new(&config).unwrap();
+    let blockchain = GanacheRepo::new(&config.clone()).unwrap();
 
-    let keys_repo = KeyPairRepo::new(&config);
 
     let nft_service = NFTsService::new(
         blockchain,
-        keys_repo,
+        repo_keys,
         asset_service.clone(),
         owner_service.clone(),
     );
@@ -343,3 +542,31 @@ fn _wei_to_eth(wei_val: U256) -> f64 {
     let res = wei_val.as_u128() as f64;
     res / 1_000_000_000_000_000_000.0
 }
+
+
+
+#[tokio::test]
+async fn set_up_secret() -> Result<(), Box<dyn std::error::Error>> {
+    env::set_var("RUST_LOG", "debug");
+    env::set_var("ENVIRONMENT", "development");
+    //env::set_var("ENVIRONMENT", "production");
+
+    env_logger::builder().is_test(true).init();
+
+    let mut config = Config::new();
+    config.setup_with_secrets().await;
+
+
+    let secret: &str = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // secret key example
+    //let kms_id: &str = "2d460536-1dc9-436c-a97b-0bad3f8906c7";
+    let kms_id: &str = "336d7e5e-9d0e-44c6-8ebb-2bb792bb79d0";
+    store_secret_key(secret, kms_id, &config).await?;
+    let res = restore_secret_key(kms_id, &config).await?;
+
+    assert_eq!(secret,res);
+
+    Ok(())
+
+}
+
+ 

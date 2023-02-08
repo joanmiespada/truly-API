@@ -7,13 +7,23 @@ Rust toolchain update
 - http://localhost:4566/health
 # Create secrets
 
+This section contains all dependencies that won't be terraformed. 
+
 - aws --endpoint-url=http://localhost:4566 --region=eu-central-1 secretsmanager create-secret --name "truly/api/secrets" --description "My test database secret created with the CLI" --secret-string file://./scripts/fake_secret.json
+- aws --endpoint-url=http://localhost:4566 --region=eu-central-1 secretsmanager create-secret --name "truly/api/secret_key" --description "Storing encrypthed secret key for contract owner" --secret-string ""
+
 - aws --endpoint-url=http://localhost:4566 --region=eu-central-1 secretsmanager get-secret-value  --secret-id "truly/api/secrets"
 
-- aws --endpoint-url=http://localhost:4566 --region=eu-central-1 kms create-key --key-spec ECC_SECG_P256K1 --key-usage SIGN_VERIFY
+- aws --endpoint-url=http://localhost:4566 --region=eu-central-1 kms create-key --key-usage # at localstack don't set up anything else like ENCRYPT_DECRYPT
 - aws --endpoint-url=http://localhost:4566 --region=eu-central-1 kms list-keys
 - aws --endpoint-url=http://localhost:4566 --region=eu-central-1 kms describe-key --key-id <>
 - aws --endpoint-url=http://localhost:4566 --region=eu-central-1 kms get-public-key --key-id <>
+- aws --endpoint-url=http://localhost:4566 --region=eu-central-1 kms encrypt \
+   --key-id 336d7e5e-9d0e-44c6-8ebb-2bb792bb79d0 \
+   --plaintext "some important stuff" \
+   --output text \
+   --query CiphertextBlob \
+  | base64 --decode 
 
 # Create Tables and basic data
 
@@ -59,3 +69,30 @@ terraform plan
 terraform apply
 terraform apply --auto-approve
 terraform destroy
+
+# aws KMS cypher examples
+
+- aws kms encrypt \
+   --key-id 2d460536-1dc9-436c-a97b-0bad3f8906c7  \
+   --plaintext fileb://<(echo 'hi')  \
+   --output text --query CiphertextBlob > deleteme.txt
+
+- aws kms decrypt \
+  --key-id 2d460536-1dc9-436c-a97b-0bad3f8906c7  \
+  --ciphertext-blob fileb://<(echo 'AQICAHg4sLjNSwfVr9EthTjrQos1zT5GZj9wO1v3Dqx6F43SbgHhV3wGYKaafl7cYhhyY4foAAAAYTBfBgkqhkiG9w0BBwagUjBQAgEAMEsGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMkAV6ZrBB7jA8YoGeAgEQgB7ymQRiydEFN7Q7IxPBvWa5yUTcLk6ZFFHL/oOK4YE=' | base64 -d) \
+  --output text \
+  --query Plaintext | base64 -d
+
+
+
+aws kms encrypt --endpoint-url=http://localhost:4566 --region=eu-central-1 \
+--key-id 336d7e5e-9d0e-44c6-8ebb-2bb792bb79d0 \
+--plaintext fileb://<(echo 'hi')  \
+   --output text --query CiphertextBlob \
+   | base64 --decode > deleteme.txt 
+
+aws kms decrypt \
+  --endpoint-url=http://localhost:4566 --region=eu-central-1 \
+  --ciphertext-blob fileb://deleteme.txt \
+  --output text \
+  --query Plaintext | base64 --decode
