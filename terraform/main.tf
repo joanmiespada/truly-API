@@ -30,7 +30,7 @@ data "aws_secretsmanager_secret_version" "secrets" {
 }
 
 locals {
-  api_secrets = jsondecode(data.aws_secretsmanager_secret_version.secrets.secret_string)
+  #api_secrets = jsondecode(data.aws_secretsmanager_secret_version.secrets.secret_string)
 
   common_tags = {
     project = var.truly_tag
@@ -94,6 +94,7 @@ module "lambda_licenses" {
   resource_xray = aws_iam_role_policy_attachment.truly_lambda_XRAY
   resource_dynamodb = aws_iam_role_policy_attachment.truly_lambda_dynamodb
   resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
+  resource_kms = aws_iam_role_policy_attachment.truly_lambda_KMS
   role = aws_iam_role.truly_lambda_execution_role.arn
 
   environment_flag = var.environment_flag

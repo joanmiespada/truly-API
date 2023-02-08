@@ -1,15 +1,11 @@
-use crate::build_dynamodb;
-use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_dynamodb::{Client, Region};
-use chrono::Utc;
+use crate::build_local_stack_connection;
+use aws_sdk_kms::model::KeyUsageType;
 use ethers::prelude::*;
 use ethers::providers::{Http, Provider};
-use ethers::signers::{LocalWallet, Signer};
-use ethers::utils::{hex::ToHex, secret_key_to_address, Ganache};
+use ethers::signers::LocalWallet;
+use ethers::utils::Ganache;
 use ethers_solc::Solc;
-use hex_literal::hex;
-use lib_config::{Config, SECRETS_MANAGER_SECRET_KEY};
-use lib_licenses::models::keypair::KeyPair;
+use lib_config::{Config, SECRETS_MANAGER_KEYS, SECRETS_MANAGER_SECRET_KEY};
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
@@ -22,30 +18,22 @@ use lib_licenses::{
     repositories::ganache::{block_status, GanacheRepo},
     services::nfts::{NFTsManipulation, NFTsService, NTFState},
 };
-use secp256k1::{
-    rand::{rngs, SeedableRng},
-    Message, PublicKey, SecretKey, Signature,
-};
-use serde_json::to_string;
+
+use aws_sdk_kms::types::Blob;
+use base64::{engine::general_purpose, Engine as _};
+use serde_json::json;
 use spectral::{assert_that, result::ResultAssertions};
 use std::time::Duration;
 use std::{env, str::FromStr};
 use std::{path::Path, sync::Arc};
 use testcontainers::*;
 use url::Url;
-use web3::signing::SecretKeyRef;
 use web3::{
     contract::{Contract, Options},
-    signing::keccak256,
     types::{H160, U256},
 };
-use aws_sdk_kms::types::Blob;
-use base64::{Engine as _, engine::{self, general_purpose}, alphabet};
 
-
-//use secp256k1::key::{PublicKey as PubKey, SecretKey as PrivKey};
-
-const MNEMONIC_TEST: &str =
+pub const MNEMONIC_TEST: &str =
     "myth like bonus scare over problem client lizard pioneer submit female collect"; //from $ganache --deterministic command
 
 #[tokio::test]
@@ -78,7 +66,7 @@ async fn ganache_bootstrap_get_balance_test() {
     drop(ganache)
 }
 
-async fn deploy_contract_web3(
+pub async fn deploy_contract_web3(
     url: &str,
     contract_owner_address: String,
 ) -> Result<String, Box<dyn std::error::Error>> {
@@ -117,7 +105,7 @@ async fn deploy_contract_web3(
     return Ok(contract_address);
 }
 
-async fn deploy_contract_ethers(
+pub async fn _deploy_contract_ethers(
     url: &str,
     wallet: &LocalWallet,
 ) -> Result<String, Box<dyn std::error::Error>> {
@@ -162,16 +150,15 @@ async fn deploy_contract_ethers(
     return Ok(addr_string);
 }
 
-async fn store_secret_key(
+pub async fn store_secret_key(
     info_to_be_encrypted: &str,
     kms_key_id: &str,
     config: &Config,
 ) -> Result<(), Box<dyn std::error::Error>> {
-
-        let aws = config.aws_config();
+    let aws = config.aws_config();
 
     let client = aws_sdk_kms::Client::new(aws);
-        
+
     let blob = Blob::new(info_to_be_encrypted.as_bytes());
     let resp_op = client
         .encrypt()
@@ -199,206 +186,92 @@ async fn store_secret_key(
     Ok(())
 }
 
-async fn restore_secret_key(
+pub async fn restore_secret_key(
     kms_key_id: &str,
     config: &Config,
 ) -> Result<String, Box<dyn std::error::Error>> {
-        
     let aws = config.aws_config();
 
     let client = aws_sdk_secretsmanager::Client::new(&aws);
-        let scr = client
-            .get_secret_value()
-            .secret_id(SECRETS_MANAGER_SECRET_KEY)
-            .send()
-            .await?;
+    let scr = client
+        .get_secret_value()
+        .secret_id(SECRETS_MANAGER_SECRET_KEY)
+        .send()
+        .await?;
 
-        let secret_key_cyphered = scr.secret_string().unwrap();
+    let secret_key_cyphered = scr.secret_string().unwrap();
 
-        let value = general_purpose::STANDARD.decode( secret_key_cyphered ).unwrap();
-
-
-        let client2 = aws_sdk_kms::Client::new(&aws);
-
-        let data = aws_sdk_kms::types::Blob::new(value);
-
-        let resp;
-        let resp_op = client2
-            .decrypt()
-            .key_id(kms_key_id.to_owned())
-            .ciphertext_blob(data.to_owned() )
-            .send()
-            .await;
-        match resp_op {
-            Err(e) => {
-                return Err(e.into());
-            }
-            Ok(val) => resp = val,
-        }
-
-        let inner = resp.plaintext.unwrap();
-        let bytes = inner.as_ref();
-
-        let secret_key_raw = String::from_utf8(bytes.to_vec()).unwrap(); // .expect("Could not convert to UTF-8");
-
-        Ok(secret_key_raw)
-
-}
-
-
-#[tokio::test]
-async fn create_contract_and_mint_nft_test() -> Result<(), Box<dyn std::error::Error>> {
-    env::set_var("RUST_LOG", "debug");
-    env::set_var("ENVIRONMENT", "development");
-
-    env_logger::builder().is_test(true).init();
-
-    let mut config = Config::new();
-    config.setup_with_secrets().await;
-
-
-    //let secret: &str = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // secret key
-    //let key_id = config.env_vars().kms_key_id();
-    //store_secret_key(secret, key_id, &config).await?;
-    
-    //create dynamodb tables against testcontainers.
-
-    let docker = clients::Cli::default();
-    let node = docker.run(images::dynamodb_local::DynamoDb::default());
-    let host_port = node.get_host_port_ipv4(8000);
-
-    let shared_config = build_dynamodb(host_port).await;
-    let client = aws_sdk_dynamodb::Client::new(&shared_config);
-
-    let creation1 = create_schema_assets(&client).await;
-    assert_that(&creation1).is_ok();
-
-    let creation2 = create_schema_owners(&client).await;
-    assert_that(&creation2).is_ok();
-
-    let creation3 = create_schema_keypairs(&client).await;
-    assert_that(&creation3).is_ok();
-
-    config.set_aws_config(&shared_config);
-
-    // bootstrap dependencies
-
-    let repo_ow = OwnerRepo::new(&config.clone());
-    let owner_service = OwnerService::new(repo_ow);
-
-    let repo_as = AssetRepo::new(&config.clone());
-    let asset_service = AssetService::new(repo_as);
-
-    let repo_keys = KeyPairRepo::new(&config.clone());
-
-    //restore connection dependencies to work with localstack
-    config = Config::new();
-    config.setup_with_secrets().await;
-
-
-    let mut new_configuration = config.env_vars().clone();
-
-    //create fake test asset and user
-
-    let asset_url: Url = Url::parse("http://www.file1.com/test1.mp4").unwrap();
-    let asset_hash: String = "hash1234".to_string();
-    let asset_license: String =
-        String::from_str("license - open shared social networks - forbiden mass media").unwrap();
-
-    let mut as0 = CreatableFildsAsset {
-        url: asset_url.to_string(),
-        hash: asset_hash,
-        license: asset_license,
-        longitude: None,
-        latitude: None,
-    };
-
-    let user_id = String::from_str("user1234-1234-1234-1234").unwrap();
-
-    let new_asset_op = asset_service.add(&mut as0, &user_id).await;
-
-    assert_that!(&new_asset_op).is_ok();
-
-    let as1 = asset_service
-        .get_by_id(&new_asset_op.unwrap())
-        .await
+    let value = general_purpose::STANDARD
+        .decode(secret_key_cyphered)
         .unwrap();
 
-    //Create contract owner account
+    let client2 = aws_sdk_kms::Client::new(&aws);
 
-    let ganache = Ganache::new().mnemonic(MNEMONIC_TEST).spawn();
+    let data = aws_sdk_kms::types::Blob::new(value);
 
-    //Ethers
-    // let aux_wallet: LocalWallet = ganache.keys()[0].clone().into();
-    // let contract_owner_wallet = aux_wallet.with_chain_id( "1337".parse::<u64>()? );
-    // let contract_owner_address  = format!("{:#?}", contract_owner_wallet.address());
+    let resp;
+    let resp_op = client2
+        .decrypt()
+        .key_id(kms_key_id.to_owned())
+        .ciphertext_blob(data.to_owned())
+        .send()
+        .await;
+    match resp_op {
+        Err(e) => {
+            return Err(e.into());
+        }
+        Ok(val) => resp = val,
+    }
 
-    //Web3
-    let secret: &str = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // secret key
-    let key_id = config.env_vars().kms_key_id();
-    store_secret_key(secret, key_id, &config).await?;
-    let contract_owner_address = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1".to_string();
-    //let contract_owner_private_key = SecretKey::from_str(secret).unwrap();
-    //let contract_owner_private_key = SecretKeyRef::new(&contract_owner_private_key);
-    //let p :SecretKey = SecretKey::from_str(private_key_0).unwrap();
-    //let p_aux: LocalWallet = LocalWallet::from_str(private_key_0 ).unwrap(); //  p.clone().into();
+    let inner = resp.plaintext.unwrap();
+    let bytes = inner.as_ref();
 
-    // let wallet: LocalWallet = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
-    //     .parse::<LocalWallet>()?
-    //     .with_chain_id(....);
+    let secret_key_raw = String::from_utf8(bytes.to_vec()).unwrap(); // .expect("Could not convert to UTF-8");
 
-    //let contract_owner_private_key = format!("{:?}", ganache.keys()[0] );
+    Ok(secret_key_raw)
+}
 
-    //create contract and deploy to blockchain
-    let url = ganache.endpoint();
+    
+pub async fn create_secrets(
+    client: &aws_sdk_secretsmanager::Client,
+) -> Result<(), Box<dyn std::error::Error>> {
+    client
+        .create_secret()
+        .name(SECRETS_MANAGER_SECRET_KEY.to_string())
+        .send()
+        .await?;
+    
+    let secrets_json = r#"
+    {
+        "HMAC_SECRET" : "localtest_hmac",
+        "JWT_TOKEN_BASE": "localtest_jwt"
+    }
+    "#;
 
-    let contract_address =
-        deploy_contract_web3(url.as_str(), contract_owner_address.clone()).await?;
-    //let contract_address = deploy_contract_ethers(url.as_str(), &contract_owner_wallet).await?;
-
-    new_configuration.set_blockchain_url(url.clone());
-    new_configuration.set_contract_address(contract_address);
-    new_configuration.set_contract_owner_address(contract_owner_address.clone());
-    //new_configuration.set_contract_owner_public_key(contract_owner_public_key);
-    //new_configuration.set_contract_owner_private_key("contract_owner_private_key".to_string());
-    config.set_env_vars(&new_configuration);
-
-    let blockchain = GanacheRepo::new(&config.clone()).unwrap();
-
-
-    let nft_service = NFTsService::new(
-        blockchain,
-        repo_keys,
-        asset_service.clone(),
-        owner_service.clone(),
-    );
-
-    let price: u64 = 2000;
-
-    let mint_op = nft_service.add(as1.id(), &user_id, &price).await;
-
-    assert_that!(&mint_op).is_ok();
-    let tx_in_chain = mint_op.unwrap();
-
-    let check_op = nft_service.get(as1.id()).await;
-
-    assert_that!(&check_op).is_ok();
-
-    let content = check_op.unwrap();
-
-    assert_eq!(content.hash_file, as1.hash().as_deref().unwrap());
-    assert_eq!(content.price, price);
-    assert_eq!(content.state, NTFState::Active);
-
-    let tx_op = asset_service.get_by_id(as1.id()).await;
-
-    assert_that!(&tx_op).is_ok();
-
-    let content_minted = tx_op.unwrap();
-
-    assert_eq!(tx_in_chain, content_minted.minted_tx().as_deref().unwrap());
+    client
+        .create_secret()
+        .name(SECRETS_MANAGER_KEYS.to_string())
+        .secret_string(  secrets_json  )
+        .send()
+        .await?;
 
     Ok(())
+}
+
+pub async fn create_key(client: &aws_sdk_kms::Client) -> Result<String, Box<dyn std::error::Error>> {
+    let resp =client
+        .create_key()
+        .key_usage(KeyUsageType::EncryptDecrypt)
+        .send()
+        .await?;
+    let id = resp
+        .key_metadata
+        .unwrap()
+        .key_id
+        .unwrap();
+        //.unwrap_or_else(|| String::from("No ID!"));
+
+    Ok(id)
 }
 
 #[tokio::test]
@@ -515,8 +388,6 @@ fn _wei_to_eth(wei_val: U256) -> f64 {
     res / 1_000_000_000_000_000_000.0
 }
 
-
-
 #[tokio::test]
 async fn set_up_secret() -> Result<(), Box<dyn std::error::Error>> {
     env::set_var("RUST_LOG", "debug");
@@ -528,17 +399,13 @@ async fn set_up_secret() -> Result<(), Box<dyn std::error::Error>> {
     let mut config = Config::new();
     config.setup_with_secrets().await;
 
-
     let secret: &str = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // secret key example
-    //let kms_id: &str = "2d460536-1dc9-436c-a97b-0bad3f8906c7";
+                                                                                           //let kms_id: &str = "2d460536-1dc9-436c-a97b-0bad3f8906c7";
     let kms_id: &str = "336d7e5e-9d0e-44c6-8ebb-2bb792bb79d0";
     store_secret_key(secret, kms_id, &config).await?;
     let res = restore_secret_key(kms_id, &config).await?;
 
-    assert_eq!(secret,res);
+    assert_eq!(secret, res);
 
     Ok(())
-
 }
-
- 

@@ -30,36 +30,25 @@ http-serde = "1.1.2"
 url = {version="2.3.1", features=["serde"] }
 hex = "0.4.3"
 web3 = {version="0.18.0", features=["signing" ]}
-hex-literal = "0.3.4"
 rs-snowflake = "0.6.0"
 mac_address = "1.1.4"
-secp256k1 = { version = "0.21", features = ["recovery"] }
+secp256k1 = { version = "0.21", features = ["rand"] }
 rand = "0.8.5"
-ethers-solc = "1.0.2"
 aws-sdk-kms = "0.24.0"
 aws-sdk-secretsmanager = "0.24.0"
 base64 = "0.21.0"
-
-[dependencies.uuid]
-version = "1.2.2"
-features = [
-    "v4",                # Lets you generate random UUIDs
-    "fast-rng",          # Use a faster (but still sufficiently random) RNG
-    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
-    "serde"
-]
+uuid = { version = "1.2.2", features=["v4","fast-rng","macro-diagnostics","serde"]}
 
 [dev-dependencies]
 env_logger = "0.10.0"
 aws-types = "0.54.1"
 spectral = "0.6.0"
-testcontainers = "0.14.0"
+#testcontainers = "0.14.0"
+testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack"  }
 tokio = { version="1.24.2", features=["full"]}
 lib_config = { path = "../lib_config" }
 lib_licenses = { path= "./"}
 ethers = "1.0.2"
-secp256k1 = {version="0.21", features=["rand"] }
-hex-literal = "0.3.4"
 base64 = "0.21.0"
-
+ethers-solc = "1.0.2"
 

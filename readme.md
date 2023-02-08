@@ -65,10 +65,10 @@ https://www.cargo-lambda.info/guide/getting-started.html#step-2-create-a-new-pro
 terraform steps: https://awstip.com/crud-operations-with-rust-on-aws-lambda-part-2-bd1feae2554b
 
 terraform init
-terraform plan
-terraform apply
-terraform apply --auto-approve
-terraform destroy
+terraform plan -var-file="variables-xxx.tfvars"
+terraform apply -var-file="variables-xxx.tfvars"
+terraform apply --auto-approve -var-file="variables-xxx.tfvars"
+terraform destroy -var-file="variables-xxx.tfvars"
 
 # aws KMS cypher examples
 

@@ -8,7 +8,7 @@ use spectral::prelude::*;
 use testcontainers::*;
 use uuid::Uuid;
 
-use crate::build_dynamodb;
+use crate::build_local_stack_connection;
 
 
 
@@ -19,7 +19,7 @@ async fn creation_table() {
     let node = docker.run(images::dynamodb_local::DynamoDb::default());
     let host_port = node.get_host_port_ipv4(8000);
 
-    let shared_config= build_dynamodb(host_port).await;
+    let shared_config= build_local_stack_connection(host_port).await;
 
     let client = Client::new(&shared_config);
     
@@ -41,7 +41,7 @@ async fn add_owners() {
     let node = docker.run(images::dynamodb_local::DynamoDb::default());
     let host_port = node.get_host_port_ipv4(8000);
 
-    let shared_config = build_dynamodb(host_port).await;
+    let shared_config = build_local_stack_connection(host_port).await;
     let client = Client::new(&shared_config);
     
     let creation = create_schema_owners(&client).await;

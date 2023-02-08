@@ -43,6 +43,7 @@ resource "aws_lambda_function" "truly_lambda_licenses" {
     //aws_iam_role_policy_attachment.truly_lambda_SNS,
     var.resource_xray,
     var.resource_secretsman,
+    var.resource_kms,
     aws_cloudwatch_log_group.truly_lambda_licenses_cloudwatch,
   ]
 

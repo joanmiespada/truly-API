@@ -6,14 +6,20 @@ use aws_config::meta::region::RegionProviderChain;
 mod assets_test;
 mod owners_test;
 mod nfts_tests;
+mod nfts2_tests;
 
 
-pub async fn build_dynamodb(host_port: u16) -> SdkConfig {
+pub async fn build_local_stack_connection(host_port: u16) -> SdkConfig {
     let endpoint_url = format!("http://127.0.0.1:{}", host_port);
     //let uri = Uri::from_str(&endpoint_uri).unwrap();
     //let endpoint_resolver = Endpoint::immutable_uri(uri);
     let region_provider = RegionProviderChain::default_provider().or_else("eu-central-1");
-    let creds = Credentials::new("fakeKey", "fakeSecret", None, None, "test");
+    let creds = Credentials::new(
+        "test", 
+        "test", 
+        None, 
+        None, 
+        "test");
 
     let shared_config = aws_config::from_env()
         .region(region_provider)

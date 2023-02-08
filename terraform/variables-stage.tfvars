@@ -1,0 +1,5 @@
+aws_region = "eu-west-1"
+blockchain_url = ""
+contract_address = ""
+contract_owner = ""
+kms_cypher_owner ="53afc0f7-cbdb-4bbf-a175-a711087a50a2"

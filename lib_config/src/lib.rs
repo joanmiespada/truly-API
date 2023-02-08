@@ -207,7 +207,7 @@ impl Config {
         self.env_variables = Some(new_data.clone() )
     }
 
-    async fn load_secrets(&mut self) {
+    pub async fn load_secrets(&mut self) {
         let client = aws_sdk_secretsmanager::Client::new(self.aws_config());
         let mut resp = client
             .get_secret_value()

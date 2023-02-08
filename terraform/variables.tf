@@ -1,7 +1,6 @@
 variable "aws_region" {
   description = "AWS region for all resources."
   type    = string
-  default = "eu-central-1"
 }
 
 variable "secrets_key_name" {
@@ -10,11 +9,11 @@ variable "secrets_key_name" {
   default = "truly/api/secrets"
 }
 
-variable "dynamodb_endpoint" {
-  description = "main dynamodb endpoint"
-  type    = string
-  default = "https://dynamodb.eu-central-1.amazonaws.com"
-}
+# variable "dynamodb_endpoint" {
+#   description = "main dynamodb endpoint"
+#   type    = string
+#   default = "https://dynamodb.eu-central-1.amazonaws.com"
+#}
 
 variable "environment_flag" {
   description = "environment flag"

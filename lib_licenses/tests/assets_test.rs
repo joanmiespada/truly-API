@@ -10,7 +10,7 @@ use spectral::prelude::*;
 use testcontainers::*;
 use url::Url;
 
-use crate::build_dynamodb;
+use crate::build_local_stack_connection;
 
 #[tokio::test]
 async fn creation_table() {
@@ -19,7 +19,7 @@ async fn creation_table() {
     let node = docker.run(images::dynamodb_local::DynamoDb::default());
     let host_port = node.get_host_port_ipv4(8000);
 
-    let shared_config = build_dynamodb(host_port).await;
+    let shared_config = build_local_stack_connection(host_port).await;
 
     let client = Client::new(&shared_config);
 
@@ -40,7 +40,7 @@ async fn add_assets() {
     let node = docker.run(images::dynamodb_local::DynamoDb::default());
     let host_port = node.get_host_port_ipv4(8000);
 
-    let shared_config = build_dynamodb(host_port).await;
+    let shared_config = build_local_stack_connection(host_port).await;
     let client = Client::new(&shared_config);
 
     let creation = create_schema_assets(&client).await;
@@ -103,7 +103,7 @@ async fn check_ownership() {
     let node = docker.run(images::dynamodb_local::DynamoDb::default());
     let host_port = node.get_host_port_ipv4(8000);
 
-    let shared_config = build_dynamodb(host_port).await;
+    let shared_config = build_local_stack_connection(host_port).await;
     let client = Client::new(&shared_config);
 
     let mut creation = create_schema_assets(&client).await;

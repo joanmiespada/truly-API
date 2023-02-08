@@ -48,13 +48,20 @@ impl KeyPairRepo {
     async fn encrypt(&self, info_to_be_encrypted: String) -> ResultE<String> {
         use base64::{engine::general_purpose, Engine as _};
         let blob = Blob::new(info_to_be_encrypted.as_bytes());
-        let resp = self
+        let resp;
+        let resp_op = self
             .client_kms
             .encrypt()
             .key_id(self.kms_key_id.clone())
             .plaintext(blob)
             .send()
-            .await?;
+            .await;
+        match resp_op{
+            Err(e)=>{
+                panic!("{}",e)
+            },
+            Ok(value)=>{resp=value}
+        }
 
         let blob = resp.ciphertext_blob.unwrap();
         let bytes = blob.as_ref();
