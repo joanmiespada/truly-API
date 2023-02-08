@@ -84,6 +84,7 @@ terraform destroy
   --query Plaintext | base64 -d
 
 
+https://janaka.dev/Simple%20example%20of%20KMS%20encrypt%20and%20decrypt%20using%20AWS%20CLI%20v2/
 
 aws kms encrypt --endpoint-url=http://localhost:4566 --region=eu-central-1 \
 --key-id 336d7e5e-9d0e-44c6-8ebb-2bb792bb79d0 \

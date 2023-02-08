@@ -56,3 +56,9 @@ variable "kms_cypher_owner" {
   default = "2d460536-1dc9-436c-a97b-0bad3f8906c7"
   description = "kms cypher for secret keys"
 }
+
+variable "blockchain_confirmations" {
+  type      = number
+  description = "number of confirmations from blockchain to commit a transaction"
+  default = 3
+}

@@ -162,24 +162,6 @@ async fn deploy_contract_ethers(
     return Ok(addr_string);
 }
 
-// async fn create_kms_cypher_key(config: &Config) -> Result<String, Box<dyn std::error::Error>>{
-
-//     let aws = config.aws_config();
-
-//     let client = aws_sdk_kms::Client::new(aws);
-
-//     let resp = client.create_key().send().await?;
-
-//     let key_id = resp
-//         .key_metadata
-//         .unwrap()
-//         .key_id
-//         .unwrap_or_else(|| String::from("No ID!"));
-    
-//     Ok(key_id)
-    
-// }
-
 async fn store_secret_key(
     info_to_be_encrypted: &str,
     kms_key_id: &str,
@@ -259,17 +241,7 @@ async fn restore_secret_key(
 
         let secret_key_raw = String::from_utf8(bytes.to_vec()).unwrap(); // .expect("Could not convert to UTF-8");
 
-        // let secret_key: SecretKey;
-        // let secret_key_op = SecretKey::from_str(secret_key_raw.as_str());
-        // match secret_key_op {
-        //     Err(e) => {
-        //         return Err(e.into());
-        //     }
-        //     Ok(val) => secret_key = val,
-        // }
-
         Ok(secret_key_raw)
-
 
 }
 

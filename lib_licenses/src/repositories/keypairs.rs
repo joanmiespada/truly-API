@@ -3,13 +3,14 @@ use std::collections::HashMap;
 use crate::errors::keypair::{KeyPairDynamoDBError, KeyPairNoExistsError};
 use crate::models::keypair::KeyPair;
 use async_trait::async_trait;
-use aws_sdk_dynamodb::{model::AttributeValue, Client};
+use aws_sdk_dynamodb::model::AttributeValue;
+use aws_sdk_kms::types::Blob;
 use chrono::{
     prelude::{DateTime, Utc},
     Local,
 };
 use lib_config::Config;
-use secp256k1::rand::{ SeedableRng, rngs};
+use secp256k1::rand::{rngs, SeedableRng};
 use web3::signing::keccak256;
 //use rand::{prelude::*, SeedableRng};
 
@@ -31,15 +32,61 @@ pub trait KeyPairRepository {
 
 #[derive(Clone, Debug)]
 pub struct KeyPairRepo {
-    client: Client,
+    client_dynamo: aws_sdk_dynamodb::Client,
+    client_kms: aws_sdk_kms::Client,
+    kms_key_id: String,
 }
 
 impl KeyPairRepo {
     pub fn new(conf: &Config) -> KeyPairRepo {
         KeyPairRepo {
-            client: Client::new(conf.aws_config()),
+            client_dynamo: aws_sdk_dynamodb::Client::new(conf.aws_config()),
+            client_kms: aws_sdk_kms::Client::new(conf.aws_config()),
+            kms_key_id: conf.env_vars().kms_key_id().to_owned(),
         }
     }
+    async fn encrypt(&self, info_to_be_encrypted: String) -> ResultE<String> {
+        use base64::{engine::general_purpose, Engine as _};
+        let blob = Blob::new(info_to_be_encrypted.as_bytes());
+        let resp = self
+            .client_kms
+            .encrypt()
+            .key_id(self.kms_key_id.clone())
+            .plaintext(blob)
+            .send()
+            .await?;
+
+        let blob = resp.ciphertext_blob.unwrap();
+        let bytes = blob.as_ref();
+
+        let value = general_purpose::STANDARD.encode(bytes);
+
+        Ok(value)
+    }
+    async fn _decrypt(&self, info_encrypted_b64: String) -> ResultE<String>{
+        use base64::{engine::general_purpose, Engine as _};
+
+        let value = general_purpose::STANDARD.decode( info_encrypted_b64 ).unwrap();
+
+        let data = aws_sdk_kms::types::Blob::new(value);
+
+        let resp = self
+            .client_kms
+            .decrypt()
+            .key_id(self.kms_key_id.to_owned())
+            .ciphertext_blob(data.to_owned() )
+            .send()
+            .await?;
+
+        let inner = resp.plaintext.unwrap();
+        let bytes = inner.as_ref();
+
+        let secret_text_raw = String::from_utf8(bytes.to_vec())?;
+
+        Ok(secret_text_raw)
+    }
+
+
 }
 
 #[async_trait]
@@ -53,7 +100,7 @@ impl KeyPairRepository for KeyPairRepo {
         let update_time_av = AttributeValue::S(iso8601(keypair.creation_time()));
 
         let request = self
-            .client
+            .client_dynamo
             .put_item()
             .table_name(KEYPAIRS_TABLE_NAME)
             .item(KEYPAIRS_USER_ID_FIELD_PK, user_id_av)
@@ -80,7 +127,7 @@ impl KeyPairRepository for KeyPairRepo {
     async fn get_by_id(&self, user_id: &String) -> ResultE<KeyPair> {
         let _id_av = AttributeValue::S(user_id.to_string());
         let request = self
-            .client
+            .client_dynamo
             .get_item()
             .table_name(KEYPAIRS_TABLE_NAME)
             .key(KEYPAIRS_USER_ID_FIELD_PK, _id_av.clone());
@@ -122,9 +169,8 @@ impl KeyPairRepository for KeyPairRepo {
                 } else if let Some(_) = e.downcast_ref::<KeyPairNoExistsError>() {
                     let secp = secp256k1::Secp256k1::new();
 
-
                     //let mut rng = rand_hc::Hc128Rng::from_entropy();
-                    let mut rng = rngs::StdRng::seed_from_u64( rand::random::<u64>() );
+                    let mut rng = rngs::StdRng::seed_from_u64(rand::random::<u64>());
 
                     let contract_owner_key_pair = secp.generate_keypair(&mut rng);
                     let contract_owner_public = contract_owner_key_pair.1.serialize();
@@ -135,11 +181,14 @@ impl KeyPairRepository for KeyPairRepo {
                         format!("{}", contract_owner_key_pair.0.display_secret());
                     let user_public_key = format!("{}", contract_owner_key_pair.1);
 
+                    let user_private_key_cyphered = self.encrypt(user_private_key).await.unwrap();
+                    let user_public_key_cyphered = self.encrypt(user_public_key).await.unwrap();
+
                     let mut user_key = KeyPair::new();
                     user_key.set_user_id(user_id);
                     user_key.set_address(&user_address);
-                    user_key.set_private_key(&user_private_key);
-                    user_key.set_public_key(&user_public_key);
+                    user_key.set_private_key(&user_private_key_cyphered);
+                    user_key.set_public_key(&user_public_key_cyphered);
 
                     self.add(&user_key).await?;
 
@@ -164,6 +213,7 @@ fn from_iso8601(st: &String) -> DateTime<Utc> {
     let aux = st.parse::<DateTime<Utc>>().unwrap();
     aux
 }
+
 pub fn mapping_from_doc_to_keypair(doc: &HashMap<String, AttributeValue>, keypair: &mut KeyPair) {
     let user_id = doc.get(KEYPAIRS_USER_ID_FIELD_PK).unwrap();
     let user_id = user_id.as_s().unwrap();

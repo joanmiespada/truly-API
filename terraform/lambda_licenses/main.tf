@@ -32,6 +32,7 @@ resource "aws_lambda_function" "truly_lambda_licenses" {
       CONTRACT_ADDRESS = "${var.contract_address}"
       CONTRACT_OWNER   = "${var.contract_owner}"
       KMS_KEY_ID       = "${var.kms_cypher_owner}"
+      BLOCKCHAIN_CONFIRMATIONS = "${var.blockchain_confirmations}"
     }
   }
 

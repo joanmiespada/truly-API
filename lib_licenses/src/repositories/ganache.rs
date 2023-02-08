@@ -1,7 +1,5 @@
 use async_trait::async_trait;
 use aws_config::SdkConfig;
-use aws_sdk_kms::types::Blob;
-use aws_sdk_kms::Client;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use lib_config::{Config, SECRETS_MANAGER_SECRET_KEY};
 use log::debug;
@@ -26,7 +24,7 @@ use web3::{
 use crate::errors::nft::HydrateMasterSecretKeyError;
 use crate::{
     errors::nft::{
-        NftBlockChainNonceMalformedError, NftBlockChainSecretOwnerMalformedError,
+        NftBlockChainNonceMalformedError, 
         NftUserAddressMalformedError,
     },
     models::keypair::KeyPair,
@@ -34,7 +32,6 @@ use crate::{
 
 const CONTRACT_METHOD_MINTING: &'static str = "mint";
 const CONTRACT_METHOD_GET_CONTENT_BY_TOKEN: &'static str = "getContentByToken";
-const CONFIRMATIONS: usize = 0;
 
 use crate::errors::asset::AssetBlockachainError;
 
@@ -59,6 +56,7 @@ pub struct GanacheRepo {
     contract_owner: Address,
     kms_key_id: String,
     aws: SdkConfig,
+    blockhain_node_confirmations: usize
 }
 
 impl GanacheRepo {
@@ -86,13 +84,13 @@ impl GanacheRepo {
             contract_owner: contract_owner_position,
             kms_key_id: conf.env_vars().kms_key_id().to_owned(),
             aws: conf.aws_config().to_owned(),
+            blockhain_node_confirmations: conf.env_vars().blockchain_confirmations().to_owned()
         })
     }
 
     async fn decrypt_contract_owner_secret_key(&self) -> ResultE<SecretKey> {
         use base64::{
-            alphabet,
-            engine::{self, general_purpose},
+            engine::general_purpose,
             Engine as _,
         };
 
@@ -252,15 +250,11 @@ impl NFTsRepository for GanacheRepo {
         }
 
         let caller = contract.signed_call_with_confirmations(
-            //working with INFURA and others!
             CONTRACT_METHOD_MINTING,
             (to.clone(), token.clone(), hash_file.clone(), price.clone()),
             tx_options,
-            //self.contract_owner.clone(), //self.contract_address.clone(), //account_owner,
-            CONFIRMATIONS,
-            //&secret_key
-            &contract_owner_private_key, //Options::default(),
-                                         //tx_options,
+            self.blockhain_node_confirmations,
+            &contract_owner_private_key,
         );
 
         let call_contract_op = caller.await;
@@ -297,7 +291,7 @@ impl NFTsRepository for GanacheRepo {
         let caller = contract.query(
             CONTRACT_METHOD_GET_CONTENT_BY_TOKEN,
             (token.clone(),),
-            self.contract_address, //to, //account_owner, //None
+            self.contract_address,
             Options::default(),
             None,
         );
@@ -310,9 +304,6 @@ impl NFTsRepository for GanacheRepo {
         };
         Ok(res)
     }
-    //fn create_account(&self) -> ResultE<(String, String, String)> {
-    //    let (secret_key, pub_key) = generate_keypair();
-    // }
 }
 
 pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
@@ -431,7 +422,7 @@ fn generate_keypair() -> SecretKey {
     return secret_key;
 }*/
 
-fn generate_nonce(counter: &Arc<Mutex<i32>>) -> Result<U256, NftBlockChainNonceMalformedError> {
+fn _generate_nonce(counter: &Arc<Mutex<i32>>) -> Result<U256, NftBlockChainNonceMalformedError> {
     //generate unique nonce number
     let machine_id: i32;
     match get_mac_address() {

@@ -12,22 +12,34 @@ pub const SECRETS_MANAGER_SECRET_KEY: &str = "truly/api/secret_key";
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct EnvironmentVariables {
-    pub jwt_token_base: Option<String>,
-    pub jwt_token_time_exp_hours : Option<String>, 
-    pub environment: String,
-    pub hmac_secret: Option<String>,
-    pub rust_log: String,
-    pub aws_region: Option<String>,
-    pub aws_endpoint: Option<String>,
+    jwt_token_base: Option<String>,
+    jwt_token_time_exp_hours : Option<String>, 
+    environment: String,
+    hmac_secret: Option<String>,
+    rust_log: String,
+    aws_region: Option<String>,
+    aws_endpoint: Option<String>,
 
-    pub blockchain_url: Option<String>,
-    pub contract_address: Option<String>,
-    pub contract_owner_address: Option<String>,
+    blockchain_url: Option<String>,
+    contract_address: Option<String>,
+    contract_owner_address: Option<String>,
 
-    kms_key_id: Option<String>
+    kms_key_id: Option<String>,
+    blockchain_confirmations: Option<usize>
 }
 
 impl EnvironmentVariables {
+
+    pub fn rust_log(&self) -> &String {
+        let aux = &self.rust_log;
+        return aux;
+    }
+    
+    pub fn environment(&self) -> &String {
+        let aux = &self.environment;
+        return aux;
+    }
+
     pub fn hmac_secret(&self) -> &String {
         let aux = self.hmac_secret.as_ref().unwrap();
         return aux;
@@ -66,21 +78,6 @@ impl EnvironmentVariables {
     pub fn set_contract_address(&mut self, new_addres: String) {
         self.contract_address = Some(new_addres.clone());
     }
-    
-    // pub fn contract_owner_public_key(&self) -> &String {
-    //     let aux = self.contract_owner_public_key.as_ref().unwrap();
-    //     return aux;
-    // } 
-    // pub fn set_contract_owner_public_key(&mut self, value: String) {
-    //     self.contract_owner_public_key = Some(value.clone());
-    // }
-    // pub fn contract_owner_private_key(&self) -> &String {
-    //     let aux = self.contract_owner_private_key.as_ref().unwrap();
-    //     return aux;
-    // }
-    // pub fn set_contract_owner_private_key(&mut self, value: String) {
-    //     self.contract_owner_private_key = Some(value.clone());
-    // }
 
     pub fn contract_owner_address(&self) -> &String {
         let aux = self.contract_owner_address.as_ref().unwrap();
@@ -96,6 +93,14 @@ impl EnvironmentVariables {
     }
     pub fn set_kms_key_id(&mut self, value: String) {
         self.kms_key_id = Some(value.clone());
+    }
+    
+    pub fn blockchain_confirmations(&self) -> &usize {
+        let aux = self.blockchain_confirmations.as_ref().unwrap();
+        return aux;
+    }
+    pub fn set_blockchain_confirmations(&mut self, value: usize) {
+        self.blockchain_confirmations = Some(value.clone());
     }
 
 }
@@ -237,7 +242,6 @@ impl Config {
                 let _value = scr.secret_string().unwrap();
             }
         }
-
 
     }
 
