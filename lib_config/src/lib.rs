@@ -1,3 +1,4 @@
+use aws_types::region::Region;
 use aws_config::{meta::region::RegionProviderChain, SdkConfig};
 use dotenv::dotenv;
 use log::{debug, info};
@@ -183,7 +184,8 @@ impl Config {
             let region_provider = RegionProviderChain::default_provider().or_else("eu-central-1");
             config = aws_config::from_env().region(region_provider).load().await;
         } else if env.environment == STAGE_ENV {
-            let region_provider = RegionProviderChain::default_provider().or_else("eu-west-1");
+            let region_provider = RegionProviderChain::first_try( Region::new("eu-west-1"));
+            //let region_provider = RegionProviderChain::first_try(provider) default_provider().or_else("eu-west-1");
             config = aws_config::from_env().region(region_provider).load().await;
         } else {
             panic!(
@@ -231,6 +233,8 @@ impl Config {
                         let secrets: Secrets = serde_json::from_str(value).unwrap(); //_or( panic!("secrets malformed") );
                         m_env.hmac_secret = Some(secrets.hmac_secret);
                         m_env.jwt_token_base = Some(secrets.jwt_token_base);
+
+                        debug!("app secretes found correctly")
                     }
                 }
             }

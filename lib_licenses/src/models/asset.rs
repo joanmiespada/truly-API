@@ -26,6 +26,8 @@ pub struct Asset {
     #[validate(length( max=1000))]
     minted_tx: Option<String>,
 
+    mint_status: MintingStatus
+
 
 }
 
@@ -48,6 +50,7 @@ impl Asset {
             longitude: None,
             license: None,
             minted_tx: None,
+            mint_status: MintingStatus::NeverMinted,
         }
     }
 
@@ -109,12 +112,17 @@ impl Asset {
     pub fn set_license(&mut self, val: &Option<String>) {
         self.license = val.clone()
     }
-    
     pub fn minted_tx(&self) -> &Option<String> {
         &self.minted_tx
     }
     pub fn set_minted_tx(&mut self, val: &Option<String>) {
         self.minted_tx = val.clone()
+    }
+    pub fn mint_status(&self) -> &MintingStatus {
+        &self.mint_status
+    }
+    pub fn set_minted_status(&mut self, val: MintingStatus) {
+        self.mint_status = val.clone()
     }
 
 }
@@ -142,6 +150,49 @@ impl fmt::Display for AssetStatus {
         }
     }
 }
+
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+pub enum MintingStatus {
+    NeverMinted,
+    Scheduled,
+    Started,
+    CompletedSuccessfully,
+    Error
+}
+
+impl fmt::Display for MintingStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            MintingStatus::Scheduled => write!(f, "Scheduled"),
+            MintingStatus::Started => write!(f, "Started"),
+            MintingStatus::CompletedSuccessfully => write!(f, "Completed successfully"),
+            MintingStatus::Error => write!(f, "Error"),
+            MintingStatus::NeverMinted => write!(f, "Never minted")
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct MintinStatusParseError;
+
+impl FromStr for MintingStatus {
+    type Err = MintinStatusParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Scheduled" => Ok(MintingStatus::Scheduled),
+            "Started" => Ok(MintingStatus::Started),
+            "Completed successfully" => Ok(MintingStatus::CompletedSuccessfully),
+            "Error" => Ok(MintingStatus::Error),
+            "Never minted" => Ok(MintingStatus::NeverMinted),
+            _ => Err(MintinStatusParseError)
+            
+        }
+    }
+}
+
+
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseAssetStatusError;
 impl FromStr for AssetStatus {

@@ -6,28 +6,14 @@ use ethers::signers::LocalWallet;
 use ethers::utils::Ganache;
 use ethers_solc::Solc;
 use lib_config::{Config, SECRETS_MANAGER_KEYS, SECRETS_MANAGER_SECRET_KEY};
-use lib_licenses::repositories::assets::AssetRepo;
-use lib_licenses::repositories::keypairs::KeyPairRepo;
-use lib_licenses::repositories::owners::OwnerRepo;
-use lib_licenses::repositories::schema_asset::create_schema_assets;
-use lib_licenses::repositories::schema_keypairs::create_schema_keypairs;
-use lib_licenses::repositories::schema_owners::create_schema_owners;
-use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
-use lib_licenses::services::owners::OwnerService;
-use lib_licenses::{
-    repositories::ganache::{block_status, GanacheRepo},
-    services::nfts::{NFTsManipulation, NFTsService, NTFState},
-};
-
+use lib_licenses::repositories::ganache::block_status;
 use aws_sdk_kms::types::Blob;
 use base64::{engine::general_purpose, Engine as _};
-use serde_json::json;
 use spectral::{assert_that, result::ResultAssertions};
 use std::time::Duration;
 use std::{env, str::FromStr};
 use std::{path::Path, sync::Arc};
 use testcontainers::*;
-use url::Url;
 use web3::{
     contract::{Contract, Options},
     types::{H160, U256},
@@ -238,13 +224,14 @@ pub async fn create_secrets(
     client
         .create_secret()
         .name(SECRETS_MANAGER_SECRET_KEY.to_string())
+        .secret_string(  "to be overwritten".to_string()  )
         .send()
         .await?;
     
     let secrets_json = r#"
     {
-        "HMAC_SECRET" : "localtest_hmac",
-        "JWT_TOKEN_BASE": "localtest_jwt"
+        "HMAC_SECRET" : "localtest_hmac_1234RGsdfg#$%",
+        "JWT_TOKEN_BASE": "localtest_jwt_sd543ERGds235$%^"
     }
     "#;
 
@@ -392,18 +379,31 @@ fn _wei_to_eth(wei_val: U256) -> f64 {
 async fn set_up_secret() -> Result<(), Box<dyn std::error::Error>> {
     env::set_var("RUST_LOG", "debug");
     env::set_var("ENVIRONMENT", "development");
-    //env::set_var("ENVIRONMENT", "production");
 
     env_logger::builder().is_test(true).init();
 
+    let docker = clients::Cli::default();
+
+    let mut local_stack = images::local_stack::LocalStack::default();
+    local_stack.set_services("secretsmanager,kms");
+    let node = docker.run(local_stack);
+    let host_port = node.get_host_port_ipv4(4566);
+
+    let shared_config = build_local_stack_connection(host_port).await;
+
     let mut config = Config::new();
-    config.setup_with_secrets().await;
+    config.setup().await;
+    config.set_aws_config(&shared_config);
+
+    let keys_client = aws_sdk_kms::client::Client::new(&shared_config);
+    let kms_id = create_key(&keys_client).await?;
+    let secrets_client = aws_sdk_secretsmanager::client::Client::new(&shared_config);
+    create_secrets(&secrets_client).await?;
 
     let secret: &str = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // secret key example
-                                                                                           //let kms_id: &str = "2d460536-1dc9-436c-a97b-0bad3f8906c7";
-    let kms_id: &str = "336d7e5e-9d0e-44c6-8ebb-2bb792bb79d0";
-    store_secret_key(secret, kms_id, &config).await?;
-    let res = restore_secret_key(kms_id, &config).await?;
+    
+    store_secret_key(secret, kms_id.as_str(), &config).await?;
+    let res = restore_secret_key(kms_id.as_str(), &config).await?;
 
     assert_eq!(secret, res);
 

@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::models::asset::MintingStatus;
 use crate::repositories::ganache::{GanacheRepo, NFTsRepository};
 use crate::repositories::keypairs::{KeyPairRepo, KeyPairRepository};
 use crate::services::assets::{AssetManipulation, AssetService};
@@ -13,7 +14,7 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 
 #[async_trait]
 pub trait NFTsManipulation {
-    async fn add(
+    async fn try_mint(
         &self,
         asset_id: &Uuid,
         user_id: &String,
@@ -50,7 +51,7 @@ impl NFTsService {
 #[async_trait]
 impl NFTsManipulation for NFTsService {
     #[tracing::instrument()]
-    async fn add(
+    async fn try_mint(
         &self,
         asset_id: &Uuid,
         user_id: &String,
@@ -65,20 +66,24 @@ impl NFTsManipulation for NFTsService {
 
         let user_wallet_address = self.keys_repo.get_or_create(user_id).await?;
 
-        let transaction = self
+        self.asset_service.mint_status(asset_id, &None, MintingStatus::Started ).await?;
+
+        let transaction_op = self
             .blockchain
             .add(asset_id, &user_wallet_address, &hash_file, price)
-            .await?;
+            .await;
 
-        let stamp_op = self.asset_service.minted(asset_id, &transaction).await;
-        match stamp_op {
-            Err(e) => {
-                //TODO! implement dead queue letter!!!!
-                return Err(e);
+        match transaction_op{
+            Err(e)=>{
+                self.asset_service.mint_status(asset_id, &Some(e.to_string()), MintingStatus::Error ).await?;
+                return Err(e.into());
+            },
+            Ok(transaction)=>{
+                self.asset_service.mint_status(asset_id, &Some(transaction.clone()), MintingStatus::CompletedSuccessfully ).await?;
+                Ok(transaction)
             }
-            Ok(_) => {}
         }
-        Ok(transaction)
+
     }
 
     #[tracing::instrument()]
@@ -92,13 +97,7 @@ impl NFTsManipulation for NFTsService {
         };
         Ok(res)
     }
-
-
-    // async fn create_account(&self)-> ResultE<(String, String, String)>{
-
-    //     let aux = self.blockchain.create_account().await?;
-    //     Ok(("".to_string(),"".to_string(),"".to_string()))
-    // }
+    
 }
 
 impl Clone for NFTsService {

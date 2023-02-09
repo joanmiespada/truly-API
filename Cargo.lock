@@ -3223,6 +3223,7 @@ dependencies = [
  "aws-config",
  "aws-sdk-dynamodb",
  "aws-sdk-secretsmanager",
+ "aws-types",
  "dotenv",
  "env_logger",
  "envy",

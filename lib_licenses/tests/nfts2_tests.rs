@@ -32,9 +32,6 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
 
     let docker = clients::Cli::default();
 
-    //let node = docker.run(images::dynamodb_local::DynamoDb::default());
-    //let host_port = node.get_host_port_ipv4(8000);
-
     let mut local_stack = images::local_stack::LocalStack::default();
     local_stack.set_services("dynamodb,secretsmanager,kms");
     let node = docker.run(local_stack);
@@ -60,7 +57,7 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
     create_secrets(&secrets_client).await?;
     let keys_client = aws_sdk_kms::Client::new(&shared_config);
     let new_key_id = create_key(&keys_client).await?;
-    env::set_var("KMS_KEY_ID", new_key_id);
+    env::set_var("KMS_KEY_ID", new_key_id.clone());
 
     // set up config for truly app
     let mut config = Config::new();
@@ -79,10 +76,6 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
     let asset_service = AssetService::new(repo_as);
 
     let repo_keys = KeyPairRepo::new(&config.clone());
-
-    //restore connection dependencies to work with localstack
-    config = Config::new();
-    config.setup_with_secrets().await;
 
 
     let mut new_configuration = config.env_vars().clone();
@@ -123,26 +116,15 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
     // let contract_owner_address  = format!("{:#?}", contract_owner_wallet.address());
 
     //Web3
-    let secret: &str = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // secret key
+    let secret: &str = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // example fake secret key
     let key_id = config.env_vars().kms_key_id();
     store_secret_key(secret, key_id, &config).await?;
-    let contract_owner_address = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1".to_string();
-    //let contract_owner_private_key = SecretKey::from_str(secret).unwrap();
-    //let contract_owner_private_key = SecretKeyRef::new(&contract_owner_private_key);
-    //let p :SecretKey = SecretKey::from_str(private_key_0).unwrap();
-    //let p_aux: LocalWallet = LocalWallet::from_str(private_key_0 ).unwrap(); //  p.clone().into();
-
-    // let wallet: LocalWallet = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
-    //     .parse::<LocalWallet>()?
-    //     .with_chain_id(....);
-
-    //let contract_owner_private_key = format!("{:?}", ganache.keys()[0] );
-
+    let contract_owner_address = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1".to_string(); //address based on the previous fake secret key
+    
     //create contract and deploy to blockchain
     let url = ganache.endpoint();
 
-    let contract_address =
-        deploy_contract_web3(url.as_str(), contract_owner_address.clone()).await?;
+    let contract_address = deploy_contract_web3(url.as_str(), contract_owner_address.clone()).await?;
     //let contract_address = deploy_contract_ethers(url.as_str(), &contract_owner_wallet).await?;
 
     new_configuration.set_blockchain_url(url.clone());
@@ -160,21 +142,18 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
         owner_service.clone(),
     );
 
-    let price: u64 = 2000;
+    let asset_price: u64 = 2000;
 
-    let mint_op = nft_service.add(as1.id(), &user_id, &price).await;
-
+    let mint_op = nft_service.try_mint(as1.id(), &user_id, &asset_price).await;
     assert_that!(&mint_op).is_ok();
     let tx_in_chain = mint_op.unwrap();
 
     let check_op = nft_service.get(as1.id()).await;
-
     assert_that!(&check_op).is_ok();
-
     let content = check_op.unwrap();
 
     assert_eq!(content.hash_file, as1.hash().as_deref().unwrap());
-    assert_eq!(content.price, price);
+    assert_eq!(content.price, asset_price);
     assert_eq!(content.state, NTFState::Active);
 
     let tx_op = asset_service.get_by_id(as1.id()).await;

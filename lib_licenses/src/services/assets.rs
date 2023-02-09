@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::models::asset::{Asset, AssetStatus};
+use crate::models::asset::{Asset, AssetStatus, MintingStatus};
 use crate::repositories::assets::{AssetRepo, AssetRepository};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -21,7 +21,7 @@ pub trait AssetManipulation {
     async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset>;
     async fn add(&self, creation_asset: &CreatableFildsAsset, user_id: &String) -> ResultE<Uuid>;
     async fn update(&self, asset_id: &Uuid, asset: &UpdatableFildsAsset) -> ResultE<()>;
-    async fn minted(&self, asset_id: &Uuid, transaction: &String) -> ResultE<()>;
+    async fn mint_status(&self, id: &Uuid, transaction: &Option<String>, sts: MintingStatus) -> ResultE<()>;
 }
 
 #[derive(Debug)]
@@ -121,15 +121,19 @@ impl AssetManipulation for AssetService {
     }
 
     #[tracing::instrument()]
-    async fn minted(&self, id: &Uuid, transaction: &String) -> ResultE<()> {
+    async fn mint_status(&self, id: &Uuid, transaction: &Option<String>, sts: MintingStatus) -> ResultE<()> {
         let dbasset = self.repository.get_by_id(id).await?;
         let mut res: Asset = dbasset.clone();
 
-        res.set_minted_tx(&Some(transaction.to_owned()));
+        //res.set_minted_tx(&Some(transaction.to_owned()));
+        let aux = transaction.to_owned();
+        res.set_minted_tx( &aux);
+        res.set_minted_status(sts);
 
         self.repository.update(&id, &res).await?;
         Ok(())
     }
+    
 
     #[tracing::instrument()]
     async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>> {

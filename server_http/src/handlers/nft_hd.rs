@@ -21,32 +21,12 @@ pub async fn add_nft(req: HttpRequest,state: web::Data<AppState>, payload: web::
 
     //let user_address: String;
     let user_id = get_user_id(&req);
-
-    // let user_op = user_service.get_by_user_id(&user_id).await;
-    // match user_op {
-    //     Err(e) => {
-    //         if let Some(m) = e.downcast_ref::<UserDynamoDBError>() {
-    //             return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
-    //         } else if let Some(m) = e.downcast_ref::<UserNoExistsError>() {
-    //             return build_resp(m.to_string(), StatusCode::NO_CONTENT);
-
-    //         } else {
-    //              return build_resp(
-    //                  "unknown error finding the user".to_string(),
-    //                  StatusCode::INTERNAL_SERVER_ERROR,
-    //              );
-    //         }
-    //     }
-    //     Ok(user) => {
-    //         user_address = user.wallet_address().to_owned().unwrap();
-    //     }
-    // }
+    
 
     let op_res = blockchain_service
-        .add(
+        .try_mint(
             &payload.asset_id,
             &user_id,
-            //&user_address,
             &payload.price,
         )
         .await;

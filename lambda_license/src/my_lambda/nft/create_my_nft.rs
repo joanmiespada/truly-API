@@ -77,7 +77,7 @@ pub async fn create_my_nft(
     //     },
     // }
 
-    let op_res = blockchain_service.add(
+    let op_res = blockchain_service.try_mint(
         &asset_id, 
         user_id, 
         //&user_address,
