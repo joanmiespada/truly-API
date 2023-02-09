@@ -36,4 +36,5 @@ spectral = "0.6.0"
 testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack"  }
 tokio = { version="1.24.2", features=["full"]}
 lib_config = { path = "../lib_config" }
+aws-sdk-secretsmanager = "0.24.0"
 

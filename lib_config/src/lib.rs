@@ -1,11 +1,12 @@
-
 use aws_config::{meta::region::RegionProviderChain, SdkConfig};
 use dotenv::dotenv;
+use log::{debug, info};
 use serde::Deserialize;
 
 pub static ENV_VAR_ENVIRONMENT: &str = "ENVIRONMENT";
 pub static DEV_ENV: &str = "development";
 pub static PROD_ENV: &str = "production";
+pub static STAGE_ENV: &str = "stage";
 
 pub const SECRETS_MANAGER_KEYS: &str = "truly/api/secrets";
 pub const SECRETS_MANAGER_SECRET_KEY: &str = "truly/api/secret_key";
@@ -13,7 +14,7 @@ pub const SECRETS_MANAGER_SECRET_KEY: &str = "truly/api/secret_key";
 #[derive(Deserialize, Clone, Debug)]
 pub struct EnvironmentVariables {
     jwt_token_base: Option<String>,
-    jwt_token_time_exp_hours : Option<String>, 
+    jwt_token_time_exp_hours: Option<String>,
     environment: String,
     hmac_secret: Option<String>,
     rust_log: String,
@@ -25,16 +26,15 @@ pub struct EnvironmentVariables {
     contract_owner_address: Option<String>,
 
     kms_key_id: Option<String>,
-    blockchain_confirmations: Option<usize>
+    blockchain_confirmations: Option<usize>,
 }
 
 impl EnvironmentVariables {
-
     pub fn rust_log(&self) -> &String {
         let aux = &self.rust_log;
         return aux;
     }
-    
+
     pub fn environment(&self) -> &String {
         let aux = &self.environment;
         return aux;
@@ -57,7 +57,7 @@ impl EnvironmentVariables {
         return aux;
     }
 
-    pub fn jwt_token_time_exp_hours (&self) -> &String {
+    pub fn jwt_token_time_exp_hours(&self) -> &String {
         let aux = self.jwt_token_time_exp_hours.as_ref().unwrap();
         return aux;
     }
@@ -66,11 +66,11 @@ impl EnvironmentVariables {
         let aux = self.blockchain_url.as_ref().unwrap();
         return aux;
     }
-    
+
     pub fn set_blockchain_url(&mut self, new_url: String) {
         self.blockchain_url = Some(new_url.clone());
     }
-    
+
     pub fn contract_address(&self) -> &String {
         let aux = self.contract_address.as_ref().unwrap();
         return aux;
@@ -86,7 +86,7 @@ impl EnvironmentVariables {
     pub fn set_contract_owner_address(&mut self, value: String) {
         self.contract_owner_address = Some(value.clone());
     }
-    
+
     pub fn kms_key_id(&self) -> &String {
         let aux = self.kms_key_id.as_ref().unwrap();
         return aux;
@@ -94,7 +94,7 @@ impl EnvironmentVariables {
     pub fn set_kms_key_id(&mut self, value: String) {
         self.kms_key_id = Some(value.clone());
     }
-    
+
     pub fn blockchain_confirmations(&self) -> &usize {
         let aux = self.blockchain_confirmations.as_ref().unwrap();
         return aux;
@@ -102,7 +102,6 @@ impl EnvironmentVariables {
     pub fn set_blockchain_confirmations(&mut self, value: usize) {
         self.blockchain_confirmations = Some(value.clone());
     }
-
 }
 
 #[derive(Clone, Debug)]
@@ -117,7 +116,6 @@ struct Secrets {
     hmac_secret: String,
     #[serde(rename = "JWT_TOKEN_BASE")]
     jwt_token_base: String,
-
 }
 
 impl Config {
@@ -144,7 +142,9 @@ impl Config {
                 e.to_string()
             ),
             Ok(env) => {
+                info!("environment var: {}", env);
                 if env == DEV_ENV {
+                    debug!("loading env vars from .env file");
                     dotenv().ok();
                 }
             }
@@ -154,7 +154,10 @@ impl Config {
             Ok(env_vars) => {
                 self.env_variables = Some(env_vars.clone());
             }
-            Err(error) => panic!("Environment variables are missing {:#?}", error),
+            Err(error) => panic!(
+                "some mandatory environment variables are missing {:#?}",
+                error
+            ),
         }
 
         let env = self.env_variables.as_ref().unwrap();
@@ -179,6 +182,9 @@ impl Config {
         } else if env.environment == PROD_ENV {
             let region_provider = RegionProviderChain::default_provider().or_else("eu-central-1");
             config = aws_config::from_env().region(region_provider).load().await;
+        } else if env.environment == STAGE_ENV {
+            let region_provider = RegionProviderChain::default_provider().or_else("eu-west-1");
+            config = aws_config::from_env().region(region_provider).load().await;
         } else {
             panic!(
                 "environment variable ENVIRONMENT configured wrongly: {}",
@@ -186,15 +192,13 @@ impl Config {
             )
         }
         self.aws_config = Some(config);
-
     }
-
 
     pub fn aws_config(&self) -> &SdkConfig {
         let aux = self.aws_config.as_ref().unwrap();
         return aux;
     }
-    pub fn set_aws_config(&mut self, cnf: &SdkConfig ) {
+    pub fn set_aws_config(&mut self, cnf: &SdkConfig) {
         //let aux = self.aws_config.as_ref().unwrap();
         //return aux;
         self.aws_config = Some(cnf.clone());
@@ -203,46 +207,102 @@ impl Config {
         let aux = self.env_variables.as_ref().unwrap();
         return aux;
     }
-    pub fn set_env_vars(&mut self, new_data: &EnvironmentVariables ) {
-        self.env_variables = Some(new_data.clone() )
+    pub fn set_env_vars(&mut self, new_data: &EnvironmentVariables) {
+        self.env_variables = Some(new_data.clone())
+    }
+
+    pub async fn load_secret(&mut self, secret_id: &str) {
+        let client = aws_sdk_secretsmanager::Client::new(self.aws_config());
+        match secret_id {
+            SECRETS_MANAGER_KEYS => {
+                let resp = client
+                    .get_secret_value()
+                    .secret_id(SECRETS_MANAGER_KEYS)
+                    .send()
+                    .await;
+
+                match resp {
+                    Err(e) => {
+                        panic!("secrets couldn't find: {}", e.to_string())
+                    }
+                    Ok(scr) => {
+                        let value = scr.secret_string().unwrap();
+                        let mut m_env = self.env_variables.as_mut().unwrap();
+                        let secrets: Secrets = serde_json::from_str(value).unwrap(); //_or( panic!("secrets malformed") );
+                        m_env.hmac_secret = Some(secrets.hmac_secret);
+                        m_env.jwt_token_base = Some(secrets.jwt_token_base);
+                    }
+                }
+            }
+            SECRETS_MANAGER_SECRET_KEY => {
+                //check secret key is stored and available, but don't stored in memory!
+                let resp = client
+                    .get_secret_value()
+                    .secret_id(SECRETS_MANAGER_SECRET_KEY)
+                    .send()
+                    .await;
+
+                match resp {
+                    Err(e) => {
+                        panic!(
+                            "secret key for contract owner couldn't find: {}",
+                            e.to_string()
+                        )
+                    }
+                    Ok(scr) => {
+                        debug!("secret key found correctly!");
+                        let _value = scr.secret_string().unwrap();
+                    }
+                }
+            }
+            _ => {
+                panic!("secret code {} not found",secret_id)
+            }
+        }
     }
 
     pub async fn load_secrets(&mut self) {
-        let client = aws_sdk_secretsmanager::Client::new(self.aws_config());
-        let mut resp = client
-            .get_secret_value()
-            .secret_id(SECRETS_MANAGER_KEYS)
-            .send()
-            .await;
 
-        match resp {
-            Err(e) => {
-                panic!("secrets couldn't find: {}", e.to_string())
-            }
-            Ok(scr) => {
-                let value = scr.secret_string().unwrap();
-                let mut m_env = self.env_variables.as_mut().unwrap();
-                let secrets: Secrets = serde_json::from_str(value).unwrap(); //_or( panic!("secrets malformed") );
-                m_env.hmac_secret = Some(secrets.hmac_secret);
-                m_env.jwt_token_base = Some(secrets.jwt_token_base);
-            }
-        }
-        //check secret key is stored
-        resp = client
-            .get_secret_value()
-            .secret_id( SECRETS_MANAGER_SECRET_KEY)
-            .send()
-            .await;
+        self.load_secret(SECRETS_MANAGER_KEYS).await;
+        self.load_secret(SECRETS_MANAGER_SECRET_KEY).await;
 
-        match resp {
-            Err(e) => {
-                panic!("secret key for contract owner couldn't find: {}", e.to_string())
-            }
-            Ok(scr) => {
-                let _value = scr.secret_string().unwrap();
-            }
-        }
+        // let client = aws_sdk_secretsmanager::Client::new(self.aws_config());
+        // let mut resp = client
+        //     .get_secret_value()
+        //     .secret_id(SECRETS_MANAGER_KEYS)
+        //     .send()
+        //     .await;
 
+        // match resp {
+        //     Err(e) => {
+        //         panic!("secrets couldn't find: {}", e.to_string())
+        //     }
+        //     Ok(scr) => {
+        //         let value = scr.secret_string().unwrap();
+        //         let mut m_env = self.env_variables.as_mut().unwrap();
+        //         let secrets: Secrets = serde_json::from_str(value).unwrap(); //_or( panic!("secrets malformed") );
+        //         m_env.hmac_secret = Some(secrets.hmac_secret);
+        //         m_env.jwt_token_base = Some(secrets.jwt_token_base);
+        //     }
+        // }
+        // //check secret key is stored and available, but don't stored in memory!
+        // resp = client
+        //     .get_secret_value()
+        //     .secret_id(SECRETS_MANAGER_SECRET_KEY)
+        //     .send()
+        //     .await;
+
+        // match resp {
+        //     Err(e) => {
+        //         panic!(
+        //             "secret key for contract owner couldn't find: {}",
+        //             e.to_string()
+        //         )
+        //     }
+        //     Ok(scr) => {
+        //         debug!("secret key found correctly!");
+        //         let _value = scr.secret_string().unwrap();
+        //     }
+        // }
     }
-
 }
