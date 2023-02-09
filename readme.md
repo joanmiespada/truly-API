@@ -5,6 +5,7 @@ Rust toolchain update
 
 # Localstack status
 - http://localhost:4566/health
+
 # Create secrets
 
 This section contains all dependencies that won't be terraformed. 

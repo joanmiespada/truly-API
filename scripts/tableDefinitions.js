@@ -78,39 +78,40 @@ var schemas = [
         ]
 
     },
-    {
+    // {
 
-        "TableName": config.dbSchemaNames.tokens,
-        "BillingMode": "PAY_PER_REQUEST",
-        "AttributeDefinitions": [
-            {
-                "AttributeName": "tokenID",
-                "AttributeType": "S"
-            },
-            {
-                "AttributeName": "creationTime",
-                "AttributeType": "S"
-            },
-        ],
-        "KeySchema": [
-            {
-                "AttributeName": "tokenID",
-                "KeyType": "HASH"
-            },
-            {
-                "AttributeName": "creationTime",
-                "KeyType": "RANGE"
-            },
-        ],
+    //     "TableName": config.dbSchemaNames.tokens,
+    //     "BillingMode": "PAY_PER_REQUEST",
+    //     "AttributeDefinitions": [
+    //         {
+    //             "AttributeName": "tokenID",
+    //             "AttributeType": "S"
+    //         },
+    //         {
+    //             "AttributeName": "creationTime",
+    //             "AttributeType": "S"
+    //         },
+    //     ],
+    //     "KeySchema": [
+    //         {
+    //             "AttributeName": "tokenID",
+    //             "KeyType": "HASH"
+    //         },
+    //         {
+    //             "AttributeName": "creationTime",
+    //             "KeyType": "RANGE"
+    //         },
+    //     ],
         
-        "Tags": [
-            {
-                "Key": "project",
-                "Value": "truly"
-            }
-        ]
+    //     "Tags": [
+    //         {
+    //             "Key": "project",
+    //             "Value": "truly"
+    //         }
+    //     ]
 
-    },{
+    // },
+    {
 
         "TableName": config.dbSchemaNames.tagsByToken,
         "BillingMode": "PAY_PER_REQUEST",
@@ -142,39 +143,40 @@ var schemas = [
             }
         ]
 
-    },{
+    },
+    // {
 
-        "TableName": config.dbSchemaNames.owners,
-        "BillingMode": "PAY_PER_REQUEST",
-        "AttributeDefinitions": [
-            {
-                "AttributeName": "userID",
-                "AttributeType": "S"
-            },
-            {
-                "AttributeName": "tokenID",
-                "AttributeType": "S"
-            },
-        ],
-        "KeySchema": [
-            {
-                "AttributeName": "userID",
-                "KeyType": "HASH"
-            },
-            {
-                "AttributeName": "tokenID",
-                "KeyType": "RANGE"
-            },
-        ],
+    //     "TableName": config.dbSchemaNames.owners,
+    //     "BillingMode": "PAY_PER_REQUEST",
+    //     "AttributeDefinitions": [
+    //         {
+    //             "AttributeName": "userID",
+    //             "AttributeType": "S"
+    //         },
+    //         {
+    //             "AttributeName": "tokenID",
+    //             "AttributeType": "S"
+    //         },
+    //     ],
+    //     "KeySchema": [
+    //         {
+    //             "AttributeName": "userID",
+    //             "KeyType": "HASH"
+    //         },
+    //         {
+    //             "AttributeName": "tokenID",
+    //             "KeyType": "RANGE"
+    //         },
+    //     ],
         
-        "Tags": [
-            {
-                "Key": "project",
-                "Value": "truly"
-            }
-        ]
+    //     "Tags": [
+    //         {
+    //             "Key": "project",
+    //             "Value": "truly"
+    //         }
+    //     ]
 
-    }
+    // }
 ]
 
 export { schemas }

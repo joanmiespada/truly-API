@@ -19,16 +19,10 @@ use chrono::{
     Local,
 };
 
-static USERS_TABLE_NAME: &str = "truly_users";
-static USERS_TABLE_INDEX_EMAIL: &str = "email";
-static USERS_TABLE_INDEX_DEVICE: &str = "device";
-static USERS_TABLE_INDEX_WALLETADDRESS: &str = "walletAddress";
-static EMAIL_FIELD_NAME: &str = "email";
+use super::schema_user::{USERS_TABLE_NAME, USERID_FIELD_NAME_PK, EMAIL_FIELD_NAME, USERS_TABLE_INDEX_EMAIL, DEVICE_FIELD_NAME, USERS_TABLE_INDEX_DEVICE};
+
 static PASSWORD_FIELD_NAME: &str = "password";
-//static PASSWORD_SALT_FIELD_NAME: &str = "salt";
-static DEVICE_FIELD_NAME: &str = "device";
-static WALLETADDRESS_FIELD_NAME: &str = "walletAddress";
-static USERID_FIELD_NAME_PK: &str = "userID";
+//static WALLETADDRESS_FIELD_NAME: &str = "walletAddress";
 static CREATIONTIME_FIELD_NAME: &str = "creationTime";
 static LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
 static ROLES_FIELD_NAME: &str = "userRoles";
@@ -140,24 +134,24 @@ impl UsersRepo {
             }
         }
 
-        match user.wallet_address() {
-            None => {}
-            Some(wallet_address) => {
-                let res = self
-                    .get_by_filter(
-                        WALLETADDRESS_FIELD_NAME,
-                        wallet_address,
-                        USERS_TABLE_INDEX_WALLETADDRESS,
-                    )
-                    .await?;
-                if res.into_iter().filter(|x| *x != *user.user_id()).count() > 0 {
-                    return Err(UserAlreadyExistsError(
-                        "wallet address already exists".to_string(),
-                    )
-                    .into());
-                }
-            }
-        }
+        // match user.wallet_address() {
+        //     None => {}
+        //     Some(wallet_address) => {
+        //         let res = self
+        //             .get_by_filter(
+        //                 WALLETADDRESS_FIELD_NAME,
+        //                 wallet_address,
+        //                 USERS_TABLE_INDEX_WALLETADDRESS,
+        //             )
+        //             .await?;
+        //         if res.into_iter().filter(|x| *x != *user.user_id()).count() > 0 {
+        //             return Err(UserAlreadyExistsError(
+        //                 "wallet address already exists".to_string(),
+        //             )
+        //             .into());
+        //         }
+        //     }
+        // }
 
         return Ok(true);
     }
@@ -215,11 +209,11 @@ impl UserRepository for UsersRepo {
             }
         }
 
-        let wallet_address_av = AttributeValue::S(
-            user.wallet_address()
-                .clone()
-                .unwrap_or_else(|| NULLABLE.to_string()),
-        );
+        // let wallet_address_av = AttributeValue::S(
+        //     user.wallet_address()
+        //         .clone()
+        //         .unwrap_or_else(|| NULLABLE.to_string()),
+        // );
         let roles_av = AttributeValue::Ss(UserRoles::to_vec_str(user.roles()).clone());
 
         let status_av = AttributeValue::S(user.status().to_string());
@@ -231,7 +225,7 @@ impl UserRepository for UsersRepo {
             .item(USERID_FIELD_NAME_PK, user_id_av)
             .item(CREATIONTIME_FIELD_NAME, creation_time_av)
             .item(LASTUPDATETIME_FIELD_NAME, update_time_av)
-            .item(WALLETADDRESS_FIELD_NAME, wallet_address_av)
+            //.item(WALLETADDRESS_FIELD_NAME, wallet_address_av)
             .item(EMAIL_FIELD_NAME, email_av)
             .item(PASSWORD_FIELD_NAME, password_av)
             .item(DEVICE_FIELD_NAME, device_av)
@@ -394,7 +388,7 @@ impl UserRepository for UsersRepo {
         let mut update_express = "set ".to_string();
         update_express.push_str(format!("{0} = :device, ", DEVICE_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :email, ", EMAIL_FIELD_NAME).as_str());
-        update_express.push_str(format!("{0} = :wa, ", WALLETADDRESS_FIELD_NAME).as_str());
+        //update_express.push_str(format!("{0} = :wa, ", WALLETADDRESS_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :lastup, ", LASTUPDATETIME_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :r_les, ", ROLES_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :_status ", STATUS_FIELD_NAME).as_str());
@@ -490,13 +484,13 @@ fn mapping_from_doc_to_user(doc: &HashMap<String, AttributeValue>, user: &mut Us
             user.set_device(device.as_s().unwrap());
         }
     }
-    let wallet_address_t = doc.get(WALLETADDRESS_FIELD_NAME);
-    match wallet_address_t {
-        None => {}
-        Some(wallet_address) => {
-            user.set_wallet_address(wallet_address.as_s().unwrap());
-        }
-    }
+    // let wallet_address_t = doc.get(WALLETADDRESS_FIELD_NAME);
+    // match wallet_address_t {
+    //     None => {}
+    //     Some(wallet_address) => {
+    //         user.set_wallet_address(wallet_address.as_s().unwrap());
+    //     }
+    // }
     let roles_t = doc.get(ROLES_FIELD_NAME);
     match roles_t {
         None => {}
