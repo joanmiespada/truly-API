@@ -1,6 +1,6 @@
 use lambda_http::RequestExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
-use lib_config::Config;
+use lib_config::config::Config;
 use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
 use lib_licenses::services::owners::OwnerService;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};

@@ -21,7 +21,7 @@ pub struct LoginResponse {
 
 pub async fn login(state: web::Data<AppState>, payload: web::Json<LoginUser>) -> impl Responder {
     let user_service = &state.user_service;
-    let conf: &lib_config::Config = &state.app_config;
+    let conf: &lib_config::config::Config = &state.app_config;
 
     let op_res = user_service
         .login(&payload.device, &payload.email, &payload.password)

@@ -1,5 +1,5 @@
 use lambda_http::service_fn;
-use lib_config::Config;
+use lib_config::config::Config;
 use lib_licenses::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::repositories::{assets::AssetRepo, ganache::GanacheRepo};

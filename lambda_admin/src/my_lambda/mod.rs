@@ -1,5 +1,5 @@
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
-use lib_config::Config;
+use lib_config::config::Config;
 use lib_users::models::user::UserRoles;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};

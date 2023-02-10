@@ -48,7 +48,7 @@ async fn add_owners() {
     
     assert_that(&creation).is_ok();
 
-    let mut conf = lib_config::Config::new();
+    let mut conf = lib_config::config::Config::new();
     conf.set_aws_config( &shared_config); 
 
     let repo = OwnerRepo::new(&conf);

@@ -1,5 +1,5 @@
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
-use lib_config::Config;
+use lib_config::config::Config;
 use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError};
 use lib_users::services::users::{UserManipulation, UsersService};
 use serde_json::json;

@@ -5,7 +5,7 @@ use ethers::providers::{Http, Provider};
 use ethers::signers::LocalWallet;
 use ethers::utils::Ganache;
 use ethers_solc::Solc;
-use lib_config::{Config, SECRETS_MANAGER_KEYS, SECRETS_MANAGER_SECRET_KEY};
+use lib_config::{config::Config, secrets::SECRETS_MANAGER_KEYS, secrets::SECRETS_MANAGER_SECRET_KEY};
 use lib_licenses::repositories::ganache::block_status;
 use aws_sdk_kms::types::Blob;
 use base64::{engine::general_purpose, Engine as _};

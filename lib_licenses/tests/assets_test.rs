@@ -47,7 +47,7 @@ async fn add_assets() {
 
     assert_that(&creation).is_ok();
 
-    let mut conf = lib_config::Config::new();
+    let mut conf = lib_config::config::Config::new();
     conf.set_aws_config(&shared_config);
 
     let repo = AssetRepo::new(&conf);
@@ -111,7 +111,7 @@ async fn check_ownership() {
     creation = create_schema_owners(&client).await;
     assert_that(&creation).is_ok();
 
-    let mut conf = lib_config::Config::new();
+    let mut conf = lib_config::config::Config::new();
     conf.set_aws_config(&shared_config);
 
     let repo = AssetRepo::new(&conf);

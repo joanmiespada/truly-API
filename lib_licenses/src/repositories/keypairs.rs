@@ -9,7 +9,7 @@ use chrono::{
     prelude::{DateTime, Utc},
     Local,
 };
-use lib_config::Config;
+use lib_config::config::Config;
 use secp256k1::rand::{rngs, SeedableRng};
 use web3::signing::keccak256;
 //use rand::{prelude::*, SeedableRng};

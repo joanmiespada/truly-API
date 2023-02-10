@@ -7,7 +7,7 @@ use lambda_http::{
 };
 use serde_json::json;
 use tracing::{instrument};
-use lib_config::Config;
+use lib_config::config::Config;
 use lib_users::services::users::UsersService;
 use login::login;
 use self::signup::create_basic_user;

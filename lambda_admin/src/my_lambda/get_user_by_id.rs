@@ -6,7 +6,7 @@ use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError};
 use lib_users::services::users::{UsersService, UserManipulation};
 use serde_json::json;
 use tracing::instrument;
-use lib_config::Config;
+use lib_config::config::Config;
 
 use super::build_resp;
 

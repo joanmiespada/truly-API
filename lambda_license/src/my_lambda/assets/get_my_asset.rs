@@ -1,5 +1,5 @@
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
-use lib_config::Config;
+use lib_config::config::Config;
 use lib_licenses::{services::assets::{AssetManipulation, AssetService}, errors::asset::AssetDynamoDBError};
 use lib_licenses::{services::owners::{OwnerService}, errors::owner::OwnerNoExistsError };
 use serde_json::json;

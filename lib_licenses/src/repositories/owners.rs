@@ -11,7 +11,7 @@ use chrono::{
     prelude::{DateTime, Utc},
     Local,
 };
-use lib_config::Config;
+use lib_config::config::Config;
 
 use super::schema_owners::{OWNER_ASSET_ID_FIELD_PK, OWNERS_TABLE_NAME, OWNER_USER_ID_FIELD_PK};
 pub const CREATIONTIME_FIELD_NAME: &str = "creationTime";

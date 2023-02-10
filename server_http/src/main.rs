@@ -7,7 +7,7 @@ use actix_web::web;
 use actix_web::{http::header, App, HttpServer};
 use handlers::appstate::AppState;
 use handlers::{asset_hd, auth_middleware, jwt_middleware, login_hd, nft_hd, user_my_hd, users_hd};
-use lib_config::Config;
+use lib_config::config::Config;
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;

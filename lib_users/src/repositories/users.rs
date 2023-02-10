@@ -4,7 +4,7 @@ use argon2::{self};
 
 use uuid::Uuid;
 
-use lib_config::{Config, EnvironmentVariables};
+use lib_config::{ config::Config, environment::EnvironmentVariables};
 use crate::errors::users::{
     UserDynamoDBError, UserAlreadyExistsError, UserNoExistsError, UserParamNotAccepted,
 };

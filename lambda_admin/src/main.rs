@@ -1,5 +1,5 @@
 use lambda_http::service_fn;
-use lib_config::Config;
+use lib_config::config::Config;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
 use my_lambda::{ error::ApiLambdaAdminUserError, function_handler};

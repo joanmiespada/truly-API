@@ -5,7 +5,7 @@ use lambda_http::{
 use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError};
 use lib_users::services::users::{UsersService, UserManipulation, PromoteUser};
 use tracing::instrument;
-use lib_config::Config;
+use lib_config::config::Config;
 
 use validator::{ ValidationError};
 use super::build_resp;

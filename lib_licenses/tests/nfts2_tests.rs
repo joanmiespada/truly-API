@@ -1,7 +1,7 @@
 use crate::build_local_stack_connection;
 use crate::nfts_tests::{store_secret_key, deploy_contract_web3, MNEMONIC_TEST,create_secrets,create_key};
 use ethers::utils::Ganache;
-use lib_config::Config;
+use lib_config::config::Config;
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;

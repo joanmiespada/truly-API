@@ -15,7 +15,7 @@ use chrono::{
     prelude::{DateTime, Utc},
     Local,
 };
-use lib_config::Config;
+use lib_config::config::Config;
 
 use super::owners::mapping_from_doc_to_owner;
 use super::schema_asset::{ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK};
@@ -513,5 +513,5 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
     let status_t = doc.get(STATUS_FIELD_NAME).unwrap().as_s().unwrap();
     let aux = AssetStatus::from_str(status_t).unwrap();
     asset.set_state(&aux);
-    
+
 }

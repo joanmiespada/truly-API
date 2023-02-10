@@ -4,7 +4,7 @@ use lib_users::repositories::schema_user::create_schema_users;
 use lib_users::services::users::{UsersService, UserManipulation };
 use lib_users::services::login::LoginOps;
 use lib_users::repositories::users::UsersRepo;
-use lib_config::{Config, SECRETS_MANAGER_KEYS};
+use lib_config::{config::Config, secrets::SECRETS_MANAGER_KEYS};
 use spectral::{assert_that, result::ResultAssertions};
 use testcontainers::*;
 use aws_config::SdkConfig;
