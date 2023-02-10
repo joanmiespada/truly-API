@@ -1,4 +1,3 @@
-use crate::build_local_stack_connection;
 use aws_sdk_kms::model::KeyUsageType;
 use ethers::prelude::*;
 use ethers::providers::{Http, Provider};
@@ -18,6 +17,7 @@ use web3::{
     contract::{Contract, Options},
     types::{H160, U256},
 };
+use lib_config::infra::build_local_stack_connection;
 
 pub const MNEMONIC_TEST: &str =
     "myth like bonus scare over problem client lizard pioneer submit female collect"; //from $ganache --deterministic command

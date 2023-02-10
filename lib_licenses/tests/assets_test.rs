@@ -10,7 +10,7 @@ use spectral::prelude::*;
 use testcontainers::*;
 use url::Url;
 
-use crate::build_local_stack_connection;
+use lib_config::infra::build_local_stack_connection;
 
 #[tokio::test]
 async fn creation_table() {

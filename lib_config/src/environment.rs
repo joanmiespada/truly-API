@@ -22,6 +22,7 @@ pub struct EnvironmentVariables {
 
     kms_key_id: Option<String>,
     blockchain_confirmations: Option<usize>,
+    queue_mint_async: Option<String>,
 }
 
 impl EnvironmentVariables {
@@ -108,7 +109,13 @@ impl EnvironmentVariables {
     pub fn set_blockchain_confirmations(&mut self, value: usize) {
         self.blockchain_confirmations = Some(value.clone());
     }
-    
+    pub fn queue_mint_async (&self) -> &String {
+        let aux = self.queue_mint_async.as_ref().unwrap();
+        return aux;
+    }
+    pub fn set_queue_mint_async(&mut self, value: String) {
+        self.queue_mint_async = Some(value.clone());
+    }
 
 }
 

@@ -1,29 +1,26 @@
 [package]
-name="lambda_license"
+name="lib_async_ops"
 version="0.0.1"
 edition = "2021"
 
-[[bin]]
-name="lambda_license"
-path="src/main.rs"
+[lib]
+name="lib_async_ops"
+crate-type=["lib"]
+
 
 [dependencies]
 lib_config = { path = "../lib_config" }
-lib_users = { path = "../lib_users" }
-lib_licenses = { path = "../lib_licenses" }
-lib_util_jwt = { path = "../lib_util_jwt" }
-lib_async_ops = { path = "../lib_async_ops" }
-tower-http = { version="0.3.5", features=["full"]  }
-lambda_http = { version = "0.7", features = ["apigw_rest"]}
-lambda_runtime = "0.7"
-aws_lambda_events = { version = "0.7.3", features = ["apigw", "alb"] }
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.91"
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3.16", default-features = false, features = ["fmt", "env-filter"] }
-tokio = { version = "1", features = ["full"] }
 validator = { version = "0.16", features = ["derive"] }
 url = {version="2.3.1", features=["serde"] }
-matchit = "0.7.0"
 uuid = { version = "1.2.2", features = ["v4","fast-rng",  "macro-diagnostics",  "serde"]}
 aws-sdk-sqs = "0.24.0"
+env_logger = "0.10.0"
+
+[dev-dependencies]
+tokio = { version="1.24.2", features=["full"]}
+spectral = "0.6.0"
+testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack"  }

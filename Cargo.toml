@@ -5,6 +5,7 @@ members = [
     "lib_config",
     "lib_licenses",
     "lib_util_jwt",
+    "lib_async_ops",
     "lambda_login",
     "lambda_user",
     "lambda_license",

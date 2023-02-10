@@ -577,6 +577,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-sdk-sqs"
+version = "0.24.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b2afbc1dfbf260945ad1cc19a1d2109f588663b053ffd828faacb29b02c9260"
+dependencies = [
+ "aws-credential-types",
+ "aws-endpoint",
+ "aws-http",
+ "aws-sig-auth",
+ "aws-smithy-async",
+ "aws-smithy-client",
+ "aws-smithy-http",
+ "aws-smithy-http-tower",
+ "aws-smithy-json",
+ "aws-smithy-query",
+ "aws-smithy-types",
+ "aws-smithy-xml",
+ "aws-types",
+ "bytes",
+ "http",
+ "regex",
+ "tokio-stream",
+ "tower",
+]
+
+[[package]]
 name = "aws-sdk-sso"
 version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3116,9 +3142,11 @@ dependencies = [
 name = "lambda_license"
 version = "0.0.1"
 dependencies = [
+ "aws-sdk-sqs",
  "aws_lambda_events",
  "lambda_http",
  "lambda_runtime",
+ "lib_async_ops",
  "lib_config",
  "lib_licenses",
  "lib_users",
@@ -3216,6 +3244,25 @@ name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
+
+[[package]]
+name = "lib_async_ops"
+version = "0.0.1"
+dependencies = [
+ "aws-sdk-sqs",
+ "env_logger",
+ "lib_config",
+ "serde",
+ "serde_json",
+ "spectral",
+ "testcontainers",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "uuid 1.2.2",
+ "validator",
+]
 
 [[package]]
 name = "lib_config"

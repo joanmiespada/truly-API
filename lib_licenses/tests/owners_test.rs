@@ -1,4 +1,5 @@
 
+use lib_config::infra::build_local_stack_connection;
 use lib_licenses::models::owner::Owner;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
 use lib_licenses::repositories::owners::OwnerRepo;
@@ -8,7 +9,6 @@ use spectral::prelude::*;
 use testcontainers::*;
 use uuid::Uuid;
 
-use crate::build_local_stack_connection;
 
 
 

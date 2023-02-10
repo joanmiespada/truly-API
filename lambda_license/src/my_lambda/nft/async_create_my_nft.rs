@@ -1,6 +1,8 @@
 
 use lambda_http::RequestExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
+use lib_async_ops::errors::AsyncOpError;
+use lib_async_ops::{SQSMessage, send};
 use lib_config::config::Config;
 use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError, AssetBlockachainError};
 use lib_licenses::errors::nft::NftUserAddressMalformedError;
@@ -15,17 +17,12 @@ use lib_licenses::services::nfts::{NFTsService, NFTsManipulation };
 
 use crate::my_lambda::build_resp;
 
-#[derive(Debug, Serialize, Validate, Deserialize, Clone, Copy)]
-pub struct CreateNFT {
-    //#[validate(length(max = 1000))]
-    //pub hash: String,
-    pub price: u64,
-    pub asset_id: Uuid
-    //#[validate(length(max = 100))]
-    //pub user_blockchain_address: String,
-}
+use super::create_my_nft::CreateNFT;
+
+
+
 #[tracing::instrument]
-pub async fn create_my_nft(
+pub async fn async_create_my_nft(
     req: &Request,
     _c: &Context,
     config: &Config,
@@ -37,9 +34,7 @@ pub async fn create_my_nft(
     user_id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send+ Sync >> {
  
-    let price: u64;
-    let asset_id: Uuid;
-    
+    let new_nft; 
     match req.payload::<CreateNFT>() {
         Err(e) => {
             return build_resp(e.to_string(), StatusCode::BAD_REQUEST);
@@ -53,39 +48,37 @@ pub async fn create_my_nft(
                     return build_resp(e.to_string(), StatusCode::BAD_REQUEST);
                 }
                 Ok(_) => {
-                    price = payload.price;
-                    asset_id = payload.asset_id;
+                    new_nft = payload.clone();
                 }
             },
         },
     }
 
-    let op_res = blockchain_service.try_mint(
-        &asset_id, 
-        user_id, 
-        &price).await;
+
+    //let queue_url = find(&client).await?;
+
+    let json_text = serde_json::to_string(&new_nft)?;
+
+    let message = SQSMessage {
+        body:  json_text.to_owned(),
+        group: "MyGroup".to_owned(),
+    };
+
+    let enqueded_op = send( config, &message).await;
+
     
-    let transaction = match op_res {
+    let message = match enqueded_op {
         Err(e) => {
-            if let Some(m) = e.downcast_ref::<AssetBlockachainError>() {
+            if let Some(m) = e.downcast_ref::< AsyncOpError>() {
                 return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
-            } else if let Some(m) = e.downcast_ref::<AssetDynamoDBError>() {
-                return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
-            } else if let Some(m) = e.downcast_ref::<OwnerDynamoDBError>() {
-                return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
-            } else if let Some(m) = e.downcast_ref::<AssetNoExistsError>() {
-                return build_resp(m.to_string(), StatusCode::NO_CONTENT);
-            } else if let Some(m) = e.downcast_ref::<OwnerNoExistsError>() {
-                return build_resp(m.to_string(), StatusCode::NO_CONTENT);
-            } else if let Some(m) = e.downcast_ref::<NftUserAddressMalformedError>() {
-                return build_resp(m.to_string(), StatusCode::NOT_ACCEPTABLE);
             } else {
                 return build_resp("unknonw error working with the blockchain".to_string(), StatusCode::INTERNAL_SERVER_ERROR);
             }
         },
-        Ok(tx) => tx,
+        Ok(val)=> val
     };
+        
     
-    return build_resp(transaction, StatusCode::OK);
+    return build_resp(message, StatusCode::OK);
 
 }

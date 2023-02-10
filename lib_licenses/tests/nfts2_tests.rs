@@ -1,4 +1,3 @@
-use crate::build_local_stack_connection;
 use crate::nfts_tests::{store_secret_key, deploy_contract_web3, MNEMONIC_TEST,create_secrets,create_key};
 use ethers::utils::Ganache;
 use lib_config::config::Config;
@@ -14,6 +13,7 @@ use lib_licenses::{
     repositories::ganache::GanacheRepo,
     services::nfts::{NFTsManipulation, NFTsService, NTFState},
 };
+use lib_config::infra::build_local_stack_connection;
 
 use spectral::{assert_that, result::ResultAssertions};
 use std::{env, str::FromStr};
@@ -38,6 +38,7 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
     let host_port = node.get_host_port_ipv4(4566);
 
     //create dynamodb tables against testcontainers.
+
 
     let shared_config = build_local_stack_connection(host_port).await;
 
