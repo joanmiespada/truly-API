@@ -7,8 +7,8 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>
 
 #[derive(Debug)]
 pub struct SQSMessage {
+    pub id: String,
     pub body: String,
-    pub group: String,
 }
 
 async fn find(
@@ -45,7 +45,8 @@ pub async fn send(config: &lib_config::config::Config, message: &SQSMessage) -> 
         .send_message()
         .queue_url(queue_url)
         .message_body(&message.body)
-        .message_group_id(&message.group)
+        //.message_group_id(&message.group)
+        .message_deduplication_id(&message.id)
         // If the queue is FIFO, you need to set .message_deduplication_id
         // or configure the queue for ContentBasedDeduplication.
         .send()
@@ -59,7 +60,7 @@ pub async fn send(config: &lib_config::config::Config, message: &SQSMessage) -> 
     }
 }
 
-pub async fn recieve(config: &lib_config::config::Config) -> Result<()>{//SQSMessage
+pub async fn recieve(config: &lib_config::config::Config) -> Result<String>{//SQSMessage
 
     let shared_config = config.aws_config();
     let client = aws_sdk_sqs::client::Client::new(shared_config);
@@ -69,12 +70,16 @@ pub async fn recieve(config: &lib_config::config::Config) -> Result<()>{//SQSMes
 
     debug!("Messages from queue with url: {}", queue_url);
 
-    for message in rcv_message_output.messages.unwrap_or_default() {
-        debug!("Got the message: {:#?}", message);
+    let message = rcv_message_output.messages.unwrap_or_default().first().unwrap().clone();
+    return Ok(message.body().unwrap().to_owned());
 
-    }
 
-    Ok(())
+    // for message in rcv_message_output.messages.unwrap_or_default() {
+    //     debug!("Got the message: {:#?}", message);
+    //     message.body()
+    // }
+
+    // Ok(())
 
 
 }
@@ -111,7 +116,7 @@ pub async fn delete(config: &lib_config::config::Config, url: String) -> Result<
         .await;
     match res_op {
         Err(e) => Err(AsyncOpError { 0: e.to_string() }.into()),
-        Ok(v) => {
+        Ok(_) => {
             Ok(())
         }
     }

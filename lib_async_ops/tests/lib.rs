@@ -1,8 +1,8 @@
 use lib_config::{infra::build_local_stack_connection, config::Config};
 use spectral::{assert_that, result::ResultAssertions};
-use std::{env, str::FromStr};
+use std::env;
 use testcontainers::*;
-
+use uuid::Uuid;
 use lib_async_ops::{create, SQSMessage, send, recieve};
 
 
@@ -38,8 +38,8 @@ async fn test_queues() ->  Result<(), Box<dyn std::error::Error>>{
     config.set_aws_config(&shared_config); //rewrite configuration to use our current testcontainer instead
 
     let content = SQSMessage{
-       body: "body".to_string(),
-       group: "Minters".to_string() 
+        id: Uuid::new_v4().to_string(),
+        body: "body".to_string(),
     };
 
     let sent_op = send(&config, &content ).await;
@@ -53,8 +53,7 @@ async fn test_queues() ->  Result<(), Box<dyn std::error::Error>>{
     assert_that( &recv_op ).is_ok();
     let recv = recv_op.unwrap();
 
-    //assert_eq!(content.body, response.body );
-    //assert_eq!(content.group, response.group);
+    assert_eq!(content.body, recv );
 
     Ok(())
 
