@@ -4,5 +4,5 @@
 /node_modules
 .terraform*
 .localstack*
-/manual_dep/res/*
+/manual_dep/res/*_prod_stage.*
 
