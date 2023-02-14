@@ -42,7 +42,6 @@ pub async fn update_user(
                     user_fields = UpdatableFildsUser {
                         device: payload.device.clone(),
                         email: payload.email.clone(),
-                        wallet_address: payload.wallet_address.clone(),
                         status: payload.status.clone(),
                     };
                 }

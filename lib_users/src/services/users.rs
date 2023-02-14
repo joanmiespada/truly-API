@@ -44,8 +44,6 @@ pub struct UpdatableFildsUser {
     #[validate(email)]
     pub email: Option<String>,
     #[validate(length(max=100))]
-    pub wallet_address: Option<String>,
-    #[validate(length(max=100))]
     pub device: Option<String>,
     #[validate(length(max=10))]
     pub status: Option<String>,
@@ -117,12 +115,6 @@ impl UserManipulation for UsersService {
         match &user.email {
             None => (),
             Some(eml) => res.set_email(&eml),
-        }
-        match &user.wallet_address {
-            None => (),
-            Some(wa) => {
-                res.set_wallet_address(&wa);
-            }
         }
         match &user.device {
             None => (),

@@ -50,9 +50,6 @@ pub async fn create_basic_user(
                     if let Some(eml) = &payload.email {
                         user.set_email(eml);
                     }
-                    if let Some(wll) = &payload.wallet_address {
-                        user.set_wallet_address(wll);
-                    }
                     if let Some(dvc) = &payload.device {
                         user.set_device(dvc);
                     }

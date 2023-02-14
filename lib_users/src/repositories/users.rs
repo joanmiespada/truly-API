@@ -379,8 +379,6 @@ impl UserRepository for UsersRepo {
 
         let email_av: AttributeValue = AttributeValue::S(user.email().clone().unwrap_or_default());
 
-        let wallet_address_av: AttributeValue =
-            AttributeValue::S(user.wallet_address().clone().unwrap_or_default());
         let roles_av = AttributeValue::Ss(UserRoles::to_vec_str(user.roles()).clone());
 
         let status_av: AttributeValue = AttributeValue::S(user.status().to_string());
@@ -388,7 +386,6 @@ impl UserRepository for UsersRepo {
         let mut update_express = "set ".to_string();
         update_express.push_str(format!("{0} = :device, ", DEVICE_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :email, ", EMAIL_FIELD_NAME).as_str());
-        //update_express.push_str(format!("{0} = :wa, ", WALLETADDRESS_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :lastup, ", LASTUPDATETIME_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :r_les, ", ROLES_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :_status ", STATUS_FIELD_NAME).as_str());
@@ -401,7 +398,6 @@ impl UserRepository for UsersRepo {
             .update_expression(update_express)
             .expression_attribute_values(":device", device_av)
             .expression_attribute_values(":email", email_av)
-            .expression_attribute_values(":wa", wallet_address_av)
             .expression_attribute_values(":lastup", last_update_time_av)
             .expression_attribute_values(":r_les", roles_av)
             .expression_attribute_values(":_status", status_av);
@@ -484,13 +480,7 @@ fn mapping_from_doc_to_user(doc: &HashMap<String, AttributeValue>, user: &mut Us
             user.set_device(device.as_s().unwrap());
         }
     }
-    // let wallet_address_t = doc.get(WALLETADDRESS_FIELD_NAME);
-    // match wallet_address_t {
-    //     None => {}
-    //     Some(wallet_address) => {
-    //         user.set_wallet_address(wallet_address.as_s().unwrap());
-    //     }
-    // }
+    
     let roles_t = doc.get(ROLES_FIELD_NAME);
     match roles_t {
         None => {}

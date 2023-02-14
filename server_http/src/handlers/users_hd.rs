@@ -89,9 +89,6 @@ pub async fn add_user(state: web::Data<AppState>, payload: web::Json<NewUser>) -
         user.set_email(eml);
     }
 
-    if let Some(wll) = &payload.wallet_address {
-        user.set_wallet_address(wll);
-    }
     if let Some(dvc) = &payload.device {
         user.set_device(dvc);
     }
@@ -118,7 +115,6 @@ pub async fn add_user(state: web::Data<AppState>, payload: web::Json<NewUser>) -
 
 #[derive(Serialize, Deserialize)]
 pub struct UpdateUser {
-    pub wallet_address: Option<String>,
     pub device: Option<String>,
     pub email: Option<String>,
     pub status: Option<String>,
@@ -142,7 +138,6 @@ pub async fn _update_user(
     let user_fields = UpdatableFildsUser {
         device: payload.device.clone(),
         email: payload.email.clone(),
-        wallet_address: payload.wallet_address.clone(),
         status: payload.status.clone(),
     };
 

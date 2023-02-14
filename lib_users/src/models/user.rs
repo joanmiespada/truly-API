@@ -78,8 +78,6 @@ pub struct User {
     user_id: String,
     creation_time: DateTime<Utc>,
     last_update_time: DateTime<Utc>,
-    #[validate(length( max=100))]
-    wallet_address: Option<String>,
     #[validate(email)]
     email: Option<String>,
     //password: String, // don't use it here!
@@ -95,7 +93,6 @@ impl User {
             user_id: Uuid::nil().to_string(),
             creation_time: Utc::now(),
             last_update_time: Utc::now(),
-            wallet_address: None,
             email: None,
             device: None,
             roles: Vec::new(),
@@ -121,12 +118,6 @@ impl User {
     }
     pub fn set_last_update_time(&mut self, val: &DateTime<Utc>) {
         self.last_update_time = val.clone()
-    }
-    pub fn wallet_address(&self) -> &Option<String> {
-        &self.wallet_address
-    }
-    pub fn set_wallet_address(&mut self, val: &String) {
-        self.wallet_address = Some(val.clone())
     }
     pub fn email(&self) -> &Option<String> {
         &self.email

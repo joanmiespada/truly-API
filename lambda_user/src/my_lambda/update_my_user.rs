@@ -9,7 +9,6 @@ use validator::{Validate,ValidationError};
 
 #[derive(Debug, Serialize, Validate, Deserialize)]
 pub struct UpdateUser {
-    pub wallet_address: Option<String>,
     pub device: Option<String>,
     #[validate(email)]
     pub email: Option<String>,
@@ -41,7 +40,6 @@ pub async fn update_my_user(
                     user_fields = UpdatableFildsUser {
                         device: payload.device.clone(),
                         email: payload.email.clone(),
-                        wallet_address: payload.wallet_address.clone(),
                         status: None
                         //status: payload.status.clone(), //forbidden here, only at admins lambda
                     };
