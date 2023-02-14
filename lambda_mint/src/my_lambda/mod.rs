@@ -1,13 +1,8 @@
 mod mint_nft_async;
 
 use aws_lambda_events::sqs::SqsEventObj;
-use lambda_http::{
-     http::Method, http::StatusCode, lambda_runtime::Context,
-      IntoResponse, Request, RequestExt, Response,
-};
 use lambda_runtime::LambdaEvent;
-use serde_json::json;
-use tracing::{instrument};
+use tracing::instrument;
 use lib_config::config::Config;
 use lib_licenses::services::nfts::{NFTsService, CreateNFTAsync};
 
@@ -34,26 +29,9 @@ pub async fn function_handler(
     config: &Config,
     blockchain_service: &NFTsService,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    //let context = req.lambda_context();Box<dyn std::error::Error + Send + Sync
-    //let query_string = req.query_string_parameters().to_owned();
-    //request.uri().path()
 
     let data = &event.payload.records[0].body;
-
             
     async_minting(&data, config, blockchain_service).await
-   // match req.method() {
-    //    &Method::POST => {
-        
-    //    } 
-        // match req.uri().path() {
-        //     "/auth/login" =>  login(&req, &context, config, user_service).await,
-        //     "/auth/signup" => create_basic_user(&req, &context, config, user_service).await,
-        //     &_ => build_resp(
-        //         "method not allowed".to_string(),
-        //         StatusCode::METHOD_NOT_ALLOWED,
-        //     ),
-        // },
-    //    _ => Err(ApiLambdaError { 0: "not matching".to_string() }.into()),
-   // }
+   
 }
