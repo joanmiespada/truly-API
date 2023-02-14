@@ -1340,27 +1340,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "command_tables"
-version = "0.0.1"
-dependencies = [
- "async-trait",
- "aws-config",
- "aws-sdk-dynamodb",
- "aws-sdk-kms",
- "aws-sdk-secretsmanager",
- "chrono",
- "lib_config",
- "lib_licenses",
- "lib_users",
- "serde",
- "serde_json",
- "structopt",
- "tokio",
- "uuid 1.2.2",
- "validator",
-]
-
-[[package]]
 name = "console"
 version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3183,6 +3162,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "lambda_mint"
+version = "0.0.1"
+dependencies = [
+ "aws-sdk-sqs",
+ "aws_lambda_events",
+ "lambda_http",
+ "lambda_runtime",
+ "lib_config",
+ "lib_licenses",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid 1.2.2",
+ "validator",
+]
+
+[[package]]
 name = "lambda_runtime"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3274,12 +3273,16 @@ dependencies = [
  "aws-sdk-kms",
  "aws-sdk-secretsmanager",
  "aws-types",
+ "base64 0.21.0",
  "dotenv",
  "env_logger",
  "envy",
  "log",
  "serde",
  "serde_json",
+ "spectral",
+ "testcontainers",
+ "tokio",
 ]
 
 [[package]]
@@ -3300,8 +3303,8 @@ dependencies = [
  "hex",
  "http",
  "http-serde",
+ "lib_async_ops",
  "lib_config",
- "lib_licenses",
  "log",
  "mac_address",
  "rand 0.8.5",
@@ -3422,6 +3425,27 @@ checksum = "b238e3235c8382b7653c6408ed1b08dd379bdb9fdf990fb0bbae3db2cc0ae963"
 dependencies = [
  "nix",
  "winapi",
+]
+
+[[package]]
+name = "manual_dep"
+version = "0.0.1"
+dependencies = [
+ "async-trait",
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "aws-sdk-kms",
+ "aws-sdk-secretsmanager",
+ "chrono",
+ "lib_config",
+ "lib_licenses",
+ "lib_users",
+ "serde",
+ "serde_json",
+ "structopt",
+ "tokio",
+ "uuid 1.2.2",
+ "validator",
 ]
 
 [[package]]
@@ -5278,7 +5302,7 @@ dependencies = [
 [[package]]
 name = "testcontainers"
 version = "0.14.0"
-source = "git+https://github.com/joanmiespada/testcontainers-rs?branch=localstack#7c628fce28bb3a48d42f704a4597ebe84af6556e"
+source = "git+https://github.com/joanmiespada/testcontainers-rs?branch=localstack2#322e6f6caee980bfdcfe33671ea9dba40b207eca"
 dependencies = [
  "bollard-stubs",
  "futures",

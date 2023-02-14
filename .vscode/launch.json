@@ -5,15 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "cmd_tables",
+            "name": "manual_dep",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceRoot}/target/debug/command_tables",
-            "args": [ "--table", "owners", "--create" ],
+            "program": "${workspaceRoot}/target/debug/manual_dep",
+            //"args": [ "--table", "owners", "--create" ],
+            "args": [ "--store_key", "23e9f888-5752-4e19-b2dd-4fed35a2d44c", "--create" ],
             "cwd": "${workspaceRoot}/target/debug",
             "preLaunchTask": "build",
             "env": {
-                "ENVIRONMENT":"development",
+                "ENVIRONMENT":"stage",
             }
         },
         {

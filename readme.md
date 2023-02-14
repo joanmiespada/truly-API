@@ -1,14 +1,18 @@
-# Pre-requistes 
-Rust toolchain update 
+
+# Pre-requistes
+
+Rust toolchain update
+
 - rustup update
 - docker-compose up -d
 
 # Localstack status
+
 - http://localhost:4566/health
 
 # Create secrets
 
-This section contains all dependencies that won't be terraformed. 
+This section contains all dependencies that won't be terraformed.
 
 - aws --endpoint-url=http://localhost:4566 --region=eu-central-1 secretsmanager create-secret --name "truly/api/secrets" --description "My test database secret created with the CLI" --secret-string file://./scripts/fake_secret.json
 - aws --endpoint-url=http://localhost:4566 --region=eu-central-1 secretsmanager create-secret --name "truly/api/secret_key" --description "Storing encrypthed secret key for contract owner" --secret-string ""

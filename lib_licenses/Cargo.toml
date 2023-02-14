@@ -15,6 +15,7 @@ path="tests/lib.rs"
 
 [dependencies]
 lib_config = { path = "../lib_config" }
+lib_async_ops = {path = "../lib_async_ops"}
 log = "0.4.17"
 chrono = {version="0.4.23", features = ["serde"] }
 serde = { version = "1.0.152", features = ["derive"] }
@@ -44,10 +45,9 @@ env_logger = "0.10.0"
 aws-types = "0.54.1"
 spectral = "0.6.0"
 #testcontainers = "0.14.0"
-testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack"  }
+testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack2"  }
 tokio = { version="1.24.2", features=["full"]}
 lib_config = { path = "../lib_config" }
-lib_licenses = { path= "./"}
 ethers = "1.0.2"
 base64 = "0.21.0"
 ethers-solc = "1.0.2"

@@ -100,6 +100,7 @@ async fn main() {
         key_repo.to_owned(),
         asset_service.to_owned(),
         owners_service.to_owned(),
+        config.to_owned()
     );
 
     http_server(

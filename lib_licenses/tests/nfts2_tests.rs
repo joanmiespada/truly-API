@@ -1,4 +1,4 @@
-use crate::nfts_tests::{store_secret_key, deploy_contract_web3, MNEMONIC_TEST,create_secrets,create_key};
+use crate::nfts_tests::{ deploy_contract_web3, MNEMONIC_TEST};
 use ethers::utils::Ganache;
 use lib_config::config::Config;
 use lib_licenses::repositories::assets::AssetRepo;
@@ -13,7 +13,7 @@ use lib_licenses::{
     repositories::ganache::GanacheRepo,
     services::nfts::{NFTsManipulation, NFTsService, NTFState},
 };
-use lib_config::infra::build_local_stack_connection;
+use lib_config::infra::{build_local_stack_connection, store_secret_key, create_key, create_secret_manager_keys, create_secret_manager_secret_key};
 
 use spectral::{assert_that, result::ResultAssertions};
 use std::{env, str::FromStr};
@@ -54,11 +54,20 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
     assert_that(&creation3).is_ok();
 
     //create secrets and keys
-    let secrets_client =aws_sdk_secretsmanager::Client::new(&shared_config);
-    create_secrets(&secrets_client).await?;
-    let keys_client = aws_sdk_kms::Client::new(&shared_config);
+
+    let keys_client = aws_sdk_kms::client::Client::new(&shared_config);
     let new_key_id = create_key(&keys_client).await?;
     env::set_var("KMS_KEY_ID", new_key_id.clone());
+    
+    let secrets_client = aws_sdk_secretsmanager::client::Client::new(&shared_config);
+    let secrets_json = r#"
+    {
+        "HMAC_SECRET" : "localtest_hmac_1234RGsdfg#$%",
+        "JWT_TOKEN_BASE": "localtest_jwt_sd543ERGds235$%^"
+    }
+    "#;
+    create_secret_manager_keys(secrets_json, &secrets_client).await?;
+    create_secret_manager_secret_key(&secrets_client).await?;
 
     // set up config for truly app
     let mut config = Config::new();
@@ -66,7 +75,6 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
     config.set_aws_config(&shared_config); //rewrite configuration to use our current testcontainer instead
     config.load_secrets().await;
 
-    
 
     // bootstrap dependencies
 
@@ -141,6 +149,7 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
         repo_keys,
         asset_service.clone(),
         owner_service.clone(),
+        config.to_owned()
     );
 
     let asset_price: u64 = 2000;

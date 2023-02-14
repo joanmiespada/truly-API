@@ -1,16 +1,16 @@
 locals {
-  lambda_file = "${var.lambda_deploy_folder}/${var.lambda_licenses_file}"
+  lambda_file = "${var.lambda_deploy_folder}/${var.lambda_mint_file}"
 }
-resource "aws_cloudwatch_log_group" "truly_lambda_licenses_cloudwatch" {
-  name              = "/aws/lambda/${var.truly_lambda_licenses_function_name}"
+resource "aws_cloudwatch_log_group" "truly_lambda_mint_cloudwatch" {
+  name              = "/aws/lambda/${var.truly_lambda_mint_function_name}"
   retention_in_days = 5
 
   tags = merge(var.common_tags, { service : "${var.service_name}" })
 }
 
 
-resource "aws_lambda_function" "truly_lambda_licenses" {
-  function_name    = var.truly_lambda_licenses_function_name
+resource "aws_lambda_function" "truly_lambda_mint" {
+  function_name    = var.truly_lambda_mint_function_name
   architectures    = ["arm64"]
   memory_size      = 512
   source_code_hash = filebase64sha256(local.lambda_file)

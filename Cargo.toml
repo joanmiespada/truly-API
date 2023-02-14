@@ -8,10 +8,11 @@ members = [
     "lib_async_ops",
     "lambda_login",
     "lambda_user",
+    "lambda_mint",
     "lambda_license",
     "lambda_admin",
     "server_http",
-    "command_tables"
+    "manual_dep"
 ]
 
 

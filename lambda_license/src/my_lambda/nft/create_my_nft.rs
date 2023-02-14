@@ -33,7 +33,6 @@ pub async fn create_my_nft(
     owner_service: &OwnerService,
     blockchain_service: &NFTsService,
     user_service: &UsersService,
-    //asset_id: &Uuid,
     user_id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send+ Sync >> {
  

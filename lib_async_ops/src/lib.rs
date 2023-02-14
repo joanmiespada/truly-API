@@ -1,6 +1,8 @@
+use std::str::FromStr;
+
 use errors::AsyncOpError;
 use tracing::log::debug;
-
+use url::Url;
 pub mod errors;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
@@ -11,9 +13,10 @@ pub struct SQSMessage {
     pub body: String,
 }
 
-async fn find(
+async fn _check_if_exist(
     client: &aws_sdk_sqs::client::Client,
-    config: &lib_config::config::Config,
+    _config: &lib_config::config::Config,
+    queue_id: Url
 ) -> Result<String> {
     let queue_ops = client.list_queues().send().await;
 
@@ -24,7 +27,8 @@ async fn find(
 
     let queue_urls = queues.queue_urls().unwrap_or_default();
 
-    let url = config.env_vars().queue_mint_async().to_owned();
+    let url = queue_id.to_string();
+   // let url = config.env_vars().queue_mint_async().to_owned();
    
     let res = queue_urls.into_iter().filter( |x| **x == url).count();
 
@@ -34,12 +38,13 @@ async fn find(
     }
 }
 
-pub async fn send(config: &lib_config::config::Config, message: &SQSMessage) -> Result<String> {
+pub async fn send(config: &lib_config::config::Config, message: &SQSMessage, queue_id: Url) -> Result<String> {
     let shared_config = config.aws_config();
 
     let client = aws_sdk_sqs::client::Client::new(shared_config);
 
-    let queue_url = find(&client, config).await?;
+    //let queue_url = find(&client, config).await?;
+    let queue_url = queue_id.to_string();
 
     let rsp_op = client
         .send_message()
@@ -60,11 +65,12 @@ pub async fn send(config: &lib_config::config::Config, message: &SQSMessage) -> 
     }
 }
 
-pub async fn recieve(config: &lib_config::config::Config) -> Result<String>{//SQSMessage
+pub async fn recieve(config: &lib_config::config::Config, queue_id: Url) -> Result<String>{//SQSMessage
 
     let shared_config = config.aws_config();
     let client = aws_sdk_sqs::client::Client::new(shared_config);
-    let queue_url = find(&client, config).await?;
+    //let queue_url = find(&client, config).await?;
+    let queue_url = queue_id.to_string();
 
     let rcv_message_output = client.receive_message().queue_url(queue_url.clone()).send().await?;
 
@@ -84,7 +90,7 @@ pub async fn recieve(config: &lib_config::config::Config) -> Result<String>{//SQ
 
 }
 
-pub async fn create(config: &lib_config::config::Config, name: String) -> Result<String> {
+pub async fn create(config: &lib_config::config::Config, name: String) -> Result<Url> {
     let shared_config = config.aws_config();
 
     let client = aws_sdk_sqs::client::Client::new(shared_config);
@@ -99,19 +105,20 @@ pub async fn create(config: &lib_config::config::Config, name: String) -> Result
     match res_op {
         Err(e) => Err(AsyncOpError { 0: e.to_string() }.into()),
         Ok(v) => {
-            let res = v.queue_url().unwrap().to_owned();
+            let aux = v.queue_url().unwrap().to_owned();
+            let res = Url::from_str(&aux).unwrap(); 
             Ok(res)
         }
     }
 }
-pub async fn delete(config: &lib_config::config::Config, url: String) -> Result<()> {
+pub async fn delete(config: &lib_config::config::Config, queue_id: Url) -> Result<()> {
     let shared_config = config.aws_config();
 
     let client = aws_sdk_sqs::client::Client::new(shared_config);
 
     let res_op = client
         .delete_queue()
-        .queue_url( url )
+        .queue_url( queue_id )
         .send()
         .await;
     match res_op {

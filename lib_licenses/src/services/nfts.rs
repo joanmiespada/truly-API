@@ -1,7 +1,10 @@
 use std::{fmt, str::FromStr};
 
 use async_trait::async_trait;
+use lib_async_ops::{SQSMessage, send as send_async_message};
+use lib_config::config::Config;
 use serde::{Deserialize, Serialize};
+use url::Url;
 use uuid::Uuid;
 
 use crate::models::asset::MintingStatus;
@@ -14,12 +17,7 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 
 #[async_trait]
 pub trait NFTsManipulation {
-    async fn try_mint(
-        &self,
-        asset_id: &Uuid,
-        user_id: &String,
-        price: &u64,
-    ) -> ResultE<String>;
+    async fn try_mint(&self, asset_id: &Uuid, user_id: &String, price: &u64) -> ResultE<String>;
     async fn get(&self, asset_id: &Uuid) -> ResultE<NTFContentInfo>;
     //async fn create_account()->   ResultE<(String, String, String)>;
 }
@@ -30,6 +28,7 @@ pub struct NFTsService {
     keys_repo: KeyPairRepo,
     asset_service: AssetService,
     owner_service: OwnerService,
+    config: Config,
 }
 
 impl NFTsService {
@@ -38,12 +37,14 @@ impl NFTsService {
         keys_repo: KeyPairRepo,
         asset_service: AssetService,
         owner_service: OwnerService,
+        config: Config,
     ) -> NFTsService {
         NFTsService {
             blockchain: repo,
-            keys_repo:keys_repo,
+            keys_repo: keys_repo,
             asset_service: asset_service,
             owner_service: owner_service,
+            config,
         }
     }
 }
@@ -51,12 +52,7 @@ impl NFTsService {
 #[async_trait]
 impl NFTsManipulation for NFTsService {
     #[tracing::instrument()]
-    async fn try_mint(
-        &self,
-        asset_id: &Uuid,
-        user_id: &String,
-        price: &u64,
-    ) -> ResultE<String> {
+    async fn try_mint(&self, asset_id: &Uuid, user_id: &String, price: &u64) -> ResultE<String> {
         let asset = self.asset_service.get_by_id(asset_id).await?;
         let hash_file = asset.hash().to_owned().unwrap();
 
@@ -66,24 +62,46 @@ impl NFTsManipulation for NFTsService {
 
         let user_wallet_address = self.keys_repo.get_or_create(user_id).await?;
 
-        self.asset_service.mint_status(asset_id, &None, MintingStatus::Started ).await?;
+        self.asset_service
+            .mint_status(asset_id, &None, MintingStatus::Started)
+            .await?;
 
         let transaction_op = self
             .blockchain
             .add(asset_id, &user_wallet_address, &hash_file, price)
             .await;
 
-        match transaction_op{
-            Err(e)=>{
-                self.asset_service.mint_status(asset_id, &Some(e.to_string()), MintingStatus::Error ).await?;
+        match transaction_op {
+            Err(e) => {
+                let url = self.config.env_vars().dead_letter_queue_mint().to_owned();
+                let queue_mint_errors_id = Url::from_str(&url).unwrap();
+
+                let message = SQSMessage {
+                    id: Uuid::new_v4().to_string(),
+                    body: format!(
+                        "error minting asset id: {} with user id: {}",
+                        asset_id, user_id
+                    ),
+                };
+                send_async_message( &self.config, &message, queue_mint_errors_id).await?;
+
+                self.asset_service
+                    .mint_status(asset_id, &Some(e.to_string()), MintingStatus::Error)
+                    .await?;
+
                 return Err(e.into());
-            },
-            Ok(transaction)=>{
-                self.asset_service.mint_status(asset_id, &Some(transaction.clone()), MintingStatus::CompletedSuccessfully ).await?;
+            }
+            Ok(transaction) => {
+                self.asset_service
+                    .mint_status(
+                        asset_id,
+                        &Some(transaction.clone()),
+                        MintingStatus::CompletedSuccessfully,
+                    )
+                    .await?;
                 Ok(transaction)
             }
         }
-
     }
 
     #[tracing::instrument()]
@@ -97,7 +115,6 @@ impl NFTsManipulation for NFTsService {
         };
         Ok(res)
     }
-    
 }
 
 impl Clone for NFTsService {
@@ -108,6 +125,7 @@ impl Clone for NFTsService {
             keys_repo: self.keys_repo.clone(),
             owner_service: self.owner_service.clone(),
             asset_service: self.asset_service.clone(),
+            config: self.config.clone()
         };
         return aux;
     }
@@ -154,4 +172,11 @@ impl std::str::FromStr for NTFState {
             _ => Err(ParseNTFStateError),
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CreateNFTAsync {
+    pub price: u64,
+    pub asset_id: Uuid,
+    pub user_id: String,
 }

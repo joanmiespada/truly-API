@@ -13,15 +13,17 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 #[async_trait]
 pub trait AssetManipulation {
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Asset>>;
-    async fn get_by_id(
-        &self,
-        asset_id: &Uuid,
-    ) -> std::result::Result<Asset, Box<dyn std::error::Error + Sync + Send>>; // ResultE<Asset>;
+    async fn get_by_id(&self, asset_id: &Uuid) -> ResultE<Asset>;
     async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>>;
     async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset>;
     async fn add(&self, creation_asset: &CreatableFildsAsset, user_id: &String) -> ResultE<Uuid>;
     async fn update(&self, asset_id: &Uuid, asset: &UpdatableFildsAsset) -> ResultE<()>;
-    async fn mint_status(&self, id: &Uuid, transaction: &Option<String>, sts: MintingStatus) -> ResultE<()>;
+    async fn mint_status(
+        &self,
+        id: &Uuid,
+        transaction: &Option<String>,
+        sts: MintingStatus,
+    ) -> ResultE<()>;
 }
 
 #[derive(Debug)]
@@ -121,19 +123,23 @@ impl AssetManipulation for AssetService {
     }
 
     #[tracing::instrument()]
-    async fn mint_status(&self, id: &Uuid, transaction: &Option<String>, sts: MintingStatus) -> ResultE<()> {
+    async fn mint_status(
+        &self,
+        id: &Uuid,
+        transaction: &Option<String>,
+        sts: MintingStatus,
+    ) -> ResultE<()> {
         let dbasset = self.repository.get_by_id(id).await?;
         let mut res: Asset = dbasset.clone();
 
         //res.set_minted_tx(&Some(transaction.to_owned()));
         let aux = transaction.to_owned();
-        res.set_minted_tx( &aux);
+        res.set_minted_tx(&aux);
         res.set_minted_status(sts);
 
         self.repository.update(&id, &res).await?;
         Ok(())
     }
-    
 
     #[tracing::instrument()]
     async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>> {

@@ -1,23 +1,18 @@
-use aws_sdk_kms::model::KeyUsageType;
 use ethers::prelude::*;
 use ethers::providers::{Http, Provider};
 use ethers::signers::LocalWallet;
 use ethers::utils::Ganache;
 use ethers_solc::Solc;
-use lib_config::{config::Config, secrets::SECRETS_MANAGER_KEYS, secrets::SECRETS_MANAGER_SECRET_KEY};
+use lib_config::config::Config;
 use lib_licenses::repositories::ganache::block_status;
-use aws_sdk_kms::types::Blob;
-use base64::{engine::general_purpose, Engine as _};
 use spectral::{assert_that, result::ResultAssertions};
 use std::time::Duration;
 use std::{env, str::FromStr};
 use std::{path::Path, sync::Arc};
-use testcontainers::*;
 use web3::{
     contract::{Contract, Options},
     types::{H160, U256},
 };
-use lib_config::infra::build_local_stack_connection;
 
 pub const MNEMONIC_TEST: &str =
     "myth like bonus scare over problem client lizard pioneer submit female collect"; //from $ganache --deterministic command
@@ -136,130 +131,7 @@ pub async fn _deploy_contract_ethers(
     return Ok(addr_string);
 }
 
-pub async fn store_secret_key(
-    info_to_be_encrypted: &str,
-    kms_key_id: &str,
-    config: &Config,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let aws = config.aws_config();
 
-    let client = aws_sdk_kms::Client::new(aws);
-
-    let blob = Blob::new(info_to_be_encrypted.as_bytes());
-    let resp_op = client
-        .encrypt()
-        .key_id(kms_key_id.clone())
-        .plaintext(blob)
-        .send()
-        .await;
-    let resp = resp_op.unwrap();
-
-    let blob = resp.ciphertext_blob.expect("Could not get encrypted text");
-    let bytes = blob.as_ref();
-
-    //let value = base64::encode(bytes);
-    let value = general_purpose::STANDARD.encode(bytes);
-
-    let client2 = aws_sdk_secretsmanager::Client::new(aws);
-
-    client2
-        .put_secret_value()
-        .secret_id(SECRETS_MANAGER_SECRET_KEY)
-        .secret_string(value)
-        .send()
-        .await?;
-
-    Ok(())
-}
-
-pub async fn restore_secret_key(
-    kms_key_id: &str,
-    config: &Config,
-) -> Result<String, Box<dyn std::error::Error>> {
-    let aws = config.aws_config();
-
-    let client = aws_sdk_secretsmanager::Client::new(&aws);
-    let scr = client
-        .get_secret_value()
-        .secret_id(SECRETS_MANAGER_SECRET_KEY)
-        .send()
-        .await?;
-
-    let secret_key_cyphered = scr.secret_string().unwrap();
-
-    let value = general_purpose::STANDARD
-        .decode(secret_key_cyphered)
-        .unwrap();
-
-    let client2 = aws_sdk_kms::Client::new(&aws);
-
-    let data = aws_sdk_kms::types::Blob::new(value);
-
-    let resp;
-    let resp_op = client2
-        .decrypt()
-        .key_id(kms_key_id.to_owned())
-        .ciphertext_blob(data.to_owned())
-        .send()
-        .await;
-    match resp_op {
-        Err(e) => {
-            return Err(e.into());
-        }
-        Ok(val) => resp = val,
-    }
-
-    let inner = resp.plaintext.unwrap();
-    let bytes = inner.as_ref();
-
-    let secret_key_raw = String::from_utf8(bytes.to_vec()).unwrap(); // .expect("Could not convert to UTF-8");
-
-    Ok(secret_key_raw)
-}
-
-    
-pub async fn create_secrets(
-    client: &aws_sdk_secretsmanager::Client,
-) -> Result<(), Box<dyn std::error::Error>> {
-    client
-        .create_secret()
-        .name(SECRETS_MANAGER_SECRET_KEY.to_string())
-        .secret_string(  "to be overwritten".to_string()  )
-        .send()
-        .await?;
-    
-    let secrets_json = r#"
-    {
-        "HMAC_SECRET" : "localtest_hmac_1234RGsdfg#$%",
-        "JWT_TOKEN_BASE": "localtest_jwt_sd543ERGds235$%^"
-    }
-    "#;
-
-    client
-        .create_secret()
-        .name(SECRETS_MANAGER_KEYS.to_string())
-        .secret_string(  secrets_json  )
-        .send()
-        .await?;
-
-    Ok(())
-}
-
-pub async fn create_key(client: &aws_sdk_kms::Client) -> Result<String, Box<dyn std::error::Error>> {
-    let resp =client
-        .create_key()
-        .key_usage(KeyUsageType::EncryptDecrypt)
-        .send()
-        .await?;
-    let id = resp
-        .key_metadata
-        .unwrap()
-        .key_id
-        .unwrap();
-        //.unwrap_or_else(|| String::from("No ID!"));
-
-    Ok(id)
-}
 
 #[tokio::test]
 async fn create_simple_contract_test() -> web3::Result<()> {
@@ -375,37 +247,3 @@ fn _wei_to_eth(wei_val: U256) -> f64 {
     res / 1_000_000_000_000_000_000.0
 }
 
-#[tokio::test]
-async fn set_up_secret() -> Result<(), Box<dyn std::error::Error>> {
-    env::set_var("RUST_LOG", "debug");
-    env::set_var("ENVIRONMENT", "development");
-
-    env_logger::builder().is_test(true).init();
-
-    let docker = clients::Cli::default();
-
-    let mut local_stack = images::local_stack::LocalStack::default();
-    local_stack.set_services("secretsmanager,kms");
-    let node = docker.run(local_stack);
-    let host_port = node.get_host_port_ipv4(4566);
-
-    let shared_config = build_local_stack_connection(host_port).await;
-
-    let mut config = Config::new();
-    config.setup().await;
-    config.set_aws_config(&shared_config);
-
-    let keys_client = aws_sdk_kms::client::Client::new(&shared_config);
-    let kms_id = create_key(&keys_client).await?;
-    let secrets_client = aws_sdk_secretsmanager::client::Client::new(&shared_config);
-    create_secrets(&secrets_client).await?;
-
-    let secret: &str = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // secret key example
-    
-    store_secret_key(secret, kms_id.as_str(), &config).await?;
-    let res = restore_secret_key(kms_id.as_str(), &config).await?;
-
-    assert_eq!(secret, res);
-
-    Ok(())
-}

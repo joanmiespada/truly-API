@@ -38,6 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         key_repo,
         asset_service.to_owned(),
         owners_service.to_owned(),
+        config.to_owned()
     );
 
     let user_repo = UsersRepo::new(&config);

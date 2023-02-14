@@ -97,7 +97,18 @@ resource "aws_iam_role_policy_attachment" "truly_lambda_KMS" {
   role       = aws_iam_role.truly_lambda_execution_role.name
   policy_arn = aws_iam_policy.truly_lambda_KMS_policy.arn
 }
+// -------------- SQS -------------------
+resource "aws_iam_policy" "truly_lambda_SQS_policy" {
+  name        = "truly_lambda_SQS_policy"
+  path        = "/"
+  description = "IAM policy for SQS from a lambda within truly app"
 
+  policy = file("./role_policies/sqs.json")
+}
+resource "aws_iam_role_policy_attachment" "truly_lambda_SQS" {
+  role       = aws_iam_role.truly_lambda_execution_role.name
+  policy_arn = aws_iam_policy.truly_lambda_SQS_policy.arn
+}
 
 // -------------- execution role -------------------
 resource "aws_iam_role_policy_attachment" "truly_lambda_execution_policy" {

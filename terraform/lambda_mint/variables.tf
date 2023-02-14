@@ -1,17 +1,17 @@
 
-variable "lambda_licenses_file" {
+variable "lambda_mint_file" {
   description = "The binary zip file for the user lambda."
   type        = string
-  default     = "lambda_licenses/bootstrap.zip"
+  default     = "lambda_mint/bootstrap.zip"
 }
 
-variable "truly_lambda_licenses_function_name" {
-  default = "truly_licenses"
+variable "truly_lambda_mint_function_name" {
+  default = "truly_mint"
   type    = string
 }
 
 variable "service_name" {
-  default = "licenses"
+  default = "minting"
   type    = string
 }
 
@@ -72,6 +72,7 @@ variable "minting_async_queue" {
   type      = string
   description = "queue url to mint async"
 }
+
 variable "ses_subscription" {
   type = string
   description = "email address where minting fails need to be notified"
