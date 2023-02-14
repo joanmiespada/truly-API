@@ -50,7 +50,7 @@ async fn ganache_bootstrap_get_balance_test() {
 pub async fn deploy_contract_web3(
     url: &str,
     contract_owner_address: String,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let http = web3::transports::Http::new(url)?;
     let web3 = web3::Web3::new(http);
 

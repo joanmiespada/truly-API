@@ -15,7 +15,7 @@ const TAG_VALUE: &str = "Truly";
 pub async fn create_secret_manager_keys(
     secrets_json: &str,
     client: &aws_sdk_secretsmanager::Client,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn std::error::Error + Send +Sync>> {
     client
         .create_secret()
         .name(SECRETS_MANAGER_KEYS.to_string())
@@ -34,7 +34,7 @@ pub async fn create_secret_manager_keys(
 
 pub async fn create_secret_manager_secret_key(
     client: &aws_sdk_secretsmanager::Client,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let aux = client
         .create_secret()
         .name(SECRETS_MANAGER_SECRET_KEY.to_string())
@@ -55,7 +55,7 @@ pub async fn create_secret_manager_secret_key(
 
 pub async fn create_key(
     client: &aws_sdk_kms::Client,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let resp = client
         .create_key()
         .description("key used to encryp private key for contract owner")
@@ -97,7 +97,7 @@ pub async fn store_secret_key(
     info_to_be_encrypted: &str,
     kms_key_id: &str,
     config: &Config,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync >> {
     let aws = config.aws_config();
 
     let client = aws_sdk_kms::Client::new(aws);
@@ -131,7 +131,7 @@ pub async fn store_secret_key(
 pub async fn restore_secret_key(
     kms_key_id: &str,
     config: &Config,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let aws = config.aws_config();
 
     let client = aws_sdk_secretsmanager::Client::new(&aws);

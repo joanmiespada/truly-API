@@ -23,7 +23,7 @@ use url::Url;
 
 
 #[tokio::test]
-async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::error::Error>> {
+async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env::set_var("RUST_LOG", "debug");
     env::set_var("ENVIRONMENT", "development");
 

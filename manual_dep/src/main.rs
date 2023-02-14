@@ -4,7 +4,10 @@ use lib_config::infra::{
     create_key, create_secret_manager_keys, create_secret_manager_secret_key, store_secret_key,
 };
 use lib_licenses::repositories::{schema_asset, schema_keypairs, schema_owners};
+use lib_users::models::user::User;
 use lib_users::repositories::schema_user;
+use lib_users::repositories::users::UsersRepo;
+use lib_users::services::users::{UsersService, UserManipulation };
 use std::{env, process};
 use structopt::StructOpt;
 
@@ -18,8 +21,9 @@ async fn command(
         store_secret,
         store_key,
         key,
+        user,
     }: Opt,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync >> {
     env::set_var("RUST_LOG", "debug");
 
     let mut config = Config::new();
@@ -102,12 +106,10 @@ async fn command(
                     Err(e) => {
                         panic!("{}", e.to_string())
                     }
-                    Ok(_) => {
-                        match store_secret_key(&aux_raw, &key_id, &config).await {
-                            Err(e)=> panic!("{}",e.to_string()),
-                            Ok(_)=> {}
-                        }
-                    }
+                    Ok(_) => match store_secret_key(&aux_raw, &key_id, &config).await {
+                        Err(e) => panic!("{}", e.to_string()),
+                        Ok(_) => {}
+                    },
                 }
             } else if delete {
                 panic!("not allowed, do it with AWS console UI")
@@ -128,6 +130,19 @@ async fn command(
             } else {
                 return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
             }
+        }
+    }
+    match user {
+        None => {}
+        Some(_) => {
+            let aux_raw = include_str!("../res/user.json");
+
+            let user_repo = UsersRepo::new(&config);
+            let user_service = UsersService::new(user_repo);
+
+            let mut user: User= serde_json::from_str(aux_raw).unwrap();
+
+            user_service.add_user(&mut user, &None).await?;
         }
     }
 
@@ -160,6 +175,9 @@ pub struct Opt {
 
     #[structopt(long = "key")]
     pub key: Option<bool>,
+
+    #[structopt(long = "user")]
+    pub user: Option<bool>,
 }
 
 #[tokio::main]

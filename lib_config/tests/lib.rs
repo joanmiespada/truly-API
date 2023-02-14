@@ -3,7 +3,7 @@ use lib_config::{config::Config, infra::{build_local_stack_connection, create_ke
 use testcontainers::*;
 
 #[tokio::test]
-async fn set_up_secret() -> Result<(), Box<dyn std::error::Error>> {
+async fn set_up_secret() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env::set_var("RUST_LOG", "debug");
     env::set_var("ENVIRONMENT", "development");
 
