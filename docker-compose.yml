@@ -11,7 +11,7 @@ services:
       - "4566:4566"            # LocalStack Gateway
       #- "4510-4559:4510-4559"  # external services port range
     environment:
-      - SERVICES=dynamodb,s3,lambda,iam,secretsmanager,sns,apigateway,logs,kms
+      #- SERVICES=dynamodb,s3,lambda,iam,secretsmanager,sns,apigateway,logs,kms
       - DEBUG=1
       - PORT_WEB_UI=8080
       - LAMBDA_EXECUTOR=docker
@@ -26,6 +26,12 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - ./create-docker-resources.sh:/docker-entrypoint-initaws.d/create-docker-resources.sh
 
+  blockchain:
+    build: 
+      context: .
+      dockerfile: ./ganache/Dockerfile
+    ports:
+      - "8545:8545"
 
 
   

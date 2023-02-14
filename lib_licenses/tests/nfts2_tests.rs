@@ -1,4 +1,4 @@
-use crate::nfts_tests::{ deploy_contract_web3, MNEMONIC_TEST};
+use crate::nfts_tests::MNEMONIC_TEST;
 use ethers::utils::Ganache;
 use lib_config::config::Config;
 use lib_licenses::repositories::assets::AssetRepo;
@@ -8,6 +8,7 @@ use lib_licenses::repositories::schema_asset::create_schema_assets;
 use lib_licenses::repositories::schema_keypairs::create_schema_keypairs;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
+use lib_licenses::services::contract::deploy_contract_locally;
 use lib_licenses::services::owners::OwnerService;
 use lib_licenses::{
     repositories::ganache::GanacheRepo,
@@ -133,7 +134,7 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
     //create contract and deploy to blockchain
     let url = ganache.endpoint();
 
-    let contract_address = deploy_contract_web3(url.as_str(), contract_owner_address.clone()).await?;
+    let contract_address = deploy_contract_locally(url.as_str(), contract_owner_address.clone()).await?;
     //let contract_address = deploy_contract_ethers(url.as_str(), &contract_owner_wallet).await?;
 
     new_configuration.set_blockchain_url(url.clone());

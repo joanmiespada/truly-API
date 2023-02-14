@@ -4,6 +4,7 @@ use lib_config::infra::{
     create_key, create_secret_manager_keys, create_secret_manager_secret_key, store_secret_key,
 };
 use lib_licenses::repositories::{schema_asset, schema_keypairs, schema_owners};
+use lib_licenses::services::contract::deploy_contract_locally;
 use lib_users::models::user::User;
 use lib_users::repositories::schema_user;
 use lib_users::repositories::users::UsersRepo;
@@ -22,6 +23,7 @@ async fn command(
         store_key,
         key,
         user,
+        contract,
     }: Opt,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync >> {
     env::set_var("RUST_LOG", "debug");
@@ -145,6 +147,14 @@ async fn command(
             user_service.add_user(&mut user, &None).await?;
         }
     }
+    match contract{
+        None => {},
+        Some(url) => {
+            let contract_owner_address= "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1".to_string(); //account[0] from ganache --deterministic
+            let address = deploy_contract_locally(&url, contract_owner_address).await?;
+            println!("contract address deployed at: {}", address);
+        }
+    }
 
     Ok(())
 }
@@ -178,6 +188,9 @@ pub struct Opt {
 
     #[structopt(long = "user")]
     pub user: Option<bool>,
+
+    #[structopt(long = "contract")]
+    pub contract: Option<String>,
 }
 
 #[tokio::main]
