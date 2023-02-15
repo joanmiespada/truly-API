@@ -38,7 +38,7 @@ pub async fn create_secret_manager_secret_key(
     let aux = client
         .create_secret()
         .name(SECRETS_MANAGER_SECRET_KEY.to_string())
-        .secret_string("")
+        .secret_string("--")
         .tags(
             aws_sdk_secretsmanager::model::Tag::builder()
                 .key(TAG_PROJECT.to_owned())

@@ -64,7 +64,8 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
     let secrets_json = r#"
     {
         "HMAC_SECRET" : "localtest_hmac_1234RGsdfg#$%",
-        "JWT_TOKEN_BASE": "localtest_jwt_sd543ERGds235$%^"
+        "JWT_TOKEN_BASE": "localtest_jwt_sd543ERGds235$%^",
+        "BLOCKCHAIN_GATEWAY_API_KEY": ""
     }
     "#;
     create_secret_manager_keys(secrets_json, &secrets_client).await?;

@@ -1,3 +1,4 @@
+use alldeps::non_terraformed_dependencies;
 use aws_sdk_dynamodb::error::ResourceNotFoundException;
 use lib_config::config::Config;
 use lib_config::infra::{
@@ -8,11 +9,11 @@ use lib_licenses::services::contract::deploy_contract_locally;
 use lib_users::models::user::User;
 use lib_users::repositories::schema_user;
 use lib_users::repositories::users::UsersRepo;
-use lib_users::services::users::PromoteUser;
 use lib_users::services::users::{UserManipulation, UsersService};
-use serde_json::Value;
 use std::{env, process};
 use structopt::StructOpt;
+
+mod alldeps;
 
 #[allow(unused_variables)]
 async fn command(
@@ -173,79 +174,7 @@ async fn command(
     match all {
         None => {}
         Some(_) => {
-            let secrets_json;
-            if environment == "development" {
-                secrets_json = include_str!("../res/secrets_development.json");
-            } else {
-                secrets_json = include_str!("../res/secrets_prod_stage.json");
-            }
-            let secret_key_raw;
-            if environment == "development" {
-                secret_key_raw = include_str!("../res/key_development.txt");
-            } else {
-                secret_key_raw = include_str!("../res/key_prod_stage.txt");
-            }
-            let aux_user;
-            if environment == "development" {
-                aux_user = include_str!("../res/user_development.json");
-            } else {
-                aux_user = include_str!("../res/user_prod_stage.json");
-            }
-            let blockchain;
-            if environment == "development" {
-                blockchain = include_str!("../res/blockchain_development.json")
-            } else {
-                blockchain = include_str!("../res/blockchain_prod_stage.json")
-            }
-
-            let client = aws_sdk_dynamodb::Client::new(config.aws_config());
-            schema_owners::create_schema_owners(&client).await?;
-            schema_asset::create_schema_assets(&client).await?;
-            schema_keypairs::create_schema_keypairs(&client).await?;
-            schema_user::create_schema_users(&client).await?;
-            drop(client);
-            let client_key = aws_sdk_kms::client::Client::new(config.aws_config());
-            let key_id = create_key(&client_key).await?;
-            drop(client_key);
-            let client_sec = aws_sdk_secretsmanager::client::Client::new(config.aws_config());
-            create_secret_manager_keys(secrets_json, &client_sec).await?;
-            create_secret_manager_secret_key(&client_sec).await?;
-            store_secret_key(&secret_key_raw, &key_id, &config).await?;
-            drop(client_sec);
-
-            let blockchain_json: Value = serde_json::from_str(blockchain).unwrap();
-            let blockchain_contract_owner_address = blockchain_json["contract_owner"].to_string();
-            let blockchain_url = blockchain_json["blockchain_url"].to_string();
-            let blockchain_contract_address;
-            if environment == "development" {
-                blockchain_contract_address = deploy_contract_locally(
-                    &blockchain_url,
-                    blockchain_contract_owner_address.to_owned(),
-                )
-                .await?;
-            } else {
-                blockchain_contract_address = blockchain_json["contract_address"].to_string();
-            }
-            let user_repo = UsersRepo::new(&config);
-            let user_service = UsersService::new(user_repo);
-            let mut user: User = serde_json::from_str(aux_user).unwrap();
-            let user_id = user_service.add_user(&mut user, &None).await?;
-            user_service
-                .promote_user_to(&user_id, &PromoteUser::Upgrade)
-                .await?;
-
-            println!("update your .env file with this information");
-            println!("blockchain url: {}", blockchain_url);
-            println!("contract owner: {}", blockchain_contract_owner_address);
-            println!("contract address: {}", blockchain_contract_address);
-            println!("key id: {}", key_id);
-            println!(
-                "user admin id: {} device: {}",
-                user.user_id(),
-                user.device().clone().unwrap()
-            );
-            println!("secrets:");
-            println!("{:?}", secrets_json);
+            non_terraformed_dependencies(environment, &config).await?;
         }
     }
 

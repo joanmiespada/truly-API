@@ -20,12 +20,19 @@ async-trait = "0.1.63"
 validator = { version = "0.16", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 structopt = "0.3.26"
+uuid = { version = "1.2.2", features=["v4","fast-rng","macro-diagnostics","serde"]}
+url = {version="2.3.1", features=["serde"] }
 
-[dependencies.uuid]
-version = "1.2.2"
-features = [
-    "v4",                # Lets you generate random UUIDs
-    "fast-rng",          # Use a faster (but still sufficiently random) RNG
-    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
-    "serde"
-]
+[dev-dependencies]
+env_logger = "0.10.0"
+aws-types = "0.54.1"
+spectral = "0.6.0"
+#testcontainers = "0.14.0"
+testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack2"  }
+tokio = { version="1.24.2", features=["full"]}
+lib_config = { path = "../lib_config" }
+ethers = "1.0.2"
+base64 = "0.21.0"
+ethers-solc = "1.0.2"
+
+
