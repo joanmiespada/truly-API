@@ -23,6 +23,7 @@ pub struct EnvironmentVariables {
     kms_key_id: Option<String>,
     blockchain_confirmations: Option<usize>,
     queue_mint_async: Option<String>,
+    topic_arn_mint_async: Option<String>,
     dead_letter_queue_mint: Option<String>,
 }
 
@@ -124,6 +125,15 @@ impl EnvironmentVariables {
     pub fn set_dead_letter_queue_mint(&mut self, value: String) {
         self.dead_letter_queue_mint = Some(value.clone());
     }
+
+    pub fn topic_arn_mint_async(&self)-> &String {
+        let aux = self.topic_arn_mint_async.as_ref().unwrap();
+        return aux;
+    }
+    pub fn set_topic_arn_mint_async(&mut self, value: String) {
+        self.topic_arn_mint_async = Some(value.clone());
+    }
+
 
 }
 

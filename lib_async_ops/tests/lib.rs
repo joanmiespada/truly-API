@@ -1,4 +1,4 @@
-use lib_async_ops::{create, recieve, send, SQSMessage};
+use lib_async_ops::sqs::{create, recieve, send, SQSMessage};
 use lib_config::{config::Config, infra::build_local_stack_connection};
 use spectral::{assert_that, result::ResultAssertions};
 use std::env;

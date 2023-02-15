@@ -5,7 +5,10 @@
             "Effect": "Allow",
             "Action": [
                 "SQS:SendMessage",
-                "SQS:ReceiveMessage"
+                "sqs:ChangeMessageVisibility",
+                "SQS:ReceiveMessage",
+                "sqs:DeleteMessage",
+                "SQS:GetQueueAttributes"
             ],
             "Resource": "arn:aws:sqs:::*"
         }

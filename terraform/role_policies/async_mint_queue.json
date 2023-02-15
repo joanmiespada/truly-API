@@ -1,0 +1,18 @@
+{
+    "Version": "2012-10-17",
+    "Id": "sqspolicy",
+    "Statement": [
+      {
+        "Sid": "First",
+        "Effect": "Allow",
+        "Principal": "*",
+        "Action": "sqs:SendMessage",
+        "Resource": "${aws_sqs_queue.minting_queue.arn}",
+        "Condition": {
+          "ArnEquals": {
+            "aws:SourceArn": "${aws_sns_topic.minting_topic.arn}"
+          }
+        }
+      }
+    ]
+  }

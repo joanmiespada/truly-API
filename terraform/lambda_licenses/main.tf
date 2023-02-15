@@ -34,7 +34,7 @@ resource "aws_lambda_function" "truly_lambda_licenses" {
       KMS_KEY_ID       = "${var.kms_cypher_owner}"
       BLOCKCHAIN_CONFIRMATIONS = "${var.blockchain_confirmations}",
       DEAD_LETTER_QUEUE_MINT= "${var.dead_letter_queue_mint}"
-      QUEUE_MINT_ASYNC = "${var.minting_async_queue}"
+      TOPIC_ARN_MINT_ASYNC = "${var.minting_async_topic_arn}"
     }
   }
 

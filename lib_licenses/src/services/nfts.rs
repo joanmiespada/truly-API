@@ -1,7 +1,7 @@
 use std::{fmt, str::FromStr};
 
 use async_trait::async_trait;
-use lib_async_ops::{SQSMessage, send as send_async_message};
+use lib_async_ops::sqs::{SQSMessage, send as send_async_message};
 use lib_config::config::Config;
 use serde::{Deserialize, Serialize};
 use url::Url;

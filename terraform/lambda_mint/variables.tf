@@ -72,8 +72,3 @@ variable "minting_async_queue" {
   type      = string
   description = "queue url to mint async"
 }
-
-variable "ses_subscription" {
-  type = string
-  description = "email address where minting fails need to be notified"
-}

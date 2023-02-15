@@ -14,7 +14,8 @@ use self::assets::create_my_asset::create_my_asset;
 use self::assets::get_my_asset::{ get_my_assets_all};
 use self::assets::get_asset::{ get_asset};
 use self::error::ApiLambdaError;
-use self::nft::{create_my_nft, async_create_my_nft::async_create_my_nft};
+use self::nft::async_create_my_nft::{async_create_my_nft_sqs, async_create_my_nft_sns};
+use self::nft::create_my_nft;
 use crate::my_lambda::create_my_nft::create_my_nft;
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
@@ -53,6 +54,7 @@ pub async fn function_handler(
     router.insert("/api/asset/:id", Some("2"))?;
     router.insert("/api/nft", Some("3"))?;
     router.insert("/api/nft/async", Some("4"))?;
+    //router.insert("/api/nft/async2", Some("5"))?;
 
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
@@ -149,7 +151,7 @@ pub async fn function_handler(
                         Ok(user)=> user_id = user
                     };
 
-                    return async_create_my_nft(
+                    return async_create_my_nft_sns(
                         &req,
                         &context,
                         config,
@@ -161,6 +163,28 @@ pub async fn function_handler(
                     )
                     .await;
                 }
+                
+                // "5" => {
+                //     //let id = matched.params.get("id").unwrap().to_string();
+                //     //let asset_id = Uuid::from_str(id.as_str())?;
+
+                //     match jwt_mandatory(&req, config){
+                //         Err(e) => { return Ok(e);},
+                //         Ok(user)=> user_id = user
+                //     };
+
+                //     return async_create_my_nft_sns(
+                //         &req,
+                //         &context,
+                //         config,
+                //         asset_service,
+                //         owners_service,
+                //         blockchain_service,
+                //         user_service,
+                //         &user_id,
+                //     )
+                //     .await;
+                // }
 
                 &_ => build_resp(
                     "method not allowed".to_string(),
