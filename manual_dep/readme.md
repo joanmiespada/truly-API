@@ -102,3 +102,12 @@ In stage *production* (eu-central-1)
 ```bash
 ENVIRONMENT=production cargo run -p manual_dep -- --store_key <key_id> --create
 ```
+
+## Create async infra
+
+Only in development env, stage and prod is terraformed. 
+
+```bash
+ENVIRONMENT=development cargo run -p manual_dep -- --async true --create
+```
+

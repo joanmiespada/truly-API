@@ -12,6 +12,8 @@ use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::{UserManipulation, UsersService};
 use std::{env, process};
 use structopt::StructOpt;
+use lib_async_ops::sqs::create as create_queue;
+use lib_async_ops::sns::create as create_topic;
 
 mod alldeps;
 
@@ -28,6 +30,7 @@ async fn command(
         user,
         contract,
         all,
+        async_jobs
     }: Opt,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env::set_var("RUST_LOG", "debug");
@@ -177,7 +180,29 @@ async fn command(
             non_terraformed_dependencies(environment, &config).await?;
         }
     }
+    match async_jobs {
+        None => {}
+        Some(keys_ok) => {
+            if create {
+                let name1 = "queue_minting_async".to_string();
+                let url1 = create_queue(&config,name1.to_owned() ).await?;
+                println!("queue {} created at url: {}",name1,url1);
+                
+                let name2 = "queue_minting_deathletter".to_string();
+                let url2 = create_queue(&config, name2.to_owned()).await?;
+                println!("queue {} created at url: {}",name2,url2);
 
+                let name3 ="topic_minting_async".to_string(); 
+                let arn = create_topic(&config, name3.to_owned()).await?;
+                println!("topic {} created at arn: {}",name2,arn);
+
+            } else if delete {
+                panic!("not implemented yet")
+            } else {
+                return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
+            }
+        }
+    }
     Ok(())
 }
 
@@ -216,6 +241,10 @@ pub struct Opt {
 
     #[structopt(long = "all")]
     pub all: Option<bool>,
+
+    #[structopt(long = "async")]
+    pub async_jobs: Option<bool>,
+
 }
 
 #[tokio::main]

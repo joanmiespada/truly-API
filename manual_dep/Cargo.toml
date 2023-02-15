@@ -8,6 +8,7 @@ edition = "2021"
 lib_config = { path = "../lib_config" }
 lib_licenses = { path = "../lib_licenses" }
 lib_users = { path = "../lib_users" }
+lib_async_ops = { path = "../lib_async_ops"}
 
 chrono = {version="0.4.23", features = ["serde"] }
 serde = { version = "1.0.152", features = ["derive"] }

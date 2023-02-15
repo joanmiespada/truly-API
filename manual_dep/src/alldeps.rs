@@ -1,6 +1,6 @@
 use lib_config::config::Config;
 use lib_config::infra::{
-    build_local_stack_connection, create_key, create_secret_manager_keys,
+    create_key, create_secret_manager_keys,
     create_secret_manager_secret_key, store_secret_key,
 };
 use lib_licenses::repositories::{schema_asset, schema_keypairs, schema_owners};
@@ -102,6 +102,7 @@ pub async fn non_terraformed_dependencies(
 #[tokio::test]
 async fn test_all() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     use ethers::utils::Ganache;
+    use lib_config::infra::build_local_stack_connection;
     use std::env;
     use testcontainers::{clients, images};
     const MNEMONIC_TEST: &str =
