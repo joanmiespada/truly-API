@@ -5,4 +5,7 @@
 .terraform*
 .localstack*
 /manual_dep/res/*_prod_stage.*
+/terraform/variables-prod.*
+/terraform/variables-stage.*
+
 

@@ -4,7 +4,7 @@ use lib_users::repositories::schema_user::create_schema_users;
 use lib_users::services::users::{UsersService, UserManipulation };
 use lib_users::services::login::LoginOps;
 use lib_users::repositories::users::UsersRepo;
-use lib_config::{config::Config, secrets::SECRETS_MANAGER_KEYS};
+use lib_config::{config::Config, secrets::SECRETS_MANAGER_APP_KEYS};
 use spectral::{assert_that, result::ResultAssertions};
 use testcontainers::*;
 use aws_config::SdkConfig;
@@ -48,7 +48,7 @@ async fn create_secrets(
     
     client
         .create_secret()
-        .name(SECRETS_MANAGER_KEYS.to_string())
+        .name(SECRETS_MANAGER_APP_KEYS.to_string())
         .secret_string(  secrets_json  )
         .send()
         .await?;
@@ -138,7 +138,7 @@ async fn login_user_email_password_test() -> Result<(), Box<dyn std::error::Erro
     let mut config = Config::new();
     config.setup().await;
     config.set_aws_config(&shared_config); //rewrite configuration to use our current testcontainer instead
-    config.load_secret(SECRETS_MANAGER_KEYS).await;
+    config.load_secret(SECRETS_MANAGER_APP_KEYS).await;
 
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);

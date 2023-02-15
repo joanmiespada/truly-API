@@ -1,20 +1,18 @@
-
-use aws_types::region::Region;
 use aws_config::{meta::region::RegionProviderChain, SdkConfig};
+use aws_types::region::Region;
 use dotenv::dotenv;
 use log::{debug, info};
 
-use crate::{environment::{EnvironmentVariables, ENV_VAR_ENVIRONMENT, DEV_ENV, PROD_ENV, STAGE_ENV}, secrets::{SECRETS_MANAGER_KEYS, SECRETS_MANAGER_SECRET_KEY, Secrets}};
-
-
+use crate::{
+    environment::{EnvironmentVariables, DEV_ENV, ENV_VAR_ENVIRONMENT, PROD_ENV, STAGE_ENV},
+    secrets::{Secrets, SECRETS_MANAGER_APP_KEYS, SECRETS_MANAGER_SECRET_KEY},
+};
 
 #[derive(Clone, Debug)]
 pub struct Config {
     aws_config: Option<SdkConfig>,
     env_variables: Option<EnvironmentVariables>,
 }
-
-
 
 impl Config {
     pub fn new() -> Config {
@@ -81,7 +79,7 @@ impl Config {
             let region_provider = RegionProviderChain::default_provider().or_else("eu-central-1");
             config = aws_config::from_env().region(region_provider).load().await;
         } else if env.environment() == STAGE_ENV {
-            let region_provider = RegionProviderChain::first_try( Region::new("eu-west-1"));
+            let region_provider = RegionProviderChain::first_try(Region::new("eu-west-1"));
             //let region_provider = RegionProviderChain::first_try(provider) default_provider().or_else("eu-west-1");
             config = aws_config::from_env().region(region_provider).load().await;
         } else {
@@ -111,10 +109,10 @@ impl Config {
     pub async fn load_secret(&mut self, secret_id: &str) {
         let client = aws_sdk_secretsmanager::Client::new(self.aws_config());
         match secret_id {
-            SECRETS_MANAGER_KEYS => {
+            SECRETS_MANAGER_APP_KEYS => {
                 let resp = client
                     .get_secret_value()
-                    .secret_id(SECRETS_MANAGER_KEYS)
+                    .secret_id(SECRETS_MANAGER_APP_KEYS)
                     .send()
                     .await;
 
@@ -128,6 +126,7 @@ impl Config {
                         let secrets: Secrets = serde_json::from_str(value).unwrap(); //_or( panic!("secrets malformed") );
                         m_env.set_hmac_secret(secrets.hmac_secret);
                         m_env.set_jwt_token_base(secrets.jwt_token_base);
+                        m_env.set_blockchain_gateway_api_key(secrets.blockchain_gateway_api_key);
 
                         debug!("app secretes found correctly")
                     }
@@ -155,15 +154,13 @@ impl Config {
                 }
             }
             _ => {
-                panic!("secret code {} not found",secret_id)
+                panic!("secret code {} not found", secret_id)
             }
         }
     }
 
     pub async fn load_secrets(&mut self) {
-
-        self.load_secret(SECRETS_MANAGER_KEYS).await;
+        self.load_secret(SECRETS_MANAGER_APP_KEYS).await;
         self.load_secret(SECRETS_MANAGER_SECRET_KEY).await;
-        
     }
 }

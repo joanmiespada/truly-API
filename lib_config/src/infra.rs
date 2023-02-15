@@ -6,7 +6,7 @@ use base64::{engine::general_purpose, Engine as _};
 
 use crate::{
     config::Config,
-    secrets::{SECRETS_MANAGER_KEYS, SECRETS_MANAGER_SECRET_KEY},
+    secrets::{SECRETS_MANAGER_APP_KEYS, SECRETS_MANAGER_SECRET_KEY},
 };
 
 const TAG_PROJECT: &str = "Project";
@@ -18,7 +18,7 @@ pub async fn create_secret_manager_keys(
 ) -> Result<(), Box<dyn std::error::Error + Send +Sync>> {
     client
         .create_secret()
-        .name(SECRETS_MANAGER_KEYS.to_string())
+        .name(SECRETS_MANAGER_APP_KEYS.to_string())
         .secret_string(secrets_json)
         .tags(
             aws_sdk_secretsmanager::model::Tag::builder()

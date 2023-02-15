@@ -25,12 +25,16 @@ provider "aws" {
   region = var.aws_region
 }
 
-data "aws_secretsmanager_secret_version" "secrets" {
-  secret_id = var.secrets_key_name 
+/*
+data "aws_secretsmanager_secret_version" "secrets_app" {
+  secret_id = var.secrets_manager_app_keys_name
 }
+data "aws_secretsmanager_secret_version" "secret_key" {
+  secret_id = var.secrets_manager_contract_owner_secret_key_name 
+}
+*/
 
 locals {
-  #api_secrets = jsondecode(data.aws_secretsmanager_secret_version.secrets.secret_string)
 
   common_tags = {
     project = var.truly_tag
@@ -107,8 +111,10 @@ module "lambda_licenses" {
   environment_flag = var.environment_flag
   trace_log = var.trace_log
   lambda_deploy_folder = var.lambda_deploy_folder
-  
-  ses_subscription = aws_ses_email_identity.email_ses_sender.arn
+
+  blockchain_url = var.blockchain_url
+  contract_address = var.contract_address
+  contract_owner = var.contract_owner
 
 }
 module "lambda_mint" {
@@ -127,6 +133,8 @@ module "lambda_mint" {
   trace_log = var.trace_log
   lambda_deploy_folder = var.lambda_deploy_folder
 
-  ses_subscription = aws_ses_email_identity.email_ses_sender.arn
+  blockchain_url = var.blockchain_url
+  contract_address = var.contract_address
+  contract_owner = var.contract_owner
 
 }

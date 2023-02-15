@@ -17,6 +17,7 @@ pub struct EnvironmentVariables {
     aws_endpoint: Option<String>,
 
     blockchain_url: Option<String>,
+    blockchain_gateway_api_key: Option<String>,
     contract_address: Option<String>,
     contract_owner_address: Option<String>,
 
@@ -132,6 +133,13 @@ impl EnvironmentVariables {
     }
     pub fn set_topic_arn_mint_async(&mut self, value: String) {
         self.topic_arn_mint_async = Some(value.clone());
+    }
+
+    pub fn blockchain_gateway_api_key(&self)-> &String{
+        self.blockchain_gateway_api_key.as_ref().unwrap()
+    }
+    pub fn set_blockchain_gateway_api_key(&mut self, value: String) {
+        self.blockchain_gateway_api_key = Some(value.clone());
     }
 
 

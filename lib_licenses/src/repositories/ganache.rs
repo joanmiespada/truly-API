@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use aws_config::SdkConfig;
 use chrono::{DateTime, NaiveDateTime, Utc};
-use lib_config::{ config::Config, secrets::SECRETS_MANAGER_SECRET_KEY};
+use lib_config::{ config::Config, secrets::SECRETS_MANAGER_SECRET_KEY, environment::DEV_ENV};
 use log::debug;
 use mac_address::get_mac_address;
 use secp256k1::SecretKey;
@@ -78,8 +78,16 @@ impl GanacheRepo {
             Ok(val) => contract_owner_position = val,
         }
 
+        let blockchain_url;
+
+        if conf.env_vars().environment() == DEV_ENV {
+            blockchain_url = conf.env_vars().blockchain_url().to_owned();
+        }else {
+            blockchain_url = format!("{}/{}",conf.env_vars().blockchain_url(),conf.env_vars().blockchain_gateway_api_key()); 
+        }
+
         Ok(GanacheRepo {
-            url: conf.env_vars().blockchain_url().to_owned(),
+            url: blockchain_url.to_owned(),
             contract_address: contract_address_position,
             contract_owner: contract_owner_position,
             kms_key_id: conf.env_vars().kms_key_id().to_owned(),

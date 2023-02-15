@@ -14,7 +14,7 @@ use self::assets::create_my_asset::create_my_asset;
 use self::assets::get_my_asset::{ get_my_assets_all};
 use self::assets::get_asset::{ get_asset};
 use self::error::ApiLambdaError;
-use self::nft::async_create_my_nft::{async_create_my_nft_sqs, async_create_my_nft_sns};
+use self::nft::async_create_my_nft::{async_create_my_nft_sns};
 use self::nft::create_my_nft;
 use crate::my_lambda::create_my_nft::create_my_nft;
 use lib_licenses::services::assets::AssetService;

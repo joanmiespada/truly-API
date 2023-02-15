@@ -1,5 +1,0 @@
-aws_region="eu-central-1"
-blockchain_url = "https://eth-goerli.g.alchemy.com/v2/-JvlGWEvkkKDQ5zOadJxKJza01DqSiEA"
-contract_address = "0x7631af3D455e2a2baE6E8755D86f14f616737956"
-contract_owner = "0xA52C10371AaA3b0f78412532EAF4f966730F2B13"
-kms_cypher_owner ="2d460536-1dc9-436c-a97b-0bad3f8906c7"

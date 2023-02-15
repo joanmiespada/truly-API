@@ -1,6 +1,9 @@
 
 # Create dependencies not terraformed
 
+At /res folder there is all conf files. Ending with _development is for local dev.
+Create files ending with_prod_stage.json to adjust values for those envs.
+
 ## Compile
 
 ```bash
