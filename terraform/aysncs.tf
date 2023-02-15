@@ -11,10 +11,10 @@ resource "aws_sqs_queue" "minting_queue" {
 
 resource "aws_sqs_queue" "minting_queue_deadletter" {
   name = "dead_letter_queue_mint_errors"
-  redrive_allow_policy = jsonencode({
-    redrivePermission = "byQueue",
-    sourceQueueArns   = [aws_sqs_queue.minting_queue.arn]
-  })
+  # redrive_allow_policy = jsonencode({
+  #   redrivePermission = "byQueue",
+  #   sourceQueueArns   = [aws_sqs_queue.minting_queue.arn]
+  # })
   tags = merge(local.common_tags,{})
 }
 
@@ -22,7 +22,7 @@ resource "aws_sqs_queue" "minting_queue_deadletter" {
 
 resource "aws_lambda_event_source_mapping" "truly_minting" {
   event_source_arn = aws_sqs_queue.minting_queue.arn
-  function_name    = aws_lambda_function.lambda_mint.arn
+  function_name    = module.lambda_mint.lambda.function_name
 }
 
 // ---------- SNS topic ------------
@@ -33,9 +33,9 @@ resource "aws_sns_topic" "minting_topic"{
 }
 
 resource "aws_sns_topic_subscription" "mintin_async_topic_subscription" {
-  topic_arn = aws_sns_topic.minting_topic
+  topic_arn = aws_sns_topic.minting_topic.arn
   protocol = "sqs"
-  endpoint = aws_sqs_queue.minting_queue
+  endpoint = aws_sqs_queue.minting_queue.url
 }
 
 resource "aws_sqs_queue_policy" "minting_queue_policy" {

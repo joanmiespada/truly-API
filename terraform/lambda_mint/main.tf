@@ -32,9 +32,8 @@ resource "aws_lambda_function" "truly_lambda_mint" {
       CONTRACT_ADDRESS = "${var.contract_address}"
       CONTRACT_OWNER   = "${var.contract_owner}"
       KMS_KEY_ID       = "${var.kms_cypher_owner}"
-      BLOCKCHAIN_CONFIRMATIONS = "${var.blockchain_confirmations}",
+      BLOCKCHAIN_CONFIRMATIONS = "${var.blockchain_confirmations}"
       DEAD_LETTER_QUEUE_MINT= "${var.dead_letter_queue_mint}"
-      QUEUE_MINT_ASYNC = "${var.minting_async_queue}"
     }
   }
 
@@ -46,8 +45,8 @@ resource "aws_lambda_function" "truly_lambda_mint" {
     var.resource_xray,
     var.resource_secretsman,
     var.resource_kms,
-    var.resoucer_sqs,
-    aws_cloudwatch_log_group.truly_lambda_licenses_cloudwatch,
+    var.resource_sqs,
+    aws_cloudwatch_log_group.truly_lambda_mint_cloudwatch,
   ]
 
   tags = merge(var.common_tags, { service : "${var.service_name}" })

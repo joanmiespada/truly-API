@@ -50,18 +50,11 @@ module "lambda_login" {
   resource_xray = aws_iam_role_policy_attachment.truly_lambda_XRAY
   resource_dynamodb = aws_iam_role_policy_attachment.truly_lambda_dynamodb
   resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
-  resource_sqs = aws_iam_role_policy_attachment.truly_lambda_SQS
-  resource_kms = aww_iam_role_policy_attachment.truly_lambda_KMS
   role = aws_iam_role.truly_lambda_execution_role.arn
 
   environment_flag = var.environment_flag
   trace_log = var.trace_log
   lambda_deploy_folder = var.lambda_deploy_folder
-
-  dead_letter_queue_mint = aws_sqs_queue.minting_queue.url
-  minting_async_queue = aws_sqs_queue.minting_queue.url
-
-
 
 }
 
@@ -105,7 +98,8 @@ module "lambda_licenses" {
   resource_dynamodb = aws_iam_role_policy_attachment.truly_lambda_dynamodb
   resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
   resource_kms = aws_iam_role_policy_attachment.truly_lambda_KMS
-  resoucer_sqs = aws_iam_role_policy_attachment.truly_lambda_SQS
+  resource_sqs = aws_iam_role_policy_attachment.truly_lambda_SQS
+  resource_sns = aws_iam_role_policy_attachment.truly_lambda_SNS
   role = aws_iam_role.truly_lambda_execution_role.arn
 
   environment_flag = var.environment_flag
@@ -115,6 +109,9 @@ module "lambda_licenses" {
   blockchain_url = var.blockchain_url
   contract_address = var.contract_address
   contract_owner = var.contract_owner
+  dead_letter_queue_mint = aws_sqs_queue.minting_queue_deadletter.url
+  minting_async_topic_arn = aws_sns_topic.minting_topic.arn 
+  kms_cypher_owner = var.kms_id_cypher_all_secret_keys
 
 }
 module "lambda_mint" {
@@ -126,7 +123,7 @@ module "lambda_mint" {
   resource_dynamodb = aws_iam_role_policy_attachment.truly_lambda_dynamodb
   resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
   resource_kms = aws_iam_role_policy_attachment.truly_lambda_KMS
-  resoucer_sqs = aws_iam_role_policy_attachment.truly_lambda_SQS
+  resource_sqs = aws_iam_role_policy_attachment.truly_lambda_SQS
   role = aws_iam_role.truly_lambda_execution_role.arn
 
   environment_flag = var.environment_flag
@@ -136,5 +133,7 @@ module "lambda_mint" {
   blockchain_url = var.blockchain_url
   contract_address = var.contract_address
   contract_owner = var.contract_owner
+  dead_letter_queue_mint = aws_sqs_queue.minting_queue_deadletter.url
+  kms_cypher_owner = var.kms_id_cypher_all_secret_keys
 
 }

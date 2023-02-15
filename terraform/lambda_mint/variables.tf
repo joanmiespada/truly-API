@@ -68,7 +68,3 @@ variable "dead_letter_queue_mint" {
   type      = string
   description = "queue url to send errors when minting"
 }
-variable "minting_async_queue" {
-  type      = string
-  description = "queue url to mint async"
-}
