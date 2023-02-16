@@ -9,7 +9,7 @@ lib_config = { path = "../lib_config" }
 lib_licenses = { path = "../lib_licenses" }
 lib_users = { path = "../lib_users" }
 lib_async_ops = { path = "../lib_async_ops"}
-
+env_logger = "0.10.0"
 chrono = {version="0.4.23", features = ["serde"] }
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.91"

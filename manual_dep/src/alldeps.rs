@@ -37,9 +37,9 @@ pub async fn non_terraformed_dependencies(
     }
     let aux_user;
     if environment == "development" {
-        aux_user = include_str!("../res/user_development.json");
+        aux_user = include_str!("../res/adminuser_development.json");
     } else {
-        aux_user = include_str!("../res/user_prod_stage.json");
+        aux_user = include_str!("../res/adminuser_prod_stage.json");
     }
     let blockchain;
     if environment == "development" {

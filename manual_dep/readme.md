@@ -105,9 +105,18 @@ ENVIRONMENT=production cargo run -p manual_dep -- --store_key <key_id> --create
 
 ## Create async infra
 
-Only in development env, stage and prod is terraformed. 
+Only in development env, at stage and prod envs it is terraformed. It creates minting queue, deadletter queue and minting topic. 
 
 ```bash
 ENVIRONMENT=development cargo run -p manual_dep -- --async true --create
 ```
 
+## Create admin user
+
+To signup as admin user we need a user with admin privilegies.
+
+```bash
+ENVIRONMENT=development cargo run -p manual_dep -- --adminuser <email> --password <pass> --create
+ENVIRONMENT=stage cargo run -p manual_dep -- --adminuser <email> --password <pass> --create
+ENVIRONMENT=production cargo run -p manual_dep -- --adminuser <email> --password <pass> --create
+```

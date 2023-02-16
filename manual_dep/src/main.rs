@@ -1,5 +1,7 @@
 use alldeps::non_terraformed_dependencies;
 use aws_sdk_dynamodb::error::ResourceNotFoundException;
+use lib_async_ops::sns::create as create_topic;
+use lib_async_ops::sqs::create as create_queue;
 use lib_config::config::Config;
 use lib_config::infra::{
     create_key, create_secret_manager_keys, create_secret_manager_secret_key, store_secret_key,
@@ -9,13 +11,18 @@ use lib_licenses::services::contract::deploy_contract_locally;
 use lib_users::models::user::User;
 use lib_users::repositories::schema_user;
 use lib_users::repositories::users::UsersRepo;
-use lib_users::services::users::{UserManipulation, UsersService};
+use lib_users::services::users::{PromoteUser, UserManipulation, UsersService};
+use serde::{Deserialize, Serialize};
 use std::{env, process};
 use structopt::StructOpt;
-use lib_async_ops::sqs::create as create_queue;
-use lib_async_ops::sns::create as create_topic;
 
 mod alldeps;
+
+#[derive(Debug, Serialize, Deserialize)]
+struct NewUser {
+    pub email: String,
+    pub device: String,
+}
 
 #[allow(unused_variables)]
 async fn command(
@@ -27,10 +34,11 @@ async fn command(
         store_secret,
         store_key,
         key,
-        user,
+        adminuser,
+        password,
         contract,
         all,
-        async_jobs
+        async_jobs,
     }: Opt,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env::set_var("RUST_LOG", "debug");
@@ -149,21 +157,34 @@ async fn command(
             }
         }
     }
-    match user {
+    match adminuser {
         None => {}
-        Some(_) => {
-            let aux_user;
-            if environment == "development" {
-                aux_user = include_str!("../res/user_development.json");
+        Some(email) => {
+            if create {
+                config.load_secrets().await;
+                //let aux_user;
+                // if environment == "development" {
+                //     aux_user = include_str!("../res/adminuser_development.json");
+                // } else {
+                //     aux_user = include_str!("../res/adminuser_prod_stage.json");
+                // }
+                let user_repo = UsersRepo::new(&config);
+                let user_service = UsersService::new(user_repo);
+
+                //let newuser: NewUser = serde_json::from_str(aux_user).unwrap();
+                let mut user = User::new();
+                user.set_email(&email);
+                let device = uuid::Uuid::new_v4().to_string();
+                user.set_device(&device);
+
+                let user_id = user_service.add_user(&mut user, &password).await?;
+                let res = user_service
+                    .promote_user_to(&user_id, &PromoteUser::Upgrade)
+                    .await?;
+                println!("admin user id:{} with {} created {}", user_id, device, res);
             } else {
-                aux_user = include_str!("../res/user_prod_stage.json");
+                println!("Not implemented yet")
             }
-            let user_repo = UsersRepo::new(&config);
-            let user_service = UsersService::new(user_repo);
-
-            let mut user: User = serde_json::from_str(aux_user).unwrap();
-
-            user_service.add_user(&mut user, &None).await?;
         }
     }
     match contract {
@@ -185,17 +206,16 @@ async fn command(
         Some(keys_ok) => {
             if create {
                 let name1 = "queue_minting_async".to_string();
-                let url1 = create_queue(&config,name1.to_owned() ).await?;
-                println!("queue {} created at url: {}",name1,url1);
-                
+                let url1 = create_queue(&config, name1.to_owned()).await?;
+                println!("queue {} created at url: {}", name1, url1);
+
                 let name2 = "queue_minting_deathletter".to_string();
                 let url2 = create_queue(&config, name2.to_owned()).await?;
-                println!("queue {} created at url: {}",name2,url2);
+                println!("queue {} created at url: {}", name2, url2);
 
-                let name3 ="topic_minting_async".to_string(); 
+                let name3 = "topic_minting_async".to_string();
                 let arn = create_topic(&config, name3.to_owned()).await?;
-                println!("topic {} created at arn: {}",name2,arn);
-
+                println!("topic {} created at arn: {}", name2, arn);
             } else if delete {
                 panic!("not implemented yet")
             } else {
@@ -233,8 +253,11 @@ pub struct Opt {
     #[structopt(long = "key")]
     pub key: Option<bool>,
 
-    #[structopt(long = "user")]
-    pub user: Option<bool>,
+    #[structopt(long = "adminuser")]
+    pub adminuser: Option<String>,
+
+    #[structopt(long = "password")]
+    pub password: Option<String>,
 
     #[structopt(long = "contract")]
     pub contract: Option<String>,
@@ -244,11 +267,14 @@ pub struct Opt {
 
     #[structopt(long = "async")]
     pub async_jobs: Option<bool>,
-
 }
 
 #[tokio::main]
 async fn main() {
+    
+    env::set_var("RUST_LOG", "debug");
+    env_logger::builder().is_test(true).init();
+
     let op_cmd = command(Opt::from_args()).await;
     match op_cmd {
         Err(err) => {

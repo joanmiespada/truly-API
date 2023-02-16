@@ -85,7 +85,7 @@ resource "aws_apigatewayv2_integration" "truly_user_integration" {
   integration_type = "AWS_PROXY"
 
   connection_type    = "INTERNET"
-  description        = "Login methods"
+  description        = "user's methods"
   integration_method = "POST"
   integration_uri    = module.lambda_user.lambda.invoke_arn
 
@@ -188,7 +188,11 @@ resource "aws_apigatewayv2_deployment" "truly_api_deployment" {
 
       jsonencode(aws_apigatewayv2_integration.truly_licenses_integration),
       jsonencode(aws_apigatewayv2_route.truly_licenses_route_owner),
+      
+      jsonencode(aws_apigatewayv2_integration.truly_licenses_integration),
       jsonencode(aws_apigatewayv2_route.truly_licenses_route_asset),
+      
+      jsonencode(aws_apigatewayv2_integration.truly_licenses_integration),
       jsonencode(aws_apigatewayv2_route.truly_licenses_route_nft),
       ],
     ))
