@@ -4,9 +4,7 @@
         {
             "Effect": "Allow",
             "Action": [
-                "SNS:Subscribe",
-                "SNS:Receive",
-                "SNS:Publish"
+                "sns:*"
             ],
             "Resource": "arn:aws:sns:::*"
         }

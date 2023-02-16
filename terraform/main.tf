@@ -135,5 +135,6 @@ module "lambda_mint" {
   contract_owner = var.contract_owner
   dead_letter_queue_mint = aws_sqs_queue.minting_queue_deadletter.url
   kms_cypher_owner = var.kms_id_cypher_all_secret_keys
+  queue_mint_arn = aws_sqs_queue.minting_queue.arn
 
 }

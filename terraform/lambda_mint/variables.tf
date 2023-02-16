@@ -34,16 +34,12 @@ variable "lambda_deploy_folder" {}
 
 variable "blockchain_url" {
   type        = string
-  #default     = "https://localhost:1234"
   description = "endpoint from our blockchain gateway"
 
 }
-
 variable "contract_address" {
   type        = string
-  #default     = ""
   description = "hex direction where is our contract in the blockchain"
-
 }
 
 variable "contract_owner" {
@@ -52,7 +48,6 @@ variable "contract_owner" {
   description = "hex direction from account user who deployed the contract in the blockchain"
 
 }
-
 variable "kms_cypher_owner" {
   type      = string
   description = "kms cypher for secret keys"
@@ -67,4 +62,9 @@ variable "blockchain_confirmations" {
 variable "dead_letter_queue_mint" {
   type      = string
   description = "queue url to send errors when minting"
+}
+
+variable "queue_mint_arn"{
+  type = string
+  description = "when this queue recieves a message this lamdbda will get up and process it"
 }

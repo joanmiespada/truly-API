@@ -15,7 +15,7 @@ resource "aws_lambda_function" "truly_lambda_mint" {
   memory_size      = 512
   source_code_hash = filebase64sha256(local.lambda_file)
   filename         = local.lambda_file
-  timeout          = 60
+  timeout          = 300 //5 minutes max to minting in the blockchain
   tracing_config {
     mode = "Active"
   }
@@ -49,7 +49,17 @@ resource "aws_lambda_function" "truly_lambda_mint" {
     aws_cloudwatch_log_group.truly_lambda_mint_cloudwatch,
   ]
 
+
   tags = merge(var.common_tags, { service : "${var.service_name}" })
 
+}
+
+//--------------- plug mint queue with lambda minting ----------------
+
+resource "aws_lambda_event_source_mapping" "truly_minting" {
+  event_source_arn = var.queue_mint_arn
+  enabled = true
+  function_name    = aws_lambda_function.truly_lambda_mint.arn
+  batch_size = 1
 }
 
