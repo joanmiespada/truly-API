@@ -97,7 +97,6 @@ resource "aws_apigatewayv2_route" "truly_user_route" {
   api_id    = aws_apigatewayv2_api.truly_api.id
   route_key =  "ANY /api/user/{proxy+}"
   target    = "integrations/${aws_apigatewayv2_integration.truly_user_integration.id}"
-
 }
 
 resource "aws_lambda_permission" "truly_user_permission" {
@@ -138,21 +137,23 @@ resource "aws_lambda_permission" "truly_licenses_permission_asset" {
   //source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/POST/auth/login"
 
 }
-resource "aws_apigatewayv2_route" "truly_licenses_route_owner" {
-  api_id    = aws_apigatewayv2_api.truly_api.id
-  route_key =  "ANY /api/owner/{proxy+}"
-  target    = "integrations/${aws_apigatewayv2_integration.truly_licenses_integration.id}"
 
-}
+# resource "aws_apigatewayv2_route" "truly_licenses_route_owner" {
+#   api_id    = aws_apigatewayv2_api.truly_api.id
+#   route_key =  "ANY /api/owner/{proxy+}"
+#   target    = "integrations/${aws_apigatewayv2_integration.truly_licenses_integration.id}"
 
-resource "aws_lambda_permission" "truly_licenses_permission_owner" {
-  function_name = module.lambda_licenses.lambda.function_name   
-  action        = "lambda:InvokeFunction"
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_owner.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_owner.route_key)[1]}"
-  //source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/POST/auth/login"
+# }
 
-}
+# resource "aws_lambda_permission" "truly_licenses_permission_owner" {
+#   function_name = module.lambda_licenses.lambda.function_name   
+#   action        = "lambda:InvokeFunction"
+#   principal     = "apigateway.amazonaws.com"
+#   source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_owner.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_owner.route_key)[1]}"
+#   //source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/POST/auth/login"
+
+# }
+
 
 resource "aws_apigatewayv2_route" "truly_licenses_route_nft" {
   api_id    = aws_apigatewayv2_api.truly_api.id
@@ -186,8 +187,8 @@ resource "aws_apigatewayv2_deployment" "truly_api_deployment" {
       jsonencode(aws_apigatewayv2_integration.truly_user_integration),
       jsonencode(aws_apigatewayv2_route.truly_user_route),
 
-      jsonencode(aws_apigatewayv2_integration.truly_licenses_integration),
-      jsonencode(aws_apigatewayv2_route.truly_licenses_route_owner),
+      //jsonencode(aws_apigatewayv2_integration.truly_licenses_integration),
+      //jsonencode(aws_apigatewayv2_route.truly_licenses_route_owner),
       
       jsonencode(aws_apigatewayv2_integration.truly_licenses_integration),
       jsonencode(aws_apigatewayv2_route.truly_licenses_route_asset),

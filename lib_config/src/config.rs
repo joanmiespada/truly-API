@@ -42,6 +42,9 @@ impl Config {
                 if env == DEV_ENV {
                     debug!("loading env vars from .env file");
                     dotenv().ok();
+                } else if env == STAGE_ENV{ 
+                    debug!("loading env vars from .env-stage file");
+                    dotenv::from_filename(".env-stage").ok();
                 }
             }
         }
@@ -79,7 +82,7 @@ impl Config {
             let region_provider = RegionProviderChain::default_provider().or_else("eu-central-1");
             config = aws_config::from_env().region(region_provider).load().await;
         } else if env.environment() == STAGE_ENV {
-            let region_provider = RegionProviderChain::first_try(Region::new("eu-west-1"));
+            let region_provider = RegionProviderChain::first_try(Region::new( env.aws_region().to_owned() ));
             //let region_provider = RegionProviderChain::first_try(provider) default_provider().or_else("eu-west-1");
             config = aws_config::from_env().region(region_provider).load().await;
         } else {
