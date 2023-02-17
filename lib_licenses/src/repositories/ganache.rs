@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use aws_config::SdkConfig;
 use chrono::{DateTime, NaiveDateTime, Utc};
-use lib_config::{ config::Config, secrets::SECRETS_MANAGER_SECRET_KEY, environment::DEV_ENV};
+use lib_config::{config::Config, environment::DEV_ENV, secrets::SECRETS_MANAGER_SECRET_KEY};
 use log::debug;
 use mac_address::get_mac_address;
 use secp256k1::SecretKey;
@@ -23,10 +23,7 @@ use web3::{
 
 use crate::errors::nft::HydrateMasterSecretKeyError;
 use crate::{
-    errors::nft::{
-        NftBlockChainNonceMalformedError, 
-        NftUserAddressMalformedError,
-    },
+    errors::nft::{NftBlockChainNonceMalformedError, NftUserAddressMalformedError},
     models::keypair::KeyPair,
 };
 
@@ -56,7 +53,7 @@ pub struct GanacheRepo {
     contract_owner: Address,
     kms_key_id: String,
     aws: SdkConfig,
-    blockhain_node_confirmations: usize
+    blockhain_node_confirmations: usize,
 }
 
 impl GanacheRepo {
@@ -82,8 +79,12 @@ impl GanacheRepo {
 
         if conf.env_vars().environment() == DEV_ENV {
             blockchain_url = conf.env_vars().blockchain_url().to_owned();
-        }else {
-            blockchain_url = format!("{}/{}",conf.env_vars().blockchain_url(),conf.env_vars().blockchain_gateway_api_key()); 
+        } else {
+            blockchain_url = format!(
+                "{}/{}",
+                conf.env_vars().blockchain_url(),
+                conf.env_vars().blockchain_gateway_api_key()
+            );
         }
 
         Ok(GanacheRepo {
@@ -92,15 +93,12 @@ impl GanacheRepo {
             contract_owner: contract_owner_position,
             kms_key_id: conf.env_vars().kms_key_id().to_owned(),
             aws: conf.aws_config().to_owned(),
-            blockhain_node_confirmations: conf.env_vars().blockchain_confirmations().to_owned()
+            blockhain_node_confirmations: conf.env_vars().blockchain_confirmations().to_owned(),
         })
     }
 
     async fn decrypt_contract_owner_secret_key(&self) -> ResultE<SecretKey> {
-        use base64::{
-            engine::general_purpose,
-            Engine as _,
-        };
+        use base64::{engine::general_purpose, Engine as _};
 
         let client = aws_sdk_secretsmanager::Client::new(&self.aws);
         let scr = client
@@ -272,8 +270,14 @@ impl NFTsRepository for GanacheRepo {
             }
             Ok(transact) => transact,
         };
-        let tx_str = format!("blockchain: ganache | tx: {} blockNum: {:?} gasUsed: {:?} effectiveGasPrice: {:?} from: {} to: {:?} ", 
-                                                    tx.transaction_hash, tx.block_number, tx.gas_used, tx.effective_gas_price, tx.from, tx.to );
+        let tx_str = format!("blockchain: ganache | tx: {:?} blockNum: {:?} gasUsed: {:?} effectiveGasPrice: {:?}weis({:?} eth)  from: {:?} to: {:?} ", 
+                                        Some(tx.transaction_hash), 
+                                        tx.block_number, 
+                                        tx.gas_used, 
+                                        tx.effective_gas_price, 
+                                        wei_to_eth( tx.effective_gas_price.unwrap()), 
+                                        Some(tx.from), 
+                                        tx.to );
         Ok(tx_str)
     }
 
@@ -313,6 +317,12 @@ impl NFTsRepository for GanacheRepo {
         Ok(res)
     }
 }
+
+fn wei_to_eth(wei_val: U256) -> f64 {
+    let res = wei_val.as_u128() as f64;
+    res / 1_000_000_000_000_000_000.0
+}
+
 
 pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
     let latest_block = client

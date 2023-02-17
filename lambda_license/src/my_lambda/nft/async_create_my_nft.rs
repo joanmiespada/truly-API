@@ -1,19 +1,19 @@
-
 use std::str::FromStr;
 
 use lambda_http::RequestExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_async_ops::errors::AsyncOpError;
-use lib_async_ops::sns::{SNSMessage,send as send_sns};
-use lib_async_ops::sqs::{SQSMessage, send as send_sqs};
+use lib_async_ops::sns::{send as send_sns, SNSMessage};
+use lib_async_ops::sqs::{send as send_sqs, SQSMessage};
 use lib_config::config::Config;
-use lib_licenses::services::assets::AssetService;
+use lib_licenses::models::asset::MintingStatus;
+use lib_licenses::services::assets::{AssetService, AssetManipulation};
+use lib_licenses::services::nfts::{CreateNFTAsync, NFTsManipulation, NFTsService};
 use lib_licenses::services::owners::OwnerService;
 use lib_users::services::users::UsersService;
 use url::Url;
 use uuid::Uuid;
 use validator::Validate;
-use lib_licenses::services::nfts::{NFTsService, CreateNFTAsync, NFTsManipulation };
 
 use crate::my_lambda::build_resp;
 
@@ -29,9 +29,8 @@ pub async fn _async_create_my_nft_sqs(
     blockchain_service: &NFTsService,
     user_service: &UsersService,
     user_id: &String,
-) -> Result<Response<String>, Box<dyn std::error::Error + Send+ Sync >> {
- 
-    let new_nft; 
+) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
+    let new_nft;
     match req.payload::<CreateNFT>() {
         Err(e) => {
             return build_resp(e.to_string(), StatusCode::BAD_REQUEST);
@@ -54,7 +53,7 @@ pub async fn _async_create_my_nft_sqs(
     let new_nft_async = CreateNFTAsync {
         user_id: user_id.clone(),
         asset_id: new_nft.asset_id,
-        price: new_nft.price
+        price: new_nft.price,
     };
 
     //let queue_url = find(&client).await?;
@@ -63,30 +62,30 @@ pub async fn _async_create_my_nft_sqs(
 
     let message = SQSMessage {
         id: Uuid::new_v4().to_string(),
-        body:  json_text.to_owned(),
+        body: json_text.to_owned(),
         //group: "MyGroup".to_owned(),
     };
-   
+
     let url = config.env_vars().queue_mint_async().to_owned();
     let queue_mint_id = Url::from_str(&url).unwrap();
 
-    let enqueded_op = send_sqs( config, &message, queue_mint_id).await;
+    let enqueded_op = send_sqs(config, &message, queue_mint_id).await;
 
-    
     let message = match enqueded_op {
         Err(e) => {
-            if let Some(m) = e.downcast_ref::< AsyncOpError>() {
+            if let Some(m) = e.downcast_ref::<AsyncOpError>() {
                 return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
             } else {
-                return build_resp("unknonw error working with the blockchain".to_string(), StatusCode::INTERNAL_SERVER_ERROR);
+                return build_resp(
+                    "unknonw error working with the blockchain".to_string(),
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                );
             }
-        },
-        Ok(val)=> val
+        }
+        Ok(val) => val,
     };
-        
-    
-    return build_resp(message, StatusCode::OK);
 
+    return build_resp(message, StatusCode::OK);
 }
 
 #[tracing::instrument]
@@ -99,9 +98,8 @@ pub async fn async_create_my_nft_sns(
     blockchain_service: &NFTsService,
     user_service: &UsersService,
     user_id: &String,
-) -> Result<Response<String>, Box<dyn std::error::Error + Send+ Sync >> {
- 
-    let new_nft; 
+) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
+    let new_nft;
     match req.payload::<CreateNFT>() {
         Err(e) => {
             return build_resp(e.to_string(), StatusCode::BAD_REQUEST);
@@ -121,36 +119,52 @@ pub async fn async_create_my_nft_sns(
         },
     }
 
-    blockchain_service.prechecks_before_minting( &new_nft.asset_id, user_id,&new_nft.price ).await?;
+    let checks_op =blockchain_service
+        .prechecks_before_minting(&new_nft.asset_id, user_id, &new_nft.price)
+        .await;
+    match checks_op{
+        Err(e)=>{
+                return build_resp(e.to_string(), StatusCode::CONFLICT);
+        },
+        Ok(asset)=>{
+            if *asset.mint_status() == MintingStatus::Scheduled{
+                return build_resp("it has been already scheduled. Please await until current process report any new status.".to_string(), StatusCode::CONFLICT);
+            }
+        }
+    }
 
     let new_nft_async = CreateNFTAsync {
         user_id: user_id.clone(),
         asset_id: new_nft.asset_id,
-        price: new_nft.price
+        price: new_nft.price,
     };
 
     let json_text = serde_json::to_string(&new_nft_async)?;
 
     let message = SNSMessage {
-        body:  json_text.to_owned(),
+        body: json_text.to_owned(),
     };
-   
+
     let topic_arn = config.env_vars().topic_arn_mint_async().to_owned();
 
-    let enqueded_op = send_sns( config, &message, topic_arn).await;
-    
-    let message = match enqueded_op {
+    let enqueded_op = send_sns(config, &message, topic_arn).await;
+
+    match enqueded_op {
         Err(e) => {
-            if let Some(m) = e.downcast_ref::< AsyncOpError>() {
+            if let Some(m) = e.downcast_ref::<AsyncOpError>() {
                 return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
             } else {
-                return build_resp("unknonw error working with the blockchain".to_string(), StatusCode::INTERNAL_SERVER_ERROR);
+                return build_resp(
+                    "unknonw error working with the blockchain".to_string(),
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                );
             }
-        },
-        Ok(val)=> val
+        }
+        Ok(val) => {
+            asset_service
+                .mint_status(&new_nft.asset_id, &None, MintingStatus::Scheduled)
+                .await?;
+            return build_resp(val, StatusCode::OK);
+        }
     };
-    
-    return build_resp(message, StatusCode::OK);
-
 }
-

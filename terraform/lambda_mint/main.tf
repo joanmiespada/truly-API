@@ -15,7 +15,7 @@ resource "aws_lambda_function" "truly_lambda_mint" {
   memory_size      = 512
   source_code_hash = filebase64sha256(local.lambda_file)
   filename         = local.lambda_file
-  timeout          = 300 //5 minutes max to minting in the blockchain
+  timeout          = 900 //15 minutes max to minting in the blockchain
   tracing_config {
     mode = "Active"
   }

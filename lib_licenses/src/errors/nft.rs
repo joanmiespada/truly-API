@@ -61,12 +61,12 @@ impl Display for TokenHasBeenMintedAlreadyError{
 }
 
 #[derive(Debug)]
-pub struct TokenMintingProcessHasBeenInitiatedError (pub Uuid);
+pub struct TokenMintingProcessHasBeenInitiatedError (pub Uuid, pub i64);
 
 impl std::error::Error for TokenMintingProcessHasBeenInitiatedError {}
 
 impl Display for TokenMintingProcessHasBeenInitiatedError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "this token has started the minting processa. Let's wait until current process finishes. token: {}", self.0.to_string())
+        write!(f, "this token: {} has started the minting processa. Let's wait at least {} minutes to re-try.", self.0.to_string(), self.1)
     }
 }

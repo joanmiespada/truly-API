@@ -1,6 +1,7 @@
 use std::{fmt, str::FromStr};
 
 use async_trait::async_trait;
+use chrono::Utc;
 use lib_async_ops::sqs::{send as send_async_message, SQSMessage};
 use lib_config::config::Config;
 use serde::{Deserialize, Serialize};
@@ -73,12 +74,16 @@ impl NFTsManipulation for NFTsService {
             }
             .into());
         }
+        let last_update = asset.last_update_time();
+        let diff = Utc::now() - *last_update;
+        let diff_min = diff.num_minutes();
+        const LIMIT: i64 =5;
 
-        if *asset.mint_status() == MintingStatus::Started
-            || *asset.mint_status() == MintingStatus::Scheduled
+        if *asset.mint_status() == MintingStatus::Started && diff_min < LIMIT
         {
             return Err(TokenMintingProcessHasBeenInitiatedError {
                 0: asset_id.to_owned(),
+                1: LIMIT
             }
             .into());
         }
