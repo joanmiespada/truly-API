@@ -13,7 +13,7 @@ use lib_users::services::users::UsersService;
 use url::Url;
 use uuid::Uuid;
 use validator::Validate;
-use lib_licenses::services::nfts::{NFTsService, CreateNFTAsync };
+use lib_licenses::services::nfts::{NFTsService, CreateNFTAsync, NFTsManipulation };
 
 use crate::my_lambda::build_resp;
 
@@ -121,13 +121,13 @@ pub async fn async_create_my_nft_sns(
         },
     }
 
+    blockchain_service.prechecks_before_minting( &new_nft.asset_id, user_id,&new_nft.price ).await?;
+
     let new_nft_async = CreateNFTAsync {
         user_id: user_id.clone(),
         asset_id: new_nft.asset_id,
         price: new_nft.price
     };
-
-    //let queue_url = find(&client).await?;
 
     let json_text = serde_json::to_string(&new_nft_async)?;
 
@@ -138,7 +138,6 @@ pub async fn async_create_my_nft_sns(
     let topic_arn = config.env_vars().topic_arn_mint_async().to_owned();
 
     let enqueded_op = send_sns( config, &message, topic_arn).await;
-
     
     let message = match enqueded_op {
         Err(e) => {
@@ -150,7 +149,6 @@ pub async fn async_create_my_nft_sns(
         },
         Ok(val)=> val
     };
-        
     
     return build_resp(message, StatusCode::OK);
 

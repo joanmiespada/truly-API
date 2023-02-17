@@ -10,7 +10,7 @@ use uuid::Uuid;
 use crate::errors::nft::{
     TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError,
 };
-use crate::models::asset::MintingStatus;
+use crate::models::asset::{MintingStatus, Asset};
 use crate::repositories::ganache::{GanacheRepo, NFTsRepository};
 use crate::repositories::keypairs::{KeyPairRepo, KeyPairRepository};
 use crate::services::assets::{AssetManipulation, AssetService};
@@ -20,9 +20,14 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 
 #[async_trait]
 pub trait NFTsManipulation {
+    async fn prechecks_before_minting(
+        &self,
+        asset_id: &Uuid,
+        user_id: &String,
+        price: &u64,
+    ) -> ResultE<Asset>;
     async fn try_mint(&self, asset_id: &Uuid, user_id: &String, price: &u64) -> ResultE<String>;
     async fn get(&self, asset_id: &Uuid) -> ResultE<NTFContentInfo>;
-    //async fn create_account()->   ResultE<(String, String, String)>;
 }
 
 #[derive(Debug)]
@@ -54,10 +59,14 @@ impl NFTsService {
 
 #[async_trait]
 impl NFTsManipulation for NFTsService {
-    #[tracing::instrument()]
-    async fn try_mint(&self, asset_id: &Uuid, user_id: &String, price: &u64) -> ResultE<String> {
-        let asset = self.asset_service.get_by_id(asset_id).await?;
+    async fn prechecks_before_minting(
+        &self,
+        asset_id: &Uuid,
+        user_id: &String,
+        _price: &u64,
+    ) -> ResultE<Asset> {
 
+        let asset = self.asset_service.get_by_id(asset_id).await?;
         if *asset.mint_status() == MintingStatus::CompletedSuccessfully {
             return Err(TokenHasBeenMintedAlreadyError {
                 0: asset_id.to_owned(),
@@ -74,10 +83,20 @@ impl NFTsManipulation for NFTsService {
             .into());
         }
 
-        let hash_file = asset.hash().to_owned().unwrap();
-
+        //check ownership between user and asset
         self.owner_service
             .get_by_user_asset_ids(asset_id, user_id)
+            .await?;
+
+        //TODO: check price minimum ammount!!!!!
+
+        Ok(asset.to_owned())
+    }
+
+    #[tracing::instrument()]
+    async fn try_mint(&self, asset_id: &Uuid, user_id: &String, price: &u64) -> ResultE<String> {
+        let asset = self
+            .prechecks_before_minting(asset_id, user_id, price)
             .await?;
 
         let user_wallet_address = self.keys_repo.get_or_create(user_id).await?;
@@ -86,6 +105,7 @@ impl NFTsManipulation for NFTsService {
             .mint_status(asset_id, &None, MintingStatus::Started)
             .await?;
 
+        let hash_file = asset.hash().to_owned().unwrap();
         let transaction_op = self
             .blockchain
             .add(asset_id, &user_wallet_address, &hash_file, price)

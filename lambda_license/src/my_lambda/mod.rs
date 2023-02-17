@@ -53,8 +53,7 @@ pub async fn function_handler(
     router.insert("/api/asset", Some("1"))?;
     router.insert("/api/asset/:id", Some("2"))?;
     router.insert("/api/nft", Some("3"))?;
-    router.insert("/api/nft/async", Some("4"))?;
-    //router.insert("/api/nft/async2", Some("5"))?;
+    //router.insert("/api/nft/sync", Some("4"))?;
 
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
@@ -119,30 +118,30 @@ pub async fn function_handler(
                     )
                     .await
                 }
+                // only useful in local development
+                // "4" => {
+                //     //let id = matched.params.get("id").unwrap().to_string();
+                //     //let asset_id = Uuid::from_str(id.as_str())?;
+
+                //     match jwt_mandatory(&req, config){
+                //         Err(e) => { return Ok(e);},
+                //         Ok(user)=> user_id = user
+                //     };
+
+                //     return create_my_nft(
+                //         &req,
+                //         &context,
+                //         config,
+                //         asset_service,
+                //         owners_service,
+                //         blockchain_service,
+                //         user_service,
+                //         &user_id,
+                //     )
+                //     .await;
+                // }
 
                 "3" => {
-                    //let id = matched.params.get("id").unwrap().to_string();
-                    //let asset_id = Uuid::from_str(id.as_str())?;
-
-                    match jwt_mandatory(&req, config){
-                        Err(e) => { return Ok(e);},
-                        Ok(user)=> user_id = user
-                    };
-
-                    return create_my_nft(
-                        &req,
-                        &context,
-                        config,
-                        asset_service,
-                        owners_service,
-                        blockchain_service,
-                        user_service,
-                        &user_id,
-                    )
-                    .await;
-                }
-
-                "4" => {
                     //let id = matched.params.get("id").unwrap().to_string();
                     //let asset_id = Uuid::from_str(id.as_str())?;
 
@@ -163,28 +162,6 @@ pub async fn function_handler(
                     )
                     .await;
                 }
-                
-                // "5" => {
-                //     //let id = matched.params.get("id").unwrap().to_string();
-                //     //let asset_id = Uuid::from_str(id.as_str())?;
-
-                //     match jwt_mandatory(&req, config){
-                //         Err(e) => { return Ok(e);},
-                //         Ok(user)=> user_id = user
-                //     };
-
-                //     return async_create_my_nft_sns(
-                //         &req,
-                //         &context,
-                //         config,
-                //         asset_service,
-                //         owners_service,
-                //         blockchain_service,
-                //         user_service,
-                //         &user_id,
-                //     )
-                //     .await;
-                // }
 
                 &_ => build_resp(
                     "method not allowed".to_string(),
