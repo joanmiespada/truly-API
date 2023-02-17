@@ -7,7 +7,7 @@ cd terraform
 terraform plan -var-file="variables-stage.tfvars"
 terraform apply -var-file="variables-stage.tfvars" --auto-approve
 
-terraform plan -var-file="variables-prod.tfvars"
-terraform apply -var-file="variables-prod.tfvars" --auto-approve
+# terraform plan -var-file="variables-prod.tfvars"
+#terraform apply -var-file="variables-prod.tfvars" --auto-approve
 
 cd ..

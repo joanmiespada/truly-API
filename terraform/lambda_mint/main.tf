@@ -30,10 +30,11 @@ resource "aws_lambda_function" "truly_lambda_mint" {
       RUST_LOG         = "${var.trace_log}"
       BLOCKCHAIN_URL   = "${var.blockchain_url}"
       CONTRACT_ADDRESS = "${var.contract_address}"
-      CONTRACT_OWNER   = "${var.contract_owner}"
+      CONTRACT_OWNER_ADDRESS   = "${var.contract_owner_address}"
       KMS_KEY_ID       = "${var.kms_cypher_owner}"
       BLOCKCHAIN_CONFIRMATIONS = "${var.blockchain_confirmations}"
       DEAD_LETTER_QUEUE_MINT= "${var.dead_letter_queue_mint}"
+      RUST_BACKTRACE = "${var.rust_backtrace}"
     }
   }
 
@@ -47,6 +48,7 @@ resource "aws_lambda_function" "truly_lambda_mint" {
     var.resource_kms,
     var.resource_sqs,
     aws_cloudwatch_log_group.truly_lambda_mint_cloudwatch,
+    var.rust_backtrace
   ]
 
 

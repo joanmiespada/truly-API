@@ -198,6 +198,7 @@ pub async fn function_handler(
         ),
     }
 }
+
 #[tracing::instrument]
 fn build_resp(
     msg: String,

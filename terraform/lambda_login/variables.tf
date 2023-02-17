@@ -35,3 +35,7 @@ variable "jwt_token_time_exp_hours" {
   default = "1"
 
 }
+
+variable "rust_backtrace" {
+  type= string
+}

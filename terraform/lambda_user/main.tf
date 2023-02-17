@@ -28,6 +28,7 @@ resource "aws_lambda_function" "truly_lambda_user" {
     variables = {
       ENVIRONMENT = "${var.environment_flag}"
       RUST_LOG = "${var.trace_log}"
+      RUST_BACKTRACE = "${var.rust_backtrace}"
     }
   }
 
@@ -39,6 +40,7 @@ resource "aws_lambda_function" "truly_lambda_user" {
     var.resource_xray,
     var.resource_secretsman,
     aws_cloudwatch_log_group.truly_lambda_user_cloudwatch,
+    var.rust_backtrace
   ]
   
   tags = merge(var.common_tags,{ service:"${var.service_name}"})

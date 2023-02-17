@@ -31,6 +31,7 @@ resource "aws_lambda_function" "truly_lambda_login" {
       ENVIRONMENT = "${var.environment_flag}"
       RUST_LOG = "${var.trace_log}"
       JWT_TOKEN_TIME_EXP_HOURS = "${var.jwt_token_time_exp_hours}"
+      RUST_BACKTRACE = "${var.rust_backtrace}"
     }
   }
 
@@ -42,6 +43,7 @@ resource "aws_lambda_function" "truly_lambda_login" {
     var.resource_xray,//aws_iam_role_policy_attachment.truly_lambda_XRAY,
     var.resource_secretsman,
     aws_cloudwatch_log_group.truly_lambda_login_cloudwatch,
+    var.rust_backtrace
   ]
   
   tags = merge(var.common_tags,{ service:"${var.service_name}"})

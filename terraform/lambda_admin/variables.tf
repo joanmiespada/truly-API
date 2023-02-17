@@ -29,3 +29,7 @@ variable "environment_flag" {}
 variable "trace_log" {}
 
 variable "lambda_deploy_folder" {}
+
+variable "rust_backtrace" {
+  type= string
+}

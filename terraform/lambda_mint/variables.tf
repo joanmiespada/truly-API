@@ -42,7 +42,7 @@ variable "contract_address" {
   description = "hex direction where is our contract in the blockchain"
 }
 
-variable "contract_owner" {
+variable "contract_owner_address" {
   type        = string
   #default     = ""
   description = "hex direction from account user who deployed the contract in the blockchain"
@@ -67,4 +67,8 @@ variable "dead_letter_queue_mint" {
 variable "queue_mint_arn"{
   type = string
   description = "when this queue recieves a message this lamdbda will get up and process it"
+}
+
+variable "rust_backtrace" {
+  type= string
 }

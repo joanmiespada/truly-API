@@ -38,7 +38,7 @@ variable "lambda_deploy_folder" {
   default = "../target/lambda_arm64/"
 }
 
-variable "contract_owner" {
+variable "contract_owner_address" {
   description = "contract owner address"
   type    = string
 }
@@ -53,4 +53,9 @@ variable "kms_id_cypher_all_secret_keys"  {
 variable "blockchain_url" {
   description = "address where the contract has been deployed at blockchain network"
   type    = string
+}
+
+variable "rust_backtrace" {
+  type = string
+  description = "debug info"
 }

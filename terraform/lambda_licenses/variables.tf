@@ -40,7 +40,7 @@ variable "contract_address" {
 
 }
 
-variable "contract_owner" {
+variable "contract_owner_address" {
   type        = string
   description = "hex direction from account user who deployed the contract in the blockchain"
 
@@ -64,4 +64,8 @@ variable "dead_letter_queue_mint" {
 variable "minting_async_topic_arn" {
   type      = string
   description = "topic arn to mint async"
+}
+
+variable "rust_backtrace" {
+  type= string
 }

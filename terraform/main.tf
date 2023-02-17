@@ -11,28 +11,21 @@ terraform {
   }
 
   required_version = "~> 1.0"
-
-  #cloud {
-    #organization = "mirch"
-
-  #  workspaces {
-  #    name = "api"
-  #  }
-  #}
+  
 }
 
 provider "aws" {
   region = var.aws_region
 }
 
-/*
+
 data "aws_secretsmanager_secret_version" "secrets_app" {
   secret_id = var.secrets_manager_app_keys_name
 }
 data "aws_secretsmanager_secret_version" "secret_key" {
   secret_id = var.secrets_manager_contract_owner_secret_key_name 
 }
-*/
+
 
 locals {
 
@@ -55,6 +48,7 @@ module "lambda_login" {
   environment_flag = var.environment_flag
   trace_log = var.trace_log
   lambda_deploy_folder = var.lambda_deploy_folder
+  rust_backtrace = var.rust_backtrace
 
 }
 
@@ -71,6 +65,8 @@ module "lambda_user" {
   environment_flag = var.environment_flag
   trace_log = var.trace_log
   lambda_deploy_folder = var.lambda_deploy_folder
+
+  rust_backtrace = var.rust_backtrace
 }
 
 module "lambda_admin" {
@@ -86,6 +82,8 @@ module "lambda_admin" {
   environment_flag = var.environment_flag
   trace_log = var.trace_log
   lambda_deploy_folder = var.lambda_deploy_folder
+  
+  rust_backtrace = var.rust_backtrace
 
 }
 
@@ -108,10 +106,12 @@ module "lambda_licenses" {
 
   blockchain_url = var.blockchain_url
   contract_address = var.contract_address
-  contract_owner = var.contract_owner
+  contract_owner_address = var.contract_owner_address
   dead_letter_queue_mint = aws_sqs_queue.minting_queue_deadletter.url
   minting_async_topic_arn = aws_sns_topic.minting_topic.arn 
   kms_cypher_owner = var.kms_id_cypher_all_secret_keys
+
+  rust_backtrace = var.rust_backtrace
 
 }
 module "lambda_mint" {
@@ -132,9 +132,11 @@ module "lambda_mint" {
 
   blockchain_url = var.blockchain_url
   contract_address = var.contract_address
-  contract_owner = var.contract_owner
+  contract_owner_address = var.contract_owner_address
   dead_letter_queue_mint = aws_sqs_queue.minting_queue_deadletter.url
   kms_cypher_owner = var.kms_id_cypher_all_secret_keys
   queue_mint_arn = aws_sqs_queue.minting_queue.arn
+  
+  rust_backtrace = var.rust_backtrace
 
 }
