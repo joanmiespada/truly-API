@@ -18,11 +18,10 @@
             }
         },
         {
-            "name": "server_http development",
+            "name": "server_http stage",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/server_http",
-            "args": [ "arg1", "arg2" ],
             "cwd": "${workspaceRoot}/target/debug",
             "preLaunchTask": "build_server_http",
             "env": {
@@ -92,31 +91,6 @@
             "args": [ ],
             "cwd": "${workspaceFolder}"
         },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Schema Definition",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}/tableCreations.js",
-            "env": {
-                "NODE_ENV": "development"
-            },
-            "args": ["--create"]
-        },
-        {
-            "name": "debug user admin creation",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceRoot}/scripts/admin_user.js",
-            "env":{
-                "NODE_ENV": "development"
-            },
-            "cwd": "${workspaceRoot}",
-            "outFiles": [
-                "${workspaceRoot}/test/**/*"
-            ],
-          },
+        
     ]
 }

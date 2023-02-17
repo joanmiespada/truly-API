@@ -1,8 +1,5 @@
-//extern crate derive_more;
-//extern crate rustc_serialize;
 
 use actix_cors::Cors;
-use actix_web::dev::Service;
 use actix_web::middleware::Logger;
 use actix_web::web;
 use actix_web::{http::header, App, HttpServer};

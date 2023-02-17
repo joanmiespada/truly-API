@@ -203,17 +203,14 @@ fn build_resp(
     msg: String,
     status_code: StatusCode,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
-    //} Response<Body> {
     let res = Response::builder()
         .status(status_code)
         .header("content-type", "text/json")
         .body(msg);
-    //.map_err(Box::new)?;
     match res {
         Err(e) => Err(ApiLambdaError { 0: e.to_string() }.into()),
         Ok(resp) => Ok(resp),
     }
-    //Ok(res)
 }
 
 fn check_jwt_token_as_user_logged(

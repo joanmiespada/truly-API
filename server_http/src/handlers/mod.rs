@@ -17,7 +17,7 @@ pub fn build_resp(body: impl Serialize, code: http::StatusCode) -> impl Responde
         StatusCode::BAD_REQUEST => HttpResponse::BadRequest().json(body),
         StatusCode::OK => HttpResponse::Ok().json(body), 
         StatusCode::SERVICE_UNAVAILABLE => HttpResponse::ServiceUnavailable().json(body),
-        StatusCode::NO_CONTENT => HttpResponse::NoContent().json(body),
+        StatusCode::NO_CONTENT => HttpResponse::NoContent().finish(),
         StatusCode::INTERNAL_SERVER_ERROR => HttpResponse::InternalServerError().json(body),
         StatusCode::NOT_ACCEPTABLE => HttpResponse::NotAcceptable().json(body),
         _ => HttpResponse::InternalServerError().body("no status code has been implemented!"),
