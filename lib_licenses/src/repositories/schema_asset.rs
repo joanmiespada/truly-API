@@ -1,26 +1,46 @@
 
 
 use aws_sdk_dynamodb::{model::{
-    AttributeDefinition, KeySchemaElement, KeyType, ScalarAttributeType, BillingMode,
+    AttributeDefinition, KeySchemaElement, KeyType, ScalarAttributeType, BillingMode, GlobalSecondaryIndex, Projection, ProjectionType,
 },  Error};
 
 pub const ASSETS_TABLE_NAME: &str = "truly_assets";
 pub const ASSETS_TABLE_INDEX_ID: &str = "assetId";
 pub const ASSET_ID_FIELD_PK: &str = "assetId";
+pub const URL_FIELD_NAME: &str = "uri";
+pub const URL_INDEX_NAME: &str = "url_index";
 
 //pub async fn create_schema_assets(conf: &Config) -> Result<(),Error> {
 pub async fn create_schema_assets(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
 
     //let client = Client::new(&shared_config);
 
-    let ad = AttributeDefinition::builder()
+    let asset_ad = AttributeDefinition::builder()
         .attribute_name(ASSET_ID_FIELD_PK)
         .attribute_type(ScalarAttributeType::S)
         .build();
-
+    let url_ad = AttributeDefinition::builder()
+        .attribute_name(ASSET_ID_FIELD_PK)
+        .attribute_type(ScalarAttributeType::S)
+        .build();
     let ks = KeySchemaElement::builder()
         .attribute_name(ASSET_ID_FIELD_PK)
         .key_type(KeyType::Hash)
+        .build();
+
+    let second_index = GlobalSecondaryIndex::builder()
+        .index_name(URL_INDEX_NAME)
+        .key_schema(
+            KeySchemaElement::builder()
+                .attribute_name(URL_FIELD_NAME)
+                .key_type(KeyType::Hash)
+                .build(),
+        )
+        .projection(
+            Projection::builder()
+                .projection_type(ProjectionType::KeysOnly)
+                .build(),
+        )
         .build();
 
     //let client = Client::new(conf.aws_config());
@@ -29,7 +49,9 @@ pub async fn create_schema_assets(client: &aws_sdk_dynamodb::Client) -> Result<(
         .create_table()
         .table_name(ASSETS_TABLE_NAME)
         .key_schema(ks)
-        .attribute_definitions(ad)
+        .global_secondary_indexes(second_index)
+        .attribute_definitions(asset_ad)
+        .attribute_definitions(url_ad)
         .billing_mode(BillingMode::PayPerRequest)
         .send()
         .await?;

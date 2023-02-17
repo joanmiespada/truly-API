@@ -227,25 +227,8 @@ impl NFTsRepository for GanacheRepo {
             max_fee_per_gas: None,
             max_priority_fee_per_gas: None,
         };
-        //block_status(&web3).await;
         debug!("calling from {}", self.contract_address.to_string());
-
-        // let caller = contract.call( //working with Ganache!
-        //     CONTRACT_METHOD_MINTING,
-        //     (to.clone(), token.clone(), hash_file.clone(), price.clone()),
-        //     self.contract_owner.clone(), //self.contract_address.clone(), //account_owner,
-        //     //Options::default(),
-        //     tx_options,
-        // );
-        // let secret_key;
-        // let secret_key_op = SecretKey::from_str( &user_key.private_key().as_str() );  //SecretKey::from_str("4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d");
-        // match secret_key_op{
-        //     Err(_)=> { return Err( NftBlockChainSecretOwnerMalformedError.into() );  },
-        //     Ok(val) => { secret_key = val}
-        // }
-        //let key: web3::signing::Key = web3::signing::Keya
-        //web3.accounts().sign_transaction(tx, key)
-        //web3::signing::
+        
         let contract_owner_private_key;
         let contract_owner_private_key_op = self.decrypt_contract_owner_secret_key().await;
         match contract_owner_private_key_op {
@@ -270,12 +253,13 @@ impl NFTsRepository for GanacheRepo {
             }
             Ok(transact) => transact,
         };
-        let tx_str = format!("blockchain: ganache | tx: {:?} blockNum: {:?} gasUsed: {:?} effectiveGasPrice: {:?}weis({:?} eth)  from: {:?} to: {:?} ", 
+        let tx_str = format!("blockchain: {} | tx: {:?} blockNum: {:?} gasUsed: {:?} w effectiveGasPrice: {:?} w  cost: {:?} gwei  from: {:?} to: {:?} ", 
+                                        self.url,
                                         Some(tx.transaction_hash), 
                                         tx.block_number, 
                                         tx.gas_used, 
                                         tx.effective_gas_price, 
-                                        wei_to_eth( tx.effective_gas_price.unwrap()), 
+                                        wei_to_gwei(tx.gas_used.unwrap() ) * wei_to_gwei( tx.effective_gas_price.unwrap()), 
                                         Some(tx.from), 
                                         tx.to );
         Ok(tx_str)
@@ -318,9 +302,13 @@ impl NFTsRepository for GanacheRepo {
     }
 }
 
-fn wei_to_eth(wei_val: U256) -> f64 {
+fn _wei_to_eth(wei_val: U256) -> f64 {
     let res = wei_val.as_u128() as f64;
     res / 1_000_000_000_000_000_000.0
+}
+fn wei_to_gwei(wei_val: U256) -> f64 {
+    let res = wei_val.as_u128() as f64;
+    res / 1_000_000_000.0
 }
 
 

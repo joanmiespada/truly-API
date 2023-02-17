@@ -18,9 +18,8 @@ use chrono::{
 use lib_config::config::Config;
 
 use super::owners::mapping_from_doc_to_owner;
-use super::schema_asset::{ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK};
+use super::schema_asset::{ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK, URL_FIELD_NAME};
 use super::schema_owners::{OWNERS_TABLE_NAME, OWNER_ASSET_ID_FIELD_PK, OWNER_USER_ID_FIELD_PK};
-const URL_FIELD_NAME: &str = "uri";
 const CREATIONTIME_FIELD_NAME: &str = "creationTime";
 const LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
 const STATUS_FIELD_NAME: &str = "assetStatus";

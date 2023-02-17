@@ -30,8 +30,10 @@ pub async fn function_handler(
     blockchain_service: &NFTsService,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
-    let data = &event.payload.records[0].body;
-            
-    async_minting(&data, config, blockchain_service).await
-   
+    let aux = event.payload.records;
+    for event in aux { 
+        let data = event.body;
+        async_minting(&data, config, blockchain_service).await?;
+    }
+    Ok(())
 }
