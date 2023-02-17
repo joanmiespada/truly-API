@@ -4,9 +4,9 @@
         {
             "Effect": "Allow",
             "Action": [
-                "sns:*"
+                "SNS:Publish"
             ],
-            "Resource": "arn:aws:sns:::*"
+            "Resource": "arn:aws:sns:*:*:*"
         }
     ]
 }

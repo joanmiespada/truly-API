@@ -1,12 +1,15 @@
 use std::{fmt, str::FromStr};
 
 use async_trait::async_trait;
-use lib_async_ops::sqs::{SQSMessage, send as send_async_message};
+use lib_async_ops::sqs::{send as send_async_message, SQSMessage};
 use lib_config::config::Config;
 use serde::{Deserialize, Serialize};
 use url::Url;
 use uuid::Uuid;
 
+use crate::errors::nft::{
+    TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError,
+};
 use crate::models::asset::MintingStatus;
 use crate::repositories::ganache::{GanacheRepo, NFTsRepository};
 use crate::repositories::keypairs::{KeyPairRepo, KeyPairRepository};
@@ -54,6 +57,23 @@ impl NFTsManipulation for NFTsService {
     #[tracing::instrument()]
     async fn try_mint(&self, asset_id: &Uuid, user_id: &String, price: &u64) -> ResultE<String> {
         let asset = self.asset_service.get_by_id(asset_id).await?;
+
+        if *asset.mint_status() == MintingStatus::CompletedSuccessfully {
+            return Err(TokenHasBeenMintedAlreadyError {
+                0: asset_id.to_owned(),
+            }
+            .into());
+        }
+
+        if *asset.mint_status() == MintingStatus::Started
+            || *asset.mint_status() == MintingStatus::Scheduled
+        {
+            return Err(TokenMintingProcessHasBeenInitiatedError {
+                0: asset_id.to_owned(),
+            }
+            .into());
+        }
+
         let hash_file = asset.hash().to_owned().unwrap();
 
         self.owner_service
@@ -83,7 +103,7 @@ impl NFTsManipulation for NFTsService {
                         asset_id, user_id
                     ),
                 };
-                send_async_message( &self.config, &message, queue_mint_errors_id).await?;
+                send_async_message(&self.config, &message, queue_mint_errors_id).await?;
 
                 self.asset_service
                     .mint_status(asset_id, &Some(e.to_string()), MintingStatus::Error)
@@ -125,7 +145,7 @@ impl Clone for NFTsService {
             keys_repo: self.keys_repo.clone(),
             owner_service: self.owner_service.clone(),
             asset_service: self.asset_service.clone(),
-            config: self.config.clone()
+            config: self.config.clone(),
         };
         return aux;
     }

@@ -31,9 +31,7 @@ variable "trace_log" {}
 variable "lambda_deploy_folder" {}
 variable "jwt_token_time_exp_hours" {
   description = "time expiration jwt in production based on hours"
-  type    = string
-  default = "1"
-
+  type    = number
 }
 
 variable "rust_backtrace" {

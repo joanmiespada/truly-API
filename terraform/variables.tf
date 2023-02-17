@@ -59,3 +59,8 @@ variable "rust_backtrace" {
   type = string
   description = "debug info"
 }
+
+variable "jwt_token_time_exp_hours" {
+  type = number
+  description = "jwt token expiration time, it forces to relogin"
+} 

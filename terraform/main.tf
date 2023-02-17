@@ -44,7 +44,7 @@ module "lambda_login" {
   resource_dynamodb = aws_iam_role_policy_attachment.truly_lambda_dynamodb
   resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
   role = aws_iam_role.truly_lambda_execution_role.arn
-
+  jwt_token_time_exp_hours = var.jwt_token_time_exp_hours 
   environment_flag = var.environment_flag
   trace_log = var.trace_log
   lambda_deploy_folder = var.lambda_deploy_folder

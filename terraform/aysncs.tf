@@ -1,8 +1,8 @@
 
 resource "aws_sqs_queue" "minting_queue" {
   name                      = "async_minting_queue"
-  delay_seconds             = 90
-  max_message_size          = 2048
+  delay_seconds             = 0
+  max_message_size          = 4096
   message_retention_seconds = 3600 //1h
   visibility_timeout_seconds = 300 // 5 minutes, it needs to be aligned with lambda_mint timeout
   receive_wait_time_seconds = 10
@@ -41,4 +41,11 @@ resource "aws_sqs_queue_policy" "minting_queue_policy" {
   queue_url = aws_sqs_queue.minting_queue.id
   policy    = file("./role_policies/async_mint_queue.json")
 
+}
+
+// TO BE DELETED!!!
+resource "aws_sns_topic_subscription" "mintin_async_topic_subscription_debug_email" {
+  topic_arn = aws_sns_topic.minting_topic.arn
+  protocol  = "email"
+  endpoint  = "joanmi@espada.cat"
 }

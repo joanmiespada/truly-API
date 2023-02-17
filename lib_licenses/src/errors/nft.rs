@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use uuid::Uuid;
+
 
 #[derive(Debug)]
 pub struct NftUserAddressMalformedError(pub String);
@@ -44,5 +46,27 @@ impl std::error::Error for HydrateMasterSecretKeyError{}
 impl Display for HydrateMasterSecretKeyError{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "master private key secret for contract owner error")
+    }
+}
+
+#[derive(Debug)]
+pub struct TokenHasBeenMintedAlreadyError(pub Uuid);
+
+impl std::error::Error for TokenHasBeenMintedAlreadyError{}
+
+impl Display for TokenHasBeenMintedAlreadyError{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "this token has been already minted. You can't mint it twice. {}", self.0.to_string())
+    }
+}
+
+#[derive(Debug)]
+pub struct TokenMintingProcessHasBeenInitiatedError (pub Uuid);
+
+impl std::error::Error for TokenMintingProcessHasBeenInitiatedError {}
+
+impl Display for TokenMintingProcessHasBeenInitiatedError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "this token has started the minting processa. Let's wait until current process finishes. token: {}", self.0.to_string())
     }
 }

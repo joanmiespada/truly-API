@@ -1,5 +1,6 @@
 
 use aws_sdk_sns::model::Topic;
+use tracing::log::info;
 
 use crate::errors::AsyncOpError;
 
@@ -36,6 +37,7 @@ async fn _check_if_exist(
     }
 }
 
+#[tracing::instrument()]
 pub async fn send(
     config: &lib_config::config::Config,
     message: &SNSMessage,
@@ -45,6 +47,7 @@ pub async fn send(
 
     let client = aws_sdk_sns::client::Client::new(shared_config);
 
+    info!( "****************sending request {}", message.body);
     let rsp_op = client
         .publish()
         .topic_arn(topic_arn)
@@ -52,9 +55,9 @@ pub async fn send(
         .send()
         .await;
     match rsp_op {
-        Err(e) => Err(AsyncOpError { 0: e.to_string() }.into()),
+        Err(e) => Err(AsyncOpError { 0: e.into_service_error().meta().message().unwrap().to_string() }.into()),
         Ok(rsp) => {
-            let result = format!("{:?}", rsp);
+            let result = format!("scheduled async miting for id {:?} successfully.", rsp.message_id().unwrap());
             Ok(result)
         }
     }

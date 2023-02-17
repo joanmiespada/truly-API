@@ -7,7 +7,7 @@
                 "kms:Encrypt",
                 "kms:Decrypt"
             ],
-            "Resource": "arn:aws:kms:::*"
+            "Resource": "arn:aws:kms:*:*:key/*"
         }
     ]
 }
