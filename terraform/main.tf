@@ -2,11 +2,11 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 3.70.0"
+      version = "~> 4.55.0"
     }
     archive = {
       source  = "hashicorp/archive"
-      version = "~> 2.2.0"
+      version = "~> 2.3.0"
     }
   }
 
@@ -31,6 +31,7 @@ locals {
 
   common_tags = {
     project = var.truly_tag
+    service = var.service_tag
   }
 
 }

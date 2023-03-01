@@ -26,6 +26,13 @@ variable "truly_tag" {
   default = "truly"
 }
 
+variable "service_tag" {
+  description = "for tagging all resources linked to this project"
+  type = string
+  default = "api"
+}
+
+
 variable "trace_log" {
   description = "tracing lambdas"
   type = string

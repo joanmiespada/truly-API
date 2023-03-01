@@ -44,8 +44,22 @@ resource "aws_sqs_queue_policy" "minting_queue_policy" {
 }
 
 // TO BE DELETED!!!
-resource "aws_sns_topic_subscription" "mintin_async_topic_subscription_debug_email" {
-  topic_arn = aws_sns_topic.minting_topic.arn
-  protocol  = "email"
-  endpoint  = "joanmi@espada.cat"
+# resource "aws_sns_topic_subscription" "mintin_async_topic_subscription_debug_email" {
+#   topic_arn = aws_sns_topic.minting_topic.arn
+#   protocol  = "email"
+#   endpoint  = "joanmi@espada.cat"
+# }
+
+
+// ---------- SNS video topics ------------
+// start processing video
+resource "aws_sns_topic" "video_in_topic" {
+   name = "video_in_topic"
+   tags = merge(local.common_tags, { service:"video"  })
 }
+// when video has been processed
+resource "aws_sns_topic" "video_out_topic" {
+   name = "video_out_topic"
+   tags = merge(local.common_tags, { service:"video"  })
+}
+
