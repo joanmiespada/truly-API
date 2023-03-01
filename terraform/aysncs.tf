@@ -22,6 +22,29 @@ resource "aws_sqs_queue" "minting_queue_deadletter" {
   tags = merge(local.common_tags, {})
 }
 
+resource "aws_cloudwatch_metric_alarm" "minting_queue_deadletter_alarm" {
+  alarm_name                = "minting_queue_deadletter"
+  comparison_operator       = "GreaterThanThreshold"
+  evaluation_periods        = "1"
+  metric_name               = "ApproximateNumberOfMessagesVisible"
+  namespace                 = "AWS/SQS"
+  period                    = "60"
+  statistic                 = "Sum"
+  threshold                 = "0"
+  alarm_description         = "This metric monitors minting dead letter queue"
+  insufficient_data_actions = []
+  alarm_actions = [ aws_sns_topic.minting_dead_letter_topic.arn ]
+}
+
+resource "aws_sns_topic" "minting_dead_letter_topic" {
+  name = "minting_dead_letter_topic"
+  tags = merge(local.common_tags, {})
+}
+resource "aws_sns_topic_subscription" "minting_topic_subscription_deadletter_email" {
+  topic_arn = aws_sns_topic.minting_dead_letter_topic.arn
+  protocol  = "email"
+  endpoint  = "joanmi@espada.cat"
+}
 
 
 // ---------- SNS topic ------------
