@@ -1,8 +1,10 @@
 use std::str::FromStr;
-
+use crate::models::asset::VideoLicensingStatus;
 use crate::models::asset::{Asset, AssetStatus, MintingStatus};
+use crate::models::video::VideoResult;
 use crate::repositories::assets::{AssetRepo, AssetRepository};
 use async_trait::async_trait;
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -24,6 +26,7 @@ pub trait AssetManipulation {
         transaction: &Option<String>,
         sts: MintingStatus,
     ) -> ResultE<()>;
+    async fn store_video_process(&self, video_res: &VideoResult) -> ResultE<()>;
 }
 
 #[derive(Debug)]
@@ -57,6 +60,8 @@ pub struct CreatableFildsAsset {
 
     pub latitude: Option<f64>,
     pub longitude: Option<f64>,
+
+    pub father: Option<Uuid>
 }
 
 #[async_trait]
@@ -90,6 +95,8 @@ impl AssetManipulation for AssetService {
 
         asset.set_longitude(&creation_asset.longitude);
         asset.set_latitude(&creation_asset.latitude);
+
+        asset.set_father(&creation_asset.father);
 
         let res = self.repository.add(&asset, user_id).await?;
         Ok(res)
@@ -154,6 +161,58 @@ impl AssetManipulation for AssetService {
             .await?;
         Ok(res)
     }
+    #[tracing::instrument()]
+    async fn store_video_process(&self, video_res: &VideoResult) -> ResultE<()> {
+
+        let mut original_asset = self.repository.get_by_id(&video_res.asset_id).await?;
+        
+        if video_res.video_op.unwrap() {
+        
+            let mut new_licensed_asset = Asset::new();
+
+            new_licensed_asset.set_id(&video_res.video_licensed_asset_id.unwrap());
+            new_licensed_asset.set_state(original_asset.state());
+            new_licensed_asset.set_longitude(original_asset.longitude());
+            new_licensed_asset.set_latitude(original_asset.latitude());
+            new_licensed_asset.set_license(original_asset.license());
+            new_licensed_asset.set_hash(&video_res.video_licensed_hash);
+            new_licensed_asset.set_url(&video_res.video_licensed);
+            new_licensed_asset.set_last_update_time(&Utc::now());
+            new_licensed_asset.set_creation_time(&Utc::now());
+            new_licensed_asset.set_minted_status( MintingStatus::NeverMinted);
+            new_licensed_asset.set_minted_tx(&None);
+            new_licensed_asset.set_video_licensing_status(VideoLicensingStatus::AlreadyLicensed);
+            new_licensed_asset.set_counter(&Some(video_res.counter));
+            new_licensed_asset.set_shorter(&Some(video_res.clone().shorter));
+            new_licensed_asset.set_father(&Some(video_res.asset_id));
+
+            self.repository
+                .add(&new_licensed_asset, &video_res.user_id)
+                .await?;
+
+            if video_res.keep_original {
+                //we need to update the original asset with new documents placed in the final location
+                original_asset.set_url(&video_res.video_original);
+                original_asset.set_hash(&video_res.video_original_hash);
+            }
+        }
+        original_asset.set_video_licensing_error(&video_res.video_error);
+        match video_res.video_op{
+            None => {},
+            Some(value)=>{
+                let state = if value {VideoLicensingStatus::CompletedSuccessfully} else {VideoLicensingStatus::Error};
+                original_asset.set_video_licensing_status( state );
+            }
+        }
+
+        self.repository
+            .update(original_asset.id(), &original_asset)
+            .await?;
+
+        Ok(())
+
+    }
+
 }
 
 impl Clone for AssetService {

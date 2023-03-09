@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
+use tracing::error;
 use url::Url;
 use uuid::Uuid;
 
 use crate::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
 use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
-use crate::models::asset::{Asset, AssetStatus, MintingStatus};
+use crate::models::asset::{Asset, AssetStatus, MintingStatus, VideoLicensingStatus};
 use crate::models::owner::Owner;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::model::{AttributeValue, Put, TransactWriteItem};
@@ -18,7 +19,10 @@ use chrono::{
 use lib_config::config::Config;
 
 use super::owners::mapping_from_doc_to_owner;
-use super::schema_asset::{ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK, URL_FIELD_NAME};
+use super::schema_asset::{
+    ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK, ASSET_TREE_FATHER_ID_FIELD_PK,
+    ASSET_TREE_SON_ID_FIELD_PK, ASSET_TREE_TABLE_NAME, URL_FIELD_NAME,
+};
 use super::schema_owners::{OWNERS_TABLE_NAME, OWNER_ASSET_ID_FIELD_PK, OWNER_USER_ID_FIELD_PK};
 const CREATIONTIME_FIELD_NAME: &str = "creationTime";
 const LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
@@ -31,6 +35,12 @@ const LICENSE_FIELD_NAME: &str = "license";
 const MINTED_FIELD_NAME: &str = "minted";
 const MINTED_STATUS_FIELD_NAME: &str = "minting_status";
 
+const COUNTER_FIELD_NAME: &str = "counter";
+const SHORTER_FIELD_NAME: &str = "shorter";
+const FATHER_FIELD_NAME: &str = "father_id";
+const VIDEO_LICENSING_FIELD_NAME: &str = "video_licensing";
+const VIDEO_LICENSING_STATUS_FIELD_NAME: &str = "video_licensing_status";
+
 static NULLABLE: &str = "__NULL__";
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
@@ -40,6 +50,7 @@ pub trait AssetRepository {
     async fn add(&self, asset: &Asset, user_id: &String) -> ResultE<Uuid>;
     async fn update(&self, id: &Uuid, ass: &Asset) -> ResultE<()>;
     async fn get_by_id(&self, id: &Uuid) -> ResultE<Asset>;
+    async fn get_father(&self, son_id: &Uuid) -> ResultE<Option<Asset>>;
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Asset>>;
     async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>>;
     async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset>;
@@ -116,8 +127,21 @@ impl AssetRepository for AssetRepo {
             Some(value) => license_av = AttributeValue::S(value.to_string()),
             None => license_av = AttributeValue::S(NULLABLE.to_string()),
         }
+        let shorter_av;
+        match asset.shorter() {
+            Some(value) => shorter_av = AttributeValue::S(value.to_string()),
+            None => shorter_av = AttributeValue::S(NULLABLE.to_string()),
+        }
+        let counter_av;
+        match asset.counter() {
+            Some(value) => counter_av = AttributeValue::N(value.to_string()),
+            None => counter_av = AttributeValue::S(NULLABLE.to_string()),
+        }
+
+        let video_licensing_status_av =
+            AttributeValue::S(asset.video_licensing_status().to_string());
         let minting_status_av = AttributeValue::S(asset.mint_status().to_string());
-        let request = self
+        let mut request = self
             .client
             .transact_write_items()
             .transact_items(
@@ -134,6 +158,9 @@ impl AssetRepository for AssetRepo {
                             .item(LICENSE_FIELD_NAME, license_av)
                             .item(STATUS_FIELD_NAME, status_av)
                             .item(MINTED_STATUS_FIELD_NAME, minting_status_av)
+                            .item(COUNTER_FIELD_NAME, counter_av)
+                            .item(SHORTER_FIELD_NAME, shorter_av)
+                            .item(VIDEO_LICENSING_STATUS_FIELD_NAME, video_licensing_status_av)
                             .table_name(ASSETS_TABLE_NAME)
                             .build(),
                     )
@@ -143,13 +170,31 @@ impl AssetRepository for AssetRepo {
                 TransactWriteItem::builder()
                     .put(
                         Put::builder()
-                            .item(OWNER_USER_ID_FIELD_PK, user_id_av)
-                            .item(OWNER_ASSET_ID_FIELD_PK, asset_id_av)
+                            .item(OWNER_USER_ID_FIELD_PK, user_id_av.clone())
+                            .item(OWNER_ASSET_ID_FIELD_PK, asset_id_av.clone())
                             .table_name(OWNERS_TABLE_NAME)
                             .build(),
                     )
                     .build(),
             );
+
+        match asset.father() {
+            None => {}
+            Some(value) => {
+                let father_id_av = AttributeValue::S(value.to_string());
+                request = request.transact_items(
+                    TransactWriteItem::builder()
+                        .put(
+                            Put::builder()
+                                .item(ASSET_TREE_FATHER_ID_FIELD_PK, father_id_av)
+                                .item(ASSET_TREE_SON_ID_FIELD_PK, asset_id_av)
+                                .table_name(ASSET_TREE_TABLE_NAME)
+                                .build(),
+                        )
+                        .build(),
+                );
+            }
+        }
 
         match request.send().await {
             Ok(_stored) => {
@@ -175,6 +220,7 @@ impl AssetRepository for AssetRepo {
         }
     }
 
+    //without fathers!
     async fn get_all(&self, _page_number: u32, _page_size: u32) -> ResultE<Vec<Asset>> {
         let mut queried = Vec::new();
 
@@ -218,6 +264,10 @@ impl AssetRepository for AssetRepo {
         let res = self._get_by_id(id).await?;
         let mut asset = Asset::new();
         mapping_from_doc_to_asset(&res, &mut asset);
+        match self.get_father(id).await? {
+            None => {}
+            Some(val) => asset.set_father(&Some(*val.id())),
+        }
         Ok(asset)
     }
 
@@ -254,6 +304,26 @@ impl AssetRepository for AssetRepo {
         }
         let minted_status_av = AttributeValue::S(asset.mint_status().to_string());
 
+        let shorter_av;
+        match asset.shorter() {
+            Some(value) => shorter_av = AttributeValue::S(value.to_string()),
+            None => shorter_av = AttributeValue::S(NULLABLE.to_string()),
+        }
+        let counter_av;
+        match asset.counter() {
+            Some(value) => counter_av = AttributeValue::N(value.to_string()),
+            None => counter_av = AttributeValue::S(NULLABLE.to_string()),
+        }
+
+        let video_licensing_status_av =
+            AttributeValue::S(asset.video_licensing_status().to_string());
+
+        let video_licensing_error_av;
+        match asset.video_licensing_error() {
+            Some(value) => video_licensing_error_av = AttributeValue::S(value.to_string()),
+            None => video_licensing_error_av = AttributeValue::S(NULLABLE.to_string()),
+        }
+
         let mut update_express = "set ".to_string();
         update_express.push_str(format!("{0} = :_url, ", URL_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :lastup, ", LASTUPDATETIME_FIELD_NAME).as_str());
@@ -264,7 +334,12 @@ impl AssetRepository for AssetRepo {
         update_express.push_str(format!("{0} = :license, ", LICENSE_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :minted_tx, ", MINTED_FIELD_NAME).as_str());
         update_express
-            .push_str(format!("{0} = :minted_status ", MINTED_STATUS_FIELD_NAME).as_str());
+            .push_str(format!("{0} = :minted_status, ", MINTED_STATUS_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :shorter, ", SHORTER_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :counter, ", COUNTER_FIELD_NAME).as_str());
+        update_express
+            .push_str(format!("{0} = :lic_status, ", VIDEO_LICENSING_STATUS_FIELD_NAME).as_str());
+        update_express.push_str(format!("{0} = :lic_error", VIDEO_LICENSING_FIELD_NAME).as_str());
 
         let request = self
             .client
@@ -280,7 +355,11 @@ impl AssetRepository for AssetRepo {
             .expression_attribute_values(":license", license_av)
             .expression_attribute_values(":minted_tx", minted_tx_av)
             .expression_attribute_values(":minted_status", minted_status_av)
-            .expression_attribute_values(":_status", status_av);
+            .expression_attribute_values(":_status", status_av)
+            .expression_attribute_values(":shorter", shorter_av)
+            .expression_attribute_values(":counter", counter_av)
+            .expression_attribute_values(":lic_status", video_licensing_status_av)
+            .expression_attribute_values(":lic_error", video_licensing_error_av);
 
         match request.send().await {
             Ok(_updated) => {
@@ -403,6 +482,51 @@ impl AssetRepository for AssetRepo {
         mapping_from_doc_to_asset(&res, &mut asset);
         Ok(asset)
     }
+
+    async fn get_father(&self, son_id: &Uuid) -> ResultE<Option<Asset>> {
+        let asset_son_id_av = AttributeValue::S(son_id.to_string());
+
+        let mut filter = HashMap::new();
+        filter.insert(ASSET_TREE_SON_ID_FIELD_PK.to_string(), asset_son_id_av);
+
+        let request = self
+            .client
+            //.query()
+            .get_item()
+            .table_name(ASSET_TREE_TABLE_NAME)
+            .set_key(Some(filter));
+
+        let results = request.send().await;
+        match results {
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(OwnerDynamoDBError(e.to_string()).into());
+            }
+            Ok(_) => {}
+        }
+
+        match results.unwrap().item {
+            None => {
+                //return Err(FatherNoExistsError(son_id.to_string()).into());
+                Ok(None)
+            }
+            Some(aux) => {
+                let _id = aux.get(ASSET_TREE_FATHER_ID_FIELD_PK).unwrap();
+                let asset_id = _id.as_s().unwrap();
+                let father_uuid = Uuid::from_str(asset_id).unwrap();
+
+                let res = self._get_by_id(&father_uuid).await?;
+                let mut asset = Asset::new();
+                mapping_from_doc_to_asset(&res, &mut asset);
+                Ok(Some(asset))
+            }
+        }
+    }
 }
 
 fn iso8601(st: &DateTime<Utc>) -> String {
@@ -508,9 +632,75 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
     let minted_status = doc.get(MINTED_STATUS_FIELD_NAME).unwrap().as_s().unwrap();
     asset.set_minted_status(MintingStatus::from_str(minted_status).unwrap());
 
-
     let status_t = doc.get(STATUS_FIELD_NAME).unwrap().as_s().unwrap();
     let aux = AssetStatus::from_str(status_t).unwrap();
     asset.set_state(&aux);
 
+    let video_licensing_status = doc
+        .get(VIDEO_LICENSING_STATUS_FIELD_NAME)
+        .unwrap()
+        .as_s()
+        .unwrap();
+    asset.set_video_licensing_status(
+        VideoLicensingStatus::from_str(video_licensing_status).unwrap(),
+    );
+
+    let video_licensing_error = doc.get(VIDEO_LICENSING_FIELD_NAME);
+    match video_licensing_error {
+        None => asset.set_video_licensing_error(&None),
+        Some(lati) => {
+            let val = lati.as_s().unwrap();
+            if val == NULLABLE {
+                asset.set_video_licensing_error(&None)
+            } else {
+                asset.set_video_licensing_error(&Some(val.clone()))
+            }
+        }
+    }
+
+    let shorter = doc.get(SHORTER_FIELD_NAME);
+    match shorter {
+        None => asset.set_shorter(&None),
+        Some(lati) => {
+            let val = lati.as_s().unwrap();
+            if val == NULLABLE {
+                asset.set_shorter(&None)
+            } else {
+                asset.set_shorter(&Some(val.clone()))
+            }
+        }
+    }
+
+    let counter = doc.get(COUNTER_FIELD_NAME);
+    match counter {
+        None => asset.set_counter(&None),
+        Some(lati) => {
+            let val = lati.as_n().unwrap();
+            if val == NULLABLE {
+                asset.set_counter(&None)
+            } else {
+                let num_op = u64::from_str_radix(val.as_str(), 10);
+                match num_op {
+                    Err(e) => {
+                        error!("counter parser error! {}", val);
+                        error!("{}", e);
+                        asset.set_counter(&None)
+                    }
+                    Ok(num) => asset.set_counter(&Some(num.clone())),
+                }
+            }
+        }
+    }
+    /*let _x_ = doc.get(   );
+    match _x_ {
+        None => asset.set_(&None),
+        Some(lati) => {
+            let val = lati.as_s().unwrap();
+            if val == NULLABLE {
+                asset.set_(&None)
+            } else {
+                asset.set_(&Some(val.clone()))
+            }
+        }
+    }*/
 }

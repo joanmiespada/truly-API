@@ -3,6 +3,7 @@ use std::str::FromStr;
 
 use aws_sdk_dynamodb::Client;
 use lib_licenses::repositories::assets::AssetRepo;
+use lib_licenses::repositories::schema_asset::create_schema_assets_tree;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::{repositories::schema_asset::create_schema_assets};
@@ -11,6 +12,7 @@ use testcontainers::*;
 use url::Url;
 
 use lib_config::infra::build_local_stack_connection;
+use uuid::Uuid;
 
 #[tokio::test]
 async fn creation_table() {
@@ -59,6 +61,7 @@ async fn add_assets() {
         license: String::from_str("gnu").unwrap(),
         longitude: None,
         latitude: None,
+        father: None
     };
 
     let user = String::from_str("user1").unwrap();
@@ -96,6 +99,43 @@ fn list_of_assets() -> HashMap<String, Vec<Url>> {
 
     return aux;
 }
+
+fn list_of_assets_tree() -> (HashMap<String, (Vec<Url>,Option<Uuid>)>,Vec<Uuid>) {
+    let mut aux = HashMap::new();
+
+    let asset1 = Uuid::new_v4();
+    let asset2 = Uuid::new_v4();
+    let asset3 = Uuid::new_v4();
+    let asset4 = Uuid::new_v4();
+
+    let master = vec![asset1,asset2,asset3,asset4];
+
+    aux.insert(
+        "user1".to_string(),
+        (vec![
+            Url::parse("http://1.com/sdf1.png").unwrap(),
+            Url::parse("http://2.com/sdf2.png").unwrap(),
+        ], Some(asset1)),
+    );
+
+    aux.insert(
+        "user2".to_string(),
+        (vec![
+            Url::parse("http://3.com/sdf3.png").unwrap(),
+            Url::parse("http://4.com/sdf4.png").unwrap(),
+            Url::parse("http://5.com/sdf5.png").unwrap(),
+        ], Some(asset2)),
+    );
+    aux.insert(
+        "user3".to_string(),
+        (vec![Url::parse("http://6.com/sdf6.png").unwrap()],None),
+    );
+
+    aux.insert("user4".to_string(), (vec![],None));
+
+    return (aux,master);
+}
+
 #[tokio::test]
 async fn check_ownership() {
     //let _ = pretty_env_logger::try_init();
@@ -129,6 +169,7 @@ async fn check_ownership() {
                 license: String::from_str("gnu").unwrap(),
                 longitude: None,
                 latitude: None,
+                father:None
             };
 
             let new_op = service.add(&mut as1, &username).await;
@@ -164,4 +205,63 @@ async fn check_ownership() {
     test1212 = list_of_ids.iter().next().unwrap();
     let ass = service.get_by_id(test1212.0).await;
     assert_that(&ass).is_ok();
+}
+
+#[tokio::test]
+async fn check_asset_tree_father_son() {
+    //let _ = pretty_env_logger::try_init();
+    let docker = clients::Cli::default();
+    let node = docker.run(images::dynamodb_local::DynamoDb::default());
+    let host_port = node.get_host_port_ipv4(8000);
+
+    let shared_config = build_local_stack_connection(host_port).await;
+    let client = Client::new(&shared_config);
+
+    let mut creation = create_schema_assets(&client).await;
+    assert_that(&creation).is_ok();
+    creation = create_schema_owners(&client).await;
+    assert_that(&creation).is_ok();
+    creation = create_schema_assets_tree(&client).await;
+    assert_that(&creation).is_ok();
+
+    let mut conf = lib_config::config::Config::new();
+    conf.set_aws_config(&shared_config);
+
+    let repo = AssetRepo::new(&conf);
+    let service = AssetService::new(repo);
+
+    let payload = list_of_assets_tree();
+    let mut list_of_ids = HashMap::new();
+    for user in payload.0 {
+        for ass in user.1.0 {
+            let username = user.0.clone();
+
+            let mut as1 = CreatableFildsAsset {
+                url: ass.to_string(),
+                hash: "hash1234".to_string(),
+                license: String::from_str("gnu").unwrap(),
+                longitude: None,
+                latitude: None,
+                father: user.1.1
+            };
+
+            let new_op = service.add(&mut as1, &username).await;
+            assert_that!(&new_op).is_ok();
+
+            let new_id = new_op.unwrap().clone();
+            println!(
+                "added user: {} with asset: {}",
+                username,
+                new_id.to_string()
+            );
+            list_of_ids.insert(new_id, user.1.1);
+        }
+    }
+
+    for doc in list_of_ids{
+        let asset1 = service.get_by_id(&doc.0).await.unwrap();
+        assert_eq!(*asset1.father(), doc.1);
+    }
+
+
 }

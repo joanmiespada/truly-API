@@ -25,9 +25,15 @@ pub struct Asset {
 
     #[validate(length( max=1000))]
     minted_tx: Option<String>,
+    mint_status: MintingStatus,
 
-    mint_status: MintingStatus
+    counter: Option<u64>,
+    shorter: Option<String>,
 
+    video_licensing_error: Option<String>,
+    video_licensing_status: VideoLicensingStatus,
+
+    father: Option<Uuid>
 
 }
 
@@ -51,6 +57,11 @@ impl Asset {
             license: None,
             minted_tx: None,
             mint_status: MintingStatus::NeverMinted,
+            shorter: None,
+            counter: None,
+            father: None,
+            video_licensing_error: None,
+            video_licensing_status: VideoLicensingStatus::NeverStarted
         }
     }
 
@@ -125,6 +136,47 @@ impl Asset {
         self.mint_status = val.clone()
     }
 
+    pub fn shorter(&self) -> &Option<String> {
+        &self.shorter
+    }
+    pub fn set_shorter(&mut self, val: &Option<String>) {
+        self.shorter = val.clone()
+    }
+
+    pub fn counter(&self) -> &Option<u64> {
+        &self.counter
+    }
+    pub fn set_counter(&mut self, val: &Option<u64>) {
+        self.counter = val.clone()
+    }
+    pub fn father(&self) -> &Option<Uuid> {
+        &self.father
+    }
+    pub fn set_father(&mut self, val: &Option<Uuid>) {
+        self.father = val.clone()
+    }
+    pub fn video_licensing_error(&self) -> &Option<String> {
+        &self.video_licensing_error
+    }
+    pub fn set_video_licensing_error(&mut self, val: &Option<String>) {
+        self.video_licensing_error = val.clone()
+    }
+    pub fn video_licensing_status(&self) -> &VideoLicensingStatus {
+        &self.video_licensing_status
+    }
+    pub fn set_video_licensing_status(&mut self, val: VideoLicensingStatus) {
+        self.video_licensing_status = val.clone()
+    }
+/* 
+    pub fn (&self) -> &Option<> {
+        &self.
+    }
+    pub fn set_(&mut self, val: &Option<>) {
+        self. = val.clone()
+    }
+*/
+
+
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
@@ -147,6 +199,18 @@ impl fmt::Display for AssetStatus {
         match self {
             AssetStatus::Enabled => write!(f, "Enabled"),
             AssetStatus::Disabled => write!(f, "Disabled"),
+        }
+    }
+}
+#[derive(Debug, PartialEq, Eq)]
+pub struct ParseAssetStatusError;
+impl FromStr for AssetStatus {
+    type Err = ParseAssetStatusError ;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        match input {
+            "Enabled" => Ok(AssetStatus::Enabled),
+            "Disabled" => Ok(AssetStatus::Disabled),
+            _ => Err(ParseAssetStatusError), 
         }
     }
 }
@@ -191,17 +255,47 @@ impl FromStr for MintingStatus {
     }
 }
 
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+pub enum VideoLicensingStatus {
+    NeverStarted,
+    Scheduled,
+    Started,
+    CompletedSuccessfully,
+    AlreadyLicensed,
+    Error
+}
 
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseAssetStatusError;
-impl FromStr for AssetStatus {
-    type Err = ParseAssetStatusError ;
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        match input {
-            "Enabled" => Ok(AssetStatus::Enabled),
-            "Disabled" => Ok(AssetStatus::Disabled),
-            _ => Err(ParseAssetStatusError), 
+impl fmt::Display for VideoLicensingStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            VideoLicensingStatus::Scheduled => write!(f, "Scheduled"),
+            VideoLicensingStatus::Started => write!(f, "Started"),
+            VideoLicensingStatus::CompletedSuccessfully => write!(f, "Completed successfully"),
+            VideoLicensingStatus::Error => write!(f, "Error"),
+            VideoLicensingStatus::NeverStarted => write!(f, "Never started"),
+            VideoLicensingStatus::AlreadyLicensed => write!(f, "Already licensed")
         }
     }
 }
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct VideoLicensingStatusParseError;
+
+impl FromStr for VideoLicensingStatus {
+    type Err = VideoLicensingStatusParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Scheduled" => Ok(VideoLicensingStatus::Scheduled),
+            "Started" => Ok(VideoLicensingStatus::Started),
+            "Completed successfully" => Ok(VideoLicensingStatus::CompletedSuccessfully),
+            "Error" => Ok(VideoLicensingStatus::Error),
+            "Never started" => Ok(VideoLicensingStatus::NeverStarted),
+            "Already licensed" => Ok(VideoLicensingStatus::AlreadyLicensed),
+            _ => Err(VideoLicensingStatusParseError)
+            
+        }
+    }
+}
+
+

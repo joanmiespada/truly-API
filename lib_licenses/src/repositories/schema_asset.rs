@@ -10,10 +10,12 @@ pub const ASSET_ID_FIELD_PK: &str = "assetId";
 pub const URL_FIELD_NAME: &str = "uri";
 pub const URL_INDEX_NAME: &str = "url_index";
 
-//pub async fn create_schema_assets(conf: &Config) -> Result<(),Error> {
+pub const ASSET_TREE_TABLE_NAME:&str = "truly_assets_tree";
+pub const ASSET_TREE_SON_ID_FIELD_PK:&str = "son_id";
+pub const ASSET_TREE_FATHER_ID_FIELD_PK:&str = "father_id";
+
 pub async fn create_schema_assets(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
 
-    //let client = Client::new(&shared_config);
 
     let asset_ad = AttributeDefinition::builder()
         .attribute_name(ASSET_ID_FIELD_PK)
@@ -43,7 +45,6 @@ pub async fn create_schema_assets(client: &aws_sdk_dynamodb::Client) -> Result<(
         )
         .build();
 
-    //let client = Client::new(conf.aws_config());
 
     client
         .create_table()
@@ -58,11 +59,50 @@ pub async fn create_schema_assets(client: &aws_sdk_dynamodb::Client) -> Result<(
    Ok(()) 
 
 }
-//pub async fn delete_schema_assets(conf: &Config) -> Result<(),Error> {
 pub async fn delete_schema_assets(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
-    //let client = Client::new(conf.aws_config());
 
     client.delete_table().table_name(ASSETS_TABLE_NAME).send().await?;
+
+    Ok(())
+}
+
+pub async fn create_schema_assets_tree(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
+ let ad1 = AttributeDefinition::builder()
+        .attribute_name(ASSET_TREE_SON_ID_FIELD_PK)
+        .attribute_type(ScalarAttributeType::S)
+        .build();
+    let ad2 = AttributeDefinition::builder()
+        .attribute_name(ASSET_TREE_FATHER_ID_FIELD_PK)
+        .attribute_type(ScalarAttributeType::S)
+        .build();
+    
+
+    let ks1= KeySchemaElement::builder()
+        .attribute_name(ASSET_TREE_SON_ID_FIELD_PK)
+        .key_type(KeyType::Hash)
+        .build();
+    let ks2= KeySchemaElement::builder()
+        .attribute_name(ASSET_TREE_FATHER_ID_FIELD_PK)
+        .key_type(KeyType::Range)
+        .build();
+
+    client
+        .create_table()
+        .table_name(ASSET_TREE_TABLE_NAME)
+        .key_schema(ks1)
+        .key_schema(ks2)
+        .attribute_definitions(ad1)
+        .attribute_definitions(ad2)
+        .billing_mode(BillingMode::PayPerRequest)
+        .send()
+        .await?;
+
+   Ok(()) 
+
+}
+pub async fn delete_schema_assets_tree(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
+
+    client.delete_table().table_name( ASSET_TREE_TABLE_NAME  ).send().await?;
 
     Ok(())
 }

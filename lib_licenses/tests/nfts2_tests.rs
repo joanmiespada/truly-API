@@ -104,6 +104,7 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
         license: asset_license,
         longitude: None,
         latitude: None,
+        father: None
     };
 
     let user_id = String::from_str("user1234-1234-1234-1234").unwrap();
