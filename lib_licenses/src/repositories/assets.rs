@@ -167,6 +167,14 @@ impl AssetRepo {
             },
             None => {},
         }
+        //let minted_tx_av;
+        match asset.minted_tx() {
+            Some(value) => {
+                let minted_tx_av = AttributeValue::S(format!("{:?}",value));
+                items = items.item( MINTED_FIELD_NAME , minted_tx_av );
+            },
+            None => {},
+        }
 
         //let video_licensing_status_av = AttributeValue::S(asset.video_licensing_status().to_string());
         items = items.item(
@@ -321,7 +329,6 @@ impl AssetRepository for AssetRepo {
             );
 
 /* 
-
         let last_update_time_av = AttributeValue::S(iso8601(&Utc::now()));
         let id_av = AttributeValue::S(id.to_string());
 
