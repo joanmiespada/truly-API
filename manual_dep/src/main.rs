@@ -6,7 +6,7 @@ use lib_config::config::Config;
 use lib_config::infra::{
     create_key, create_secret_manager_keys, create_secret_manager_secret_key, store_secret_key,
 };
-use lib_licenses::repositories::{schema_asset, schema_keypairs, schema_owners};
+use lib_licenses::repositories::{schema_asset, schema_keypairs, schema_owners, schema_block_tx };
 use lib_licenses::services::contract::deploy_contract_locally;
 use lib_users::models::user::User;
 use lib_users::repositories::schema_user;
@@ -78,6 +78,15 @@ async fn command(
                         schema_keypairs::create_schema_keypairs(&client).await?
                     } else if delete {
                         schema_keypairs::delete_schema_keypairs(&client).await?
+                    } else {
+                        return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
+                    }
+                }
+                "transactions" => {
+                    if create {
+                        schema_block_tx::create_schema_transactions(&client).await?
+                    } else if delete {
+                        schema_block_tx::delete_schema_transactions(&client).await?
                     } else {
                         return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
                     }

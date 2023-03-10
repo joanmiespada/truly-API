@@ -27,6 +27,7 @@ In stage environment (eu-west-1)
 ENVIRONMENT=stage cargo run -p manual_dep -- --table owners --create
 ENVIRONMENT=stage cargo run -p manual_dep -- --table assets --create
 ENVIRONMENT=stage cargo run -p manual_dep -- --table keypairs --create
+ENVIRONMENT=stage cargo run -p manual_dep -- --table transactions --create
 ENVIRONMENT=stage cargo run -p manual_dep -- --table users --create
 ```
 
@@ -36,6 +37,7 @@ In stage *production* (eu-central-1)
 ENVIRONMENT=production cargo run -p manual_dep -- --table owners --create
 ENVIRONMENT=production cargo run -p manual_dep -- --table assets --create
 ENVIRONMENT=production cargo run -p manual_dep -- --table keypairs --create
+ENVIRONMENT=production cargo run -p manual_dep -- --table transactions --create
 ENVIRONMENT=production cargo run -p manual_dep -- --table users --create
 ```
 

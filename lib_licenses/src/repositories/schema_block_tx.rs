@@ -10,7 +10,7 @@ pub const TX_TIMESTAMP_PK: &str = "timestamp";
 pub const TX_FIELD: &str = "tx";
 pub const TX_INDEX_NAME: &str = "tx_index";
 
-pub async fn create_schema_assets(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
+pub async fn create_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
 
 
     let asset_ad = AttributeDefinition::builder()
@@ -61,7 +61,7 @@ pub async fn create_schema_assets(client: &aws_sdk_dynamodb::Client) -> Result<(
    Ok(()) 
 
 }
-pub async fn delete_schema_assets(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
+pub async fn delete_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
 
     client.delete_table().table_name(BLOCKCHAIN_TX_TABLE_NAME).send().await?;
 
