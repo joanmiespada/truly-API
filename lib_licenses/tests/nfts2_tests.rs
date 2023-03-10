@@ -6,7 +6,7 @@ use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::block_tx::BlockchainTxRepo;
 use lib_licenses::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
-use lib_licenses::repositories::schema_asset::create_schema_assets;
+use lib_licenses::repositories::schema_asset::{create_schema_assets, create_schema_assets_tree};
 use lib_licenses::repositories::schema_block_tx::create_schema_transactions;
 use lib_licenses::repositories::schema_keypairs::create_schema_keypairs;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
@@ -51,6 +51,9 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
 
     let creation1 = create_schema_assets(&dynamo_client).await;
     assert_that(&creation1).is_ok();
+
+    let creation11 = create_schema_assets_tree(&dynamo_client).await;
+    assert_that(&creation11).is_ok();
 
     let creation2 = create_schema_owners(&dynamo_client).await;
     assert_that(&creation2).is_ok();

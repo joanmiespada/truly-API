@@ -21,8 +21,8 @@ use lib_config::config::Config;
 
 use super::owners::mapping_from_doc_to_owner;
 use super::schema_asset::{
-    ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK, ASSET_TREE_FATHER_ID_FIELD,
-    ASSET_TREE_SON_ID_FIELD_PK, ASSET_TREE_TABLE_NAME, URL_FIELD_NAME,
+    ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK, ASSET_TREE_FATHER_ID_FIELD, ASSET_TREE_SON_ID_FIELD_PK,
+    ASSET_TREE_TABLE_NAME, URL_FIELD_NAME,
 };
 use super::schema_owners::{OWNERS_TABLE_NAME, OWNER_ASSET_ID_FIELD_PK, OWNER_USER_ID_FIELD_PK};
 const CREATIONTIME_FIELD_NAME: &str = "creationTime";
@@ -36,7 +36,7 @@ const LICENSE_FIELD_NAME: &str = "license";
 const MINTED_FIELD_NAME: &str = "minted";
 const MINTED_STATUS_FIELD_NAME: &str = "minting_status";
 
-const COUNTER_FIELD_NAME: &str = "counter";
+const COUNTER_FIELD_NAME: &str = "global_counter";
 const SHORTER_FIELD_NAME: &str = "shorter";
 const VIDEO_LICENSING_FIELD_NAME: &str = "video_licensing";
 const VIDEO_LICENSING_STATUS_FIELD_NAME: &str = "video_licensing_status";
@@ -123,73 +123,61 @@ impl AssetRepository for AssetRepo {
 
         //let longitude_av;
         match asset.longitude() {
-            Some(value) =>{ 
+            Some(value) => {
                 let longitude_av = AttributeValue::S(value.to_string());
                 items = items.item(LONGITUDE_FIELD_NAME, longitude_av);
-            },
-            None =>{}// longitude_av = AttributeValue::S(NULLABLE.to_string()),
+            }
+            None => {} // longitude_av = AttributeValue::S(NULLABLE.to_string()),
         }
         //let latitude_av;
         match asset.latitude() {
             Some(value) => {
                 let latitude_av = AttributeValue::S(value.to_string());
-                items = items.item( LATITUDE_FIELD_NAME, latitude_av);
-            },
+                items = items.item(LATITUDE_FIELD_NAME, latitude_av);
+            }
             None => {} //latitude_av = AttributeValue::S(NULLABLE.to_string()),
         }
         //let license_av;
         match asset.license() {
-            Some(value) =>{
+            Some(value) => {
                 let license_av = AttributeValue::S(value.to_string());
-                items = items.item( LICENSE_FIELD_NAME, license_av);
-            },
-            None =>{}// license_av = AttributeValue::S(NULLABLE.to_string()),
+                items = items.item(LICENSE_FIELD_NAME, license_av);
+            }
+            None => {} // license_av = AttributeValue::S(NULLABLE.to_string()),
         }
         //let shorter_av;
         match asset.shorter() {
             Some(value) => {
                 let shorter_av = AttributeValue::S(value.to_string());
-                items = items.item( SHORTER_FIELD_NAME, shorter_av);
-            },
-            None =>{} //shorter_av = AttributeValue::S(NULLABLE.to_string()),
+                items = items.item(SHORTER_FIELD_NAME, shorter_av);
+            }
+            None => {} //shorter_av = AttributeValue::S(NULLABLE.to_string()),
         }
         //let counter_av;
         match asset.counter() {
-            Some(value) => { 
+            Some(value) => {
                 let counter_av = AttributeValue::N(value.to_string());
-                items = items.item( COUNTER_FIELD_NAME, counter_av);
-            },
+                items = items.item(COUNTER_FIELD_NAME, counter_av);
+            }
             None => {} // counter_av = AttributeValue::N(NULLABLE.to_string()),
         }
 
         //let video_licensing_status_av = AttributeValue::S(asset.video_licensing_status().to_string());
-        items = items.item( VIDEO_LICENSING_STATUS_FIELD_NAME , AttributeValue::S(asset.video_licensing_status().to_string()));
-        items = items.item( MINTED_STATUS_FIELD_NAME, AttributeValue::S(asset.mint_status().to_string()));
-
+        items = items.item(
+            VIDEO_LICENSING_STATUS_FIELD_NAME,
+            AttributeValue::S(asset.video_licensing_status().to_string()),
+        );
+        items = items.item(
+            MINTED_STATUS_FIELD_NAME,
+            AttributeValue::S(asset.mint_status().to_string()),
+        );
 
         let mut request = self
             .client
             .transact_write_items()
             .transact_items(
                 TransactWriteItem::builder()
-                    .put(
-                        //Put::builder()
-                            //.item(ASSET_ID_FIELD_PK, asset_id_av.clone())
-                            //.item(CREATIONTIME_FIELD_NAME, creation_time_av)
-                            //.item(LASTUPDATETIME_FIELD_NAME, update_time_av)
-                            //.item(URL_FIELD_NAME, url_av)
-                            //.item(HASH_FIELD_NAME, hash_av)
-                            //.item(LONGITUDE_FIELD_NAME, longitude_av)
-                            // .item(LATITUDE_FIELD_NAME, latitude_av)
-                            // .item(LICENSE_FIELD_NAME, license_av)
-                            // .item(STATUS_FIELD_NAME, status_av)
-                            // .item(MINTED_STATUS_FIELD_NAME, minting_status_av)
-                            // .item(COUNTER_FIELD_NAME, counter_av)
-                            // .item(SHORTER_FIELD_NAME, shorter_av)
-                            // .item(VIDEO_LICENSING_STATUS_FIELD_NAME, video_licensing_status_av)
-                            items.table_name(ASSETS_TABLE_NAME)
-                             .build(),
-                    )
+                    .put(items.table_name(ASSETS_TABLE_NAME).build())
                     .build(),
             )
             .transact_items(

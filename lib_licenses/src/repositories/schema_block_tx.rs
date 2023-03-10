@@ -17,11 +17,15 @@ pub async fn create_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Re
         .attribute_name(TX_ASSET_ID_FIELD_PK)
         .attribute_type(ScalarAttributeType::S)
         .build();
-    let tx_ad = AttributeDefinition::builder()
+    let time_ad = AttributeDefinition::builder()
         .attribute_name( TX_TIMESTAMP_PK)
         .attribute_type(ScalarAttributeType::S)
         .build();
-    
+    let tx_ad = AttributeDefinition::builder()
+        .attribute_name( TX_FIELD)
+        .attribute_type(ScalarAttributeType::S)
+        .build();
+
     let ks1 = KeySchemaElement::builder()
         .attribute_name(TX_ASSET_ID_FIELD_PK)
         .key_type(KeyType::Hash)
@@ -47,18 +51,24 @@ pub async fn create_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Re
         .build();
 
 
-    client
+    let op = client
         .create_table()
         .table_name(BLOCKCHAIN_TX_TABLE_NAME)
         .key_schema(ks1)
         .key_schema(ks2)
         .global_secondary_indexes(second_index)
         .attribute_definitions(asset_ad)
+        .attribute_definitions(time_ad)
         .attribute_definitions(tx_ad)
         .billing_mode(BillingMode::PayPerRequest)
         .send()
-        .await?;
-   Ok(()) 
+        .await;
+    match op {
+        Err(e)=> {
+            return Err(e.into())
+        },
+        Ok(_)=> Ok(())
+    } 
 
 }
 pub async fn delete_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
