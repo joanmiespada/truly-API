@@ -4,6 +4,7 @@ use std::str::FromStr;
 use tracing::error;
 use url::Url;
 use uuid::Uuid;
+use web3::types::H256;
 
 use crate::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
 use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
@@ -20,7 +21,7 @@ use lib_config::config::Config;
 
 use super::owners::mapping_from_doc_to_owner;
 use super::schema_asset::{
-    ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK, ASSET_TREE_FATHER_ID_FIELD_PK,
+    ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK, ASSET_TREE_FATHER_ID_FIELD,
     ASSET_TREE_SON_ID_FIELD_PK, ASSET_TREE_TABLE_NAME, URL_FIELD_NAME,
 };
 use super::schema_owners::{OWNERS_TABLE_NAME, OWNER_ASSET_ID_FIELD_PK, OWNER_USER_ID_FIELD_PK};
@@ -37,7 +38,6 @@ const MINTED_STATUS_FIELD_NAME: &str = "minting_status";
 
 const COUNTER_FIELD_NAME: &str = "counter";
 const SHORTER_FIELD_NAME: &str = "shorter";
-const FATHER_FIELD_NAME: &str = "father_id";
 const VIDEO_LICENSING_FIELD_NAME: &str = "video_licensing";
 const VIDEO_LICENSING_STATUS_FIELD_NAME: &str = "video_licensing_status";
 
@@ -50,7 +50,7 @@ pub trait AssetRepository {
     async fn add(&self, asset: &Asset, user_id: &String) -> ResultE<Uuid>;
     async fn update(&self, id: &Uuid, ass: &Asset) -> ResultE<()>;
     async fn get_by_id(&self, id: &Uuid) -> ResultE<Asset>;
-    async fn get_father(&self, son_id: &Uuid) -> ResultE<Option<Asset>>;
+    async fn get_father(&self, son_id: &Uuid) -> ResultE<Option<Uuid>>;
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Asset>>;
     async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>>;
     async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset>;
@@ -112,57 +112,83 @@ impl AssetRepository for AssetRepo {
 
         let hash_av = AttributeValue::S(asset.hash().clone().unwrap().to_string());
 
-        let longitude_av;
+        let mut items = Put::builder();
+        items = items
+            .item(ASSET_ID_FIELD_PK, asset_id_av.clone())
+            .item(CREATIONTIME_FIELD_NAME, creation_time_av)
+            .item(LASTUPDATETIME_FIELD_NAME, update_time_av)
+            .item(URL_FIELD_NAME, url_av)
+            .item(STATUS_FIELD_NAME, status_av)
+            .item(HASH_FIELD_NAME, hash_av);
+
+        //let longitude_av;
         match asset.longitude() {
-            Some(value) => longitude_av = AttributeValue::S(value.to_string()),
-            None => longitude_av = AttributeValue::S(NULLABLE.to_string()),
+            Some(value) =>{ 
+                let longitude_av = AttributeValue::S(value.to_string());
+                items = items.item(LONGITUDE_FIELD_NAME, longitude_av);
+            },
+            None =>{}// longitude_av = AttributeValue::S(NULLABLE.to_string()),
         }
-        let latitude_av;
+        //let latitude_av;
         match asset.latitude() {
-            Some(value) => latitude_av = AttributeValue::S(value.to_string()),
-            None => latitude_av = AttributeValue::S(NULLABLE.to_string()),
+            Some(value) => {
+                let latitude_av = AttributeValue::S(value.to_string());
+                items = items.item( LATITUDE_FIELD_NAME, latitude_av);
+            },
+            None => {} //latitude_av = AttributeValue::S(NULLABLE.to_string()),
         }
-        let license_av;
+        //let license_av;
         match asset.license() {
-            Some(value) => license_av = AttributeValue::S(value.to_string()),
-            None => license_av = AttributeValue::S(NULLABLE.to_string()),
+            Some(value) =>{
+                let license_av = AttributeValue::S(value.to_string());
+                items = items.item( LICENSE_FIELD_NAME, license_av);
+            },
+            None =>{}// license_av = AttributeValue::S(NULLABLE.to_string()),
         }
-        let shorter_av;
+        //let shorter_av;
         match asset.shorter() {
-            Some(value) => shorter_av = AttributeValue::S(value.to_string()),
-            None => shorter_av = AttributeValue::S(NULLABLE.to_string()),
+            Some(value) => {
+                let shorter_av = AttributeValue::S(value.to_string());
+                items = items.item( SHORTER_FIELD_NAME, shorter_av);
+            },
+            None =>{} //shorter_av = AttributeValue::S(NULLABLE.to_string()),
         }
-        let counter_av;
+        //let counter_av;
         match asset.counter() {
-            Some(value) => counter_av = AttributeValue::N(value.to_string()),
-            None => counter_av = AttributeValue::S(NULLABLE.to_string()),
+            Some(value) => { 
+                let counter_av = AttributeValue::N(value.to_string());
+                items = items.item( COUNTER_FIELD_NAME, counter_av);
+            },
+            None => {} // counter_av = AttributeValue::N(NULLABLE.to_string()),
         }
 
-        let video_licensing_status_av =
-            AttributeValue::S(asset.video_licensing_status().to_string());
-        let minting_status_av = AttributeValue::S(asset.mint_status().to_string());
+        //let video_licensing_status_av = AttributeValue::S(asset.video_licensing_status().to_string());
+        items = items.item( VIDEO_LICENSING_STATUS_FIELD_NAME , AttributeValue::S(asset.video_licensing_status().to_string()));
+        items = items.item( MINTED_STATUS_FIELD_NAME, AttributeValue::S(asset.mint_status().to_string()));
+
+
         let mut request = self
             .client
             .transact_write_items()
             .transact_items(
                 TransactWriteItem::builder()
                     .put(
-                        Put::builder()
-                            .item(ASSET_ID_FIELD_PK, asset_id_av.clone())
-                            .item(CREATIONTIME_FIELD_NAME, creation_time_av)
-                            .item(LASTUPDATETIME_FIELD_NAME, update_time_av)
-                            .item(URL_FIELD_NAME, url_av)
-                            .item(HASH_FIELD_NAME, hash_av)
-                            .item(LONGITUDE_FIELD_NAME, longitude_av)
-                            .item(LATITUDE_FIELD_NAME, latitude_av)
-                            .item(LICENSE_FIELD_NAME, license_av)
-                            .item(STATUS_FIELD_NAME, status_av)
-                            .item(MINTED_STATUS_FIELD_NAME, minting_status_av)
-                            .item(COUNTER_FIELD_NAME, counter_av)
-                            .item(SHORTER_FIELD_NAME, shorter_av)
-                            .item(VIDEO_LICENSING_STATUS_FIELD_NAME, video_licensing_status_av)
-                            .table_name(ASSETS_TABLE_NAME)
-                            .build(),
+                        //Put::builder()
+                            //.item(ASSET_ID_FIELD_PK, asset_id_av.clone())
+                            //.item(CREATIONTIME_FIELD_NAME, creation_time_av)
+                            //.item(LASTUPDATETIME_FIELD_NAME, update_time_av)
+                            //.item(URL_FIELD_NAME, url_av)
+                            //.item(HASH_FIELD_NAME, hash_av)
+                            //.item(LONGITUDE_FIELD_NAME, longitude_av)
+                            // .item(LATITUDE_FIELD_NAME, latitude_av)
+                            // .item(LICENSE_FIELD_NAME, license_av)
+                            // .item(STATUS_FIELD_NAME, status_av)
+                            // .item(MINTED_STATUS_FIELD_NAME, minting_status_av)
+                            // .item(COUNTER_FIELD_NAME, counter_av)
+                            // .item(SHORTER_FIELD_NAME, shorter_av)
+                            // .item(VIDEO_LICENSING_STATUS_FIELD_NAME, video_licensing_status_av)
+                            items.table_name(ASSETS_TABLE_NAME)
+                             .build(),
                     )
                     .build(),
             )
@@ -186,7 +212,7 @@ impl AssetRepository for AssetRepo {
                     TransactWriteItem::builder()
                         .put(
                             Put::builder()
-                                .item(ASSET_TREE_FATHER_ID_FIELD_PK, father_id_av)
+                                .item(ASSET_TREE_FATHER_ID_FIELD, father_id_av)
                                 .item(ASSET_TREE_SON_ID_FIELD_PK, asset_id_av)
                                 .table_name(ASSET_TREE_TABLE_NAME)
                                 .build(),
@@ -266,7 +292,7 @@ impl AssetRepository for AssetRepo {
         mapping_from_doc_to_asset(&res, &mut asset);
         match self.get_father(id).await? {
             None => {}
-            Some(val) => asset.set_father(&Some(*val.id())),
+            Some(val) => asset.set_father(&Some(val)),
         }
         Ok(asset)
     }
@@ -483,7 +509,7 @@ impl AssetRepository for AssetRepo {
         Ok(asset)
     }
 
-    async fn get_father(&self, son_id: &Uuid) -> ResultE<Option<Asset>> {
+    async fn get_father(&self, son_id: &Uuid) -> ResultE<Option<Uuid>> {
         let asset_son_id_av = AttributeValue::S(son_id.to_string());
 
         let mut filter = HashMap::new();
@@ -516,14 +542,14 @@ impl AssetRepository for AssetRepo {
                 Ok(None)
             }
             Some(aux) => {
-                let _id = aux.get(ASSET_TREE_FATHER_ID_FIELD_PK).unwrap();
+                let _id = aux.get(ASSET_TREE_FATHER_ID_FIELD).unwrap();
                 let asset_id = _id.as_s().unwrap();
                 let father_uuid = Uuid::from_str(asset_id).unwrap();
-
-                let res = self._get_by_id(&father_uuid).await?;
-                let mut asset = Asset::new();
-                mapping_from_doc_to_asset(&res, &mut asset);
-                Ok(Some(asset))
+                Ok(Some(father_uuid))
+                //let res = self._get_by_id(&father_uuid).await?;
+                //let mut asset = Asset::new();
+                //mapping_from_doc_to_asset(&res, &mut asset);
+                //Ok(Some(asset))
             }
         }
     }
@@ -624,7 +650,8 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
             if val == NULLABLE {
                 asset.set_minted_tx(&None)
             } else {
-                asset.set_minted_tx(&Some(val.clone()))
+                let hash = H256::from_str(val).unwrap();
+                asset.set_minted_tx(&Some(hash.clone()))
             }
         }
     }

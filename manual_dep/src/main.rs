@@ -64,9 +64,11 @@ async fn command(
                 }
                 "assets" => {
                     if create {
-                        schema_asset::create_schema_assets(&client).await?
+                        schema_asset::create_schema_assets(&client).await?;
+                        schema_asset::create_schema_assets_tree(&client).await?;
                     } else if delete {
-                        schema_asset::delete_schema_assets(&client).await?
+                        schema_asset::delete_schema_assets(&client).await?;
+                        schema_asset::delete_schema_assets_tree(&client).await?;
                     } else {
                         return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
                     }

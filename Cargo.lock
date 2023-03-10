@@ -3094,6 +3094,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "lambda_after_video"
+version = "0.0.1"
+dependencies = [
+ "aws-sdk-sqs",
+ "aws_lambda_events",
+ "lambda_http",
+ "lambda_runtime",
+ "lib_config",
+ "lib_licenses",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid 1.2.2",
+ "validator",
+]
+
+[[package]]
 name = "lambda_http"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

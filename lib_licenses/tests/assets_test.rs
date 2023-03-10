@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::env;
 use std::str::FromStr;
 
 use aws_sdk_dynamodb::Client;
@@ -25,14 +26,17 @@ async fn creation_table() {
 
     let client = Client::new(&shared_config);
 
-    let creation = create_schema_assets(&client).await;
-
+    let mut creation = create_schema_assets(&client).await;
+    assert_that(&creation).is_ok();
+    creation = create_schema_owners(&client).await;
+    assert_that(&creation).is_ok();
+    creation = create_schema_assets_tree(&client).await;
     assert_that(&creation).is_ok();
 
     let req = client.list_tables().limit(10);
     let list_tables_result = req.send().await.unwrap();
 
-    assert_eq!(list_tables_result.table_names().unwrap().len(), 1);
+    assert_eq!(list_tables_result.table_names().unwrap().len(), 3);
 }
 
 #[tokio::test]
@@ -45,8 +49,11 @@ async fn add_assets() {
     let shared_config = build_local_stack_connection(host_port).await;
     let client = Client::new(&shared_config);
 
-    let creation = create_schema_assets(&client).await;
-
+    let mut creation = create_schema_assets(&client).await;
+    assert_that(&creation).is_ok();
+    creation = create_schema_owners(&client).await;
+    assert_that(&creation).is_ok();
+    creation = create_schema_assets_tree(&client).await;
     assert_that(&creation).is_ok();
 
     let mut conf = lib_config::config::Config::new();
@@ -138,6 +145,10 @@ fn list_of_assets_tree() -> (HashMap<String, (Vec<Url>,Option<Uuid>)>,Vec<Uuid>)
 
 #[tokio::test]
 async fn check_ownership() {
+
+    env::set_var("RUST_LOG", "debug");
+    env::set_var("RUST_BACKTRACE", "full");
+    
     //let _ = pretty_env_logger::try_init();
     let docker = clients::Cli::default();
     let node = docker.run(images::dynamodb_local::DynamoDb::default());
@@ -150,6 +161,9 @@ async fn check_ownership() {
     assert_that(&creation).is_ok();
     creation = create_schema_owners(&client).await;
     assert_that(&creation).is_ok();
+    creation = create_schema_assets_tree(&client).await;
+    assert_that(&creation).is_ok();
+
 
     let mut conf = lib_config::config::Config::new();
     conf.set_aws_config(&shared_config);
@@ -249,10 +263,15 @@ async fn check_asset_tree_father_son() {
             assert_that!(&new_op).is_ok();
 
             let new_id = new_op.unwrap().clone();
+            let father = match user.1.1{
+                None=> "no father".to_string(),
+                Some(id)=> id.to_string()
+            };
             println!(
-                "added user: {} with asset: {}",
+                "added user: {} with asset: {} and father id: {}",
                 username,
-                new_id.to_string()
+                new_id.to_string(),
+                father
             );
             list_of_ids.insert(new_id, user.1.1);
         }

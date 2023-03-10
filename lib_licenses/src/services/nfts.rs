@@ -12,10 +12,13 @@ use crate::errors::nft::{
     TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError,
 };
 use crate::models::asset::{MintingStatus, Asset};
+use crate::models::tx::BlockchainTx;
 use crate::repositories::ganache::{GanacheRepo, NFTsRepository};
 use crate::repositories::keypairs::{KeyPairRepo, KeyPairRepository};
 use crate::services::assets::{AssetManipulation, AssetService};
 use crate::services::owners::{OwnerManipulation, OwnerService};
+
+use super::block_tx::{BlockchainTxService, BlockchainTxManipulation};
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
@@ -27,7 +30,7 @@ pub trait NFTsManipulation {
         user_id: &String,
         price: &u64,
     ) -> ResultE<Asset>;
-    async fn try_mint(&self, asset_id: &Uuid, user_id: &String, price: &u64) -> ResultE<String>;
+    async fn try_mint(&self, asset_id: &Uuid, user_id: &String, price: &u64) -> ResultE<BlockchainTx>;
     async fn get(&self, asset_id: &Uuid) -> ResultE<NTFContentInfo>;
 }
 
@@ -37,6 +40,7 @@ pub struct NFTsService {
     keys_repo: KeyPairRepo,
     asset_service: AssetService,
     owner_service: OwnerService,
+    tx_service: BlockchainTxService,
     config: Config,
 }
 
@@ -46,14 +50,16 @@ impl NFTsService {
         keys_repo: KeyPairRepo,
         asset_service: AssetService,
         owner_service: OwnerService,
+        tx_service: BlockchainTxService,
         config: Config,
     ) -> NFTsService {
         NFTsService {
             blockchain: repo,
-            keys_repo: keys_repo,
-            asset_service: asset_service,
-            owner_service: owner_service,
+            keys_repo,
+            asset_service,
+            owner_service,
             config,
+            tx_service
         }
     }
 }
@@ -99,7 +105,7 @@ impl NFTsManipulation for NFTsService {
     }
 
     #[tracing::instrument()]
-    async fn try_mint(&self, asset_id: &Uuid, user_id: &String, price: &u64) -> ResultE<String> {
+    async fn try_mint(&self, asset_id: &Uuid, user_id: &String, price: &u64) -> ResultE<BlockchainTx> {
         let asset = self
             .prechecks_before_minting(asset_id, user_id, price)
             .await?;
@@ -118,6 +124,7 @@ impl NFTsManipulation for NFTsService {
 
         match transaction_op {
             Err(e) => {
+                //we need to change it to SNS topic instead!!
                 let url = self.config.env_vars().dead_letter_queue_mint().to_owned();
                 let queue_mint_errors_id = Url::from_str(&url).unwrap();
 
@@ -131,19 +138,26 @@ impl NFTsManipulation for NFTsService {
                 send_async_message(&self.config, &message, queue_mint_errors_id).await?;
 
                 self.asset_service
-                    .mint_status(asset_id, &Some(e.to_string()), MintingStatus::Error)
+                    .mint_status(asset_id, &None, MintingStatus::Error)
                     .await?;
 
+                let mut tx_paylaod = BlockchainTx::new();
+                tx_paylaod.set_asset_id(asset_id);
+                tx_paylaod.set_result(&e.to_string());
+                
+                self.tx_service.add(&tx_paylaod ).await?;
                 return Err(e.into());
             }
             Ok(transaction) => {
                 self.asset_service
                     .mint_status(
                         asset_id,
-                        &Some(transaction.clone()),
+                        transaction.tx(),
                         MintingStatus::CompletedSuccessfully,
                     )
                     .await?;
+                
+                self.tx_service.add( &transaction ).await?;
                 Ok(transaction)
             }
         }
@@ -171,6 +185,7 @@ impl Clone for NFTsService {
             owner_service: self.owner_service.clone(),
             asset_service: self.asset_service.clone(),
             config: self.config.clone(),
+            tx_service: self.tx_service.clone(),
         };
         return aux;
     }

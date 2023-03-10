@@ -3,6 +3,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use url::Url;
+use web3::types::H256;
 use std::{fmt, str::FromStr};
 use uuid::Uuid;
 use validator::Validate;
@@ -23,8 +24,8 @@ pub struct Asset {
     #[validate(length( max=1000))]
     license: Option<String>,
 
-    #[validate(length( max=1000))]
-    minted_tx: Option<String>,
+    //#[validate(length( max=1000))]
+    last_minted_tx: Option<H256>,
     mint_status: MintingStatus,
 
     counter: Option<u64>,
@@ -55,7 +56,7 @@ impl Asset {
             latitude: None,
             longitude: None,
             license: None,
-            minted_tx: None,
+            last_minted_tx: None,
             mint_status: MintingStatus::NeverMinted,
             shorter: None,
             counter: None,
@@ -123,11 +124,11 @@ impl Asset {
     pub fn set_license(&mut self, val: &Option<String>) {
         self.license = val.clone()
     }
-    pub fn minted_tx(&self) -> &Option<String> {
-        &self.minted_tx
+    pub fn minted_tx(&self) -> &Option<H256> {
+        &self.last_minted_tx
     }
-    pub fn set_minted_tx(&mut self, val: &Option<String>) {
-        self.minted_tx = val.clone()
+    pub fn set_minted_tx(&mut self, val: &Option<H256>) {
+        self.last_minted_tx = val.clone()
     }
     pub fn mint_status(&self) -> &MintingStatus {
         &self.mint_status

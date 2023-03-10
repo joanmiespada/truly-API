@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use validator::Validate;
+use web3::types::H256;
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
@@ -23,7 +24,7 @@ pub trait AssetManipulation {
     async fn mint_status(
         &self,
         id: &Uuid,
-        transaction: &Option<String>,
+        transaction: &Option<H256>,
         sts: MintingStatus,
     ) -> ResultE<()>;
     async fn store_video_process(&self, video_res: &VideoResult) -> ResultE<()>;
@@ -133,13 +134,12 @@ impl AssetManipulation for AssetService {
     async fn mint_status(
         &self,
         id: &Uuid,
-        transaction: &Option<String>,
+        transaction: &Option<H256>,
         sts: MintingStatus,
     ) -> ResultE<()> {
         let dbasset = self.repository.get_by_id(id).await?;
         let mut res: Asset = dbasset.clone();
 
-        //res.set_minted_tx(&Some(transaction.to_owned()));
         let aux = transaction.to_owned();
         res.set_minted_tx(&aux);
         res.set_minted_status(sts);

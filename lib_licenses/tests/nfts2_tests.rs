@@ -1,13 +1,16 @@
 use crate::nfts_tests::MNEMONIC_TEST;
 use ethers::utils::Ganache;
 use lib_config::config::Config;
+use lib_licenses::models::asset::MintingStatus;
 use lib_licenses::repositories::assets::AssetRepo;
+use lib_licenses::repositories::block_tx::BlockchainTxRepo;
 use lib_licenses::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::repositories::schema_asset::create_schema_assets;
 use lib_licenses::repositories::schema_keypairs::create_schema_keypairs;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
+use lib_licenses::services::block_tx::{BlockchainTxService, BlockchainTxManipulation};
 use lib_licenses::services::contract::deploy_contract_locally;
 use lib_licenses::services::owners::OwnerService;
 use lib_licenses::{
@@ -79,6 +82,8 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
 
 
     // bootstrap dependencies
+    let repo_tx = BlockchainTxRepo::new(&config.clone());
+    let tx_service = BlockchainTxService::new(repo_tx);
 
     let repo_ow = OwnerRepo::new(&config.clone());
     let owner_service = OwnerService::new(repo_ow);
@@ -152,6 +157,7 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
         repo_keys,
         asset_service.clone(),
         owner_service.clone(),
+        tx_service.clone(),
         config.to_owned()
     );
 
@@ -175,7 +181,17 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
 
     let content_minted = tx_op.unwrap();
 
-    assert_eq!(tx_in_chain, content_minted.minted_tx().as_deref().unwrap());
+    assert_eq!(*content_minted.mint_status(), MintingStatus::CompletedSuccessfully );
+    assert_ne!(*content_minted.minted_tx(), None );
+
+    let find = as1.minted_tx().unwrap();
+    let tx_tx= tx_service.get_by_tx(&find).await;
+    assert_that!(&tx_tx).is_ok();
+    let final_tx = tx_tx.unwrap();
+    let content1 = tx_in_chain.result().clone().unwrap();
+    let content2 = final_tx.result().clone().unwrap();
+    assert_eq!(content1,content2);
+
 
     Ok(())
 }

@@ -1,9 +1,12 @@
-mod mint_nft_async;
+mod after_video;
 
 use aws_lambda_events::sqs::SqsEventObj;
 use lambda_runtime::LambdaEvent;
 use tracing::instrument;
 use lib_config::config::Config;
+use lib_licenses::models::video::VideoResult;
+use lib_licenses::services::assets::AssetService;
+use crate::my_lambda::after_video::store_after_video_process;
 
 
 #[derive(Debug)]

@@ -21,7 +21,7 @@ use web3::{
     Web3,
 };
 
-use crate::errors::nft::HydrateMasterSecretKeyError;
+use crate::{errors::nft::HydrateMasterSecretKeyError, models::tx::BlockchainTx};
 use crate::{
     errors::nft::{NftBlockChainNonceMalformedError, NftUserAddressMalformedError},
     models::keypair::KeyPair,
@@ -41,7 +41,7 @@ pub trait NFTsRepository {
         user_key: &KeyPair,
         hash_file: &String,
         price: &u64,
-    ) -> ResultE<String>;
+    ) -> ResultE<BlockchainTx>;
 
     async fn get(&self, asset_id: &Uuid) -> ResultE<GanacheContentInfo>;
 }
@@ -157,7 +157,7 @@ impl NFTsRepository for GanacheRepo {
         user_key: &KeyPair,
         hash_file: &String,
         prc: &u64,
-    ) -> ResultE<String> {
+    ) -> ResultE<BlockchainTx> {
         let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
         let web3 = web3::Web3::new(transport);
 
@@ -249,7 +249,7 @@ impl NFTsRepository for GanacheRepo {
         let call_contract_op = caller.await;
         let tx = match call_contract_op {
             Err(e) => {
-                return Err(AssetBlockachainError(e.to_string()).into());
+                return Err(AssetBlockachainError( format!("{:?}",e)).into());
             }
             Ok(transact) => transact,
         };
@@ -262,7 +262,12 @@ impl NFTsRepository for GanacheRepo {
                                         wei_to_gwei(tx.gas_used.unwrap() ) * wei_to_gwei( tx.effective_gas_price.unwrap()), 
                                         Some(tx.from), 
                                         tx.to );
-        Ok(tx_str)
+
+        let mut tx_paylaod = BlockchainTx::new();
+        tx_paylaod.set_asset_id(asset_id);
+        tx_paylaod.set_tx(&tx.transaction_hash);
+        tx_paylaod.set_result(&tx_str); //TODO: split string in multiple fields
+        Ok(tx_paylaod)
     }
 
     async fn get(&self, asset_id: &Uuid) -> ResultE<GanacheContentInfo> {

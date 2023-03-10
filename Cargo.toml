@@ -11,6 +11,7 @@ members = [
     "lambda_mint",
     "lambda_license",
     "lambda_admin",
+    "lambda_after_video",
     "server_http",
     "manual_dep"
 ]

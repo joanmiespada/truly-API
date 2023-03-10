@@ -1,8 +1,9 @@
 
 
-use tracing::instrument;
+use tracing::{instrument,error,info};
 use lib_config::config::Config;
-use lib_licenses::{services::nfts::{CreateNFTAsync, NFTsService, NFTsManipulation} };
+use lib_licenses::models::video::VideoResult;
+use lib_licenses::services::assets::{AssetService, AssetManipulation };
 
 
 #[instrument]
@@ -17,10 +18,11 @@ pub async fn store_after_video_process(
     
     match op_res {
         Err(e) => {
-                println!("{}", e.to_string());
+                error!("{}", e.to_string());
         },
-        Ok(tx) => {
-            println!("{}",tx)
+        Ok(_) => { 
+            info!("sucessfully stored");
+            info!("{:?}",data);
         },
       };
       Ok( () )

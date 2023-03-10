@@ -4,7 +4,7 @@
 use lambda_runtime::{run, service_fn, Error };
 
 use lib_config::config::Config;
-use lib_licenses::{repositories::{assets::AssetRepo, owners::OwnerRepo, keypairs::KeyPairRepo, ganache::GanacheRepo}, services::{owners::OwnerService, assets::AssetService, nfts::NFTsService}};
+use lib_licenses::{repositories::{assets::AssetRepo }, services::{ assets::AssetService}};
 use my_lambda::{ function_handler};
 
 mod my_lambda;
