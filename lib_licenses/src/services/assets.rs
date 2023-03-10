@@ -126,7 +126,7 @@ impl AssetManipulation for AssetService {
             }
         }
 
-        self.repository.update(&id, &res).await?;
+        self.repository.update(&res).await?;
         Ok(())
     }
 
@@ -144,7 +144,7 @@ impl AssetManipulation for AssetService {
         res.set_minted_tx(&aux);
         res.set_minted_status(sts);
 
-        self.repository.update(&id, &res).await?;
+        self.repository.update(&res).await?;
         Ok(())
     }
 
@@ -206,7 +206,7 @@ impl AssetManipulation for AssetService {
         }
 
         self.repository
-            .update(original_asset.id(), &original_asset)
+            .update(&original_asset)
             .await?;
 
         Ok(())

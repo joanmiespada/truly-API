@@ -3,10 +3,11 @@ use std::env;
 use std::str::FromStr;
 
 use aws_sdk_dynamodb::Client;
+use lib_licenses::models::asset::AssetStatus;
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::schema_asset::create_schema_assets_tree;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
-use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
+use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset, UpdatableFildsAsset};
 use lib_licenses::{repositories::schema_asset::create_schema_assets};
 use spectral::prelude::*;
 use testcontainers::*;
@@ -62,10 +63,10 @@ async fn add_assets() {
     let repo = AssetRepo::new(&conf);
     let service = AssetService::new(repo);
 
-    let mut as1 = CreatableFildsAsset {
+    let as1 = CreatableFildsAsset {
         url: "http://www.file1.com/test1.mp4".to_string(),
         hash: "hash1234".to_string(),
-        license: String::from_str("gnu").unwrap(),
+        license: "gnu".to_string(),
         longitude: None,
         latitude: None,
         father: None
@@ -73,9 +74,35 @@ async fn add_assets() {
 
     let user = String::from_str("user1").unwrap();
 
-    let new_op = service.add(&mut as1, &user).await;
-
+    let new_op = service.add(&as1, &user).await;
     assert_that!(&new_op).is_ok();
+    let new_id = new_op.unwrap();
+
+    let get_op = service.get_by_id(&new_id).await;
+    assert_that!(&get_op).is_ok();
+
+    let aass11 = get_op.unwrap();
+    let url = aass11.url().clone().unwrap();
+    assert_eq!(url.to_string(), as1.url);
+    let hash = aass11.hash().clone().unwrap();
+    assert_eq!( hash , as1.hash  );
+    let lic = aass11.license().clone().unwrap();
+    assert_eq!( lic , as1.license  );
+
+    let up_as = UpdatableFildsAsset {
+        license: Some("mit".to_string()),
+        status: Some("Disabled".to_string())
+    };
+     
+    let upd_op = service.update(aass11.id(), &up_as ).await;
+    assert_that!(&upd_op).is_ok();
+
+    let get2_op = service.get_by_id(&new_id).await;
+    assert_that!(&get2_op).is_ok();
+    let ass3 = get2_op.unwrap();
+    assert_eq!( *ass3.state(), AssetStatus::Disabled);
+
+
 }
 
 fn list_of_assets() -> HashMap<String, Vec<Url>> {

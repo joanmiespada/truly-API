@@ -48,7 +48,7 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 #[async_trait]
 pub trait AssetRepository {
     async fn add(&self, asset: &Asset, user_id: &String) -> ResultE<Uuid>;
-    async fn update(&self, id: &Uuid, ass: &Asset) -> ResultE<()>;
+    async fn update(&self, ass: &Asset) -> ResultE<()>;
     async fn get_by_id(&self, id: &Uuid) -> ResultE<Asset>;
     async fn get_father(&self, son_id: &Uuid) -> ResultE<Option<Uuid>>;
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Asset>>;
@@ -98,16 +98,14 @@ impl AssetRepo {
             Some(aux) => Ok(aux),
         }
     }
-}
 
-#[async_trait]
-impl AssetRepository for AssetRepo {
-    async fn add(&self, asset: &Asset, user_id: &String) -> ResultE<Uuid> {
+
+    fn new_or_update(&self, asset: &Asset ) -> ResultE<aws_sdk_dynamodb::model::put::Builder> {
+
         let asset_id_av = AttributeValue::S(asset.id().to_string());
-        let user_id_av = AttributeValue::S(user_id.clone());
         let url_av = AttributeValue::S(asset.url().clone().unwrap().to_string());
         let creation_time_av = AttributeValue::S(iso8601(asset.creation_time()));
-        let update_time_av = AttributeValue::S(iso8601(asset.creation_time()));
+        let update_time_av = AttributeValue::S(iso8601(asset.last_update_time()));
         let status_av = AttributeValue::S(asset.state().to_string());
 
         let hash_av = AttributeValue::S(asset.hash().clone().unwrap().to_string());
@@ -161,6 +159,14 @@ impl AssetRepository for AssetRepo {
             }
             None => {} // counter_av = AttributeValue::N(NULLABLE.to_string()),
         }
+        //let video_licensing_error_av;
+        match asset.video_licensing_error() {
+            Some(value) => {
+                let video_licensing_error_av = AttributeValue::S(value.to_string());
+                items = items.item( VIDEO_LICENSING_FIELD_NAME , video_licensing_error_av );
+            },
+            None => {},
+        }
 
         //let video_licensing_status_av = AttributeValue::S(asset.video_licensing_status().to_string());
         items = items.item(
@@ -171,6 +177,21 @@ impl AssetRepository for AssetRepo {
             MINTED_STATUS_FIELD_NAME,
             AttributeValue::S(asset.mint_status().to_string()),
         );
+        Ok(items)
+    }
+
+
+}
+
+#[async_trait]
+impl AssetRepository for AssetRepo {
+    async fn add(&self, asset: &Asset, user_id: &String) -> ResultE<Uuid> {
+        
+
+        let asset_id_av = AttributeValue::S(asset.id().to_string());
+        let user_id_av = AttributeValue::S(user_id.clone());
+        
+        let items = self.new_or_update(asset).unwrap();
 
         let mut request = self
             .client
@@ -285,7 +306,22 @@ impl AssetRepository for AssetRepo {
         Ok(asset)
     }
 
-    async fn update(&self, id: &Uuid, asset: &Asset) -> ResultE<()> {
+    async fn update(&self, asset: &Asset) -> ResultE<()> {
+
+        
+        let items = self.new_or_update(asset).unwrap();
+
+        let request = self
+            .client
+            .transact_write_items()
+            .transact_items(
+                TransactWriteItem::builder()
+                    .put(items.table_name(ASSETS_TABLE_NAME).build())
+                    .build(),
+            );
+
+/* 
+
         let last_update_time_av = AttributeValue::S(iso8601(&Utc::now()));
         let id_av = AttributeValue::S(id.to_string());
 
@@ -337,7 +373,8 @@ impl AssetRepository for AssetRepo {
             Some(value) => video_licensing_error_av = AttributeValue::S(value.to_string()),
             None => video_licensing_error_av = AttributeValue::S(NULLABLE.to_string()),
         }
-
+        */
+/* 
         let mut update_express = "set ".to_string();
         update_express.push_str(format!("{0} = :_url, ", URL_FIELD_NAME).as_str());
         update_express.push_str(format!("{0} = :lastup, ", LASTUPDATETIME_FIELD_NAME).as_str());
@@ -374,13 +411,13 @@ impl AssetRepository for AssetRepo {
             .expression_attribute_values(":counter", counter_av)
             .expression_attribute_values(":lic_status", video_licensing_status_av)
             .expression_attribute_values(":lic_error", video_licensing_error_av);
-
+*/
         match request.send().await {
             Ok(_updated) => {
                 let mssag = format!(
                     "Record updated at [{}] - item id: {} ",
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
-                    id.to_string()
+                    asset.id().to_string()
                 );
                 tracing::debug!(mssag);
 
