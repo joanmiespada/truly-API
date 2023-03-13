@@ -10,11 +10,11 @@
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/manual_dep",
             //"args": [ "--table", "owners", "--create" ],
-            //"args": ["--adminuser","...@truly.video","--password","...", "--create"],
+            //"args": ["--adminuser","...@....","--password",".....", "--create"],
             "cwd": "${workspaceRoot}/target/debug",
             "preLaunchTask": "build",
             "env": {
-                "ENVIRONMENT":"development",
+                "ENVIRONMENT":"stage",
             }
         },
         {

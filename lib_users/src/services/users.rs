@@ -22,6 +22,7 @@ pub trait UserManipulation {
     async fn update_user(&self, id: &String, user: &UpdatableFildsUser) -> ResultE<bool>;
     async fn promote_user_to(&self, id: &String, promo: &PromoteUser) -> ResultE<bool>;
     async fn update_password(&self, id: &String, password: &String) -> ResultE<()>;
+    async fn remove_by_id(&self, user_id: &String) -> ResultE<()>;
 }
 
 #[derive(Debug)]
@@ -100,6 +101,13 @@ impl UserManipulation for UsersService {
         user.roles_add(&UserRoles::Basic);
         user.validate()?;
         let res = self.repository.add_user(user, password).await?;
+        Ok(res)
+    }
+    
+    #[tracing::instrument()]
+    async fn remove_by_id(&self, id: &String) -> ResultE<()> {
+        let user = self.get_by_user_id(id).await?;
+        let res = self.repository.remove(user.user_id()).await?;
         Ok(res)
     }
 

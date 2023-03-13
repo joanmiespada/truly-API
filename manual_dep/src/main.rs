@@ -6,7 +6,7 @@ use lib_config::config::Config;
 use lib_config::infra::{
     create_key, create_secret_manager_keys, create_secret_manager_secret_key, store_secret_key,
 };
-use lib_licenses::repositories::{schema_asset, schema_keypairs, schema_owners, schema_block_tx };
+use lib_licenses::repositories::{schema_asset, schema_block_tx, schema_keypairs, schema_owners};
 use lib_licenses::services::contract::deploy_contract_locally;
 use lib_users::models::user::User;
 use lib_users::repositories::schema_user;
@@ -35,6 +35,7 @@ async fn command(
         store_key,
         key,
         adminuser,
+        user_id,
         password,
         contract,
         all,
@@ -171,28 +172,42 @@ async fn command(
     match adminuser {
         None => {}
         Some(email) => {
+            config.load_secrets().await;
+            let user_repo = UsersRepo::new(&config);
+            let user_service = UsersService::new(user_repo);
             if create {
-                config.load_secrets().await;
-                //let aux_user;
-                // if environment == "development" {
-                //     aux_user = include_str!("../res/adminuser_development.json");
-                // } else {
-                //     aux_user = include_str!("../res/adminuser_prod_stage.json");
-                // }
-                let user_repo = UsersRepo::new(&config);
-                let user_service = UsersService::new(user_repo);
-
-                //let newuser: NewUser = serde_json::from_str(aux_user).unwrap();
+                
                 let mut user = User::new();
                 user.set_email(&email);
                 let device = uuid::Uuid::new_v4().to_string();
                 user.set_device(&device);
 
                 let user_id = user_service.add_user(&mut user, &password).await?;
-                let res = user_service
+                user_service
                     .promote_user_to(&user_id, &PromoteUser::Upgrade)
                     .await?;
-                println!("admin user id:{} with {} created {}", user_id, device, res);
+                println!("admin user id:{} with device: {} created.", user_id, device);
+            } else {
+                println!("Not implemented yet")
+            }
+        }
+    }
+    match user_id{
+        None=>{},
+        Some(id)=>{
+            config.load_secrets().await;
+            let user_repo = UsersRepo::new(&config);
+            let user_service = UsersService::new(user_repo);
+            if delete {
+                let op = user_service.remove_by_id(&id).await;
+                match op {
+                    Err(e) => {
+                        println!("{}", e);
+                    }
+                    Ok(_) => {
+                        println!("user {} deleted!", id)
+                    }
+                }
             } else {
                 println!("Not implemented yet")
             }
@@ -266,6 +281,9 @@ pub struct Opt {
 
     #[structopt(long = "adminuser")]
     pub adminuser: Option<String>,
+    
+    #[structopt(long = "user_id")]
+    pub user_id: Option<String>,
 
     #[structopt(long = "password")]
     pub password: Option<String>,
@@ -282,7 +300,6 @@ pub struct Opt {
 
 #[tokio::main]
 async fn main() {
-    
     env::set_var("RUST_LOG", "debug");
     env_logger::builder().is_test(true).init();
 
@@ -293,7 +310,7 @@ async fn main() {
             process::exit(1);
         }
         Ok(_) => {
-            println!("successful!")
+            println!("command executed successfully!")
         }
     }
 }

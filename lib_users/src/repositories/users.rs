@@ -45,6 +45,7 @@ pub trait UserRepository {
         password: &String,
     ) -> ResultE<User>;
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<User>>;
+    async fn remove(&self, user_id: &String) -> ResultE<()>;
 }
 
 #[derive(Clone, Debug)]
@@ -450,6 +451,33 @@ impl UserRepository for UsersRepo {
             }
         }
     }
+
+    async fn remove(&self, id: &String) -> ResultE<()>{
+        let user_id_av = AttributeValue::S(id.clone());
+
+        let request = self
+            .client
+            .delete_item()
+            .table_name(USERS_TABLE_NAME)
+            .key(USERID_FIELD_NAME_PK, user_id_av);
+
+        let results = request.send().await;
+        match results {
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(UserDynamoDBError(e.to_string()).into());
+            }
+            Ok(_) => {
+                return Ok(());
+            }
+        }
+    }
+
 }
 
 fn iso8601(st: &DateTime<Utc>) -> String {
