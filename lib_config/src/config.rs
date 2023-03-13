@@ -41,6 +41,15 @@ impl Config {
                 }
             }
         }
+        match envy::from_env::<EnvironmentVariables>() {
+            Ok(env_vars) => {
+                self.env_variables = Some(env_vars.clone());
+            }
+            Err(error) => panic!(
+                "some mandatory environment variables are missing {:#?}",
+                error
+            ),
+        }
     }
 
     pub async fn setup_with_secrets(&mut self) {
