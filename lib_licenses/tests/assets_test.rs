@@ -176,6 +176,8 @@ async fn check_ownership() {
     env::set_var("RUST_LOG", "debug");
     env::set_var("RUST_BACKTRACE", "full");
     
+    env_logger::builder().is_test(true).init();
+    
     //let _ = pretty_env_logger::try_init();
     let docker = clients::Cli::default();
     let node = docker.run(images::dynamodb_local::DynamoDb::default());

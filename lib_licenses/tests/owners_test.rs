@@ -14,6 +14,7 @@ use uuid::Uuid;
 
 #[tokio::test]
 async fn creation_table() {
+    env_logger::builder().is_test(true).init();
     //let _ = pretty_env_logger::try_init();
     let docker = clients::Cli::default();
     let node = docker.run(images::dynamodb_local::DynamoDb::default());
