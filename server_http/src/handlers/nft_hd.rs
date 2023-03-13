@@ -52,7 +52,7 @@ pub async fn add_nft(req: HttpRequest,state: web::Data<AppState>, payload: web::
                 );
             }
         }
-        Ok(tx) => tx,
+        Ok(tx) => tx.result().clone().unwrap(),
     };
 
     return build_resp(transaction, StatusCode::OK);

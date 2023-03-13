@@ -7,9 +7,11 @@ use handlers::appstate::AppState;
 use handlers::{asset_hd, auth_middleware, jwt_middleware, login_hd, nft_hd, user_my_hd, users_hd};
 use lib_config::config::Config;
 use lib_licenses::repositories::assets::AssetRepo;
+use lib_licenses::repositories::block_tx::BlockchainTxRepo;
 use lib_licenses::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::services::assets::AssetService;
+use lib_licenses::services::block_tx::BlockchainTxService;
 use lib_licenses::services::owners::OwnerService;
 use log::debug;
 use tracing_actix_web::TracingLogger;
@@ -82,7 +84,10 @@ async fn main() {
     let mut config = Config::new();
     config.setup_with_secrets().await;
 
-    let user_repo = UsersRepo::new(&config);
+    let repo_tx = BlockchainTxRepo::new(&config.to_owned());
+    let tx_service = BlockchainTxService::new(repo_tx);
+
+    let user_repo = UsersRepo::new(&config.to_owned());
     let user_service = UsersService::new(user_repo);
 
     let asset_repo = AssetRepo::new(&config);
@@ -98,6 +103,7 @@ async fn main() {
         key_repo.to_owned(),
         asset_service.to_owned(),
         owners_service.to_owned(),
+        tx_service.to_owned(),
         config.to_owned(),
     );
 

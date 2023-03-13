@@ -4,7 +4,7 @@
 use lambda_runtime::{run, service_fn, Error };
 
 use lib_config::config::Config;
-use lib_licenses::{repositories::{assets::AssetRepo, owners::OwnerRepo, keypairs::KeyPairRepo, ganache::GanacheRepo}, services::{owners::OwnerService, assets::AssetService, nfts::NFTsService}};
+use lib_licenses::{repositories::{assets::AssetRepo, owners::OwnerRepo, keypairs::KeyPairRepo, ganache::GanacheRepo, block_tx::BlockchainTxRepo}, services::{owners::OwnerService, assets::AssetService, nfts::NFTsService, block_tx::BlockchainTxService}};
 use my_lambda::{ function_handler};
 
 mod my_lambda;
@@ -21,6 +21,9 @@ async fn main() -> Result<(), Error> {
     let mut config = Config::new();
     config.setup_with_secrets().await;
 
+    let repo_tx = BlockchainTxRepo::new(&config.clone());
+    let tx_service = BlockchainTxService::new(repo_tx);
+
     let asset_repo = AssetRepo::new(&config);
     let asset_service = AssetService::new(asset_repo);
 
@@ -34,6 +37,7 @@ async fn main() -> Result<(), Error> {
         key_repo,
         asset_service.to_owned(),
         owners_service.to_owned(),
+        tx_service.to_owned(),
         config.to_owned()
     );
     run(service_fn(|e| {  function_handler(e,&config,&blockchain_service) })).await
