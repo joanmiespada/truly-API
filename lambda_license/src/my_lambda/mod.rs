@@ -2,12 +2,14 @@ mod assets;
 pub mod error;
 mod nft;
 mod owners;
+mod video;
 
 use std::str::FromStr;
 
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_config::config::Config;
 use lib_licenses::services::nfts::NFTsService;
+use lib_licenses::services::video::VideoService;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
 use self::assets::create_my_asset::create_my_asset;
@@ -15,6 +17,7 @@ use self::assets::get_my_asset::{ get_my_assets_all};
 use self::assets::get_asset::{ get_asset};
 use self::error::ApiLambdaError;
 use self::nft::async_create_my_nft::{async_create_my_nft_sns};
+use self::video::async_create_my_shorter::async_create_my_shorter_sns;
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
 use matchit::Router;
@@ -34,6 +37,7 @@ pub async fn function_handler(
     owners_service: &OwnerService,
     blockchain_service: &NFTsService,
     user_service: &UsersService,
+    video_service: &VideoService,
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error + Send + Sync>> {
     let context = req.lambda_context();
@@ -51,7 +55,7 @@ pub async fn function_handler(
     router.insert("/api/asset", Some("1"))?;
     router.insert("/api/asset/:id", Some("2"))?;
     router.insert("/api/nft", Some("3"))?;
-    //router.insert("/api/nft/sync", Some("4"))?;
+    router.insert("/api/license", Some("4"))?;
 
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
@@ -156,6 +160,28 @@ pub async fn function_handler(
                         owners_service,
                         blockchain_service,
                         user_service,
+                        &user_id,
+                    )
+                    .await;
+                }
+                
+                "4" => {
+                    //let id = matched.params.get("id").unwrap().to_string();
+                    //let asset_id = Uuid::from_str(id.as_str())?;
+
+                    match jwt_mandatory(&req, config){
+                        Err(e) => { return Ok(e);},
+                        Ok(user)=> user_id = user
+                    };
+
+                    return async_create_my_shorter_sns(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        video_service,
+                        //owners_service,
+                        //user_service,
                         &user_id,
                     )
                     .await;

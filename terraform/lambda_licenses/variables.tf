@@ -69,3 +69,13 @@ variable "minting_async_topic_arn" {
 variable "rust_backtrace" {
   type= string
 }
+
+variable "video_in_topic" {
+  type = string
+  description = "topic to be connectec with other dependencies, video processing triggers"
+}
+
+variable "video_out_topic" {
+  type = string
+  desdescription = "topic to be connected with other dependencies, video processing results" 
+}

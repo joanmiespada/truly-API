@@ -26,6 +26,10 @@ pub struct EnvironmentVariables {
     queue_mint_async: Option<String>,
     topic_arn_mint_async: Option<String>,
     dead_letter_queue_mint: Option<String>,
+    
+    shorter_video_in_topic: Option<String>,
+    shorter_video_out_topic: Option<String>,
+
 }
 
 impl EnvironmentVariables {
@@ -140,6 +144,20 @@ impl EnvironmentVariables {
     }
     pub fn set_blockchain_gateway_api_key(&mut self, value: String) {
         self.blockchain_gateway_api_key = Some(value.clone());
+    }
+
+    pub fn topic_arn_shorter_video_start(&self)-> &String{
+        self.shorter_video_in_topic.as_ref().unwrap()
+    }
+    pub fn set_topic_arn_shorter_video_start(&mut self, value: String) {
+        self.shorter_video_in_topic= Some(value.clone());
+    }
+
+    pub fn topic_arn_shorter_video_result(&self)-> &String{
+        self.shorter_video_out_topic.as_ref().unwrap()
+    }
+    pub fn set_topic_arn_shorter_video_result(&mut self, value: String) {
+        self.shorter_video_out_topic= Some(value.clone());
     }
 
 

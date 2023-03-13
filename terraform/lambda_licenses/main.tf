@@ -36,6 +36,8 @@ resource "aws_lambda_function" "truly_lambda_licenses" {
       DEAD_LETTER_QUEUE_MINT= "${var.dead_letter_queue_mint}"
       TOPIC_ARN_MINT_ASYNC = "${var.minting_async_topic_arn}"
       RUST_BACKTRACE = "${var.rust_backtrace}"
+      SHORTER_VIDEO_IN_TOPIC = var.video_in_topic
+      SHORTER_VIDEO_OUT_TOPIC = var.video_out_topic
     }
   }
 

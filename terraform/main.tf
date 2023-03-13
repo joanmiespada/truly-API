@@ -114,6 +114,9 @@ module "lambda_licenses" {
 
   rust_backtrace = var.rust_backtrace
 
+  video_in_topic = var.aws_sns_topic.video_in_topic.arn
+  video_out_topic = var.aws_sns_topic.video_out_topic.arn
+
 }
 module "lambda_mint" {
   source = "./lambda_mint"

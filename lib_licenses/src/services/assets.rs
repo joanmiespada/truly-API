@@ -1,4 +1,3 @@
-use std::str::FromStr;
 use crate::models::asset::VideoLicensingStatus;
 use crate::models::asset::{Asset, AssetStatus, MintingStatus};
 use crate::models::video::VideoResult;
@@ -6,6 +5,7 @@ use crate::repositories::assets::{AssetRepo, AssetRepository};
 use async_trait::async_trait;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use uuid::Uuid;
 
 use validator::Validate;
@@ -28,6 +28,12 @@ pub trait AssetManipulation {
         sts: MintingStatus,
     ) -> ResultE<()>;
     async fn store_video_process(&self, video_res: &VideoResult) -> ResultE<()>;
+    async fn shorter_video_status(
+        &self,
+        id: &Uuid,
+        message: &Option<String>,
+        sts: VideoLicensingStatus,
+    ) -> ResultE<()>;
 }
 
 #[derive(Debug)]
@@ -62,7 +68,7 @@ pub struct CreatableFildsAsset {
     pub latitude: Option<f64>,
     pub longitude: Option<f64>,
 
-    pub father: Option<Uuid>
+    pub father: Option<Uuid>,
 }
 
 #[async_trait]
@@ -149,6 +155,23 @@ impl AssetManipulation for AssetService {
     }
 
     #[tracing::instrument()]
+    async fn shorter_video_status(
+        &self,
+        id: &Uuid,
+        message: &Option<String>,
+        sts: VideoLicensingStatus,
+    ) -> ResultE<()> {
+        let dbasset = self.repository.get_by_id(id).await?;
+        let mut res: Asset = dbasset.clone();
+
+        res.set_video_licensing_error(message);
+        res.set_video_licensing_status(sts);
+
+        self.repository.update(&res).await?;
+        Ok(())
+    }
+
+    #[tracing::instrument()]
     async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>> {
         let res = self.repository.get_by_user_id(user_id).await?;
         Ok(res)
@@ -163,11 +186,9 @@ impl AssetManipulation for AssetService {
     }
     #[tracing::instrument()]
     async fn store_video_process(&self, video_res: &VideoResult) -> ResultE<()> {
-
         let mut original_asset = self.repository.get_by_id(&video_res.asset_id).await?;
-        
+
         if video_res.video_op.unwrap() {
-        
             let mut new_licensed_asset = Asset::new();
 
             new_licensed_asset.set_id(&video_res.video_licensed_asset_id.unwrap());
@@ -179,7 +200,7 @@ impl AssetManipulation for AssetService {
             new_licensed_asset.set_url(&video_res.video_licensed);
             new_licensed_asset.set_last_update_time(&Utc::now());
             new_licensed_asset.set_creation_time(&Utc::now());
-            new_licensed_asset.set_minted_status( MintingStatus::NeverMinted);
+            new_licensed_asset.set_minted_status(MintingStatus::NeverMinted);
             new_licensed_asset.set_minted_tx(&None);
             new_licensed_asset.set_video_licensing_status(VideoLicensingStatus::AlreadyLicensed);
             new_licensed_asset.set_counter(&Some(video_res.counter));
@@ -197,22 +218,22 @@ impl AssetManipulation for AssetService {
             }
         }
         original_asset.set_video_licensing_error(&video_res.video_error);
-        match video_res.video_op{
-            None => {},
-            Some(value)=>{
-                let state = if value {VideoLicensingStatus::CompletedSuccessfully} else {VideoLicensingStatus::Error};
-                original_asset.set_video_licensing_status( state );
+        match video_res.video_op {
+            None => {}
+            Some(value) => {
+                let state = if value {
+                    VideoLicensingStatus::CompletedSuccessfully
+                } else {
+                    VideoLicensingStatus::Error
+                };
+                original_asset.set_video_licensing_status(state);
             }
         }
 
-        self.repository
-            .update(&original_asset)
-            .await?;
+        self.repository.update(&original_asset).await?;
 
         Ok(())
-
     }
-
 }
 
 impl Clone for AssetService {

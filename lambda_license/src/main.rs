@@ -8,6 +8,7 @@ use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::block_tx::BlockchainTxService;
 use lib_licenses::services::nfts::NFTsService;
 use lib_licenses::services::owners::OwnerService;
+use lib_licenses::services::video::VideoService;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
 use my_lambda::{error::ApiLambdaError, function_handler};
@@ -36,7 +37,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let owners_repo = OwnerRepo::new(&config);
     let owners_service = OwnerService::new(owners_repo);
 
-    let key_repo= KeyPairRepo::new(&config);
+    let key_repo = KeyPairRepo::new(&config);
     let blockchain = GanacheRepo::new(&config).unwrap();
     let blockchain_service = NFTsService::new(
         blockchain,
@@ -44,11 +45,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         asset_service.to_owned(),
         owners_service.to_owned(),
         tx_service.to_owned(),
-        config.to_owned()
+        config.to_owned(),
     );
 
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);
+
+    let video_service = VideoService::new(asset_service.to_owned(), config.to_owned());
 
     let resp = lambda_http::run(service_fn(|event| {
         function_handler(
@@ -57,6 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             &owners_service,
             &blockchain_service,
             &user_service,
+            &video_service,
             event,
         )
     }))

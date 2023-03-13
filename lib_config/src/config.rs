@@ -22,14 +22,7 @@ impl Config {
         }
     }
 
-    pub async fn setup_with_secrets(&mut self) {
-        self._setup_basic().await;
-        self.load_secrets().await;
-    }
-    pub async fn setup(&mut self) {
-        self._setup_basic().await;
-    }
-    async fn _setup_basic(&mut self) {
+    pub fn refresh_env_vars(&mut self) {
         let check_env = std::env::var(ENV_VAR_ENVIRONMENT);
         match check_env {
             Err(e) => panic!(
@@ -42,22 +35,24 @@ impl Config {
                 if env == DEV_ENV {
                     debug!("loading env vars from .env file");
                     dotenv().ok();
-                } else if env == STAGE_ENV{ 
+                } else if env == STAGE_ENV {
                     debug!("loading env vars from .env-stage file");
                     dotenv::from_filename(".env-stage").ok();
                 }
             }
         }
+    }
 
-        match envy::from_env::<EnvironmentVariables>() {
-            Ok(env_vars) => {
-                self.env_variables = Some(env_vars.clone());
-            }
-            Err(error) => panic!(
-                "some mandatory environment variables are missing {:#?}",
-                error
-            ),
-        }
+    pub async fn setup_with_secrets(&mut self) {
+        self._setup_basic().await;
+        self.load_secrets().await;
+    }
+    pub async fn setup(&mut self) {
+        self._setup_basic().await;
+    }
+    async fn _setup_basic(&mut self) {
+
+        self.refresh_env_vars();        
 
         let env = self.env_variables.as_ref().unwrap();
         let config: SdkConfig;
