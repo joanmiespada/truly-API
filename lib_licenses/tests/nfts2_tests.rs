@@ -191,7 +191,7 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
     assert_eq!(*content_minted.mint_status(), MintingStatus::CompletedSuccessfully );
     assert_ne!(*content_minted.minted_tx(), None );
 
-    let find = as1.minted_tx().unwrap();
+    let find = content_minted.minted_tx().unwrap();
     let tx_tx= tx_service.get_by_tx(&find).await;
     assert_that!(&tx_tx).is_ok();
     let final_tx = tx_tx.unwrap();

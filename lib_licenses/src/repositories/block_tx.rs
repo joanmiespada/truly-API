@@ -75,6 +75,9 @@ impl BlockchainTxRepository for BlockchainTxRepo {
                 return Err(BlockchainTxError(e.to_string()).into());
             }
             Ok(items) => {
+                if items.count() != 1 {
+                    return Err(BlockchainTxError(format!("Tx hash is incorrect or duplicated. count:{} ", items.count())).into());
+                }
                 let docus = items.items().unwrap();
                 match docus.first() {
                     None => Err(BlockchainTxNoExistsError(hash.to_string()).into()),
