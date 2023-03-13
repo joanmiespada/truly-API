@@ -36,7 +36,7 @@ variable "service_tag" {
 variable "trace_log" {
   description = "tracing lambdas"
   type = string
-  default = "cargo_lambda=trace"
+  //default = "cargo_lambda=info" //"cargo_lambda=trace"
 }
 
 variable "lambda_deploy_folder" {
