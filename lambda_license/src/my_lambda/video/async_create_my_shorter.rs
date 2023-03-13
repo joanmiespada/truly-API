@@ -1,11 +1,7 @@
 use lambda_http::RequestExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
-use lib_async_ops::errors::AsyncOpError;
-use lib_async_ops::sns::{send as send_sns, SNSMessage};
 use lib_config::config::Config;
-use lib_licenses::models::asset::{VideoLicensingStatus, Asset};
-use lib_licenses::models::video::CreateShorter;
-use lib_licenses::services::assets::{AssetService, AssetManipulation};
+use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::video::{VideoService, VideoManipulation};
 use serde::{Serialize, Deserialize};
 use uuid::Uuid;

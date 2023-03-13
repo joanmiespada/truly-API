@@ -77,5 +77,5 @@ variable "video_in_topic" {
 
 variable "video_out_topic" {
   type = string
-  desdescription = "topic to be connected with other dependencies, video processing results" 
+  description = "topic to be connected with other dependencies, video processing results" 
 }
