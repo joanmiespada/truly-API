@@ -144,3 +144,25 @@ module "lambda_mint" {
   rust_backtrace = var.rust_backtrace
 
 }
+module "lambda_after_video" {
+  source = "./lambda_after_video"
+
+  common_tags = local.common_tags 
+  resource_logs = aws_iam_role_policy_attachment.truly_lambda_logs
+  resource_xray = aws_iam_role_policy_attachment.truly_lambda_XRAY
+  resource_dynamodb = aws_iam_role_policy_attachment.truly_lambda_dynamodb
+  resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
+  resource_kms = aws_iam_role_policy_attachment.truly_lambda_KMS
+  resource_sqs = aws_iam_role_policy_attachment.truly_lambda_SQS
+  role = aws_iam_role.truly_lambda_execution_role.arn
+
+  environment_flag = var.environment_flag
+  trace_log = var.trace_log
+  lambda_deploy_folder = var.lambda_deploy_folder
+
+  kms_cypher_owner = var.kms_id_cypher_all_secret_keys
+  sqs_after_video_process_arn = aws_sqs_queue.after_video_queue.arn
+  
+  rust_backtrace = var.rust_backtrace
+
+}
