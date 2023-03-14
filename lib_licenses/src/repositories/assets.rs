@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use tracing::error;
+use tracing::{error, info};
 use url::Url;
 use uuid::Uuid;
 use web3::types::H256;
@@ -201,6 +201,7 @@ impl AssetRepository for AssetRepo {
         
         let items = self.new_or_update(asset).unwrap();
 
+        info!("common data ready");
         let mut request = self
             .client
             .transact_write_items()
@@ -221,6 +222,7 @@ impl AssetRepository for AssetRepo {
                     .build(),
             );
 
+        info!("owners added");
         match asset.father() {
             None => {}
             Some(value) => {
@@ -239,6 +241,7 @@ impl AssetRepository for AssetRepo {
             }
         }
 
+        info!("sending request to dynamodb");
         match request.send().await {
             Ok(_stored) => {
                 let mssag = format!(
@@ -247,7 +250,7 @@ impl AssetRepository for AssetRepo {
                     user_id,
                     asset.id().to_string()
                 );
-                tracing::debug!(mssag);
+                info!(mssag);
 
                 return Ok(asset.id().clone());
             }
@@ -257,7 +260,7 @@ impl AssetRepository for AssetRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                error!(mssag);
                 return Err(AssetDynamoDBError(e.to_string()).into());
             }
         }

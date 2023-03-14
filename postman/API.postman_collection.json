@@ -233,7 +233,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"device\": \"d7890-1234-1234-1234-1234-7980\"\n}",
+									"raw": "{\n    \"device\": \"device-test-1234-1234-1234-1234-7980\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -260,7 +260,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"wallet_address\": \"0x311231230000\",\n    \"email\": \"ab.b.@a.io\",\n    \"password\":\"Ay7pert&*fg\",\n    \"device\": \"d4567-1234-1234-1234-1234-4567\"\n}",
+									"raw": "{\n    \"email\": \"test1@test1.er.io\",\n    \"password\":\"Ay7pert&*fg\",\n    \"device\": \"d4567-1234-1234-1234-1234-4567\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -289,7 +289,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \n    \"device\":\"device-12DFFG34-12YUIO34-12QWE34-8790\"\n}",
+							"raw": "{\n    \n     \"device\":\"device-test-1234-1234-1234-1234-7980\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -316,7 +316,34 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"a.a@a.com\",\n    \"password\":\"1234dkdidfFJ%$#\"\n}",
+							"raw": "{\n    \"email\": \"test1@test1.er.io\",\n    \"password\":\"Ay7pert&*fg\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_uri}}/auth/login",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login by user/pass by admin",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{test_admin_email}}\",\n    \"password\":\"{{test_admin_pass}}\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -389,7 +416,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\":\"fofofo@fofofo.com\",\n    \"wallet_address\":\"0x000000000000123\"\n}",
+							"raw": "{\n    \n     \"email\": \"test1@test1.er.io\"\n     \n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -436,6 +463,124 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Asset",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"url\":\"https://truly-public-upload-stage.s3.eu-west-1.amazonaws.com/IMG_3495.MOV\",\n    \"license\": \"Creative commons 123\",\n    \"hash\": \"3c0f333b9792e9728fa79479bd7f5d01c14d8b6ed6740b7ce12e787ced58d0030b7929026fc09c497e99946349ffcc6687c63bac38f78ec3428456945d97733f\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_uri}}/api/asset",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"api",
+								"asset"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Asset",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_uri}}/api/asset/d5490770-5027-4269-945b-844093da1145",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"api",
+								"asset",
+								"d5490770-5027-4269-945b-844093da1145"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Asset all",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_uri}}/api/asset",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"api",
+								"asset"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "NFT",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"price\":2000,\n    \"asset_id\": \"64d553ec-6613-4eab-8e3f-041cc7bc5179\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_uri}}/api/nft",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"api",
+								"nft"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "License",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"asset_id\": \"64d553ec-6613-4eab-8e3f-041cc7bc5179\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_uri}}/api/license",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"api",
+								"license"
+							]
+						}
+					},
+					"response": []
 				}
 			],
 			"auth": {
@@ -466,6 +611,30 @@
 							""
 						]
 					}
+				}
+			]
+		},
+		{
+			"name": "public",
+			"item": [
+				{
+					"name": "Asset for everyone",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_uri}}/api/asset/e6a08772-5266-4f66-8fd9-3745c1c235b3",
+							"host": [
+								"{{base_uri}}"
+							],
+							"path": [
+								"api",
+								"asset",
+								"e6a08772-5266-4f66-8fd9-3745c1c235b3"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		}

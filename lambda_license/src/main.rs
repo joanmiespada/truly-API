@@ -12,6 +12,7 @@ use lib_licenses::services::video::VideoService;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
 use my_lambda::{error::ApiLambdaError, function_handler};
+use tracing::info;
 
 mod my_lambda;
 
@@ -20,10 +21,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         // disable printing the name of the module in every log line.
-        .with_target(false)
+        //.with_target(false)
         // disabling time is handy because CloudWatch will add the ingestion time.
-        .without_time()
+        //.without_time()
         .init();
+
+    info!("bootstrapping dependencies...");
 
     let mut config = Config::new();
     config.setup_with_secrets().await;
@@ -53,6 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let video_service = VideoService::new(asset_service.to_owned(), config.to_owned());
 
+    info!("bootstrapping dependencies: completed. Lambda ready.");
     let resp = lambda_http::run(service_fn(|event| {
         function_handler(
             &config,

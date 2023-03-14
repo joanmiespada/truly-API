@@ -5,6 +5,7 @@ use crate::repositories::assets::{AssetRepo, AssetRepository};
 use async_trait::async_trait;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use tracing::info;
 use std::str::FromStr;
 use uuid::Uuid;
 
@@ -62,7 +63,7 @@ pub struct CreatableFildsAsset {
     #[validate(length(max = 100))]
     pub license: String,
     pub url: String,
-    #[validate(length(max = 100))]
+    #[validate(length(max = 2000))]
     pub hash: String,
 
     pub latitude: Option<f64>,
@@ -92,6 +93,7 @@ impl AssetManipulation for AssetService {
     async fn add(&self, creation_asset: &CreatableFildsAsset, user_id: &String) -> ResultE<Uuid> {
         creation_asset.validate()?;
 
+        info!("asset fields validated");
         let mut asset = Asset::new();
         asset.set_state(&AssetStatus::Enabled);
         asset.set_id(&Uuid::new_v4());
@@ -105,6 +107,7 @@ impl AssetManipulation for AssetService {
 
         asset.set_father(&creation_asset.father);
 
+        info!("attaching new asset to repository ");
         let res = self.repository.add(&asset, user_id).await?;
         Ok(res)
     }

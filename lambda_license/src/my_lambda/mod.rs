@@ -8,10 +8,12 @@ use std::str::FromStr;
 
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_config::config::Config;
+use lib_config::environment::{DEV_ENV, STAGE_ENV};
 use lib_licenses::services::nfts::NFTsService;
 use lib_licenses::services::video::VideoService;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
+use tracing::info;
 use self::assets::create_my_asset::create_my_asset;
 use self::assets::get_my_asset::{ get_my_assets_all};
 use self::assets::get_asset::{ get_asset};
@@ -40,6 +42,7 @@ pub async fn function_handler(
     video_service: &VideoService,
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error + Send + Sync>> {
+    info!("income new request");
     let context = req.lambda_context();
     //let query_string = req.query_string_parameters().to_owned();
     //request.uri().path()
@@ -200,7 +203,6 @@ pub async fn function_handler(
     }
 }
 
-#[tracing::instrument]
 fn build_resp(
     msg: String,
     status_code: StatusCode,
@@ -215,6 +217,29 @@ fn build_resp(
     }
 }
 
+
+fn build_resp_env(
+    env: &String,
+    error: Box<dyn std::error::Error + Send + Sync >,
+    status_code: StatusCode,
+) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
+
+    let msg: String;
+    if env == DEV_ENV || env == STAGE_ENV {
+        msg = format!("{}",error);
+    }else{
+        msg = "".to_string();
+    }
+
+    let res = Response::builder()
+        .status(status_code)
+        .header("content-type", "text/json")
+        .body(msg);
+    match res {
+        Err(e) => Err(ApiLambdaError { 0: e.to_string() }.into()),
+        Ok(resp) => Ok(resp),
+    }
+}
 fn check_jwt_token_as_user_logged(
     req: &Request,
     config: &Config,

@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use aws_config::{meta::region::RegionProviderChain, SdkConfig};
 use aws_types::region::Region;
 use dotenv::dotenv;
@@ -169,5 +170,14 @@ impl Config {
     pub async fn load_secrets(&mut self) {
         self.load_secret(SECRETS_MANAGER_APP_KEYS).await;
         self.load_secret(SECRETS_MANAGER_SECRET_KEY).await;
+    }
+}
+
+impl Display for Config {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, 
+            "{{ 'aws_config': '--', 'environment': '{}' }}", 
+                self.env_variables.clone().unwrap(), 
+    )
     }
 }

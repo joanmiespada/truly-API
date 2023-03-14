@@ -1,3 +1,4 @@
+use std::fmt::Display;
 
 use serde::Deserialize;
 
@@ -163,3 +164,13 @@ impl EnvironmentVariables {
 
 }
 
+impl Display for EnvironmentVariables {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, 
+            "{{ 'env': '{}', 'rust_log': '{}', 'aws': '{}', }}", 
+                self.environment,
+                self.rust_log, 
+                self.aws_region.clone().unwrap()
+    )
+    }
+}
