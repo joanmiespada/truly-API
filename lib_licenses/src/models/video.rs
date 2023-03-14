@@ -1,22 +1,11 @@
+//file copied from VideoApi repo. lib_video/src/video.rs
+
+use std::{fmt, str::FromStr};
+
 use serde::{Serialize, Deserialize};
 use url::Url;
 use uuid::Uuid;
-use validator::Validate;
 
-
-//structure to communicate from VideoAPI: sns_topic video in 
-#[derive(Debug, Serialize, Deserialize, Clone, Validate)]
-pub struct CreateShorter {
-    pub url_file: Url,
-    pub asset_id: Uuid,
-    #[validate(length(max = 100))]
-    pub user_id: String,
-    #[validate(length(max = 200))]
-    pub hash: String,
-    pub keep_original: bool
-}
-
-//structure to communicate from VideoAPI: sns_topic video out
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct VideoResult {
     pub url_file: Url, //temporally bucket
@@ -33,5 +22,59 @@ pub struct VideoResult {
     pub keep_original: bool,
     pub video_original : Option<Url>, //final and permanent bucket
     pub video_original_hash: Option<String>, 
+    pub video_process_status: Option<VideoProcessStatus>
 }
 
+
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+pub enum VideoProcessStatus {
+    Started,
+    Downloaded,
+    ApplyingLicense,
+    UploadedLicensed,
+    UploadedOriginal,
+    CompletedSuccessfully,
+    Error
+}
+
+impl fmt::Display for VideoProcessStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            VideoProcessStatus::Started => write!(f, "Started"),
+            VideoProcessStatus::CompletedSuccessfully => write!(f, "Completed successfully"),
+            VideoProcessStatus::Error => write!(f, "Error"),
+            VideoProcessStatus::ApplyingLicense => write!(f, "Applying license"),
+            VideoProcessStatus::UploadedLicensed => write!(f, "Uploaded license asset"),
+            VideoProcessStatus::UploadedOriginal => write!(f, "Uploaded original asset"),
+            VideoProcessStatus::Downloaded => write!(f, "Downloaded")
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct VideoProcessStatusParseError;
+
+impl FromStr for VideoProcessStatus{
+    type Err = VideoProcessStatusParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Started" => Ok(VideoProcessStatus::Started),
+            "Completed successfully" => Ok(VideoProcessStatus::CompletedSuccessfully),
+            "Error" => Ok(VideoProcessStatus::Error),
+            "Applying license" => Ok(VideoProcessStatus::ApplyingLicense),
+            "Uploaded license asset" => Ok(VideoProcessStatus::UploadedLicensed),
+            "Uploaded original asset" => Ok(VideoProcessStatus::UploadedOriginal),
+            "Downloaded" => Ok(VideoProcessStatus::Downloaded),
+            _ => Err(VideoProcessStatusParseError)
+            
+        }
+    }
+}
+
+impl fmt::Display for VideoProcessStatusParseError{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f,"error parsing video process status")
+    }
+}
+ 

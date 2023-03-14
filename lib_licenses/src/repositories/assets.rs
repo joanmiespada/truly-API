@@ -10,6 +10,7 @@ use crate::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
 use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
 use crate::models::asset::{Asset, AssetStatus, MintingStatus, VideoLicensingStatus};
 use crate::models::owner::Owner;
+use crate::models::video::VideoProcessStatus;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::model::{AttributeValue, Put, TransactWriteItem};
 use aws_sdk_dynamodb::Client;
@@ -40,6 +41,7 @@ const COUNTER_FIELD_NAME: &str = "global_counter";
 const SHORTER_FIELD_NAME: &str = "shorter";
 const VIDEO_LICENSING_FIELD_NAME: &str = "video_licensing";
 const VIDEO_LICENSING_STATUS_FIELD_NAME: &str = "video_licensing_status";
+const VIDEO_PROCESS_STATUS_FIELD_NAME: &str = "video_processing_status";
 
 static NULLABLE: &str = "__NULL__";
 
@@ -181,10 +183,20 @@ impl AssetRepo {
             VIDEO_LICENSING_STATUS_FIELD_NAME,
             AttributeValue::S(asset.video_licensing_status().to_string()),
         );
+
         items = items.item(
             MINTED_STATUS_FIELD_NAME,
             AttributeValue::S(asset.mint_status().to_string()),
         );
+        
+        match asset.video_process_status() {
+            Some(value) => {
+                let video_process_status_av = AttributeValue::S(value.to_string());
+                items = items.item( VIDEO_PROCESS_STATUS_FIELD_NAME , video_process_status_av );
+            },
+            None => {},
+        }
+
         Ok(items)
     }
 
@@ -753,6 +765,29 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
             }
         }
     }
+
+    let video_proc_sts = doc.get(VIDEO_PROCESS_STATUS_FIELD_NAME);
+    match video_proc_sts {
+        None => asset.set_video_process_status(&None),
+        Some(vid_st) => {
+            let val = vid_st.as_s().unwrap();
+            if val == NULLABLE {
+                asset.set_video_process_status(&None)
+            } else {
+                
+                let st_op = VideoProcessStatus::from_str(val);
+                match st_op {
+                    Err(e) => {
+                        error!("video process status parser error! {}", val);
+                        error!("{}", e);
+                        asset.set_video_process_status(&None)
+                    }
+                    Ok(state) => asset.set_video_process_status(&Some(state)),
+                }
+            }
+        }
+    }
+    
     /*let _x_ = doc.get(   );
     match _x_ {
         None => asset.set_(&None),

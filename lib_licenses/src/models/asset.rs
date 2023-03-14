@@ -8,6 +8,8 @@ use std::{fmt, str::FromStr};
 use uuid::Uuid;
 use validator::Validate;
 
+use super::video::VideoProcessStatus;
+
 
 #[derive(Clone, Serialize, Validate, Deserialize, Debug)]
 pub struct Asset {
@@ -33,6 +35,8 @@ pub struct Asset {
 
     video_licensing_error: Option<String>,
     video_licensing_status: VideoLicensingStatus,
+
+    video_process_status: Option<VideoProcessStatus>,
 
     father: Option<Uuid>
 
@@ -62,7 +66,8 @@ impl Asset {
             counter: None,
             father: None,
             video_licensing_error: None,
-            video_licensing_status: VideoLicensingStatus::NeverStarted
+            video_licensing_status: VideoLicensingStatus::NeverStarted,
+            video_process_status: None
         }
     }
 
@@ -167,6 +172,12 @@ impl Asset {
     }
     pub fn set_video_licensing_status(&mut self, val: VideoLicensingStatus) {
         self.video_licensing_status = val.clone()
+    }
+    pub fn video_process_status (&self) -> &Option<VideoProcessStatus> {
+        &self.video_process_status
+    }
+    pub fn set_video_process_status (&mut self, val: &Option<VideoProcessStatus>) {
+        self.video_process_status = val.clone()
     }
 /* 
     pub fn (&self) -> &Option<> {

@@ -9,8 +9,7 @@ use uuid::Uuid;
 use crate::{
     errors::video::VideoError,
     models::{
-        asset::{Asset, VideoLicensingStatus},
-        video::CreateShorter,
+        asset::{Asset, VideoLicensingStatus}, shorter::CreateShorter,
     },
 };
 

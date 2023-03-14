@@ -4,3 +4,4 @@ pub mod owner;
 pub mod keypair;
 pub mod video;
 pub mod tx;
+pub mod shorter;

@@ -6,7 +6,8 @@ use lib_async_ops::sns::create;
 use lib_config::config::Config;
 use lib_config::infra::build_local_stack_connection;
 use lib_licenses::models::asset::VideoLicensingStatus;
-use lib_licenses::models::video::{CreateShorter, VideoResult};
+use lib_licenses::models::shorter::CreateShorter;
+use lib_licenses::models::video::{VideoResult, VideoProcessStatus};
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::schema_asset::{create_schema_assets, create_schema_assets_tree};
 use lib_licenses::repositories::schema_owners::create_schema_owners;
@@ -82,7 +83,60 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     assert_that!(&post_request_op).is_ok();
 
     //simalate response after posting the request:
-    let video_res = VideoResult {
+    let mut video_res = VideoResult {
+        url_file: Url::from_str(creation_asset.url.as_str()).unwrap(),
+        hash: creation_asset.hash.to_owned(),
+        user_id: user_id.to_owned(),
+        asset_id: asset_original,
+        keep_original: shorter.keep_original,
+        counter: 0,
+        shorter: "0".to_string(),
+        video_op: None,
+        video_error: None,
+        video_original: None, // Some(Url::from_str("http://w222.test.com/f1.mov").unwrap()),
+        video_original_hash: None, //  Some("hash_f1".to_string()),
+        video_licensed_asset_id: None, //Some(Uuid::new_v4()),
+        video_licensed: None, //Some(Url::from_str("http://w222.test.com/f2.mov").unwrap()),
+        video_licensed_hash: None, // Some("hash_f2".to_string()),
+        video_process_status: Some( VideoProcessStatus::Started)
+    };
+
+    let new_op = service.store_video_process(&video_res).await;
+    assert_that!(&new_op).is_ok();
+    
+    let mut old_asset_op = service.get_by_id(&asset_original).await;
+    assert_that!(&old_asset_op ).is_ok();
+    let mut old_asset_father = old_asset_op.unwrap();
+    assert_eq!( old_asset_father.video_process_status().clone().unwrap(), VideoProcessStatus::Started );
+
+    video_res = VideoResult {
+        url_file: Url::from_str(creation_asset.url.as_str()).unwrap(),
+        hash: creation_asset.hash.to_owned(),
+        user_id: user_id.to_owned(),
+        asset_id: asset_original,
+        keep_original: shorter.keep_original,
+        counter: 0,
+        shorter: "0".to_string(),
+        video_op: None,
+        video_error: None,
+        video_original: None, // Some(Url::from_str("http://w222.test.com/f1.mov").unwrap()),
+        video_original_hash: None, //  Some("hash_f1".to_string()),
+        video_licensed_asset_id: None, //Some(Uuid::new_v4()),
+        video_licensed: None, //Some(Url::from_str("http://w222.test.com/f2.mov").unwrap()),
+        video_licensed_hash: None, // Some("hash_f2".to_string()),
+        video_process_status: Some( VideoProcessStatus::Downloaded)
+    };
+
+    let new_op = service.store_video_process(&video_res).await;
+    assert_that!(&new_op).is_ok();
+
+    old_asset_op = service.get_by_id(&asset_original).await;
+    assert_that!(&old_asset_op ).is_ok();
+    old_asset_father = old_asset_op.unwrap();
+    assert_eq!( old_asset_father.video_process_status().clone().unwrap(), VideoProcessStatus::Downloaded);
+
+
+    video_res = VideoResult {
         url_file: Url::from_str(creation_asset.url.as_str()).unwrap(),
         hash: creation_asset.hash,
         user_id,
@@ -97,10 +151,13 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
         video_licensed_asset_id: Some(Uuid::new_v4()),
         video_licensed: Some(Url::from_str("http://w222.test.com/f2.mov").unwrap()),
         video_licensed_hash: Some("hash_f2".to_string()),
+        video_process_status: Some( VideoProcessStatus::CompletedSuccessfully)
     };
+
 
     let new_op = service.store_video_process(&video_res).await;
     assert_that!(&new_op).is_ok();
+
 
     let new_asset_op = service
         .get_by_id(&video_res.video_licensed_asset_id.unwrap())
@@ -123,9 +180,9 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
         VideoLicensingStatus::AlreadyLicensed
     );
 
-    let old_asset_op = service.get_by_id(&asset_original).await;
+    old_asset_op = service.get_by_id(&asset_original).await;
     assert_that!(&old_asset_op).is_ok();
-    let old_asset_father = old_asset_op.unwrap();
+    old_asset_father = old_asset_op.unwrap();
 
     assert_eq!(
         *old_asset_father.url().as_ref().unwrap(),
@@ -139,5 +196,6 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
         *old_asset_father.video_licensing_status(),
         VideoLicensingStatus::CompletedSuccessfully
     );
+    assert_eq!( old_asset_father.video_process_status().clone().unwrap(), VideoProcessStatus::CompletedSuccessfully);
     Ok(())
 }
