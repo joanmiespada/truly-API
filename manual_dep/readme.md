@@ -18,6 +18,7 @@ In local dev environment (docker localstack)
 ENVIRONMENT=development cargo run -p manual_dep -- --table owners --create
 ENVIRONMENT=development cargo run -p manual_dep -- --table assets --create
 ENVIRONMENT=development cargo run -p manual_dep -- --table keypairs --create
+ENVIRONMENT=development cargo run -p manual_dep -- --table transactions --create
 ENVIRONMENT=development cargo run -p manual_dep -- --table users --create
 ```
 

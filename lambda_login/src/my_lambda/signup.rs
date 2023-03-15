@@ -78,10 +78,11 @@ pub async fn create_basic_user(
                 build_resp(e.to_string(), StatusCode::INTERNAL_SERVER_ERROR)
             }
         }
-        Ok(iid) => {
-            let res = NewIdUser { id: iid };
+        Ok(_) => {
+            //let res = NewIdUser { id: iid };
             //HttpResponse::Ok().json(res)
-            build_resp(json!(res).to_string(), StatusCode::OK)
+            //build_resp(json!(res).to_string(), StatusCode::OK)
+            build_resp("".to_string(), StatusCode::OK)
         }
     }
 }
