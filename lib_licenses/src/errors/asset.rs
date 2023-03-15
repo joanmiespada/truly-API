@@ -79,3 +79,14 @@ impl Display for AssetBlockachainError{
         write!(f, "blockchain error: {}", self.0)
     }
 }
+
+#[derive(Debug)]
+pub struct AssetTreeError(pub String);
+
+impl std::error::Error for AssetTreeError{}
+
+impl Display for AssetTreeError{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "asset tree error: {}", self.0)
+    }
+}

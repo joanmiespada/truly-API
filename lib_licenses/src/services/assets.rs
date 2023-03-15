@@ -1,12 +1,13 @@
-use crate::models::asset::VideoLicensingStatus;
+use crate::models::asset::{VideoLicensingStatus, AssetEnhanced};
 use crate::models::asset::{Asset, AssetStatus, MintingStatus};
 use crate::models::video::VideoResult;
 use crate::repositories::assets::{AssetRepo, AssetRepository};
 use async_trait::async_trait;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use url::Url;
 use std::str::FromStr;
-use tracing::info;
+use tracing::{info,error};
 use uuid::Uuid;
 
 use validator::Validate;
@@ -18,6 +19,8 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 pub trait AssetManipulation {
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Asset>>;
     async fn get_by_id(&self, asset_id: &Uuid) -> ResultE<Asset>;
+    async fn get_by_url(&self, url: &Url) -> ResultE<Asset>;
+    async fn get_by_id_enhanced(&self, asset_id: &Uuid) -> ResultE<AssetEnhanced>;
     async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>>;
     async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset>;
     async fn add(&self, creation_asset: &CreatableFildsAsset, user_id: &String) -> ResultE<Uuid>;
@@ -88,7 +91,32 @@ impl AssetManipulation for AssetService {
         let res = self.repository.get_by_id(id).await?;
         Ok(res)
     }
+    async fn get_by_url(&self, url: &Url) -> ResultE<Asset> {
+        let res = self.repository.get_by_url(url).await?;
+        Ok(res)
+    }
 
+    #[tracing::instrument()]
+    async fn get_by_id_enhanced(
+        &self,
+        id: &Uuid,
+    ) -> std::result::Result<AssetEnhanced, Box<dyn std::error::Error + Sync + Send>> {
+        let asset = self.repository.get_by_id(id).await?;
+        let son_uids = self.repository.get_sons(id).await?;
+        let mut sons = Vec::new();
+        for son in son_uids{
+            let son_ass_op = self.repository.get_by_id(&son).await;
+            match son_ass_op{
+                Err(_) =>{ error!("id registered as a son has no entity! It shouldn't happen!")},
+                Ok(son_id)=>sons.push(son_id)
+            }
+        }
+        let result = AssetEnhanced{
+            asset,
+            sons
+        };
+        Ok(result)
+    }
     #[tracing::instrument()]
     async fn add(&self, creation_asset: &CreatableFildsAsset, user_id: &String) -> ResultE<Uuid> {
         creation_asset.validate()?;

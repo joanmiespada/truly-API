@@ -188,7 +188,11 @@ impl Asset {
     }
 */
 
+}
 
+pub struct AssetEnhanced{
+    pub asset: Asset,
+    pub sons: Vec<Asset>
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
