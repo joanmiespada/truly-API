@@ -6,7 +6,6 @@ use lib_users::models::user::User;
 use lib_users::services::users::{UserManipulation, UsersService};
 use lib_users::validate_password;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use tracing::instrument;
 use validator::{Validate, ValidationError};
 

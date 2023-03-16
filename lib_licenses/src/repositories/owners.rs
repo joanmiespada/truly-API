@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
+use aws_sdk_dynamodb::model::Select;
 use uuid::Uuid;
 
 use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
@@ -13,12 +14,13 @@ use chrono::{
 };
 use lib_config::config::Config;
 
-use super::schema_owners::{OWNER_ASSET_ID_FIELD_PK, OWNERS_TABLE_NAME, OWNER_USER_ID_FIELD_PK};
+use super::schema_owners::{
+    OWNERS_TABLE_NAME, OWNERS_USER_ID_INDEX, OWNER_ASSET_ID_FIELD_PK, OWNER_USER_ID_FIELD_PK, OWNERS_ASSET_ID_INDEX,
+};
 pub const CREATIONTIME_FIELD_NAME: &str = "creationTime";
 pub const LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
 
-
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
 #[async_trait]
 pub trait OwnerRepository {
@@ -40,6 +42,70 @@ impl OwnerRepo {
         OwnerRepo {
             client: Client::new(conf.aws_config()),
         }
+    }
+    async fn get_by_filter(
+        &self,
+        filter: &String,
+        label: &String,
+        index_name: &str,
+        av: AttributeValue,
+    ) -> ResultE<Vec<Owner>> {
+        let mut queried = Vec::new();
+        //let user_id_av = AttributeValue::S(id.to_string());
+
+        // let mut filter = "".to_string();
+        //filter.push_str(OWNER_USER_ID_FIELD_PK);
+        //filter.push_str(" = :value");
+
+        let request = self
+            .client
+            .query()
+            .table_name(OWNERS_TABLE_NAME)
+            //.index_name(OWNERS_USER_ID_INDEX)
+            .index_name(index_name)
+            .key_condition_expression(filter)
+            .expression_attribute_values(label, av)
+            .select(Select::AllProjectedAttributes);
+
+        let results = request.send().await;
+        match results {
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(OwnerDynamoDBError(e.to_string()).into());
+            }
+            Ok(data) => {
+                let op_items = data.items();
+                match op_items {
+                    None => {
+                        return Err(OwnerNoExistsError("id doesn't exist".to_string()).into());
+                    }
+                    Some(aux) => {
+                        for doc in aux {
+                            let mut owner = Owner::new();
+                            mapping_from_doc_to_owner(doc, &mut owner);
+                            /*
+                            let ass1_id = doc.get(OWNER_ASSET_ID_FIELD_PK).unwrap();
+                            let ass1_id1 = ass1_id.as_s().unwrap();
+                            let ass1_id1_1 = Uuid::from_str(ass1_id1).unwrap();
+
+                            let usr1_id = doc.get(OWNER_USER_ID_FIELD_PK).unwrap();
+                            let usr1_id1 = usr1_id.as_s().unwrap();*/
+
+                            //owner.set_asset_id(&ass1_id1_1 );
+                            //owner.set_user_id(&usr1_id1);
+                            queried.push(owner.clone());
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(queried)
     }
 }
 
@@ -111,13 +177,28 @@ impl OwnerRepository for OwnerRepo {
     }
 
     async fn get_by_user(&self, id: &String) -> ResultE<Vec<Owner>> {
-        let mut queried = Vec::new();
-        let _id_av = AttributeValue::S(id.to_string());
+        //let mut queried = Vec::new();
+        let id_av = AttributeValue::S(id.to_string());
+
+        let mut filter = "".to_string();
+        filter.push_str(OWNER_USER_ID_FIELD_PK);
+        filter.push_str(" = :value");
+
+        let res = self
+            .get_by_filter(&filter, &":value".to_string(),OWNERS_USER_ID_INDEX, id_av)
+            .await?;
+
+        Ok(res)
+        /*
+
         let request = self
             .client
-            .get_item()
+            .query()
             .table_name(OWNERS_TABLE_NAME)
-            .key(OWNER_USER_ID_FIELD_PK, _id_av.clone());
+            .index_name(OWNERS_USER_ID_INDEX)
+            .key_condition_expression(filter)
+            .expression_attribute_values(":value".to_string(), user_id_av)
+            .select(Select::AllProjectedAttributes);
 
         let results = request.send().await;
         match results {
@@ -128,32 +209,61 @@ impl OwnerRepository for OwnerRepo {
                     e
                 );
                 tracing::error!(mssag);
-                return Err(OwnerDynamoDBError(e.to_string()).into());
+                return Err( OwnerDynamoDBError(e.to_string()).into());
             }
-            Ok(_) => {}
-        }
-        match results.unwrap().item {
-            None => Err(OwnerNoExistsError("id doesn't exist".to_string()).into()),
-            Some(aux) => {
-                // for doc in docs {
-                let mut owner = Owner::new();
+            Ok(data) => {
+                let op_items = data.items();
+                match op_items {
+                    None => {
+                        return Err(OwnerNoExistsError("id doesn't exist".to_string()).into());
+                    }
+                    Some(aux) => {
+                        for doc in aux {
+                            let ass1_id = doc.get(OWNER_ASSET_ID_FIELD_PK).unwrap();
+                            let ass1_id1 = ass1_id.as_s().unwrap();
+                            let ass1_id1_1 = Uuid::from_str(ass1_id1).unwrap();
 
-                mapping_from_doc_to_owner(&aux, &mut owner);
+                            let usr1_id = doc.get(OWNER_USER_ID_FIELD_PK).unwrap();
+                            let usr1_id1 = usr1_id.as_s().unwrap();
 
-                queried.push(owner.clone());
-                // }
-                Ok(queried)
+                            let mut owner = Owner::new();
+                            owner.set_asset_id(&ass1_id1_1 );
+                            owner.set_user_id(&usr1_id1);
+                            queried.push(owner.clone());
+                        }
+                    }
+                }
             }
         }
+
+        Ok(queried)
+        */
     }
 
     async fn get_by_asset(&self, id: &Uuid) -> ResultE<Owner> {
         let _id_av = AttributeValue::S(id.to_string());
+        let mut filter = "".to_string();
+        filter.push_str(OWNER_ASSET_ID_FIELD_PK);
+        filter.push_str(" = :value");
+
+        let res = self
+            .get_by_filter(&filter, &":value".to_string(),OWNERS_ASSET_ID_INDEX, _id_av)
+            .await?;
+
+        if res.len() == 0 {
+            Err(OwnerNoExistsError("id doesn't exist".to_string()).into())
+        } else {
+            let first = res[0].to_owned();
+            Ok(first)
+        }
+        /*
         let request = self
             .client
             .get_item()
             .table_name(OWNERS_TABLE_NAME)
             .key(OWNER_USER_ID_FIELD_PK, _id_av.clone());
+
+
 
         let results = request.send().await;
         match results {
@@ -179,10 +289,10 @@ impl OwnerRepository for OwnerRepo {
                 // }
                 Ok(owner)
             }
-        }
+        }*/
     }
 
-    async fn get_by_user_asset(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Owner>{
+    async fn get_by_user_asset(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Owner> {
         let asset_id_av = AttributeValue::S(asset_id.to_string());
         let user_id_av = AttributeValue::S(user_id.clone());
         let request = self
@@ -213,7 +323,6 @@ impl OwnerRepository for OwnerRepo {
                 mapping_from_doc_to_owner(&val, &mut owner);
 
                 Ok(owner)
-
             }
         }
     }
@@ -243,7 +352,7 @@ impl OwnerRepository for OwnerRepo {
                 //ow.set_asset_id(old_owner.asset_id());
                 //ow.set_user_id(new_owner );
                 Ok(())
-            },
+            }
             Err(e) => {
                 let mssag = format!(
                     "Error at [{}] - {} ",

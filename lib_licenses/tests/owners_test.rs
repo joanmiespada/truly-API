@@ -1,16 +1,14 @@
+use std::env;
 
+use aws_sdk_dynamodb::Client;
 use lib_config::infra::build_local_stack_connection;
 use lib_licenses::models::owner::Owner;
-use lib_licenses::repositories::schema_owners::create_schema_owners;
 use lib_licenses::repositories::owners::OwnerRepo;
-use lib_licenses::services::owners::{OwnerService, OwnerManipulation};
-use aws_sdk_dynamodb::{Client };
+use lib_licenses::repositories::schema_owners::create_schema_owners;
+use lib_licenses::services::owners::{OwnerManipulation, OwnerService};
 use spectral::prelude::*;
 use testcontainers::*;
 use uuid::Uuid;
-
-
-
 
 #[tokio::test]
 async fn creation_table() {
@@ -20,12 +18,12 @@ async fn creation_table() {
     let node = docker.run(images::dynamodb_local::DynamoDb::default());
     let host_port = node.get_host_port_ipv4(8000);
 
-    let shared_config= build_local_stack_connection(host_port).await;
+    let shared_config = build_local_stack_connection(host_port).await;
 
     let client = Client::new(&shared_config);
-    
+
     let creation = create_schema_owners(&client).await;
-    
+
     assert_that(&creation).is_ok();
 
     let req = client.list_tables().limit(10);
@@ -36,31 +34,64 @@ async fn creation_table() {
 
 #[tokio::test]
 async fn add_owners() {
-    
-    //let _ = pretty_env_logger::try_init();
+
+    env::set_var("RUST_LOG", "debug");
+    env::set_var("ENVIRONMENT", "development");
+
+    env_logger::builder().is_test(true).init();
+
     let docker = clients::Cli::default();
     let node = docker.run(images::dynamodb_local::DynamoDb::default());
     let host_port = node.get_host_port_ipv4(8000);
 
     let shared_config = build_local_stack_connection(host_port).await;
     let client = Client::new(&shared_config);
-    
+
     let creation = create_schema_owners(&client).await;
-    
+
     assert_that(&creation).is_ok();
 
     let mut conf = lib_config::config::Config::new();
-    conf.set_aws_config( &shared_config); 
+    conf.set_aws_config(&shared_config);
 
     let repo = OwnerRepo::new(&conf);
     let service = OwnerService::new(repo);
 
+    let asset1 = Uuid::new_v4();
+    let asset2 = Uuid::new_v4();
+    let asset3 = Uuid::new_v4();
+
+    let items = vec![("user1", asset1), ("user1", asset2), ("user2", asset3)];
+
     let mut as1 = Owner::new();
-    as1.set_user_id( &"hello1user1".to_string());
-    as1.set_asset_id( &Uuid::new_v4() );
+    for item in items {
+        as1.set_user_id(&item.0.to_string());
+        as1.set_asset_id(&item.1);
 
-    let new_op = service.add(&mut as1).await;
+        let new_op = service.add(&mut as1).await;
 
-    assert_that!(&new_op).is_ok();
-    
+        assert_that!(&new_op).is_ok();
+    }
+    let mut res_op = service.get_by_user(&"user1".to_string()).await;
+    assert_that!(&res_op).is_ok();
+    let mut res = res_op.unwrap();
+    assert_eq!(res.len(), 2 );
+    res_op = service.get_by_user(&"user2".to_string()).await;
+    assert_that!(&res_op).is_ok();
+    res = res_op.unwrap();
+    assert_eq!(res.len(), 1 );
+
+    let mut res_op2 = service.get_by_asset(&asset1).await;
+    assert_that!(&res_op2).is_ok();
+    let mut res2 = res_op2.unwrap();
+    assert_eq!("user1", res2.user_id() );
+
+    res_op2 = service.get_by_asset(&asset3).await;
+    assert_that!(&res_op2).is_ok();
+    res2 = res_op2.unwrap();
+    assert_eq!("user2", res2.user_id() );
+
+
+
+
 }
