@@ -182,7 +182,7 @@ async fn command(
                 let device = uuid::Uuid::new_v4().to_string();
                 user.set_device(&device);
 
-                let user_id = user_service.add_user(&mut user, &password).await?;
+                let user_id = user_service.add(&mut user, &password).await?;
                 user_service
                     .promote_user_to(&user_id, &PromoteUser::Upgrade)
                     .await?;

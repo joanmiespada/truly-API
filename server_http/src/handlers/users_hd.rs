@@ -52,7 +52,7 @@ pub async fn get_users(
 pub async fn get_user_by_id(state: web::Data<AppState>, path: web::Path<String>) -> impl Responder {
     let user_service = &state.user_service;
     let id = path.into_inner();
-    let op_res = user_service.get_by_user_id(&id).await;
+    let op_res = user_service.get_by_id(&id).await;
     match op_res {
         Ok(user) => HttpResponse::Ok().json(user),
         Err(e) => {
@@ -93,7 +93,7 @@ pub async fn add_user(state: web::Data<AppState>, payload: web::Json<NewUser>) -
         user.set_device(dvc);
     }
 
-    let op_res = user_service.add_user(&mut user, &payload.password).await;
+    let op_res = user_service.add(&mut user, &payload.password).await;
     match op_res {
         Err(e) => {
             if let Some(err) = e.downcast_ref::<UserDynamoDBError>() {
@@ -139,9 +139,10 @@ pub async fn _update_user(
         device: payload.device.clone(),
         email: payload.email.clone(),
         status: payload.status.clone(),
+        wallet: None
     };
 
-    let op_res = user_service.update_user(&id, &user_fields).await;
+    let op_res = user_service.update(&id, &user_fields).await;
     match op_res {
         Err(e) => {
             if let Some(_) = e.downcast_ref::<UserDynamoDBError>() {
@@ -202,7 +203,7 @@ pub async fn promote_user(state: web::Data<AppState>, path: web::Path<String>) -
                 HttpResponse::InternalServerError().finish()
             }
         }
-        Ok(iid) => HttpResponse::Ok().body(iid.to_string()),
+        Ok(_) => HttpResponse::Ok().finish(),
     }
 }
 
@@ -224,7 +225,7 @@ pub async fn downgrade_user(state: web::Data<AppState>, path: web::Path<String>)
                 HttpResponse::InternalServerError().finish()
             }
         }
-        Ok(iid) => HttpResponse::Ok().body(iid.to_string()),
+        Ok(_) => HttpResponse::Ok().finish(),
     }
 }
 

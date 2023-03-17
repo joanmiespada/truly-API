@@ -58,7 +58,7 @@ pub async fn create_basic_user(
         },
     }
 
-    let op_res = user_service.add_user(&mut user, &new_password).await;
+    let op_res = user_service.add(&mut user, &new_password).await;
     match op_res {
         Err(e) => {
             if let Some(err) = e.downcast_ref::<UserDynamoDBError>() {

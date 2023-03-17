@@ -79,7 +79,7 @@ pub async fn non_terraformed_dependencies(
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);
     let mut user: User = serde_json::from_str(aux_user).unwrap();
-    let user_id = user_service.add_user(&mut user, &None).await?;
+    let user_id = user_service.add(&mut user, &None).await?;
     user_service
         .promote_user_to(&user_id, &PromoteUser::Upgrade)
         .await?;

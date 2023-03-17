@@ -10,17 +10,18 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send 
 #[async_trait]
 pub trait UserManipulation {
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<User>>;
-    async fn get_by_user_id(&self, id: &String) -> ResultE<User>;
-    async fn get_by_user_device(&self, device: &String) -> ResultE<User>;
-    async fn get_by_user_email_and_password(
+    async fn get_by_id(&self, id: &String) -> ResultE<User>;
+    async fn get_by_device(&self, device: &String) -> ResultE<User>;
+    async fn get_by_wallet(&self, wallet_address: &String) -> ResultE<User>;
+    async fn get_by_email_and_password(
         &self,
         email: &String,
         password: &String,
     ) -> ResultE<User>;
-    async fn add_user(&self, user: &mut User, password: &Option<String>) -> ResultE<String>;
+    async fn add(&self, user: &mut User, password: &Option<String>) -> ResultE<String>;
     //async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>>;
-    async fn update_user(&self, id: &String, user: &UpdatableFildsUser) -> ResultE<bool>;
-    async fn promote_user_to(&self, id: &String, promo: &PromoteUser) -> ResultE<bool>;
+    async fn update(&self, id: &String, user: &UpdatableFildsUser) -> ResultE<()>;
+    async fn promote_user_to(&self, id: &String, promo: &PromoteUser) -> ResultE<()>;
     async fn update_password(&self, id: &String, password: &String) -> ResultE<()>;
     async fn remove_by_id(&self, user_id: &String) -> ResultE<()>;
 }
@@ -48,6 +49,8 @@ pub struct UpdatableFildsUser {
     pub device: Option<String>,
     #[validate(length(max=10))]
     pub status: Option<String>,
+    #[validate(length(max=100))]
+    pub wallet: Option<String>,
 }
 
 
@@ -60,19 +63,25 @@ impl UserManipulation for UsersService {
     }
 
     #[tracing::instrument()]
-    async fn get_by_user_id(&self, id: &String) -> ResultE<User> {
-        let res = self.repository.get_by_user_id(id).await?;
+    async fn get_by_id(&self, id: &String) -> ResultE<User> {
+        let res = self.repository.get_by_id(id).await?;
         Ok(res)
     }
 
     #[tracing::instrument( fields( device= tracing::field::Empty) )]
-    async fn get_by_user_device(&self, device: &String) -> ResultE<User> {
+    async fn get_by_device(&self, device: &String) -> ResultE<User> {
         tracing::Span::current().record("device", &tracing::field::display(&device));
-        let res = self.repository.get_by_user_device(device).await?;
+        let res = self.repository.get_by_device(device).await?;
+        Ok(res)
+    }
+    async fn get_by_wallet(&self, wallet_address: &String) -> ResultE<User>{
+
+        tracing::Span::current().record("wallet_address", &tracing::field::display(&wallet_address));
+        let res = self.repository.get_by_wallet_address(wallet_address).await?;
         Ok(res)
     }
     #[tracing::instrument(fields(email, success = false))]
-    async fn get_by_user_email_and_password(
+    async fn get_by_email_and_password(
         &self,
         email: &String,
         password: &String,
@@ -81,7 +90,7 @@ impl UserManipulation for UsersService {
 
         let res = self
             .repository
-            .get_by_user_email_and_password(email, password)
+            .get_by_email_and_password(email, password)
             .await?;
 
         tracing::Span::current().record("success", &tracing::field::display(true));
@@ -89,7 +98,7 @@ impl UserManipulation for UsersService {
     }
 
     #[tracing::instrument()]
-    async fn add_user(&self, user: &mut User, password: &Option<String>) -> ResultE<String> {
+    async fn add(&self, user: &mut User, password: &Option<String>) -> ResultE<String> {
 
         match password {
             None=> {},
@@ -98,28 +107,33 @@ impl UserManipulation for UsersService {
 
         let id = Uuid::new_v4();
         user.set_user_id(&id.to_string());
-        user.roles_add(&UserRoles::Basic);
+        if user.roles().len() == 0 {
+            user.roles_add(&UserRoles::Basic);
+        }
         user.validate()?;
-        let res = self.repository.add_user(user, password).await?;
-        Ok(res)
+        self.repository.add(user, password).await?;
+        Ok(id.to_string())
     }
     
     #[tracing::instrument()]
     async fn remove_by_id(&self, id: &String) -> ResultE<()> {
-        let user = self.get_by_user_id(id).await?;
+        let user = self.get_by_id(id).await?;
         let res = self.repository.remove(user.user_id()).await?;
         Ok(res)
     }
 
     #[tracing::instrument()]
-    async fn update_user(&self, id: &String, user: &UpdatableFildsUser) -> ResultE<bool> {
+    async fn update(&self, id: &String, user: &UpdatableFildsUser) -> ResultE<()> {
         
         user.validate()?;
         
-        let dbuser = self.repository.get_by_user_id(id).await?;
+        let dbuser = self.repository.get_by_id(id).await?;
         let mut res: User = dbuser.clone();
 
-
+        match &user.wallet {
+            None => (),
+            Some(wal) => res.set_wallet_address(&wal),
+        }
         match &user.email {
             None => (),
             Some(eml) => res.set_email(&eml),
@@ -139,8 +153,8 @@ impl UserManipulation for UsersService {
             }
         }
 
-        let res = self.repository.update_user(&id, &res).await?;
-        Ok(res)
+        self.repository.update(&id, &res).await?;
+        Ok(())
     }
 
     #[tracing::instrument()]
@@ -151,8 +165,8 @@ impl UserManipulation for UsersService {
         Ok(())
     }
 
-    async fn promote_user_to(&self, id: &String, promo: &PromoteUser) -> ResultE<bool> {
-        let dbuser = self.repository.get_by_user_id(id).await?;
+    async fn promote_user_to(&self, id: &String, promo: &PromoteUser) -> ResultE<()> {
+        let dbuser = self.repository.get_by_id(id).await?;
         let mut res: User = dbuser.clone();
         match promo {
             PromoteUser::Upgrade => {
@@ -163,8 +177,8 @@ impl UserManipulation for UsersService {
             }
         }
 
-        let res = self.repository.update_user(&id, &res).await?;
-        Ok(res)
+        self.repository.update(&id, &res).await?;
+        Ok(())
     }
 }
 

@@ -40,6 +40,7 @@ pub async fn update_my_user(
                     user_fields = UpdatableFildsUser {
                         device: payload.device.clone(),
                         email: payload.email.clone(),
+                        wallet: None,
                         status: None
                         //status: payload.status.clone(), //forbidden here, only at admins lambda
                     };
@@ -48,7 +49,7 @@ pub async fn update_my_user(
         },
     }
 
-    let op_res = user_service.update_user(&id, &user_fields).await;
+    let op_res = user_service.update(&id, &user_fields).await;
 
     match op_res {
         Err(e) => {

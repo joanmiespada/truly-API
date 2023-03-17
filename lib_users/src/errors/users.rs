@@ -77,3 +77,15 @@ impl Display for UserStatusError{
         write!(f, "user's status: {}", self.0)
     }
 }
+
+
+#[derive(Debug)]
+pub struct UserNoPasswordError;
+
+impl std::error::Error for UserNoPasswordError{}
+
+impl Display for UserNoPasswordError{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "you can't create a user with email and without password")
+    }
+}

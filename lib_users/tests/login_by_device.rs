@@ -45,9 +45,9 @@ async fn login_user_device_test() -> Result<(), Box<dyn std::error::Error + Send
     let mut new_user = User::new();
     new_user.set_device(&device.unwrap());
 
-    let new_id = user_service.add_user(&mut new_user, &None).await?;
+    let new_id = user_service.add(&mut new_user, &None).await?;
 
-    let res = user_service.login(device_ref, &None, &None).await?;
+    let res = user_service.login(device_ref, &None, &None, &None).await?;
 
     assert_eq!(new_id, res.user_id);
 

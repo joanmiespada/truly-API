@@ -20,7 +20,7 @@ pub async fn get_my_user(req: HttpRequest,state: web::Data<AppState>) -> impl Re
     
     let id = get_user_id(&req);
 
-    let op_res = user_service.get_by_user_id(&id).await;
+    let op_res = user_service.get_by_id(&id).await;
     match op_res {
         Ok(user) => HttpResponse::Ok().json(user),
         Err(e) => {

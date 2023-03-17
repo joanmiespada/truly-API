@@ -108,7 +108,6 @@ pub async fn create_schema_assets_tree(client: &aws_sdk_dynamodb::Client) -> Res
         .create_table()
         .table_name(ASSET_TREE_TABLE_NAME)
         .key_schema(ks1)
-        //.key_schema(ks2)
         .global_secondary_indexes(second_index)
         .attribute_definitions(ad1)
         .attribute_definitions(ad2)

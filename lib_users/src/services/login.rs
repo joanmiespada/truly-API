@@ -9,6 +9,7 @@ use super::users::UsersService;
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
 
+#[derive(Clone, Debug)]
 pub struct LoginInfo {
     pub user_id: String,
     pub roles: Vec<UserRoles>,
@@ -19,6 +20,7 @@ pub trait LoginOps {
     async fn login(
         &self,
         device: &Option<String>,
+        wallet: &Option<String>,
         email: &Option<String>,
         passw: &Option<String>,
     ) -> ResultE<LoginInfo>;
@@ -30,6 +32,7 @@ impl LoginOps for UsersService {
     async fn login(
         &self,
         device: &Option<String>,
+        wallet: &Option<String>,
         email: &Option<String>,
         passw: &Option<String>,
     ) -> ResultE<LoginInfo> {
@@ -39,15 +42,17 @@ impl LoginOps for UsersService {
         };
         let usr;
         if let Some(dvc) = device {
-            usr = self.get_by_user_device(dvc).await?;
+            usr = self.get_by_device(dvc).await?;
         } else if let Some(eml) = email {
             // && let Some(pwd) = passw {
             match passw {
                 None => { return Err(UserNoExistsError("password is empty".to_string()).into());},
                 Some(pss) => {
-                    usr = self.get_by_user_email_and_password(eml, pss).await?;
+                    usr = self.get_by_email_and_password(eml, pss).await?;
                 }
             }
+        } else if let Some(wall) = wallet  {
+            usr = self.get_by_wallet(wall).await?
         } else {
             return Err(UserNoExistsError("not correct parameters".to_string()).into());
         }

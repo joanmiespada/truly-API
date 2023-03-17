@@ -43,13 +43,14 @@ pub async fn update_user(
                         device: payload.device.clone(),
                         email: payload.email.clone(),
                         status: payload.status.clone(),
+                        wallet: None
                     };
                 }
             },
         },
     }
 
-    let op_res = user_service.update_user(id, &user_fields).await;
+    let op_res = user_service.update(id, &user_fields).await;
     match op_res {
         Err(e) => {
             if let Some(m) = e.downcast_ref::<UserDynamoDBError>() {

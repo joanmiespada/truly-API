@@ -49,7 +49,7 @@ pub async fn login(
                         Err(e) => { return build_resp(e.to_string(), StatusCode::BAD_REQUEST); }
                         Ok(_) => {}
                     }
-                    let result = user_service.login(&payload.device, &payload.email, &payload.password).await;
+                    let result = user_service.login(&payload.device, &None, &payload.email, &payload.password).await;
                     match result {
                         Err(e) => {
                             if let Some(_) = e.downcast_ref::<UserDynamoDBError>() {

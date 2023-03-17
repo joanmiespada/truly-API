@@ -57,7 +57,7 @@ impl fmt::Display for UserRoles {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub enum UserStatus {
     Enabled,
     Disabled,
@@ -83,6 +83,8 @@ pub struct User {
     //password: String, // don't use it here!
     #[validate(length( max=100))]
     device: Option<String>,
+    #[validate(length( max=100))]
+    wallet_address: Option<String>,
     roles: Vec<UserRoles>,
     status: UserStatus,
 }
@@ -95,6 +97,7 @@ impl User {
             last_update_time: Utc::now(),
             email: None,
             device: None,
+            wallet_address: None,
             roles: Vec::new(),
             //password: String::new(),
             status: UserStatus::Enabled,
@@ -151,13 +154,13 @@ impl User {
             _ => true,
         }
     }
-    /*
-    pub fn password (&self) -> &String {
-        &self.password
+    
+    pub fn wallet_address (&self) -> &Option<String> {
+        &self.wallet_address
     }
-    pub fn set_password(&mut self, val: &String ) {
-        self.password = val.clone()
-    }*/
+    pub fn set_wallet_address(&mut self, val: &String ) {
+        self.wallet_address = Some(val.clone())
+    }
     pub fn status(&self) -> &UserStatus {
         &self.status
     }

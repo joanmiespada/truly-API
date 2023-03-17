@@ -1,10 +1,10 @@
 use lib_config::infra::build_local_stack_connection;
 use lib_config::{config::Config, secrets::SECRETS_MANAGER_APP_KEYS};
-use lib_users::models::user::{User, UserStatus};
+use lib_users::models::user::User;
 use lib_users::repositories::schema_user::create_schema_users;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::login::LoginOps;
-use lib_users::services::users::{UserManipulation, UsersService, UpdatableFildsUser};
+use lib_users::services::users::{UserManipulation, UsersService};
 use spectral::{assert_that, result::ResultAssertions};
 use std::env;
 use testcontainers::*;
@@ -64,29 +64,16 @@ async fn login_user_email_password_test() -> Result<(), Box<dyn std::error::Erro
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);
 
-    let email = Some("pepe@test.cat.io".to_string());
-
-    let password = Some("123456789aA$%^@2".to_string());
+    let wallet = Some("wallet-2r1234-12341234-12341234-1234-123".to_string());
 
     let mut new_user = User::new();
-    new_user.set_email(&email.to_owned().unwrap());
+    new_user.set_wallet_address(&wallet.clone().unwrap());
 
-    let new_id = user_service.add(&mut new_user, &password).await?;
+    let new_id = user_service.add(&mut new_user, &None).await?;
 
-    let res = user_service.login(&None, &None,&email, &password).await?;
+    let res = user_service.login( &None, &wallet,&None, &None ).await?;
+
     assert_eq!(new_id, res.user_id);
-
-    let update_fields = UpdatableFildsUser{
-        email: None,
-        device: None,
-        status: Some(UserStatus::Disabled.to_string() ),
-        wallet: None
-    };
-
-    user_service.update(&new_id, &update_fields).await?;
-
-    let fail = user_service.login(&None, &None,&email, &password).await;
-    assert_that(&fail).is_err();
 
     Ok(())
 }

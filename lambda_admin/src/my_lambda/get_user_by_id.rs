@@ -20,7 +20,7 @@ pub async fn get_user_by_id(
     id: &String
 ) -> Result<Response<String>, Box<dyn std::error::Error>> {
 
-    let op_res = user_service.get_by_user_id(id).await;
+    let op_res = user_service.get_by_id(id).await;
     match op_res {
         Ok(user) => build_resp( json!(user).to_string()  , StatusCode::OK  ),
         Err(e) => {
