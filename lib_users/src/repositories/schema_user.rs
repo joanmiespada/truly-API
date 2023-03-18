@@ -167,6 +167,9 @@ pub async fn create_schema_users(client: &aws_sdk_dynamodb::Client) -> Result<()
 pub async fn delete_schema_users(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
 
     client.delete_table().table_name(USERS_TABLE_NAME).send().await?;
+    client.delete_table().table_name(LOGIN_DEVICE_TABLE_NAME).send().await?;
+    client.delete_table().table_name(LOGIN_EMAIL_TABLE_NAME).send().await?;
+    client.delete_table().table_name(LOGIN_WALLET_TABLE_NAME).send().await?;
 
     Ok(())
 }

@@ -30,6 +30,8 @@ ENVIRONMENT=stage cargo run -p manual_dep -- --table assets --create
 ENVIRONMENT=stage cargo run -p manual_dep -- --table keypairs --create
 ENVIRONMENT=stage cargo run -p manual_dep -- --table transactions --create
 ENVIRONMENT=stage cargo run -p manual_dep -- --table users --create
+or 
+ENVIRONMENT=stage cargo run -p manual_dep -- --table all --create
 ```
 
 In stage *production* (eu-central-1)
