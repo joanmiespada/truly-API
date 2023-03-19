@@ -30,7 +30,9 @@ pub struct VideoResult {
 pub enum VideoProcessStatus {
     Started,
     Downloaded,
+    HashVerified,
     ApplyingLicense,
+    Uploading,
     UploadedLicensed,
     UploadedOriginal,
     CompletedSuccessfully,
@@ -43,7 +45,9 @@ impl fmt::Display for VideoProcessStatus {
             VideoProcessStatus::Started => write!(f, "Started"),
             VideoProcessStatus::CompletedSuccessfully => write!(f, "Completed successfully"),
             VideoProcessStatus::Error => write!(f, "Error"),
+            VideoProcessStatus::HashVerified => write!(f, "Hash verified"),
             VideoProcessStatus::ApplyingLicense => write!(f, "Applying license"),
+            VideoProcessStatus::Uploading => write!(f, "Uploading"),
             VideoProcessStatus::UploadedLicensed => write!(f, "Uploaded license asset"),
             VideoProcessStatus::UploadedOriginal => write!(f, "Uploaded original asset"),
             VideoProcessStatus::Downloaded => write!(f, "Downloaded")
@@ -62,7 +66,9 @@ impl FromStr for VideoProcessStatus{
             "Started" => Ok(VideoProcessStatus::Started),
             "Completed successfully" => Ok(VideoProcessStatus::CompletedSuccessfully),
             "Error" => Ok(VideoProcessStatus::Error),
+            "Hash verified" => Ok(VideoProcessStatus::HashVerified),
             "Applying license" => Ok(VideoProcessStatus::ApplyingLicense),
+            "Uploading" => Ok(VideoProcessStatus::Uploading),
             "Uploaded license asset" => Ok(VideoProcessStatus::UploadedLicensed),
             "Uploaded original asset" => Ok(VideoProcessStatus::UploadedOriginal),
             "Downloaded" => Ok(VideoProcessStatus::Downloaded),
@@ -77,4 +83,3 @@ impl fmt::Display for VideoProcessStatusParseError{
         write!(f,"error parsing video process status")
     }
 }
- 

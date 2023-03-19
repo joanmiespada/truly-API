@@ -72,3 +72,13 @@ variable "queue_mint_arn"{
 variable "rust_backtrace" {
   type= string
 }
+
+variable "minting_async_topic_arn" {
+  type      = string
+  description = "topic arn to mint async"
+}
+
+variable minting_fails_topic_arn {
+  type = string
+  description = "topic to register when miting fails after several retries"
+}

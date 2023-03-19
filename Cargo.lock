@@ -3187,6 +3187,7 @@ dependencies = [
  "aws_lambda_events",
  "lambda_http",
  "lambda_runtime",
+ "lib_async_ops",
  "lib_config",
  "lib_licenses",
  "serde",

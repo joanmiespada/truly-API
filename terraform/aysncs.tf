@@ -189,3 +189,30 @@ resource "aws_sqs_queue_policy" "after_video_queue_policy" {
 }
 POLICY
 }
+
+//--------- topic to regisgter minting fails after several retries -----------
+resource "aws_sns_topic" "minting_fails_after_max_retries_topic" {
+  name = "minting_fails_after_max_retries_topic"
+  tags = merge(local.common_tags, {})
+}
+
+resource "aws_cloudwatch_metric_alarm" "minting_fails_after_max_retries_alarm" {
+  alarm_name                = "minting_fails_after_max_retries"
+  comparison_operator       = "GreaterThanThreshold"
+  evaluation_periods        = "1"
+  metric_name               = "ApproximateNumberOfMessagesVisible"
+  namespace                 = "AWS/SNS"
+  period                    = "60"
+  statistic                 = "Sum"
+  threshold                 = "0"
+  alarm_description         = "This metric monitors minting retries failed"
+  insufficient_data_actions = []
+  //alarm_actions             = [aws_sns_topic.____.arn]
+}
+
+resource "aws_sns_topic_subscription" "minting_fails_after_max_retries_topic_email" {
+  topic_arn = aws_sns_topic.minting_fails_after_max_retries_topic.arn
+  protocol  = "email"
+  endpoint  = "joanmi@espada.cat"
+}
+

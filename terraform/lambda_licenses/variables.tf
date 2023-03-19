@@ -79,3 +79,8 @@ variable "video_out_topic" {
   type = string
   description = "topic to be connected with other dependencies, video processing results" 
 }
+
+variable minting_fails_topic_arn {
+  type = string
+  description = "topic to register when miting fails after several retries"
+}

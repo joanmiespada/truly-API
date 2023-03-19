@@ -11,14 +11,14 @@ use uuid::Uuid;
 use crate::errors::nft::{
     TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError,
 };
-use crate::models::asset::{MintingStatus, Asset};
+use crate::models::asset::{Asset, MintingStatus};
 use crate::models::tx::BlockchainTx;
 use crate::repositories::ganache::{GanacheRepo, NFTsRepository};
 use crate::repositories::keypairs::{KeyPairRepo, KeyPairRepository};
 use crate::services::assets::{AssetManipulation, AssetService};
 use crate::services::owners::{OwnerManipulation, OwnerService};
 
-use super::block_tx::{BlockchainTxService, BlockchainTxManipulation};
+use super::block_tx::{BlockchainTxManipulation, BlockchainTxService};
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
@@ -30,7 +30,12 @@ pub trait NFTsManipulation {
         user_id: &String,
         price: &u64,
     ) -> ResultE<Asset>;
-    async fn try_mint(&self, asset_id: &Uuid, user_id: &String, price: &u64) -> ResultE<BlockchainTx>;
+    async fn try_mint(
+        &self,
+        asset_id: &Uuid,
+        user_id: &String,
+        price: &u64,
+    ) -> ResultE<BlockchainTx>;
     async fn get(&self, asset_id: &Uuid) -> ResultE<NTFContentInfo>;
 }
 
@@ -59,7 +64,7 @@ impl NFTsService {
             asset_service,
             owner_service,
             config,
-            tx_service
+            tx_service,
         }
     }
 }
@@ -72,7 +77,6 @@ impl NFTsManipulation for NFTsService {
         user_id: &String,
         _price: &u64,
     ) -> ResultE<Asset> {
-
         let asset = self.asset_service.get_by_id(asset_id).await?;
         if *asset.mint_status() == MintingStatus::CompletedSuccessfully {
             return Err(TokenHasBeenMintedAlreadyError {
@@ -83,13 +87,12 @@ impl NFTsManipulation for NFTsService {
         let last_update = asset.last_update_time();
         let diff = Utc::now() - *last_update;
         let diff_min = diff.num_minutes();
-        const LIMIT: i64 =5;
+        const LIMIT: i64 = 5;
 
-        if *asset.mint_status() == MintingStatus::Started && diff_min < LIMIT
-        {
+        if *asset.mint_status() == MintingStatus::Started && diff_min < LIMIT {
             return Err(TokenMintingProcessHasBeenInitiatedError {
                 0: asset_id.to_owned(),
-                1: LIMIT
+                1: LIMIT,
             }
             .into());
         }
@@ -105,7 +108,13 @@ impl NFTsManipulation for NFTsService {
     }
 
     #[tracing::instrument()]
-    async fn try_mint(&self, asset_id: &Uuid, user_id: &String, price: &u64) -> ResultE<BlockchainTx> {
+    async fn try_mint(
+        &self,
+        asset_id: &Uuid,
+        user_id: &String,
+        price: &u64,
+    ) -> ResultE<BlockchainTx> {
+
         let asset = self
             .prechecks_before_minting(asset_id, user_id, price)
             .await?;
@@ -144,8 +153,8 @@ impl NFTsManipulation for NFTsService {
                 let mut tx_paylaod = BlockchainTx::new();
                 tx_paylaod.set_asset_id(asset_id);
                 tx_paylaod.set_result(&e.to_string());
-                
-                self.tx_service.add(&tx_paylaod ).await?;
+
+                self.tx_service.add(&tx_paylaod).await?;
                 return Err(e.into());
             }
             Ok(transaction) => {
@@ -156,8 +165,8 @@ impl NFTsManipulation for NFTsService {
                         MintingStatus::CompletedSuccessfully,
                     )
                     .await?;
-                
-                self.tx_service.add( &transaction ).await?;
+
+                self.tx_service.add(&transaction).await?;
                 Ok(transaction)
             }
         }
@@ -234,9 +243,41 @@ impl std::str::FromStr for NTFState {
     }
 }
 
+#[non_exhaustive]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateNFTAsync {
     pub price: u64,
     pub asset_id: Uuid,
     pub user_id: String,
+    pub tries: usize,
+}
+
+impl CreateNFTAsync {
+    pub fn new(user_id: &String, asset_id: &Uuid, price: u64) -> CreateNFTAsync {
+        CreateNFTAsync {
+            price,
+            asset_id: asset_id.to_owned(),
+            user_id: user_id.to_owned(),
+            tries: 0,
+        }
+    }
+    pub fn increase_try(&mut self){
+       self.tries +=1; 
+    }
+
+    pub fn get_tries(&self) -> usize {
+        self.tries
+    }
+}
+
+impl std::fmt::Display for CreateNFTAsync {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "user_id: {} asset_id: {} price: {}",
+            self.user_id,
+            self.asset_id.to_string(),
+            self.price
+        )
+    }
 }

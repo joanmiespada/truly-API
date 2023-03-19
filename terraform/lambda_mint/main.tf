@@ -35,6 +35,8 @@ resource "aws_lambda_function" "truly_lambda_mint" {
       BLOCKCHAIN_CONFIRMATIONS = "${var.blockchain_confirmations}"
       DEAD_LETTER_QUEUE_MINT= "${var.dead_letter_queue_mint}"
       RUST_BACKTRACE = "${var.rust_backtrace}"
+      TOPIC_ARN_MINT_ASYNC = "${var.minting_async_topic_arn}"
+      MINTING_FAILS_TOPIC =  var.minting_fails_topic_arn 
     }
   }
 

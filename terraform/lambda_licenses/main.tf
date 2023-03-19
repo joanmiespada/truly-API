@@ -38,6 +38,7 @@ resource "aws_lambda_function" "truly_lambda_licenses" {
       RUST_BACKTRACE = "${var.rust_backtrace}"
       SHORTER_VIDEO_IN_TOPIC = var.video_in_topic
       SHORTER_VIDEO_OUT_TOPIC = var.video_out_topic
+      MINTING_FAILS_TOPIC =  var.minting_fails_topic_arn 
     }
   }
 

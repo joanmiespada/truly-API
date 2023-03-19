@@ -59,11 +59,11 @@ pub async fn async_create_my_nft_sns(
         }
     }
 
-    let new_nft_async = CreateNFTAsync {
-        user_id: user_id.clone(),
-        asset_id: new_nft.asset_id,
-        price: new_nft.price,
-    };
+    let new_nft_async = CreateNFTAsync::new(
+        user_id,
+        &new_nft.asset_id,
+        new_nft.price
+    );
 
     let json_text = serde_json::to_string(&new_nft_async)?;
 

@@ -31,6 +31,8 @@ pub struct EnvironmentVariables {
     shorter_video_in_topic: Option<String>,
     shorter_video_out_topic: Option<String>,
 
+    minting_fails_topic : Option<String>
+
 }
 
 impl EnvironmentVariables {
@@ -161,6 +163,12 @@ impl EnvironmentVariables {
         self.shorter_video_out_topic= Some(value.clone());
     }
 
+    pub fn topic_arn_mint_fails (&self)-> &String{
+        self.minting_fails_topic.as_ref().unwrap()
+    }
+    pub fn set_topic_arn_mint_fails(&mut self, value: String) {
+        self.minting_fails_topic = Some(value.clone());
+    }
 
 }
 

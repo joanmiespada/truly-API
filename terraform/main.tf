@@ -110,6 +110,7 @@ module "lambda_licenses" {
   contract_owner_address = var.contract_owner_address
   dead_letter_queue_mint = aws_sqs_queue.minting_queue_deadletter.url
   minting_async_topic_arn = aws_sns_topic.minting_topic.arn 
+  minting_fails_topic_arn = aws_sns_topic.minting_fails_after_max_retries_topic.arn
   kms_cypher_owner = var.kms_id_cypher_all_secret_keys
 
   rust_backtrace = var.rust_backtrace
@@ -140,6 +141,9 @@ module "lambda_mint" {
   dead_letter_queue_mint = aws_sqs_queue.minting_queue_deadletter.url
   kms_cypher_owner = var.kms_id_cypher_all_secret_keys
   queue_mint_arn = aws_sqs_queue.minting_queue.arn
+  minting_async_topic_arn = aws_sns_topic.minting_topic.arn 
+  minting_fails_topic_arn = aws_sns_topic.minting_fails_after_max_retries_topic.arn
+
   
   rust_backtrace = var.rust_backtrace
 
