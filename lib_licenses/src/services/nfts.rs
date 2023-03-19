@@ -11,7 +11,8 @@ use uuid::Uuid;
 use crate::errors::nft::{
     TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError,
 };
-use crate::models::asset::{Asset, MintingStatus};
+use crate::errors::video::VideoNotYetLicensed;
+use crate::models::asset::{Asset, MintingStatus, VideoLicensingStatus};
 use crate::models::tx::BlockchainTx;
 use crate::repositories::ganache::{GanacheRepo, NFTsRepository};
 use crate::repositories::keypairs::{KeyPairRepo, KeyPairRepository};
@@ -97,6 +98,10 @@ impl NFTsManipulation for NFTsService {
             .into());
         }
 
+        if *asset.video_licensing_status() != VideoLicensingStatus::AlreadyLicensed {
+                    return Err(VideoNotYetLicensed{}.into());
+        }
+
         //check ownership between user and asset
         self.owner_service
             .get_by_user_asset_ids(asset_id, user_id)
@@ -114,7 +119,6 @@ impl NFTsManipulation for NFTsService {
         user_id: &String,
         price: &u64,
     ) -> ResultE<BlockchainTx> {
-
         let asset = self
             .prechecks_before_minting(asset_id, user_id, price)
             .await?;
@@ -261,8 +265,8 @@ impl CreateNFTAsync {
             tries: 0,
         }
     }
-    pub fn increase_try(&mut self){
-       self.tries +=1; 
+    pub fn increase_try(&mut self) {
+        self.tries += 1;
     }
 
     pub fn get_tries(&self) -> usize {

@@ -1,7 +1,7 @@
 use crate::nfts_tests::MNEMONIC_TEST;
 use ethers::utils::Ganache;
 use lib_config::config::Config;
-use lib_licenses::models::asset::MintingStatus;
+use lib_licenses::models::asset::{MintingStatus, VideoLicensingStatus};
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::block_tx::BlockchainTxRepo;
 use lib_licenses::repositories::keypairs::KeyPairRepo;
@@ -125,7 +125,7 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
 
     assert_that!(&new_asset_op).is_ok();
 
-    let as1 = asset_service
+    let mut as1 = asset_service
         .get_by_id(&new_asset_op.unwrap())
         .await
         .unwrap();
@@ -169,6 +169,10 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
     );
 
     let asset_price: u64 = 2000;
+
+    as1.set_video_licensing_status( VideoLicensingStatus::AlreadyLicensed);
+    let update_op = asset_service.update_full( &as1).await;
+    assert_that!(&update_op).is_ok();
 
     let mint_op = nft_service.try_mint(as1.id(), &user_id, &asset_price).await;
     assert_that!(&mint_op).is_ok();

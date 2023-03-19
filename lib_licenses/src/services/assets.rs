@@ -25,6 +25,7 @@ pub trait AssetManipulation {
     async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset>;
     async fn add(&self, creation_asset: &CreatableFildsAsset, user_id: &String) -> ResultE<Uuid>;
     async fn update(&self, asset_id: &Uuid, asset: &UpdatableFildsAsset) -> ResultE<()>;
+    async fn update_full(&self, asset: &Asset) -> ResultE<()>;
     async fn mint_status(
         &self,
         id: &Uuid,
@@ -164,6 +165,13 @@ impl AssetManipulation for AssetService {
         }
 
         self.repository.update(&res).await?;
+        Ok(())
+    }
+    
+    #[tracing::instrument()]
+    async fn update_full(&self, asset: &Asset) -> ResultE<()>{
+
+        self.repository.update(asset).await?;
         Ok(())
     }
 
