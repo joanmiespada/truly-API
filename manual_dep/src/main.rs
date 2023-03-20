@@ -65,11 +65,9 @@ async fn command(
                 }
                 "assets" => {
                     if create {
-                        schema_asset::create_schema_assets(&client).await?;
-                        schema_asset::create_schema_assets_tree(&client).await?;
+                        schema_asset::create_schema_assets_all(&client).await?;
                     } else if delete {
-                        schema_asset::delete_schema_assets(&client).await?;
-                        schema_asset::delete_schema_assets_tree(&client).await?;
+                        schema_asset::delete_schema_assets_all(&client).await?;
                     } else {
                         return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
                     }
@@ -104,15 +102,13 @@ async fn command(
                 "all" =>{
                     if create {
                         schema_owners::create_schema_owners(&client).await?;
-                        schema_asset::create_schema_assets(&client).await?;
-                        schema_asset::create_schema_assets_tree(&client).await?;
+                        schema_asset::create_schema_assets_all(&client).await?;
                         schema_keypairs::create_schema_keypairs(&client).await?;
                         schema_block_tx::create_schema_transactions(&client).await?;
                         schema_user::create_schema_users(&client).await?;
                     } else if delete{
                         schema_owners::delete_schema_owners(&client).await?;
-                        schema_asset::delete_schema_assets(&client).await?;
-                        schema_asset::delete_schema_assets_tree(&client).await?;
+                        schema_asset::delete_schema_assets_all(&client).await?;
                         schema_keypairs::delete_schema_keypairs(&client).await?;
                         schema_block_tx::delete_schema_transactions(&client).await?;
                         schema_user::delete_schema_users(&client).await?;

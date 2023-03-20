@@ -14,6 +14,8 @@ use lib_licenses::services::video::VideoService;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
 use tracing::info;
+use crate::my_lambda::assets::get_asset::get_asset_by_shorter;
+
 use self::assets::create_my_asset::create_my_asset;
 use self::assets::get_my_asset::{ get_my_assets_all};
 use self::assets::get_asset::{ get_asset};
@@ -59,6 +61,7 @@ pub async fn function_handler(
     router.insert("/api/asset/:id", Some("2"))?;
     router.insert("/api/nft", Some("3"))?;
     router.insert("/api/license", Some("4"))?;
+    router.insert("/api/shorter/:id", Some("5"))?;
 
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
@@ -93,6 +96,19 @@ pub async fn function_handler(
                         asset_service,
                         owners_service,
                         &asset_id,
+                    )
+                    .await;
+                }
+                "5" => {
+                    // public, not required jwt token
+                    let shorter_id = matched.params.get("id").unwrap().to_string();
+                    return get_asset_by_shorter(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        owners_service,
+                        &shorter_id,
                     )
                     .await;
                 }
@@ -217,6 +233,22 @@ fn build_resp(
     }
 }
 
+fn build_resp_no_cache(
+    msg: String,
+    status_code: StatusCode,
+) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
+    let res = Response::builder()
+        .status(status_code)
+        .header("content-type", "text/json")
+        .header("cache-control", "no-cache,max-age=0")
+        .body(msg);
+    match res {
+        Err(e) => Err(ApiLambdaError { 0: e.to_string() }.into()),
+        Ok(resp) => Ok(resp),
+    }
+}
+
+
 
 fn build_resp_env(
     env: &String,
@@ -234,6 +266,7 @@ fn build_resp_env(
     let res = Response::builder()
         .status(status_code)
         .header("content-type", "text/json")
+        .header("cache-control", "max-age=300")//5 minutes
         .body(msg);
     match res {
         Err(e) => Err(ApiLambdaError { 0: e.to_string() }.into()),

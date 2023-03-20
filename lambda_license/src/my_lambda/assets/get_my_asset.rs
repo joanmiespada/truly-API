@@ -13,7 +13,7 @@ use tracing::instrument;
 use uuid::Uuid;
 use validator::ValidationError;
 
-use crate::my_lambda::{build_resp, build_resp_env};
+use crate::my_lambda::{build_resp, build_resp_env, build_resp_no_cache};
 
 #[instrument]
 pub async fn get_my_asset(
@@ -27,7 +27,7 @@ pub async fn get_my_asset(
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     let op_res = asset_service.get_by_user_asset_id(asset_id, user_id).await;
     match op_res {
-        Ok(assets) => build_resp(json!(assets).to_string(), StatusCode::OK),
+        Ok(assets) => build_resp_no_cache(json!(assets).to_string(), StatusCode::OK),
         Err(e) => {
             if let Some(e) = e.downcast_ref::<AssetDynamoDBError>() {
                 return build_resp(e.to_string(), StatusCode::SERVICE_UNAVAILABLE);

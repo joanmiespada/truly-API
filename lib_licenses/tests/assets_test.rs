@@ -5,10 +5,10 @@ use std::str::FromStr;
 use aws_sdk_dynamodb::Client;
 use lib_licenses::models::asset::AssetStatus;
 use lib_licenses::repositories::assets::AssetRepo;
-use lib_licenses::repositories::schema_asset::create_schema_assets_tree;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
+use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset, UpdatableFildsAsset};
-use lib_licenses::{repositories::schema_asset::create_schema_assets};
+use lib_licenses::repositories::schema_asset::create_schema_assets_all;
 use spectral::prelude::*;
 use testcontainers::*;
 use url::Url;
@@ -27,17 +27,15 @@ async fn creation_table() {
 
     let client = Client::new(&shared_config);
 
-    let mut creation = create_schema_assets(&client).await;
+    let mut creation = create_schema_assets_all(&client).await;
     assert_that(&creation).is_ok();
     creation = create_schema_owners(&client).await;
-    assert_that(&creation).is_ok();
-    creation = create_schema_assets_tree(&client).await;
     assert_that(&creation).is_ok();
 
     let req = client.list_tables().limit(10);
     let list_tables_result = req.send().await.unwrap();
 
-    assert_eq!(list_tables_result.table_names().unwrap().len(), 3);
+    assert_eq!(list_tables_result.table_names().unwrap().len(), 4);
 }
 
 #[tokio::test]
@@ -50,18 +48,17 @@ async fn add_assets() {
     let shared_config = build_local_stack_connection(host_port).await;
     let client = Client::new(&shared_config);
 
-    let mut creation = create_schema_assets(&client).await;
+    let mut creation = create_schema_assets_all(&client).await;
     assert_that(&creation).is_ok();
     creation = create_schema_owners(&client).await;
-    assert_that(&creation).is_ok();
-    creation = create_schema_assets_tree(&client).await;
     assert_that(&creation).is_ok();
 
     let mut conf = lib_config::config::Config::new();
     conf.set_aws_config(&shared_config);
 
-    let repo = AssetRepo::new(&conf);
-    let service = AssetService::new(repo);
+    let repo_assets = AssetRepo::new(&conf);
+    let repo_shorters = ShorterRepo::new(&conf);
+    let service = AssetService::new(repo_assets,repo_shorters);
 
     let as1 = CreatableFildsAsset {
         url: "http://www.file1.com/test1.mp4".to_string(),
@@ -186,19 +183,18 @@ async fn check_ownership() {
     let shared_config = build_local_stack_connection(host_port).await;
     let client = Client::new(&shared_config);
 
-    let mut creation = create_schema_assets(&client).await;
+    let mut creation = create_schema_assets_all(&client).await;
     assert_that(&creation).is_ok();
     creation = create_schema_owners(&client).await;
-    assert_that(&creation).is_ok();
-    creation = create_schema_assets_tree(&client).await;
     assert_that(&creation).is_ok();
 
 
     let mut conf = lib_config::config::Config::new();
     conf.set_aws_config(&shared_config);
 
-    let repo = AssetRepo::new(&conf);
-    let service = AssetService::new(repo);
+    let repo_assets = AssetRepo::new(&conf);
+    let repo_shorters = ShorterRepo::new(&conf);
+    let service = AssetService::new(repo_assets,repo_shorters);
 
     let payload = list_of_assets();
     let mut list_of_ids = HashMap::new();
@@ -260,18 +256,17 @@ async fn check_asset_tree_father_son() {
     let shared_config = build_local_stack_connection(host_port).await;
     let client = Client::new(&shared_config);
 
-    let mut creation = create_schema_assets(&client).await;
+    let mut creation = create_schema_assets_all(&client).await;
     assert_that(&creation).is_ok();
     creation = create_schema_owners(&client).await;
-    assert_that(&creation).is_ok();
-    creation = create_schema_assets_tree(&client).await;
     assert_that(&creation).is_ok();
 
     let mut conf = lib_config::config::Config::new();
     conf.set_aws_config(&shared_config);
 
-    let repo = AssetRepo::new(&conf);
-    let service = AssetService::new(repo);
+    let repo_assets = AssetRepo::new(&conf);
+    let repo_shorters = ShorterRepo::new(&conf);
+    let service = AssetService::new(repo_assets,repo_shorters);
 
     let payload = list_of_assets_tree();
     let mut list_of_ids = HashMap::new();

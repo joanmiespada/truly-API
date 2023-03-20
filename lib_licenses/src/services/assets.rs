@@ -1,13 +1,14 @@
-use crate::models::asset::{VideoLicensingStatus, AssetEnhanced};
 use crate::models::asset::{Asset, AssetStatus, MintingStatus};
+use crate::models::asset::{AssetEnhanced, VideoLicensingStatus};
 use crate::models::video::VideoResult;
 use crate::repositories::assets::{AssetRepo, AssetRepository};
+use crate::repositories::shorter::{ShorterRepo, ShorterRepository};
 use async_trait::async_trait;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use url::Url;
 use std::str::FromStr;
-use tracing::{info,error};
+use tracing::{error, info};
+use url::Url;
 use uuid::Uuid;
 
 use validator::Validate;
@@ -21,6 +22,7 @@ pub trait AssetManipulation {
     async fn get_by_id(&self, asset_id: &Uuid) -> ResultE<Asset>;
     async fn get_by_url(&self, url: &Url) -> ResultE<Asset>;
     async fn get_by_id_enhanced(&self, asset_id: &Uuid) -> ResultE<AssetEnhanced>;
+    async fn get_by_shorter(&self, shorter_id: &String) -> ResultE<Asset>;
     async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>>;
     async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset>;
     async fn add(&self, creation_asset: &CreatableFildsAsset, user_id: &String) -> ResultE<Uuid>;
@@ -44,13 +46,16 @@ pub trait AssetManipulation {
 #[derive(Debug)]
 pub struct AssetService {
     repository: AssetRepo,
-    //owner_service: OwnerService,
+    short_repository: ShorterRepo, //owner_service: OwnerService,
 }
 
 impl AssetService {
-    pub fn new(repo: AssetRepo) -> AssetService {
+    pub fn new(ass_repo: AssetRepo, short_repo: ShorterRepo) -> AssetService {
         //,owner_service: OwnerService
-        AssetService { repository: repo } // owner_service: owner_service.clone() }
+        AssetService {
+            repository: ass_repo,
+            short_repository: short_repo,
+        } // owner_service: owner_service.clone() }
     }
 }
 
@@ -105,19 +110,26 @@ impl AssetManipulation for AssetService {
         let asset = self.repository.get_by_id(id).await?;
         let son_uids = self.repository.get_sons(id).await?;
         let mut sons = Vec::new();
-        for son in son_uids{
+        for son in son_uids {
             let son_ass_op = self.repository.get_by_id(&son).await;
-            match son_ass_op{
-                Err(_) =>{ error!("id registered as a son has no entity! It shouldn't happen!")},
-                Ok(son_id)=>sons.push(son_id)
+            match son_ass_op {
+                Err(_) => {
+                    error!("id registered as a son has no entity! It shouldn't happen!")
+                }
+                Ok(son_id) => sons.push(son_id),
             }
         }
-        let result = AssetEnhanced{
-            asset,
-            sons
-        };
+        let result = AssetEnhanced { asset, sons };
         Ok(result)
     }
+
+    #[tracing::instrument()]
+    async fn get_by_shorter(&self, shorter_id: &String) -> ResultE<Asset> {
+        let res = self.short_repository.get_by_shorter(shorter_id).await?;
+        let asset = self.repository.get_by_id(&res).await?;
+        Ok(asset)
+    }
+
     #[tracing::instrument()]
     async fn add(&self, creation_asset: &CreatableFildsAsset, user_id: &String) -> ResultE<Uuid> {
         creation_asset.validate()?;
@@ -167,10 +179,9 @@ impl AssetManipulation for AssetService {
         self.repository.update(&res).await?;
         Ok(())
     }
-    
-    #[tracing::instrument()]
-    async fn update_full(&self, asset: &Asset) -> ResultE<()>{
 
+    #[tracing::instrument()]
+    async fn update_full(&self, asset: &Asset) -> ResultE<()> {
         self.repository.update(asset).await?;
         Ok(())
     }
@@ -225,7 +236,6 @@ impl AssetManipulation for AssetService {
     }
     #[tracing::instrument()]
     async fn store_video_process(&self, video_res: &VideoResult) -> ResultE<()> {
-        
         let mut original_asset = self.repository.get_by_id(&video_res.asset_id).await?;
 
         match video_res.video_op {
@@ -255,6 +265,13 @@ impl AssetManipulation for AssetService {
 
                     self.repository
                         .add(&new_licensed_asset, &video_res.user_id)
+                        .await?;
+
+                    self.short_repository
+                        .add(
+                            &video_res.video_licensed_asset_id.unwrap(),
+                            &video_res.clone().shorter,
+                        )
                         .await?;
 
                     if video_res.keep_original {
@@ -291,7 +308,7 @@ impl Clone for AssetService {
     fn clone(&self) -> AssetService {
         let aux = AssetService {
             repository: self.repository.clone(),
-            //owner_service: self.owner_service.clone()
+            short_repository: self.short_repository.clone()
         };
         return aux;
     }

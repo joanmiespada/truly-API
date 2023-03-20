@@ -3,6 +3,7 @@ use lib_config::config::Config;
 use lib_licenses::repositories::block_tx::BlockchainTxRepo;
 use lib_licenses::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
+use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::repositories::{assets::AssetRepo, ganache::GanacheRepo};
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::block_tx::BlockchainTxService;
@@ -35,7 +36,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tx_service = BlockchainTxService::new(repo_tx);
 
     let asset_repo = AssetRepo::new(&config);
-    let asset_service = AssetService::new(asset_repo);
+    let shorter_repo = ShorterRepo::new(&config);
+    let asset_service = AssetService::new(asset_repo, shorter_repo);
 
     let owners_repo = OwnerRepo::new(&config);
     let owners_service = OwnerService::new(owners_repo);

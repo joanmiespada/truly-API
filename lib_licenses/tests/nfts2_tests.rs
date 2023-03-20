@@ -6,10 +6,11 @@ use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::block_tx::BlockchainTxRepo;
 use lib_licenses::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
-use lib_licenses::repositories::schema_asset::{create_schema_assets, create_schema_assets_tree};
+use lib_licenses::repositories::schema_asset::{create_schema_assets_all };
 use lib_licenses::repositories::schema_block_tx::create_schema_transactions;
 use lib_licenses::repositories::schema_keypairs::create_schema_keypairs;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
+use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::services::block_tx::{BlockchainTxService, BlockchainTxManipulation};
 use lib_licenses::services::contract::deploy_contract_locally;
@@ -49,11 +50,8 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
 
     let dynamo_client = aws_sdk_dynamodb::Client::new(&shared_config);
 
-    let creation1 = create_schema_assets(&dynamo_client).await;
+    let creation1 = create_schema_assets_all(&dynamo_client).await;
     assert_that(&creation1).is_ok();
-
-    let creation11 = create_schema_assets_tree(&dynamo_client).await;
-    assert_that(&creation11).is_ok();
 
     let creation2 = create_schema_owners(&dynamo_client).await;
     assert_that(&creation2).is_ok();
@@ -96,7 +94,8 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
     let owner_service = OwnerService::new(repo_ow);
 
     let repo_as = AssetRepo::new(&config.clone());
-    let asset_service = AssetService::new(repo_as);
+    let repo_sh = ShorterRepo::new(&config.clone());
+    let asset_service = AssetService::new(repo_as,repo_sh);
 
     let repo_keys = KeyPairRepo::new(&config.clone());
 

@@ -9,8 +9,9 @@ use lib_licenses::models::asset::VideoLicensingStatus;
 use lib_licenses::models::shorter::CreateShorter;
 use lib_licenses::models::video::{VideoResult, VideoProcessStatus};
 use lib_licenses::repositories::assets::AssetRepo;
-use lib_licenses::repositories::schema_asset::{create_schema_assets, create_schema_assets_tree};
+use lib_licenses::repositories::schema_asset::create_schema_assets_all;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
+use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::services::video::{VideoManipulation, VideoService};
 use spectral::prelude::*;
@@ -34,10 +35,8 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     let shared_config = build_local_stack_connection(host_port).await;
     let client = Client::new(&shared_config);
 
-    let creation = create_schema_assets(&client).await;
+    let creation = create_schema_assets_all(&client).await;
     assert_that(&creation).is_ok();
-    let creation2 = create_schema_assets_tree(&client).await;
-    assert_that(&creation2).is_ok();
     let creation3 = create_schema_owners(&client).await;
     assert_that(&creation3).is_ok();
 
@@ -48,9 +47,9 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     env::set_var("SHORTER_VIDEO_IN_TOPIC", topic_arn);
     conf.refresh_env_vars();
 
-
-    let repo = AssetRepo::new(&conf);
-    let service = AssetService::new(repo);
+    let repo_assets = AssetRepo::new(&conf);
+    let repo_shorters = ShorterRepo::new(&conf);
+    let service = AssetService::new(repo_assets,repo_shorters);
 
     let video_service = VideoService::new(service.to_owned(), conf.to_owned());
 
@@ -64,6 +63,7 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
         hash: "hash_f1".to_string(),
         father: None,
     };
+    let shorter_id = "0".to_string();
 
     let asset_original_op = service.add(&creation_asset, &user_id).await;
     assert_that!(&asset_original_op).is_ok();
@@ -90,7 +90,7 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
         asset_id: asset_original,
         keep_original: shorter.keep_original,
         counter: 0,
-        shorter: "0".to_string(),
+        shorter: shorter_id.to_owned(),
         video_op: None,
         video_error: None,
         video_original: None, // Some(Url::from_str("http://w222.test.com/f1.mov").unwrap()),
@@ -116,7 +116,7 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
         asset_id: asset_original,
         keep_original: shorter.keep_original,
         counter: 0,
-        shorter: "0".to_string(),
+        shorter: shorter_id.to_owned(),
         video_op: None,
         video_error: None,
         video_original: None, // Some(Url::from_str("http://w222.test.com/f1.mov").unwrap()),
@@ -143,7 +143,7 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
         asset_id: asset_original,
         keep_original: shorter.keep_original,
         counter: 0,
-        shorter: "0".to_string(),
+        shorter: shorter_id.to_owned(),
         video_op: Some(true),
         video_error: None,
         video_original: Some(Url::from_str("http://w222.test.com/f1.mov").unwrap()),
@@ -197,5 +197,10 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
         VideoLicensingStatus::CompletedSuccessfully
     );
     assert_eq!( old_asset_father.video_process_status().clone().unwrap(), VideoProcessStatus::CompletedSuccessfully);
+
+
+    let ass_short = service.get_by_shorter(&shorter_id).await?;
+    assert_eq!( video_res.video_licensed_asset_id.unwrap(), *ass_short.id() );
+
     Ok(())
 }

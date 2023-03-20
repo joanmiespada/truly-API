@@ -10,6 +10,7 @@ use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::block_tx::BlockchainTxRepo;
 use lib_licenses::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
+use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::block_tx::BlockchainTxService;
 use lib_licenses::services::owners::OwnerService;
@@ -91,7 +92,8 @@ async fn main() {
     let user_service = UsersService::new(user_repo);
 
     let asset_repo = AssetRepo::new(&config);
-    let asset_service = AssetService::new(asset_repo.to_owned());
+    let shorter_repo = ShorterRepo::new(&config);
+    let asset_service = AssetService::new(asset_repo.to_owned(), shorter_repo.to_owned());
 
     let owners_repo = OwnerRepo::new(&config);
     let owners_service = OwnerService::new(owners_repo.to_owned());

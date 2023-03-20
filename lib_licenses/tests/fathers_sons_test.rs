@@ -6,8 +6,8 @@ use lib_licenses::{
     models::asset::Asset,
     repositories::{
         assets::AssetRepo,
-        schema_asset::{create_schema_assets, create_schema_assets_tree},
-        schema_owners::create_schema_owners,
+        schema_asset::create_schema_assets_all,
+        schema_owners::create_schema_owners, shorter::ShorterRepo,
     },
     services::assets::{AssetManipulation, AssetService, CreatableFildsAsset},
 };
@@ -74,18 +74,17 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
     let shared_config = build_local_stack_connection(host_port).await;
     let client = Client::new(&shared_config);
 
-    let mut creation = create_schema_assets(&client).await;
+    let mut creation = create_schema_assets_all(&client).await;
     assert_that(&creation).is_ok();
     creation = create_schema_owners(&client).await;
-    assert_that(&creation).is_ok();
-    creation = create_schema_assets_tree(&client).await;
     assert_that(&creation).is_ok();
 
     let mut conf = lib_config::config::Config::new();
     conf.set_aws_config(&shared_config);
 
-    let repo = AssetRepo::new(&conf);
-    let service = AssetService::new(repo);
+    let repo_assets = AssetRepo::new(&conf);
+    let repo_shorters = ShorterRepo::new(&conf);
+    let service = AssetService::new(repo_assets,repo_shorters);
 
     let mut list_of_ids = Vec::new();
     let payload = list_of_assets_father_sons();

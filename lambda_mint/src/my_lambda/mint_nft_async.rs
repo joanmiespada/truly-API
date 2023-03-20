@@ -34,7 +34,7 @@ pub async fn async_minting(
             }
         }
     } else {
-        info!("miting...");
+        info!("minting...");
         info!("{}", data);
         let op_res = blockchain_service
             .try_mint(&data.asset_id, &data.user_id, &data.price)

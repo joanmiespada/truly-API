@@ -22,8 +22,9 @@ use lib_config::config::Config;
 
 use super::owners::mapping_from_doc_to_owner;
 use super::schema_asset::{
-    ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK, ASSET_TREE_FATHER_ID_FIELD_PK,
-    ASSET_TREE_SON_ID_FIELD_PK, ASSET_TREE_TABLE_NAME, URL_FIELD_NAME, URL_INDEX_NAME, ASSET_TREE_FATHER_INDEX,
+    ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK, ASSET_TREE_FATHER_ID_FIELD_PK, ASSET_TREE_FATHER_INDEX,
+    ASSET_TREE_SON_ID_FIELD_PK, ASSET_TREE_TABLE_NAME,
+    URL_FIELD_NAME, URL_INDEX_NAME,
 };
 use super::schema_owners::{OWNERS_TABLE_NAME, OWNER_ASSET_ID_FIELD_PK, OWNER_USER_ID_FIELD_PK};
 const CREATIONTIME_FIELD_NAME: &str = "creationTime";
@@ -274,7 +275,6 @@ impl AssetRepository for AssetRepo {
         }
     }
 
-    //without fathers!
     async fn get_all(&self, _page_number: u32, _page_size: u32) -> ResultE<Vec<Asset>> {
         let mut queried = Vec::new();
 
@@ -301,6 +301,10 @@ impl AssetRepository for AssetRepo {
                         let mut asset = Asset::new();
 
                         mapping_from_doc_to_asset(&doc, &mut asset);
+                        match self.get_father(asset.id()).await? {
+                            None => {}
+                            Some(val) => asset.set_father(&Some(val)),
+                        }
 
                         queried.push(asset.clone());
                     }
@@ -375,6 +379,8 @@ impl AssetRepository for AssetRepo {
             }
         }
     }
+
+    
 
     async fn update(&self, asset: &Asset) -> ResultE<()> {
         let items = self.new_or_update(asset).unwrap();
@@ -505,9 +511,12 @@ impl AssetRepository for AssetRepo {
         }
 
         for ass in assets_list {
-            let res = self._get_by_id(ass.asset_id()).await?;
-            let mut asset = Asset::new();
-            mapping_from_doc_to_asset(&res, &mut asset);
+            //let res = self._get_by_id(ass.asset_id()).await?;
+            //let mut asset = Asset::new();
+            //mapping_from_doc_to_asset(&res, &mut asset);
+
+            let asset = self.get_by_id(ass.asset_id()).await?;
+
             queried.push(asset.clone());
         }
         Ok(queried)
@@ -551,9 +560,10 @@ impl AssetRepository for AssetRepo {
                 mapping_from_doc_to_owner(&aux, &mut own);
             }
         }
-        let res = self._get_by_id(own.asset_id()).await?;
-        let mut asset = Asset::new();
-        mapping_from_doc_to_asset(&res, &mut asset);
+        //let res = self._get_by_id(own.asset_id()).await?;
+        //let mut asset = Asset::new();
+        //mapping_from_doc_to_asset(&res, &mut asset);
+        let asset = self.get_by_id(own.asset_id()).await?;
         Ok(asset)
     }
 

@@ -50,7 +50,7 @@ pub async fn non_terraformed_dependencies(
 
     let client = aws_sdk_dynamodb::Client::new(config.aws_config());
     schema_owners::create_schema_owners(&client).await?;
-    schema_asset::create_schema_assets(&client).await?;
+    schema_asset::create_schema_assets_all(&client).await?;
     schema_keypairs::create_schema_keypairs(&client).await?;
     schema_user::create_schema_users(&client).await?;
     drop(client);

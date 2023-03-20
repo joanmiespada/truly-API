@@ -9,3 +9,5 @@ pub mod keypairs;
 pub mod block_tx;
 
 pub mod ganache;
+
+pub mod shorter;
