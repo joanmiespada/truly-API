@@ -16,7 +16,7 @@ use tracing::instrument;
 use uuid::Uuid;
 use validator::ValidationError;
 
-use crate::my_lambda::{build_resp, build_resp_env};
+use crate::my_lambda::{build_resp, build_resp_env, build_resp_no_cache};
 
 #[instrument]
 pub async fn get_asset(
@@ -69,7 +69,7 @@ pub async fn get_asset_by_shorter(
                     asset: asset.to_owned(),
                     tx: None,
                 };
-                build_resp(json!(res.to_owned()).to_string(), StatusCode::OK)
+                build_resp_no_cache(json!(res.to_owned()).to_string(), StatusCode::OK)
             }
             Some(hash) => {
                 let tx_op = tx_service.get_by_hash(hash).await;
@@ -79,7 +79,7 @@ pub async fn get_asset_by_shorter(
                             asset,
                             tx: Some(tx),
                         };
-                        build_resp(json!(res).to_string(), StatusCode::OK)
+                        build_resp_no_cache(json!(res).to_string(), StatusCode::OK)
                     }
                     Err(e) => {
                         if let Some(e) = e.downcast_ref::<BlockchainTxError>() {
