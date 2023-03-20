@@ -1,5 +1,7 @@
 
 
+use std::str::FromStr;
+
 use crate::models::tx::BlockchainTx ;
 use crate::repositories::block_tx::{BlockchainTxRepository, BlockchainTxRepo};
 use async_trait::async_trait;
@@ -10,7 +12,8 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send 
 #[async_trait]
 pub trait BlockchainTxManipulation {
     async fn add(&self, tx: & BlockchainTx) -> ResultE<()>;
-    async fn get_by_tx(&self, hash: &H256) -> ResultE<BlockchainTx>;
+    async fn get_by_hash(&self, hash: &H256) -> ResultE<BlockchainTx>;
+    async fn get_by_id(&self, hash: &String) -> ResultE<BlockchainTx>;
 }
 
 #[derive(Debug)]
@@ -34,8 +37,13 @@ impl BlockchainTxManipulation for BlockchainTxService {
     }
 
     #[tracing::instrument()]
-    async fn get_by_tx(&self, hash: &H256) -> ResultE<BlockchainTx>{
+    async fn get_by_hash(&self, hash: &H256) -> ResultE<BlockchainTx>{
         self.repository.get_by_tx(hash).await
+    }
+    #[tracing::instrument()]
+    async fn get_by_id(&self, hash: &String) -> ResultE<BlockchainTx>{
+        let new_hash = H256::from_str(hash).unwrap();
+        self.repository.get_by_tx(&new_hash).await
     }
 }
 

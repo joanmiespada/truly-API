@@ -67,6 +67,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             &blockchain_service,
             &user_service,
             &video_service,
+            &tx_service,
             event,
         )
     }))

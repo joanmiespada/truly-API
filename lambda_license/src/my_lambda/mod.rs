@@ -6,31 +6,33 @@ mod video;
 
 use std::str::FromStr;
 
+use crate::my_lambda::assets::get_asset::get_asset_by_shorter;
+use crate::my_lambda::nft::get_tx::get_tx;
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, STAGE_ENV};
+use lib_licenses::services::block_tx::BlockchainTxService;
 use lib_licenses::services::nfts::NFTsService;
 use lib_licenses::services::video::VideoService;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
 use tracing::info;
-use crate::my_lambda::assets::get_asset::get_asset_by_shorter;
 
 use self::assets::create_my_asset::create_my_asset;
-use self::assets::get_my_asset::{ get_my_assets_all};
-use self::assets::get_asset::{ get_asset};
+use self::assets::get_asset::get_asset;
+use self::assets::get_my_asset::get_my_assets_all;
 use self::error::ApiLambdaError;
-use self::nft::async_create_my_nft::{async_create_my_nft_sns};
+use self::nft::async_create_my_nft::async_create_my_nft_sns;
 use self::video::async_create_my_shorter::async_create_my_shorter_sns;
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
 use matchit::Router;
 use uuid::Uuid;
 
-fn jwt_mandatory(req: &Request, config: &Config) -> Result<String, Response< String>> {
+fn jwt_mandatory(req: &Request, config: &Config) -> Result<String, Response<String>> {
     match check_jwt_token_as_user_logged(&req, config) {
         Err(e) => Err(build_resp(e.to_string(), StatusCode::UNAUTHORIZED).unwrap()),
-        Ok(id) => Ok(id)
+        Ok(id) => Ok(id),
     }
 }
 
@@ -42,6 +44,7 @@ pub async fn function_handler(
     blockchain_service: &NFTsService,
     user_service: &UsersService,
     video_service: &VideoService,
+    tx_service: &BlockchainTxService,
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error + Send + Sync>> {
     info!("income new request");
@@ -62,6 +65,7 @@ pub async fn function_handler(
     router.insert("/api/nft", Some("3"))?;
     router.insert("/api/license", Some("4"))?;
     router.insert("/api/shorter/:id", Some("5"))?;
+    router.insert("/api/tx/:hash", Some("6"))?;
 
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
@@ -71,9 +75,11 @@ pub async fn function_handler(
             ),
             Ok(matched) => match matched.value.unwrap() {
                 "1" => {
-                    match jwt_mandatory(&req, config){
-                        Err(e) => { return Ok(e);},
-                        Ok(user)=> user_id = user
+                    match jwt_mandatory(&req, config) {
+                        Err(e) => {
+                            return Ok(e);
+                        }
+                        Ok(user) => user_id = user,
                     };
                     get_my_assets_all(
                         &req,
@@ -107,10 +113,15 @@ pub async fn function_handler(
                         &context,
                         config,
                         asset_service,
-                        owners_service,
+                        tx_service,
                         &shorter_id,
                     )
                     .await;
+                }
+                "6" => {
+                    // public, not required jwt token
+                    let tx_hash = matched.params.get("hash").unwrap().to_string();
+                    return get_tx(&req, &context, config, tx_service, &tx_hash).await;
                 }
                 _ => build_resp(
                     "method not allowed".to_string(),
@@ -125,9 +136,11 @@ pub async fn function_handler(
             ),
             Ok(matched) => match matched.value.unwrap() {
                 "1" => {
-                    match jwt_mandatory(&req, config){
-                        Err(e) => { return Ok(e);},
-                        Ok(user)=> user_id = user
+                    match jwt_mandatory(&req, config) {
+                        Err(e) => {
+                            return Ok(e);
+                        }
+                        Ok(user) => user_id = user,
                     };
                     create_my_asset(
                         &req,
@@ -161,14 +174,15 @@ pub async fn function_handler(
                 //     )
                 //     .await;
                 // }
-
                 "3" => {
                     //let id = matched.params.get("id").unwrap().to_string();
                     //let asset_id = Uuid::from_str(id.as_str())?;
 
-                    match jwt_mandatory(&req, config){
-                        Err(e) => { return Ok(e);},
-                        Ok(user)=> user_id = user
+                    match jwt_mandatory(&req, config) {
+                        Err(e) => {
+                            return Ok(e);
+                        }
+                        Ok(user) => user_id = user,
                     };
 
                     return async_create_my_nft_sns(
@@ -183,14 +197,16 @@ pub async fn function_handler(
                     )
                     .await;
                 }
-                
+
                 "4" => {
                     //let id = matched.params.get("id").unwrap().to_string();
                     //let asset_id = Uuid::from_str(id.as_str())?;
 
-                    match jwt_mandatory(&req, config){
-                        Err(e) => { return Ok(e);},
-                        Ok(user)=> user_id = user
+                    match jwt_mandatory(&req, config) {
+                        Err(e) => {
+                            return Ok(e);
+                        }
+                        Ok(user) => user_id = user,
                     };
 
                     return async_create_my_shorter_sns(
@@ -248,25 +264,22 @@ fn build_resp_no_cache(
     }
 }
 
-
-
 fn build_resp_env(
     env: &String,
-    error: Box<dyn std::error::Error + Send + Sync >,
+    error: Box<dyn std::error::Error + Send + Sync>,
     status_code: StatusCode,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
-
     let msg: String;
     if env == DEV_ENV || env == STAGE_ENV {
-        msg = format!("{}",error);
-    }else{
+        msg = format!("{}", error);
+    } else {
         msg = "".to_string();
     }
 
     let res = Response::builder()
         .status(status_code)
         .header("content-type", "text/json")
-        .header("cache-control", "max-age=300")//5 minutes
+        .header("cache-control", "max-age=300") //5 minutes
         .body(msg);
     match res {
         Err(e) => Err(ApiLambdaError { 0: e.to_string() }.into()),

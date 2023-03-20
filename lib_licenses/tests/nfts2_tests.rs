@@ -195,7 +195,7 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
     assert_ne!(*content_minted.minted_tx(), None );
 
     let find = content_minted.minted_tx().unwrap();
-    let tx_tx= tx_service.get_by_tx(&find).await;
+    let tx_tx= tx_service.get_by_hash(&find).await;
     assert_that!(&tx_tx).is_ok();
     let final_tx = tx_tx.unwrap();
     let content1 = tx_in_chain.result().clone().unwrap();
