@@ -13,7 +13,7 @@ use uuid::Uuid;
 use web3::types::H256;
 
 use crate::{
-    errors::block_tx::{BlockchainTxError, BlockchainTxNoExistsError},
+    errors::{block_tx::{BlockchainTxError, BlockchainTxNoExistsError}, asset::AssetNoExistsError},
     models::tx::BlockchainTx,
 };
 
@@ -30,8 +30,8 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 pub trait BlockchainTxRepository {
     async fn add(&self, tx: &BlockchainTx) -> ResultE<()>;
     async fn get_by_tx(&self, hash: &H256) -> ResultE<BlockchainTx>;
-    async fn get_by_ids(&self, asset_id: &Uuid, timestamp: &DateTime<Utc>)
-        -> ResultE<BlockchainTx>;
+    async fn get_by_ids(&self, asset_id: &Uuid, timestamp: &DateTime<Utc>)-> ResultE<BlockchainTx>;
+    async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<BlockchainTx>>;
 }
 
 #[derive(Clone, Debug)]
@@ -181,6 +181,66 @@ impl BlockchainTxRepository for BlockchainTxRepo {
             }
         }
     }
+
+    async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<BlockchainTx>>{
+        let mut queried = Vec::new();
+        let asset_id_av = AttributeValue::S(asset_id.to_string());
+
+        let mut filter = "".to_string();
+        filter.push_str(TX_ASSET_ID_FIELD_PK);
+        filter.push_str(" = :value");
+
+        let request = self
+            .client
+            .query()
+            .table_name(BLOCKCHAIN_TX_TABLE_NAME)
+            .key_condition_expression(filter)
+            .expression_attribute_values(":value".to_string(), asset_id_av);
+        //.select(Select::AllProjectedAttributes);
+        //.key(OWNER_USER_ID_FIELD_PK, _id_av.clone());
+
+        //let mut id_list = Vec::new();
+        let results = request.send().await;
+        match results {
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(BlockchainTxError(e.to_string()).into());
+            }
+            Ok(data) => {
+                let op_items = data.items();
+                match op_items {
+                    None => {
+                        return Err(AssetNoExistsError("asset id doesn't exist".to_string()).into());
+                    }
+                    Some(aux) => {
+                        for doc in aux {
+                            let mut res = BlockchainTx::new();
+                            mapping_from_doc_to_blockchain(&doc, &mut res);
+                            queried.push(res.clone());
+                        }
+                    }
+                }
+            }
+        }
+
+        //for ass in assets_list {
+            //let res = self._get_by_id(ass.asset_id()).await?;
+            //let mut asset = Asset::new();
+            //mapping_from_doc_to_asset(&res, &mut asset);
+
+         //   let asset = self.get_by_id(ass.asset_id()).await?;
+
+        //    queried.push(asset.clone());
+        //}
+        Ok(queried)
+    }
+
+
 }
 
 fn iso8601(st: &DateTime<Utc>) -> String {

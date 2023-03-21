@@ -41,5 +41,5 @@ async fn main() -> Result<(), Error> {
         tx_service.to_owned(),
         config.to_owned()
     );
-    run(service_fn(|e| {  function_handler(e,&config,&blockchain_service) })).await
+    run(service_fn(|e| {  function_handler(e,&config,&blockchain_service, &asset_service) })).await
 }

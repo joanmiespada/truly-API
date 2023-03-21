@@ -99,7 +99,7 @@ impl NFTsManipulation for NFTsService {
         }
 
         if *asset.video_licensing_status() != VideoLicensingStatus::AlreadyLicensed {
-                    return Err(VideoNotYetLicensed{}.into());
+            return Err(VideoNotYetLicensed {}.into());
         }
 
         //check ownership between user and asset
@@ -137,18 +137,17 @@ impl NFTsManipulation for NFTsService {
 
         match transaction_op {
             Err(e) => {
-                //we need to change it to SNS topic instead!!
-                let url = self.config.env_vars().dead_letter_queue_mint().to_owned();
-                let queue_mint_errors_id = Url::from_str(&url).unwrap();
+                // let url = self.config.env_vars().dead_letter_queue_mint().to_owned();
+                // let queue_mint_errors_id = Url::from_str(&url).unwrap();
 
-                let message = SQSMessage {
-                    id: Uuid::new_v4().to_string(),
-                    body: format!(
-                        "error minting asset id: {} with user id: {}",
-                        asset_id, user_id
-                    ),
-                };
-                send_async_message(&self.config, &message, queue_mint_errors_id).await?;
+                // let message = SQSMessage {
+                //     id: Uuid::new_v4().to_string(),
+                //     body: format!(
+                //         "error minting asset id: {} with user id: {}",
+                //         asset_id, user_id
+                //     ),
+                // };
+                // send_async_message(&self.config, &message, queue_mint_errors_id).await?;
 
                 self.asset_service
                     .mint_status(asset_id, &None, MintingStatus::Error)

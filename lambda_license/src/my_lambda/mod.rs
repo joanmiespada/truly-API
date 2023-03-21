@@ -7,7 +7,7 @@ mod video;
 use std::str::FromStr;
 
 use crate::my_lambda::assets::get_asset::get_asset_by_shorter;
-use crate::my_lambda::nft::get_tx::get_tx;
+use crate::my_lambda::nft::get_tx::{get_tx, get_txs};
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, STAGE_ENV};
@@ -66,6 +66,7 @@ pub async fn function_handler(
     router.insert("/api/license", Some("4"))?;
     router.insert("/api/shorter/:id", Some("5"))?;
     router.insert("/api/tx/:hash", Some("6"))?;
+    router.insert("/api/txs/:id", Some("7"))?;
 
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
@@ -122,6 +123,12 @@ pub async fn function_handler(
                     // public, not required jwt token
                     let tx_hash = matched.params.get("hash").unwrap().to_string();
                     return get_tx(&req, &context, config, tx_service, &tx_hash).await;
+                }
+                "7" => {
+                    // public, not required jwt token
+                    let id = matched.params.get("id").unwrap().to_string();
+                    let asset_id = Uuid::from_str(id.as_str())?;
+                    return get_txs(&req, &context, config, tx_service, &asset_id).await;
                 }
                 _ => build_resp(
                     "method not allowed".to_string(),

@@ -5,7 +5,7 @@ use std::str::FromStr;
 use aws_lambda_events::sqs::SqsEventObj;
 use lambda_runtime::LambdaEvent;
 use lib_config::config::Config;
-use lib_licenses::services::nfts::{CreateNFTAsync, NFTsService};
+use lib_licenses::services::{nfts::{CreateNFTAsync, NFTsService}, assets::AssetService};
 use serde_json::{Error,Value};
 use tracing::{instrument, error, info};
 
@@ -32,6 +32,7 @@ pub async fn function_handler(
     event: LambdaEvent<SqsEventObj<Value>>,
     config: &Config,
     blockchain_service: &NFTsService,
+    asset_service: &AssetService
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let aux = event.payload.records;
     for event in aux {
@@ -59,7 +60,7 @@ pub async fn function_handler(
                 info!("message sqs parsed successfully");
                 println!("{}", data);
                 let mut aux = data.clone();
-                async_minting(&mut aux, config, blockchain_service).await?;
+                async_minting(&mut aux, config, blockchain_service,asset_service).await?;
             }
         }
     }

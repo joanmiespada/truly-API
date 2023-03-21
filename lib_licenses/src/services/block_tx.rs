@@ -6,7 +6,7 @@ use crate::models::tx::BlockchainTx ;
 use crate::repositories::block_tx::{BlockchainTxRepository, BlockchainTxRepo};
 use async_trait::async_trait;
 use web3::types::H256;
-
+use uuid::Uuid;
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
 
 #[async_trait]
@@ -14,6 +14,7 @@ pub trait BlockchainTxManipulation {
     async fn add(&self, tx: & BlockchainTx) -> ResultE<()>;
     async fn get_by_hash(&self, hash: &H256) -> ResultE<BlockchainTx>;
     async fn get_by_id(&self, hash: &String) -> ResultE<BlockchainTx>;
+    async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<BlockchainTx>>;
 }
 
 #[derive(Debug)]
@@ -44,6 +45,10 @@ impl BlockchainTxManipulation for BlockchainTxService {
     async fn get_by_id(&self, hash: &String) -> ResultE<BlockchainTx>{
         let new_hash = H256::from_str(hash).unwrap();
         self.repository.get_by_tx(&new_hash).await
+    }
+    #[tracing::instrument()]
+    async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<BlockchainTx>>{
+        self.repository.get_by_asset_id(asset_id).await
     }
 }
 

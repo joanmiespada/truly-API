@@ -202,6 +202,11 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
     let content2 = final_tx.result().clone().unwrap();
     assert_eq!(content1,content2);
 
+    let txs_op = tx_service.get_by_asset_id(content_minted.id() ).await;
+    assert_that!(&txs_op).is_ok();
+    let txs = txs_op.unwrap();
+    assert_eq!(txs.len(), 1);
+
 
     Ok(())
 }
