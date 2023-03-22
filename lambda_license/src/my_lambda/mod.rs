@@ -120,12 +120,22 @@ pub async fn function_handler(
                     .await;
                 }
                 "6" => {
-                    // public, not required jwt token
+                    match jwt_mandatory(&req, config) {
+                        Err(e) => {
+                            return Ok(e);
+                        }
+                        Ok(_) => {},
+                    };
                     let tx_hash = matched.params.get("hash").unwrap().to_string();
                     return get_tx(&req, &context, config, tx_service, &tx_hash).await;
                 }
                 "7" => {
-                    // public, not required jwt token
+                    match jwt_mandatory(&req, config) {
+                        Err(e) => {
+                            return Ok(e);
+                        }
+                        Ok(_) => {},
+                    };
                     let id = matched.params.get("id").unwrap().to_string();
                     let asset_id = Uuid::from_str(id.as_str())?;
                     return get_txs(&req, &context, config, tx_service, &asset_id).await;

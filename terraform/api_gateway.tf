@@ -198,7 +198,7 @@ resource "aws_lambda_permission" "truly_licenses_permission_asset_by_shorter_id"
 }
 resource "aws_apigatewayv2_route" "truly_licenses_route_tx" {
   api_id    = aws_apigatewayv2_api.truly_api.id
-  route_key = "ANY /api/tx/{id}"
+  route_key = "GET /api/tx/{id}"
   target    = "integrations/${aws_apigatewayv2_integration.truly_licenses_integration.id}"
 }
 
@@ -208,39 +208,23 @@ resource "aws_lambda_permission" "truly_licenses_permission_tx" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_tx.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_tx.route_key)[1]}"
 }
+
+resource "aws_apigatewayv2_route" "truly_licenses_route_txs" {
+  api_id    = aws_apigatewayv2_api.truly_api.id
+  route_key = "GET /api/txs/{id}"
+  target    = "integrations/${aws_apigatewayv2_integration.truly_licenses_integration.id}"
+}
+
+resource "aws_lambda_permission" "truly_licenses_permission_txs" {
+  function_name = module.lambda_licenses.lambda.function_name
+  action        = "lambda:InvokeFunction"
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_txs.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_txs.route_key)[1]}"
+}
 //---------------- register all lambdas below ----------------------------
 resource "aws_apigatewayv2_deployment" "truly_api_deployment" {
   api_id      = aws_apigatewayv2_api.truly_api.id
   description = "truly API deployment"
-
-  # triggers = {
-  #   redeployment = sha1(join(",", [
-  #     jsonencode(aws_apigatewayv2_integration.truly_login_integration),
-  #     jsonencode(aws_apigatewayv2_route.truly_login_route),
-
-  #     jsonencode(aws_apigatewayv2_integration.truly_admin_integration),
-  #     jsonencode(aws_apigatewayv2_route.truly_admin_route),
-
-  #     jsonencode(aws_apigatewayv2_integration.truly_user_integration),
-  #     jsonencode(aws_apigatewayv2_route.truly_user_route),
-
-  #     jsonencode(aws_apigatewayv2_integration.truly_user_integration),
-  #     jsonencode(aws_apigatewayv2_route.truly_user_route_by_id),
-
-  #     jsonencode(aws_apigatewayv2_integration.truly_licenses_integration),
-  #     jsonencode(aws_apigatewayv2_route.truly_licenses_route_asset),
-
-  #     jsonencode(aws_apigatewayv2_integration.truly_licenses_integration),
-  #     jsonencode(aws_apigatewayv2_route.truly_licenses_route_asset_by_id),
-
-  #     jsonencode(aws_apigatewayv2_integration.truly_licenses_integration),
-  #     jsonencode(aws_apigatewayv2_route.truly_licenses_route_nft),
-
-  #     jsonencode(aws_apigatewayv2_integration.truly_licenses_integration),
-  #     jsonencode(aws_apigatewayv2_route.truly_licenses_route_nft_async),
-  #     ],
-  #   ))
-  #}
 
   # lifecycle {
   #   create_before_destroy = true
