@@ -2,10 +2,8 @@ use std::{fmt, str::FromStr};
 
 use async_trait::async_trait;
 use chrono::Utc;
-use lib_async_ops::sqs::{send as send_async_message, SQSMessage};
 use lib_config::config::Config;
 use serde::{Deserialize, Serialize};
-use url::Url;
 use uuid::Uuid;
 
 use crate::errors::nft::{
@@ -137,28 +135,26 @@ impl NFTsManipulation for NFTsService {
 
         match transaction_op {
             Err(e) => {
-                // let url = self.config.env_vars().dead_letter_queue_mint().to_owned();
-                // let queue_mint_errors_id = Url::from_str(&url).unwrap();
+                let asset = self.asset_service.get_by_id(asset_id).await?;
+                //it has been previously minted by other process...
+                if *asset.mint_status() == MintingStatus::CompletedSuccessfully {
+                    
+                    let tx = asset.minted_tx().unwrap();
+                    let transact = self.tx_service.get_by_hash(&tx).await?;
+                    return Ok(transact);
 
-                // let message = SQSMessage {
-                //     id: Uuid::new_v4().to_string(),
-                //     body: format!(
-                //         "error minting asset id: {} with user id: {}",
-                //         asset_id, user_id
-                //     ),
-                // };
-                // send_async_message(&self.config, &message, queue_mint_errors_id).await?;
+                } else {
+                    self.asset_service
+                        .mint_status(asset_id, &None, MintingStatus::Error)
+                        .await?;
 
-                self.asset_service
-                    .mint_status(asset_id, &None, MintingStatus::Error)
-                    .await?;
+                    let mut tx_paylaod = BlockchainTx::new();
+                    tx_paylaod.set_asset_id(asset_id);
+                    tx_paylaod.set_result(&e.to_string());
 
-                let mut tx_paylaod = BlockchainTx::new();
-                tx_paylaod.set_asset_id(asset_id);
-                tx_paylaod.set_result(&e.to_string());
-
-                self.tx_service.add(&tx_paylaod).await?;
-                return Err(e.into());
+                    self.tx_service.add(&tx_paylaod).await?;
+                    return Err(e.into());
+                }
             }
             Ok(transaction) => {
                 self.asset_service

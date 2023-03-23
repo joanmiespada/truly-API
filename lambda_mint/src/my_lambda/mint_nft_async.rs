@@ -66,29 +66,35 @@ pub async fn async_minting(
 
         match op_res {
             Err(e) => {
-                error!("failed when minting, retring operation for later");
-                error!("{}", e.to_string());
-                //re-scheduele again
-                data.increase_try();
-                let json_text = serde_json::to_string(&data)?;
+                let err_str = e.to_string();
+                info!("{}",err_str);
+                if err_str.contains("token is already in use") {
+                    info!("pervios tries were successfully minted, let's discard this one");
+                } else {
+                    error!("failed when minting, retring operation for later");
+                    error!("{}", e.to_string());
+                    //re-scheduele again
+                    data.increase_try();
+                    let json_text = serde_json::to_string(&data)?;
 
-                let message = SNSMessage {
-                    body: json_text.to_owned(),
-                };
-                let topic_arn = config.env_vars().topic_arn_mint_async().to_owned();
+                    let message = SNSMessage {
+                        body: json_text.to_owned(),
+                    };
+                    let topic_arn = config.env_vars().topic_arn_mint_async().to_owned();
 
-                let op_sent = send_sns(config, &message, topic_arn.to_owned()).await;
-                match op_sent {
-                    Ok(_) => {
-                        error!("{}", data);
-                    }
-                    Err(e) => {
-                        error!(
-                            "message retry failed when posting in the topic {}",
-                            topic_arn.to_owned()
-                        );
-                        error!("{}", data);
-                        error!("{}", e);
+                    let op_sent = send_sns(config, &message, topic_arn.to_owned()).await;
+                    match op_sent {
+                        Ok(_) => {
+                            error!("{}", data);
+                        }
+                        Err(e) => {
+                            error!(
+                                "message retry failed when posting in the topic {}",
+                                topic_arn.to_owned()
+                            );
+                            error!("{}", data);
+                            error!("{}", e);
+                        }
                     }
                 }
             }
