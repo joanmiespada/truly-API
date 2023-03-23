@@ -230,7 +230,7 @@ impl NFTsRepository for GanacheRepo {
             value: None,
             condition: None,
             transaction_type: None,
-            nonce: Some(counter), //Error here! 
+            nonce: None, //Some(counter), // None
             access_list: None,
             max_fee_per_gas: None,
             max_priority_fee_per_gas: None,
