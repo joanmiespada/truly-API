@@ -27,7 +27,6 @@ use testcontainers::*;
 use url::Url;
 
 
-
 #[tokio::test]
 async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env::set_var("RUST_LOG", "debug");
@@ -170,7 +169,7 @@ async fn create_contract_and_mint_nft_test_sync() -> Result<(), Box<dyn std::err
     let asset_price: u64 = 2000;
 
     as1.set_video_licensing_status( VideoLicensingStatus::AlreadyLicensed);
-    as1.set_counter( &Some(12));
+    as1.set_counter( &Some(1));
     let update_op = asset_service.update_full( &as1).await;
     assert_that!(&update_op).is_ok();
 
