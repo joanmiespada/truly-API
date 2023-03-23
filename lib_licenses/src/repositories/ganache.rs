@@ -41,6 +41,7 @@ pub trait NFTsRepository {
         user_key: &KeyPair,
         hash_file: &String,
         price: &u64,
+        counter: &u64
     ) -> ResultE<BlockchainTx>;
 
     async fn get(&self, asset_id: &Uuid) -> ResultE<GanacheContentInfo>;
@@ -157,6 +158,7 @@ impl NFTsRepository for GanacheRepo {
         user_key: &KeyPair,
         hash_file: &String,
         prc: &u64,
+        cntr: &u64
     ) -> ResultE<BlockchainTx> {
         let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
         let web3 = web3::Web3::new(transport);
@@ -174,6 +176,7 @@ impl NFTsRepository for GanacheRepo {
 
         let token = asset_id.to_string();
         let price = U256::from_dec_str((*prc).to_string().as_str()).unwrap();
+        let counter = U256::from_dec_str((*cntr).to_string().as_str()).unwrap();
 
         let contract_op = Contract::from_json(
             web3.eth(),
@@ -222,7 +225,7 @@ impl NFTsRepository for GanacheRepo {
             value: None,
             condition: None,
             transaction_type: None,
-            nonce: None, // Some(nonce),
+            nonce: None, //Some(counter), //Error here! 
             access_list: None,
             max_fee_per_gas: None,
             max_priority_fee_per_gas: None,

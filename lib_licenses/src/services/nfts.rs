@@ -126,11 +126,11 @@ impl NFTsManipulation for NFTsService {
         self.asset_service
             .mint_status(asset_id, &None, MintingStatus::Started)
             .await?;
-
+        let counter = asset.counter().unwrap();
         let hash_file = asset.hash().to_owned().unwrap();
         let transaction_op = self
             .blockchain
-            .add(asset_id, &user_wallet_address, &hash_file, price)
+            .add(asset_id, &user_wallet_address, &hash_file, price, &counter)
             .await;
 
         match transaction_op {
