@@ -176,7 +176,7 @@ impl NFTsRepository for GanacheRepo {
 
         let token = asset_id.to_string();
         let price = U256::from_dec_str((*prc).to_string().as_str()).unwrap();
-        let counter = U256::from_dec_str((*cntr).to_string().as_str()).unwrap();
+        //let counter = U256::from_dec_str((*cntr).to_string().as_str()).unwrap();
 
         let contract_op = Contract::from_json(
             web3.eth(),
@@ -218,6 +218,11 @@ impl NFTsRepository for GanacheRepo {
         //let nonce = U256::from(1); //
         //let nonce = generate_nonce(&self.counter )?;
         // debug!("nonce calculated: {}", nonce);
+
+        let counter = web3.eth().transaction_count(self.contract_address, None).await.unwrap();
+        debug!("{}", counter);
+        //counter += U256::from_str_radix("1", 10).unwrap(); 
+        //debug!("{}", counter);
 
         let tx_options = Options {
             gas: Some(cost_gas), // Some(U256::from_str("400000").unwrap()), //250.000 weis  30.000.000 //with 400.000 gas units works!
