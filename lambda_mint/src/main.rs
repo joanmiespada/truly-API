@@ -4,7 +4,7 @@
 use lambda_runtime::{run, service_fn, Error };
 
 use lib_config::config::Config;
-use lib_licenses::{repositories::{assets::AssetRepo, owners::OwnerRepo, keypairs::KeyPairRepo, ganache::GanacheRepo, block_tx::BlockchainTxRepo, shorter::ShorterRepo}, services::{owners::OwnerService, assets::AssetService, nfts::NFTsService, block_tx::BlockchainTxService}};
+use lib_licenses::{repositories::{assets::AssetRepo, owners::OwnerRepo, keypairs::KeyPairRepo, ganache::GanacheRepo, block_tx::BlockchainTxRepo, shorter::ShorterRepo, blockchain::BlockchainRepo, contract::ContractRepo}, services::{owners::OwnerService, assets::AssetService, nfts::NFTsService, block_tx::BlockchainTxService}};
 use my_lambda::{ function_handler};
 
 mod my_lambda;
@@ -32,7 +32,9 @@ async fn main() -> Result<(), Error> {
     let owners_service = OwnerService::new(owners_repo);
 
     let key_repo= KeyPairRepo::new(&config);
-    let blockchain = GanacheRepo::new(&config).unwrap();
+    let blockchains_repo =BlockchainRepo::new(&config);
+    let contracts_repo= ContractRepo::new(&config);
+    let blockchain = GanacheRepo::new(&config, &contracts_repo, &blockchains_repo).await?;
     let blockchain_service = NFTsService::new(
         blockchain,
         key_repo,

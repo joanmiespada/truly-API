@@ -3,12 +3,14 @@ use std::env;
 use std::str::FromStr;
 
 use aws_sdk_dynamodb::Client;
-use lib_licenses::models::asset::AssetStatus;
+use lib_licenses::models::asset::{AssetStatus, SourceType};
 use lib_licenses::repositories::assets::AssetRepo;
+use lib_licenses::repositories::schema_asset::create_schema_assets_all;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
 use lib_licenses::repositories::shorter::ShorterRepo;
-use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset, UpdatableFildsAsset};
-use lib_licenses::repositories::schema_asset::create_schema_assets_all;
+use lib_licenses::services::assets::{
+    AssetManipulation, AssetService, CreatableFildsAsset, UpdatableFildsAsset,
+};
 use spectral::prelude::*;
 use testcontainers::*;
 use url::Url;
@@ -58,7 +60,7 @@ async fn add_assets() {
 
     let repo_assets = AssetRepo::new(&conf);
     let repo_shorters = ShorterRepo::new(&conf);
-    let service = AssetService::new(repo_assets,repo_shorters);
+    let service = AssetService::new(repo_assets, repo_shorters);
 
     let as1 = CreatableFildsAsset {
         url: "http://www.file1.com/test1.mp4".to_string(),
@@ -66,7 +68,10 @@ async fn add_assets() {
         license: "gnu".to_string(),
         longitude: None,
         latitude: None,
-        father: None
+        father: None,
+        source: SourceType::Others,
+        source_details: None,
+
     };
 
     let user = String::from_str("user1").unwrap();
@@ -82,24 +87,22 @@ async fn add_assets() {
     let url = aass11.url().clone().unwrap();
     assert_eq!(url.to_string(), as1.url);
     let hash = aass11.hash().clone().unwrap();
-    assert_eq!( hash , as1.hash  );
+    assert_eq!(hash, as1.hash);
     let lic = aass11.license().clone().unwrap();
-    assert_eq!( lic , as1.license  );
+    assert_eq!(lic, as1.license);
 
     let up_as = UpdatableFildsAsset {
         license: Some("mit".to_string()),
-        status: Some("Disabled".to_string())
+        status: Some("Disabled".to_string()),
     };
-     
-    let upd_op = service.update(aass11.id(), &up_as ).await;
+
+    let upd_op = service.update(aass11.id(), &up_as).await;
     assert_that!(&upd_op).is_ok();
 
     let get2_op = service.get_by_id(&new_id).await;
     assert_that!(&get2_op).is_ok();
     let ass3 = get2_op.unwrap();
-    assert_eq!( *ass3.state(), AssetStatus::Disabled);
-
-
+    assert_eq!(*ass3.state(), AssetStatus::Disabled);
 }
 
 fn list_of_assets() -> HashMap<String, Vec<Url>> {
@@ -131,7 +134,7 @@ fn list_of_assets() -> HashMap<String, Vec<Url>> {
     return aux;
 }
 
-fn list_of_assets_tree() -> (HashMap<String, (Vec<Url>,Option<Uuid>)>,Vec<Uuid>) {
+fn list_of_assets_tree() -> (HashMap<String, (Vec<Url>, Option<Uuid>)>, Vec<Uuid>) {
     let mut aux = HashMap::new();
 
     let asset1 = Uuid::new_v4();
@@ -139,42 +142,47 @@ fn list_of_assets_tree() -> (HashMap<String, (Vec<Url>,Option<Uuid>)>,Vec<Uuid>)
     let asset3 = Uuid::new_v4();
     let asset4 = Uuid::new_v4();
 
-    let master = vec![asset1,asset2,asset3,asset4];
+    let master = vec![asset1, asset2, asset3, asset4];
 
     aux.insert(
         "user1".to_string(),
-        (vec![
-            Url::parse("http://1.com/sdf1.png").unwrap(),
-            Url::parse("http://2.com/sdf2.png").unwrap(),
-        ], Some(asset1)),
+        (
+            vec![
+                Url::parse("http://1.com/sdf1.png").unwrap(),
+                Url::parse("http://2.com/sdf2.png").unwrap(),
+            ],
+            Some(asset1),
+        ),
     );
 
     aux.insert(
         "user2".to_string(),
-        (vec![
-            Url::parse("http://3.com/sdf3.png").unwrap(),
-            Url::parse("http://4.com/sdf4.png").unwrap(),
-            Url::parse("http://5.com/sdf5.png").unwrap(),
-        ], Some(asset2)),
+        (
+            vec![
+                Url::parse("http://3.com/sdf3.png").unwrap(),
+                Url::parse("http://4.com/sdf4.png").unwrap(),
+                Url::parse("http://5.com/sdf5.png").unwrap(),
+            ],
+            Some(asset2),
+        ),
     );
     aux.insert(
         "user3".to_string(),
-        (vec![Url::parse("http://6.com/sdf6.png").unwrap()],None),
+        (vec![Url::parse("http://6.com/sdf6.png").unwrap()], None),
     );
 
-    aux.insert("user4".to_string(), (vec![],None));
+    aux.insert("user4".to_string(), (vec![], None));
 
-    return (aux,master);
+    return (aux, master);
 }
 
 #[tokio::test]
 async fn check_ownership() {
-
     env::set_var("RUST_LOG", "debug");
     env::set_var("RUST_BACKTRACE", "full");
-    
+
     env_logger::builder().is_test(true).init();
-    
+
     //let _ = pretty_env_logger::try_init();
     let docker = clients::Cli::default();
     let node = docker.run(images::dynamodb_local::DynamoDb::default());
@@ -188,13 +196,12 @@ async fn check_ownership() {
     creation = create_schema_owners(&client).await;
     assert_that(&creation).is_ok();
 
-
     let mut conf = lib_config::config::Config::new();
     conf.set_aws_config(&shared_config);
 
     let repo_assets = AssetRepo::new(&conf);
     let repo_shorters = ShorterRepo::new(&conf);
-    let service = AssetService::new(repo_assets,repo_shorters);
+    let service = AssetService::new(repo_assets, repo_shorters);
 
     let payload = list_of_assets();
     let mut list_of_ids = HashMap::new();
@@ -208,7 +215,10 @@ async fn check_ownership() {
                 license: String::from_str("gnu").unwrap(),
                 longitude: None,
                 latitude: None,
-                father:None
+                father: None,
+                source: SourceType::Others,
+                source_details: None,
+
             };
 
             let new_op = service.add(&mut as1, &username).await;
@@ -266,12 +276,12 @@ async fn check_asset_tree_father_son() {
 
     let repo_assets = AssetRepo::new(&conf);
     let repo_shorters = ShorterRepo::new(&conf);
-    let service = AssetService::new(repo_assets,repo_shorters);
+    let service = AssetService::new(repo_assets, repo_shorters);
 
     let payload = list_of_assets_tree();
     let mut list_of_ids = HashMap::new();
     for user in payload.0 {
-        for ass in user.1.0 {
+        for ass in user.1 .0 {
             let username = user.0.clone();
 
             let mut as1 = CreatableFildsAsset {
@@ -280,16 +290,18 @@ async fn check_asset_tree_father_son() {
                 license: String::from_str("gnu").unwrap(),
                 longitude: None,
                 latitude: None,
-                father: user.1.1
+                father: user.1 .1,
+                source: SourceType::Others,
+                source_details: None,
             };
 
             let new_op = service.add(&mut as1, &username).await;
             assert_that!(&new_op).is_ok();
 
             let new_id = new_op.unwrap().clone();
-            let father = match user.1.1{
-                None=> "no father".to_string(),
-                Some(id)=> id.to_string()
+            let father = match user.1 .1 {
+                None => "no father".to_string(),
+                Some(id) => id.to_string(),
             };
             println!(
                 "added user: {} with asset: {} and father id: {}",
@@ -297,14 +309,12 @@ async fn check_asset_tree_father_son() {
                 new_id.to_string(),
                 father
             );
-            list_of_ids.insert(new_id, user.1.1);
+            list_of_ids.insert(new_id, user.1 .1);
         }
     }
 
-    for doc in list_of_ids{
+    for doc in list_of_ids {
         let asset1 = service.get_by_id(&doc.0).await.unwrap();
         assert_eq!(*asset1.father(), doc.1);
     }
-
-
 }

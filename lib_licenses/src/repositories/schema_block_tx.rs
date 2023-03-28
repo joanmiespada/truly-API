@@ -4,7 +4,7 @@ use aws_sdk_dynamodb::{model::{
     AttributeDefinition, KeySchemaElement, KeyType, ScalarAttributeType, BillingMode, GlobalSecondaryIndex, Projection, ProjectionType,
 },  Error};
 
-pub const BLOCKCHAIN_TX_TABLE_NAME: &str = "truly_blockchain_txs";
+pub const TX_TABLE_NAME: &str = "truly_blockchain_txs";
 pub const TX_ASSET_ID_FIELD_PK: &str = "assetId";
 pub const TX_TIMESTAMP_PK: &str = "timestamp";
 pub const TX_FIELD: &str = "tx";
@@ -53,7 +53,7 @@ pub async fn create_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Re
 
     let op = client
         .create_table()
-        .table_name(BLOCKCHAIN_TX_TABLE_NAME)
+        .table_name(TX_TABLE_NAME)
         .key_schema(ks1)
         .key_schema(ks2)
         .global_secondary_indexes(second_index)
@@ -73,7 +73,7 @@ pub async fn create_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Re
 }
 pub async fn delete_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
 
-    client.delete_table().table_name(BLOCKCHAIN_TX_TABLE_NAME).send().await?;
+    client.delete_table().table_name(TX_TABLE_NAME).send().await?;
 
     Ok(())
 }

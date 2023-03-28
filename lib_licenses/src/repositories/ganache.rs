@@ -7,6 +7,7 @@ use mac_address::get_mac_address;
 use secp256k1::SecretKey;
 use serde::{Deserialize, Serialize};
 use snowflake::SnowflakeIdGenerator;
+use url::Url;
 use std::{
     fmt,
     str::FromStr,
@@ -21,7 +22,7 @@ use web3::{
     Web3,
 };
 
-use crate::{errors::nft::HydrateMasterSecretKeyError, models::tx::BlockchainTx};
+use crate::{errors::nft::HydrateMasterSecretKeyError, models::block_tx::BlockchainTx};
 use crate::{
     errors::nft::{NftBlockChainNonceMalformedError, NftUserAddressMalformedError},
     models::keypair::KeyPair,
@@ -31,6 +32,8 @@ const CONTRACT_METHOD_MINTING: &'static str = "mint";
 const CONTRACT_METHOD_GET_CONTENT_BY_TOKEN: &'static str = "getContentByToken";
 
 use crate::errors::asset::AssetBlockachainError;
+
+use super::{contract::{ContractRepo, ContractRepository}, blockchain::{BlockchainRepo, BlockchainRepository}};
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 #[async_trait]
@@ -45,20 +48,27 @@ pub trait NFTsRepository {
     ) -> ResultE<BlockchainTx>;
 
     async fn get(&self, asset_id: &Uuid) -> ResultE<GanacheContentInfo>;
+    fn contract_id(&self) -> u16;
 }
 
 #[derive(Clone, Debug)]
 pub struct GanacheRepo {
-    url: String,
+    url: Url,
     contract_address: Address,
     contract_owner: Address,
     kms_key_id: String,
     aws: SdkConfig,
-    blockhain_node_confirmations: usize,
+    blockhain_node_confirmations: u16,
+    contract_id: u16
+    
 }
 
 impl GanacheRepo {
-    pub fn new(conf: &Config) -> Result<GanacheRepo, String> {
+    pub async fn new(conf: &Config, contracts_repo: &ContractRepo, blockchains_repo: &BlockchainRepo ) -> ResultE<GanacheRepo> {
+
+        
+        //TODO: read from contracts table!
+/* 
         let contract_address_position;
         let aux = conf.env_vars().contract_address();
         let contract_address_position_op = Address::from_str(aux.as_str()); //.unwrap();
@@ -87,16 +97,25 @@ impl GanacheRepo {
                 conf.env_vars().blockchain_gateway_api_key()
             );
         }
+*/
+        let aux = conf.env_vars().contract_id();
 
+        let contract = contracts_repo.get_by_id(aux).await?;
+
+        let blockchain = blockchains_repo.get_by_id(contract.blockchain()).await?;
+        
+        
         Ok(GanacheRepo {
-            url: blockchain_url.to_owned(),
-            contract_address: contract_address_position,
-            contract_owner: contract_owner_position,
+            url: blockchain.url().to_owned(),  //blockchain_url.to_owned(),
+            contract_address: contract.address().unwrap().to_owned(), //contract_address_position,
+            contract_owner:  contract.owner().unwrap().to_owned(), //contract_owner_position,
             kms_key_id: conf.env_vars().kms_key_id().to_owned(),
             aws: conf.aws_config().to_owned(),
-            blockhain_node_confirmations: conf.env_vars().blockchain_confirmations().to_owned(),
+            blockhain_node_confirmations: blockchain.confirmations().to_owned(),  //conf.env_vars().blockchain_confirmations().to_owned(),
+            contract_id: aux.to_owned() //contract.to_owned(),
         })
     }
+
 
     async fn decrypt_contract_owner_secret_key(&self) -> ResultE<SecretKey> {
         use base64::{engine::general_purpose, Engine as _};
@@ -152,13 +171,16 @@ impl GanacheRepo {
 
 #[async_trait]
 impl NFTsRepository for GanacheRepo {
+    fn contract_id(&self) -> u16{
+        self.contract_id
+    }
     async fn add(
         &self,
         asset_id: &Uuid,
         user_key: &KeyPair,
         hash_file: &String,
         prc: &u64,
-        cntr: &u64
+        _cntr: &u64
     ) -> ResultE<BlockchainTx> {
         let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
         let web3 = web3::Web3::new(transport);
@@ -250,7 +272,7 @@ impl NFTsRepository for GanacheRepo {
             CONTRACT_METHOD_MINTING,
             (to.clone(), token.clone(), hash_file.clone(), price.clone()),
             tx_options,
-            self.blockhain_node_confirmations,
+            self.blockhain_node_confirmations.into(),
             &contract_owner_private_key,
         );
 
@@ -270,11 +292,24 @@ impl NFTsRepository for GanacheRepo {
                                         wei_to_gwei(tx.gas_used.unwrap() ) * wei_to_gwei( tx.effective_gas_price.unwrap()), 
                                         Some(tx.from), 
                                         tx.to );
-
-        let mut tx_paylaod = BlockchainTx::new();
-        tx_paylaod.set_asset_id(asset_id);
-        tx_paylaod.set_tx(&tx.transaction_hash);
-        tx_paylaod.set_result(&tx_str); //TODO: split string in multiple fields
+        // let block_num = match tx.block_number {
+        //     None => None,
+        //     Some(bn) => Some(bn.as_u64())
+        // };
+        let tx_paylaod = BlockchainTx::new(
+            asset_id.to_owned(),
+            Utc::now(),
+            Some(tx.transaction_hash), 
+            tx.block_number, 
+            tx.gas_used, 
+            tx.effective_gas_price, 
+            Some(wei_to_gwei(tx.gas_used.unwrap() ) * wei_to_gwei( tx.effective_gas_price.unwrap())), 
+            Some("gweis".to_string()),
+            Some(tx.from), 
+            tx.to,
+            self.contract_id,
+            None
+        );
         Ok(tx_paylaod)
     }
 

@@ -11,7 +11,7 @@ use crate::errors::nft::{
 };
 use crate::errors::video::VideoNotYetLicensed;
 use crate::models::asset::{Asset, MintingStatus, VideoLicensingStatus};
-use crate::models::tx::BlockchainTx;
+use crate::models::block_tx::BlockchainTx;
 use crate::repositories::ganache::{GanacheRepo, NFTsRepository};
 use crate::repositories::keypairs::{KeyPairRepo, KeyPairRepository};
 use crate::services::assets::{AssetManipulation, AssetService};
@@ -138,19 +138,30 @@ impl NFTsManipulation for NFTsService {
                 let asset = self.asset_service.get_by_id(asset_id).await?;
                 //it has been previously minted by other process...
                 if *asset.mint_status() == MintingStatus::CompletedSuccessfully {
-                    
                     let tx = asset.minted_tx().unwrap();
                     let transact = self.tx_service.get_by_hash(&tx).await?;
                     return Ok(transact);
-
                 } else {
                     self.asset_service
                         .mint_status(asset_id, &None, MintingStatus::Error)
                         .await?;
 
-                    let mut tx_paylaod = BlockchainTx::new();
-                    tx_paylaod.set_asset_id(asset_id);
-                    tx_paylaod.set_result(&e.to_string());
+                    let tx_paylaod = BlockchainTx::new(
+                        asset_id.clone(),
+                        Utc::now(),
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        self.blockchain.contract_id(),
+                        Some(e.to_string())
+                    );
+                    //tx_paylaod.set_asset_id(asset_id);
+                    //tx_paylaod.set_result(&e.to_string());
 
                     self.tx_service.add(&tx_paylaod).await?;
                     return Err(e.into());

@@ -5,7 +5,7 @@ use aws_sdk_dynamodb::Client;
 use lib_async_ops::sns::create;
 use lib_config::config::Config;
 use lib_config::infra::build_local_stack_connection;
-use lib_licenses::models::asset::VideoLicensingStatus;
+use lib_licenses::models::asset::{VideoLicensingStatus, SourceType};
 use lib_licenses::models::shorter::CreateShorter;
 use lib_licenses::models::video::{VideoResult, VideoProcessStatus};
 use lib_licenses::repositories::assets::AssetRepo;
@@ -62,6 +62,8 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
         url: "http://w111.test.com/f1.mov".to_string(),
         hash: "hash_f1".to_string(),
         father: None,
+        source: SourceType::Others, 
+        source_details:None
     };
     let shorter_id = "0".to_string();
 

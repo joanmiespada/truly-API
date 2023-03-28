@@ -2,7 +2,7 @@
 
 use std::str::FromStr;
 
-use crate::models::tx::BlockchainTx ;
+use crate::models::block_tx::BlockchainTx ;
 use crate::repositories::block_tx::{BlockchainTxRepository, BlockchainTxRepo};
 use async_trait::async_trait;
 use web3::types::H256;

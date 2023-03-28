@@ -1,12 +1,11 @@
-use std::{ str::FromStr, env};
+use std::{env, str::FromStr};
 
 use aws_sdk_dynamodb::Client;
 use lib_config::infra::build_local_stack_connection;
 use lib_licenses::{
-    models::asset::Asset,
+    models::asset::{Asset, SourceType},
     repositories::{
-        assets::AssetRepo,
-        schema_asset::create_schema_assets_all,
+        assets::AssetRepo, schema_asset::create_schema_assets_all,
         schema_owners::create_schema_owners, shorter::ShorterRepo,
     },
     services::assets::{AssetManipulation, AssetService, CreatableFildsAsset},
@@ -84,14 +83,14 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
 
     let repo_assets = AssetRepo::new(&conf);
     let repo_shorters = ShorterRepo::new(&conf);
-    let service = AssetService::new(repo_assets,repo_shorters);
+    let service = AssetService::new(repo_assets, repo_shorters);
 
     let mut list_of_ids = Vec::new();
     let payload = list_of_assets_father_sons();
     for user in payload {
         let username = user.0.clone();
 
-        let mut as1: CreatableFildsAsset; 
+        let mut as1: CreatableFildsAsset;
 
         match user.1 .1 {
             None => {
@@ -102,6 +101,8 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
                     longitude: None,
                     latitude: None,
                     father: None,
+                    source: SourceType::Others,
+                    source_details: None,
                 };
             }
             Some(father_url) => {
@@ -114,6 +115,8 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
                     longitude: None,
                     latitude: None,
                     father: father_id,
+                    source: SourceType::Others,
+                    source_details: None,
                 };
             }
         }
@@ -123,24 +126,21 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
 
         let new_id = new_op.unwrap();
         list_of_ids.push(new_id);
-        
     }
 
-    for doc in list_of_ids{
-        let ass =  service.get_by_id(&doc).await?;
+    for doc in list_of_ids {
+        let ass = service.get_by_id(&doc).await?;
         let url1 = ass.url().clone().unwrap();
         let url = url1.as_str();
-        let res_expected: usize = match url{
+        let res_expected: usize = match url {
             "http://1.com/asset1.png" => 2,
             "http://1.com/asset2.png" => 2,
-            _ => 0
+            _ => 0,
         };
         let ass_improved = service.get_by_id_enhanced(&doc).await?;
 
-        assert_eq!( ass_improved.sons.iter().count(), res_expected );
-
+        assert_eq!(ass_improved.sons.iter().count(), res_expected);
     }
-
 
     Ok(())
 }

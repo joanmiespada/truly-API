@@ -1,10 +1,12 @@
+use chrono::{DateTime, Utc};
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
 use lib_licenses::errors::block_tx::{BlockchainTxError, BlockchainTxNoExistsError};
+use lib_licenses::models::asset::{AssetStatus, MintingStatus, VideoLicensingStatus};
 use lib_licenses::services::owners::OwnerService;
 use lib_licenses::{
     errors::asset::{AssetDynamoDBError, AssetNoExistsError},
-    models::{asset::Asset, tx::BlockchainTx},
+    models::{asset::Asset, block_tx::BlockchainTx},
     services::{
         assets::{AssetManipulation, AssetService},
         block_tx::{BlockchainTxManipulation, BlockchainTxService},
@@ -49,9 +51,37 @@ pub async fn get_asset(
 }
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct AssetTx {
-    pub asset: Asset,
+    pub id: Uuid,
+    pub creation_time: DateTime<Utc>,
+    pub last_update_time: DateTime<Utc>,
+    pub status: AssetStatus,
+    pub latitude: Option<f64>,
+    pub longitude: Option<f64>,
+    pub hash: String,
+    pub license: Option<String>,
+    pub mint_status: MintingStatus,
+    pub video_licensing_status: VideoLicensingStatus,
     pub tx: Option<BlockchainTx>,
 }
+
+impl AssetTx {
+    pub fn new(asset: &Asset, tx: &Option<BlockchainTx>) -> AssetTx {
+        AssetTx {
+            id: asset.id().clone(),
+            creation_time: asset.creation_time().clone(),
+            last_update_time: asset.last_update_time().clone(),
+            status: asset.state().clone(),
+            latitude: asset.latitude().clone(),
+            longitude: asset.longitude().clone(),
+            hash: asset.hash().clone().unwrap().clone(),
+            license: asset.license().clone(),
+            mint_status: asset.mint_status().clone(),
+            video_licensing_status: asset.video_licensing_status().clone(),
+            tx: tx.clone()
+        }
+    }
+}
+
 #[instrument]
 pub async fn get_asset_by_shorter(
     req: &Request,
@@ -63,40 +93,38 @@ pub async fn get_asset_by_shorter(
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     let op_res = asset_service.get_by_shorter(shorter_id).await;
     match op_res {
-        Ok(asset) => match asset.minted_tx() {
-            None => {
-                let res = AssetTx {
-                    asset: asset.to_owned(),
-                    tx: None,
-                };
-                build_resp_no_cache(json!(res.to_owned()).to_string(), StatusCode::OK)
-            }
-            Some(hash) => {
-                let tx_op = tx_service.get_by_hash(hash).await;
-                match tx_op {
-                    Ok(tx) => {
-                        let res = AssetTx {
-                            asset,
-                            tx: Some(tx),
-                        };
-                        build_resp_no_cache(json!(res).to_string(), StatusCode::OK)
-                    }
-                    Err(e) => {
-                        if let Some(e) = e.downcast_ref::<BlockchainTxError>() {
-                            return build_resp(e.to_string(), StatusCode::SERVICE_UNAVAILABLE);
-                        } else if let Some(m) = e.downcast_ref::<BlockchainTxNoExistsError>() {
-                            return build_resp(m.to_string(), StatusCode::NO_CONTENT);
-                        } else {
-                            return build_resp_env(
-                                config.env_vars().environment(),
-                                e,
-                                StatusCode::INTERNAL_SERVER_ERROR,
-                            );
+        Ok(asset) => {
+            match asset.minted_tx() {
+                None => {
+
+                    let res = AssetTx::new(&asset,&None);
+
+                    build_resp_no_cache(json!(res.to_owned()).to_string(), StatusCode::OK)
+                }
+                Some(hash) => {
+                    let tx_op = tx_service.get_by_hash(hash).await;
+                    match tx_op {
+                        Ok(tx) => {
+                            let res = AssetTx::new(&asset,&Some(tx));
+                            build_resp_no_cache(json!(res).to_string(), StatusCode::OK)
+                        }
+                        Err(e) => {
+                            if let Some(e) = e.downcast_ref::<BlockchainTxError>() {
+                                return build_resp(e.to_string(), StatusCode::SERVICE_UNAVAILABLE);
+                            } else if let Some(m) = e.downcast_ref::<BlockchainTxNoExistsError>() {
+                                return build_resp(m.to_string(), StatusCode::NO_CONTENT);
+                            } else {
+                                return build_resp_env(
+                                    config.env_vars().environment(),
+                                    e,
+                                    StatusCode::INTERNAL_SERVER_ERROR,
+                                );
+                            }
                         }
                     }
                 }
             }
-        },
+        }
         Err(e) => {
             if let Some(e) = e.downcast_ref::<AssetDynamoDBError>() {
                 return build_resp(e.to_string(), StatusCode::SERVICE_UNAVAILABLE);

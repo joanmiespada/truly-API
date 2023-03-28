@@ -8,7 +8,7 @@ use web3::types::H256;
 
 use crate::errors::asset::{AssetDynamoDBError, AssetNoExistsError, AssetTreeError};
 use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
-use crate::models::asset::{Asset, AssetStatus, MintingStatus, VideoLicensingStatus};
+use crate::models::asset::{Asset, AssetStatus, MintingStatus, VideoLicensingStatus, SourceType};
 use crate::models::owner::Owner;
 use crate::models::video::VideoProcessStatus;
 use async_trait::async_trait;
@@ -43,6 +43,9 @@ const SHORTER_FIELD_NAME: &str = "shorter";
 const VIDEO_LICENSING_FIELD_NAME: &str = "video_licensing";
 const VIDEO_LICENSING_STATUS_FIELD_NAME: &str = "video_licensing_status";
 const VIDEO_PROCESS_STATUS_FIELD_NAME: &str = "video_processing_status";
+
+const SOURCE_FIELD_NAME: &str = "source";
+const SOURCE_DETAILS_FIELD_NAME: &str = "source_details";
 
 static NULLABLE: &str = "__NULL__";
 
@@ -197,7 +200,20 @@ impl AssetRepo {
             }
             None => {}
         }
-
+        match asset.source() {
+            Some(value) => {
+                let source_av = AttributeValue::S(value.to_string());
+                items = items.item( SOURCE_FIELD_NAME , source_av);
+            }
+            None => {}
+        }
+        match asset.source_details() {
+            Some(value) => {
+                let source_det_av = AttributeValue::S(value.to_string());
+                items = items.item( SOURCE_DETAILS_FIELD_NAME , source_det_av);
+            }
+            None => {}
+        }
         Ok(items)
     }
 }
@@ -797,7 +813,39 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
             }
         }
     }
+let source = doc.get( SOURCE_FIELD_NAME   );
+    match source{
+        None => asset.set_source(&None),
+        Some(value) => {
+            let val = value.as_s().unwrap();
+            if val == NULLABLE {
+                asset.set_source(&None)
+            } else {
+                let st_op = SourceType::from_str(val);
+                match st_op {
+                    Err(e) => {
+                        error!("source type parser error! {}", val);
+                        error!("{}", e);
+                        asset.set_source(&None)
+                    }
+                    Ok(state) => asset.set_source(&Some(state)),
+                }
+            }
+        }
+    }
 
+let source_details = doc.get(SOURCE_DETAILS_FIELD_NAME   );
+    match source_details {
+        None => asset.set_source_details(&None),
+        Some(lati) => {
+            let val = lati.as_s().unwrap();
+            if val == NULLABLE {
+                asset.set_source_details(&None)
+            } else {
+                asset.set_source_details(&Some(val.clone()))
+            }
+        }
+    }
     /*let _x_ = doc.get(   );
     match _x_ {
         None => asset.set_(&None),

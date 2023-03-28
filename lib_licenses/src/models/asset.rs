@@ -38,7 +38,10 @@ pub struct Asset {
 
     video_process_status: Option<VideoProcessStatus>,
 
-    father: Option<Uuid>
+    father: Option<Uuid>,
+
+    source: Option<SourceType>,
+    source_details: Option<String>
 
 }
 
@@ -67,7 +70,9 @@ impl Asset {
             father: None,
             video_licensing_error: None,
             video_licensing_status: VideoLicensingStatus::NeverStarted,
-            video_process_status: None
+            video_process_status: None,
+            source: None,
+            source_details: None
         }
     }
 
@@ -179,6 +184,18 @@ impl Asset {
     pub fn set_video_process_status (&mut self, val: &Option<VideoProcessStatus>) {
         self.video_process_status = val.clone()
     }
+    pub fn source(&self) -> &Option<SourceType> {
+        &self.source
+    }
+    pub fn set_source(&mut self, val: &Option<SourceType>) {
+        self.source = val.clone()
+    }
+    pub fn source_details (&self) -> &Option<String> {
+        &self.source_details
+    }
+    pub fn set_source_details(&mut self, val: &Option<String>) {
+        self.source_details = val.clone()
+    }
 /* 
     pub fn (&self) -> &Option<> {
         &self.
@@ -231,6 +248,14 @@ impl FromStr for AssetStatus {
         }
     }
 }
+
+impl fmt::Display for ParseAssetStatusError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "error parsing asset status type")
+    }
+}
+
+
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub enum MintingStatus {
@@ -315,4 +340,41 @@ impl FromStr for VideoLicensingStatus {
     }
 }
 
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+pub enum SourceType {
+    TrulyApp,
+    TrulyWeb,
+    TrulyApi,
+    Others,
+}
 
+impl fmt::Display for SourceType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            SourceType::TrulyApp => write!(f, "TrulyApp"),
+            SourceType::TrulyWeb => write!(f, "TrulyWeb"),
+            SourceType::TrulyApi => write!(f, "TrulyApi"),
+            SourceType::Others => write!(f, "Others"),
+        }
+    }
+}
+#[derive(Debug, PartialEq, Eq)]
+pub struct ParseSourceTypeError;
+impl FromStr for SourceType {
+    type Err = ParseSourceTypeError ;
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        match input {
+            "TrulyApp" => Ok(SourceType::TrulyApp),
+            "TrulyWeb" => Ok(SourceType::TrulyWeb),
+            "TrulyApi" => Ok(SourceType::TrulyApi),
+            "Others" => Ok(SourceType::Others),
+            _ => Err(ParseSourceTypeError), 
+        }
+    }
+}
+impl fmt::Display for ParseSourceTypeError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "error parsing source type")
+    }
+}
+ 

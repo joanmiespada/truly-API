@@ -17,10 +17,12 @@ pub struct EnvironmentVariables {
     aws_region: Option<String>,
     aws_endpoint: Option<String>,
 
-    blockchain_url: Option<String>,
-    blockchain_gateway_api_key: Option<String>,
-    contract_address: Option<String>,
-    contract_owner_address: Option<String>,
+    //migrated to Dynamodb Tables
+    //blockchain_url: Option<String>,
+    //blockchain_gateway_api_key: Option<String>,
+    //contract_address: Option<String>,
+    //contract_owner_address: Option<String>,
+    contract_id: u16,
 
     kms_key_id: Option<String>,
     blockchain_confirmations: Option<usize>,
@@ -79,30 +81,37 @@ impl EnvironmentVariables {
         return aux;
     }
 
-    pub fn blockchain_url(&self) -> &String {
-        let aux = self.blockchain_url.as_ref().unwrap();
-        return aux;
+    pub fn contract_id(&self) -> &u16{
+        &self.contract_id
     }
+    pub fn set_contract_id(&mut self, val: &u16) {
+        self.contract_id = *val;
+    }
+    
+    // pub fn blockchain_url(&self) -> &String {
+    //     let aux = self.blockchain_url.as_ref().unwrap();
+    //     return aux;
+    // }
 
-    pub fn set_blockchain_url(&mut self, new_url: String) {
-        self.blockchain_url = Some(new_url.clone());
-    }
+    // pub fn set_blockchain_url(&mut self, new_url: String) {
+    //     self.blockchain_url = Some(new_url.clone());
+    // }
 
-    pub fn contract_address(&self) -> &String {
-        let aux = self.contract_address.as_ref().unwrap();
-        return aux;
-    }
-    pub fn set_contract_address(&mut self, new_addres: String) {
-        self.contract_address = Some(new_addres.clone());
-    }
+    // pub fn contract_address(&self) -> &String {
+    //     let aux = self.contract_address.as_ref().unwrap();
+    //     return aux;
+    // }
+    // pub fn set_contract_address(&mut self, new_addres: String) {
+    //     self.contract_address = Some(new_addres.clone());
+    // }
 
-    pub fn contract_owner_address(&self) -> &String {
-        let aux = self.contract_owner_address.as_ref().unwrap();
-        return aux;
-    }
-    pub fn set_contract_owner_address(&mut self, value: String) {
-        self.contract_owner_address = Some(value.clone());
-    }
+    // pub fn contract_owner_address(&self) -> &String {
+    //     let aux = self.contract_owner_address.as_ref().unwrap();
+    //     return aux;
+    // }
+    // pub fn set_contract_owner_address(&mut self, value: String) {
+    //     self.contract_owner_address = Some(value.clone());
+    // }
 
     pub fn kms_key_id(&self) -> &String {
         let aux = self.kms_key_id.as_ref().unwrap();
@@ -142,12 +151,12 @@ impl EnvironmentVariables {
         self.topic_arn_mint_async = Some(value.clone());
     }
 
-    pub fn blockchain_gateway_api_key(&self)-> &String{
-        self.blockchain_gateway_api_key.as_ref().unwrap()
-    }
-    pub fn set_blockchain_gateway_api_key(&mut self, value: String) {
-        self.blockchain_gateway_api_key = Some(value.clone());
-    }
+    // pub fn blockchain_gateway_api_key(&self)-> &String{
+    //     self.blockchain_gateway_api_key.as_ref().unwrap()
+    // }
+    // pub fn set_blockchain_gateway_api_key(&mut self, value: String) {
+    //     self.blockchain_gateway_api_key = Some(value.clone());
+    // }
 
     pub fn topic_arn_shorter_video_start(&self)-> &String{
         self.shorter_video_in_topic.as_ref().unwrap()

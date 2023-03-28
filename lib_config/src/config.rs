@@ -134,7 +134,7 @@ impl Config {
                         let secrets: Secrets = serde_json::from_str(value).unwrap(); //_or( panic!("secrets malformed") );
                         m_env.set_hmac_secret(secrets.hmac_secret);
                         m_env.set_jwt_token_base(secrets.jwt_token_base);
-                        m_env.set_blockchain_gateway_api_key(secrets.blockchain_gateway_api_key);
+                        //m_env.set_blockchain_gateway_api_key(secrets.blockchain_gateway_api_key);
 
                         debug!("app secretes found correctly")
                     }

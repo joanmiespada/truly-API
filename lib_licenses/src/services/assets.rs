@@ -1,4 +1,4 @@
-use crate::models::asset::{Asset, AssetStatus, MintingStatus};
+use crate::models::asset::{Asset, AssetStatus, MintingStatus, SourceType};
 use crate::models::asset::{AssetEnhanced, VideoLicensingStatus};
 use crate::models::video::VideoResult;
 use crate::repositories::assets::{AssetRepo, AssetRepository};
@@ -79,6 +79,10 @@ pub struct CreatableFildsAsset {
     pub longitude: Option<f64>,
 
     pub father: Option<Uuid>,
+
+    pub source: SourceType,
+    #[validate(length(max = 1000))]
+    pub source_details: Option<String>
 }
 
 #[async_trait]
