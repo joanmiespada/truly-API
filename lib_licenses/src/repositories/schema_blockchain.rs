@@ -1,7 +1,7 @@
 
 
 use aws_sdk_dynamodb::{model::{
-    AttributeDefinition, KeySchemaElement, KeyType, ScalarAttributeType, BillingMode, GlobalSecondaryIndex, Projection, ProjectionType,
+    AttributeDefinition, KeySchemaElement, KeyType, ScalarAttributeType, BillingMode
 },  Error};
 
 pub const BLOCKCHAIN_TABLE_NAME: &str = "truly_blockchain";

@@ -2,10 +2,7 @@ use std::{collections::HashMap, str::FromStr};
 
 use async_trait::async_trait;
 use aws_sdk_dynamodb::model::{AttributeValue, Put, TransactWriteItem};
-use chrono::{
-    prelude::{DateTime, Utc},
-    Local,
-};
+use chrono::Local;
 use lib_config::config::Config;
 use url::Url;
 
@@ -144,16 +141,6 @@ impl BlockchainRepository for BlockchainRepo {
             }
         }
     }
-}
-
-fn iso8601(st: &DateTime<Utc>) -> String {
-    let dt: DateTime<Utc> = st.clone().into();
-    format!("{}", dt.format("%+"))
-}
-
-fn from_iso8601(st: &String) -> DateTime<Utc> {
-    let aux = st.parse::<DateTime<Utc>>().unwrap();
-    aux
 }
 
 pub fn mapping_from_doc_to_blockchain(

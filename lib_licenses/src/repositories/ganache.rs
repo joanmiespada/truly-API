@@ -86,27 +86,26 @@ impl GanacheRepo {
             Ok(val) => contract_owner_position = val,
         }
 
-        let blockchain_url;
 
-        if conf.env_vars().environment() == DEV_ENV {
-            blockchain_url = conf.env_vars().blockchain_url().to_owned();
-        } else {
-            blockchain_url = format!(
-                "{}/{}",
-                conf.env_vars().blockchain_url(),
-                conf.env_vars().blockchain_gateway_api_key()
-            );
-        }
+        
 */
         let aux = conf.env_vars().contract_id();
-
         let contract = contracts_repo.get_by_id(aux).await?;
-
         let blockchain = blockchains_repo.get_by_id(contract.blockchain()).await?;
-        
+
+        let blockchain_url;
+        if conf.env_vars().environment() == DEV_ENV {
+            blockchain_url = blockchain.url().to_owned()
+        } else {
+            blockchain_url = 
+                Url::from_str(format!("{}/{}",
+                    blockchain.url().to_owned(),
+                    blockchain.api_key().to_owned()
+                ).as_str() ).unwrap();
+        } 
         
         Ok(GanacheRepo {
-            url: blockchain.url().to_owned(),  //blockchain_url.to_owned(),
+            url: blockchain_url.to_owned(),
             contract_address: contract.address().unwrap().to_owned(), //contract_address_position,
             contract_owner:  contract.owner().unwrap().to_owned(), //contract_owner_position,
             kms_key_id: conf.env_vars().kms_key_id().to_owned(),
@@ -283,16 +282,16 @@ impl NFTsRepository for GanacheRepo {
             }
             Ok(transact) => transact,
         };
-        let tx_str = format!("blockchain: {} | tx: {:?} blockNum: {:?} gasUsed: {:?} w effectiveGasPrice: {:?} w  cost: {:?} gwei  from: {:?} to: {:?} ", 
-                                        self.url,
-                                        Some(tx.transaction_hash), 
-                                        tx.block_number, 
-                                        tx.gas_used, 
-                                        tx.effective_gas_price, 
-                                        wei_to_gwei(tx.gas_used.unwrap() ) * wei_to_gwei( tx.effective_gas_price.unwrap()), 
-                                        Some(tx.from), 
-                                        tx.to );
-        // let block_num = match tx.block_number {
+        // let tx_str = format!("blockchain: {} | tx: {:?} blockNum: {:?} gasUsed: {:?} w effectiveGasPrice: {:?} w  cost: {:?} gwei  from: {:?} to: {:?} ", 
+        //                                 self.url,
+        //                                 Some(tx.transaction_hash), 
+        //                                 tx.block_number, 
+        //                                 tx.gas_used, 
+        //                                 tx.effective_gas_price, 
+        //                                 wei_to_gwei(tx.gas_used.unwrap() ) * wei_to_gwei( tx.effective_gas_price.unwrap()), 
+        //                                 Some(tx.from), 
+        //                                 tx.to );
+        // // let block_num = match tx.block_number {
         //     None => None,
         //     Some(bn) => Some(bn.as_u64())
         // };
