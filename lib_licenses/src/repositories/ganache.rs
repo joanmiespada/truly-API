@@ -1,18 +1,21 @@
 use async_trait::async_trait;
 use aws_config::SdkConfig;
 use chrono::{DateTime, NaiveDateTime, Utc};
-use lib_config::{config::Config, environment::DEV_ENV, secrets::SECRETS_MANAGER_SECRET_KEY};
+use lib_config::{
+    config::Config, environment::DEV_ENV, infra::restore_secret_key,
+    secrets::SECRETS_MANAGER_SECRET_KEY,
+};
 use log::debug;
 use mac_address::get_mac_address;
 use secp256k1::SecretKey;
 use serde::{Deserialize, Serialize};
 use snowflake::SnowflakeIdGenerator;
-use url::Url;
 use std::{
     fmt,
     str::FromStr,
     sync::{Arc, Mutex},
 };
+use url::Url;
 use uuid::Uuid;
 
 use web3::{
@@ -33,7 +36,10 @@ const CONTRACT_METHOD_GET_CONTENT_BY_TOKEN: &'static str = "getContentByToken";
 
 use crate::errors::asset::AssetBlockachainError;
 
-use super::{contract::{ContractRepo, ContractRepository}, blockchain::{BlockchainRepo, BlockchainRepository}};
+use super::{
+    blockchain::{BlockchainRepo, BlockchainRepository},
+    contract::{ContractRepo, ContractRepository},
+};
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 #[async_trait]
@@ -44,7 +50,7 @@ pub trait NFTsRepository {
         user_key: &KeyPair,
         hash_file: &String,
         price: &u64,
-        counter: &u64
+        counter: &u64,
     ) -> ResultE<BlockchainTx>;
 
     async fn get(&self, asset_id: &Uuid) -> ResultE<GanacheContentInfo>;
@@ -55,78 +61,89 @@ pub trait NFTsRepository {
 pub struct GanacheRepo {
     url: Url,
     contract_address: Address,
-    contract_owner: Address,
+    contract_owner_address: Address,
+    contract_owner_secret: String,
     kms_key_id: String,
-    aws: SdkConfig,
+    //aws: SdkConfig,
+    config: Config,
     blockhain_node_confirmations: u16,
-    contract_id: u16
-    
+    contract_id: u16,
 }
 
 impl GanacheRepo {
-    pub async fn new(conf: &Config, contracts_repo: &ContractRepo, blockchains_repo: &BlockchainRepo ) -> ResultE<GanacheRepo> {
-
-        
+    pub async fn new(
+        conf: &Config,
+        contracts_repo: &ContractRepo,
+        blockchains_repo: &BlockchainRepo,
+    ) -> ResultE<GanacheRepo> {
         //TODO: read from contracts table!
-/* 
-        let contract_address_position;
-        let aux = conf.env_vars().contract_address();
-        let contract_address_position_op = Address::from_str(aux.as_str()); //.unwrap();
-        match contract_address_position_op {
-            Err(e) => {
-                return Err(e.to_string());
-            }
-            Ok(val) => contract_address_position = val,
-        }
-        let contract_owner_position;
-        let aux2 = conf.env_vars().contract_owner_address();
-        let contract_owner_position_op = Address::from_str(aux2.as_str()); //.unwrap();
-        match contract_owner_position_op {
-            Err(e) => return Err(e.to_string()),
-            Ok(val) => contract_owner_position = val,
-        }
+        /*
+                let contract_address_position;
+                let aux = conf.env_vars().contract_address();
+                let contract_address_position_op = Address::from_str(aux.as_str()); //.unwrap();
+                match contract_address_position_op {
+                    Err(e) => {
+                        return Err(e.to_string());
+                    }
+                    Ok(val) => contract_address_position = val,
+                }
+                let contract_owner_position;
+                let aux2 = conf.env_vars().contract_owner_address();
+                let contract_owner_position_op = Address::from_str(aux2.as_str()); //.unwrap();
+                match contract_owner_position_op {
+                    Err(e) => return Err(e.to_string()),
+                    Ok(val) => contract_owner_position = val,
+                }
 
 
-        
-*/
+
+        */
         let aux = conf.env_vars().contract_id();
-        let contract = contracts_repo.get_by_id(aux).await?;
+        let contract = contracts_repo.get_by_id(&aux).await?;
         let blockchain = blockchains_repo.get_by_id(contract.blockchain()).await?;
 
         let blockchain_url;
         if conf.env_vars().environment() == DEV_ENV {
             blockchain_url = blockchain.url().to_owned()
         } else {
-            blockchain_url = 
-                Url::from_str(format!("{}/{}",
+            blockchain_url = Url::from_str(
+                format!(
+                    "{}/{}",
                     blockchain.url().to_owned(),
                     blockchain.api_key().to_owned()
-                ).as_str() ).unwrap();
-        } 
-        
+                )
+                .as_str(),
+            )
+            .unwrap();
+        }
+
         Ok(GanacheRepo {
             url: blockchain_url.to_owned(),
             contract_address: contract.address().unwrap().to_owned(), //contract_address_position,
-            contract_owner:  contract.owner().unwrap().to_owned(), //contract_owner_position,
+            contract_owner_address: contract.owner_address().unwrap().to_owned(), //contract_owner_position,
+            contract_owner_secret: contract.owner_secret().clone().unwrap().to_owned(), //contract_owner_position,
             kms_key_id: conf.env_vars().kms_key_id().to_owned(),
-            aws: conf.aws_config().to_owned(),
-            blockhain_node_confirmations: blockchain.confirmations().to_owned(),  //conf.env_vars().blockchain_confirmations().to_owned(),
-            contract_id: aux.to_owned() //contract.to_owned(),
+            //aws: conf.aws_config().to_owned(),
+            config: conf.clone(),
+            blockhain_node_confirmations: blockchain.confirmations().to_owned(), //conf.env_vars().blockchain_confirmations().to_owned(),
+            contract_id: aux.to_owned(), //contract.to_owned(),
         })
     }
 
-
+    /*
     async fn decrypt_contract_owner_secret_key(&self) -> ResultE<SecretKey> {
         use base64::{engine::general_purpose, Engine as _};
 
-        let client = aws_sdk_secretsmanager::Client::new(&self.aws);
-        let scr = client
-            .get_secret_value()
-            .secret_id(SECRETS_MANAGER_SECRET_KEY)
-            .send()
-            .await?;
+        // let client = aws_sdk_secretsmanager::Client::new(&self.aws);
+        // let scr = client
+        //     .get_secret_value()
+        //     .secret_id(SECRETS_MANAGER_SECRET_KEY)
+        //     .send()
+        //     .await?;
 
-        let secret_key_cyphered_b64 = scr.secret_string().unwrap();
+        // let secret_key_cyphered_b64 = scr.secret_string().unwrap();
+        let secret_key_cyphered_b64 = self.contract_owner_secret.to_owned();
+
 
         let secret_key_cyphered = general_purpose::STANDARD
             .decode(secret_key_cyphered_b64)
@@ -166,11 +183,12 @@ impl GanacheRepo {
 
         Ok(secret_key)
     }
+    */
 }
 
 #[async_trait]
 impl NFTsRepository for GanacheRepo {
-    fn contract_id(&self) -> u16{
+    fn contract_id(&self) -> u16 {
         self.contract_id
     }
     async fn add(
@@ -179,7 +197,7 @@ impl NFTsRepository for GanacheRepo {
         user_key: &KeyPair,
         hash_file: &String,
         prc: &u64,
-        _cntr: &u64
+        _cntr: &u64,
     ) -> ResultE<BlockchainTx> {
         let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
         let web3 = web3::Web3::new(transport);
@@ -215,7 +233,7 @@ impl NFTsRepository for GanacheRepo {
         let estimate_call = contract.estimate_gas(
             CONTRACT_METHOD_MINTING,
             (to.clone(), token.clone(), hash_file.clone(), price.clone()),
-            self.contract_owner.clone(), //self.contract_address.clone(), //account_owner,
+            self.contract_owner_address.clone(), //self.contract_address.clone(), //account_owner,
             Options::default(),
         );
 
@@ -240,9 +258,13 @@ impl NFTsRepository for GanacheRepo {
         //let nonce = generate_nonce(&self.counter )?;
         // debug!("nonce calculated: {}", nonce);
 
-        let counter = web3.eth().transaction_count(self.contract_address, None).await.unwrap();
+        let counter = web3
+            .eth()
+            .transaction_count(self.contract_address, None)
+            .await
+            .unwrap();
         debug!("{}", counter);
-        //counter += U256::from_str_radix("1", 10).unwrap(); 
+        //counter += U256::from_str_radix("1", 10).unwrap();
         //debug!("{}", counter);
 
         let tx_options = Options {
@@ -257,9 +279,15 @@ impl NFTsRepository for GanacheRepo {
             max_priority_fee_per_gas: None,
         };
         debug!("calling from {}", self.contract_address.to_string());
-        
+
         let contract_owner_private_key;
-        let contract_owner_private_key_op = self.decrypt_contract_owner_secret_key().await;
+        //let contract_owner_private_key_op = self.decrypt_contract_owner_secret_key().await;
+        let contract_owner_private_key_op = SecretKey::from_str(
+            restore_secret_key(self.contract_owner_secret.to_owned(), &self.kms_key_id, &self.config)
+                .await
+                .unwrap().as_str(),
+        );
+
         match contract_owner_private_key_op {
             Err(_) => {
                 return Err(HydrateMasterSecretKeyError {}.into());
@@ -278,18 +306,18 @@ impl NFTsRepository for GanacheRepo {
         let call_contract_op = caller.await;
         let tx = match call_contract_op {
             Err(e) => {
-                return Err(AssetBlockachainError( format!("{:?}",e)).into());
+                return Err(AssetBlockachainError(format!("{:?}", e)).into());
             }
             Ok(transact) => transact,
         };
-        // let tx_str = format!("blockchain: {} | tx: {:?} blockNum: {:?} gasUsed: {:?} w effectiveGasPrice: {:?} w  cost: {:?} gwei  from: {:?} to: {:?} ", 
+        // let tx_str = format!("blockchain: {} | tx: {:?} blockNum: {:?} gasUsed: {:?} w effectiveGasPrice: {:?} w  cost: {:?} gwei  from: {:?} to: {:?} ",
         //                                 self.url,
-        //                                 Some(tx.transaction_hash), 
-        //                                 tx.block_number, 
-        //                                 tx.gas_used, 
-        //                                 tx.effective_gas_price, 
-        //                                 wei_to_gwei(tx.gas_used.unwrap() ) * wei_to_gwei( tx.effective_gas_price.unwrap()), 
-        //                                 Some(tx.from), 
+        //                                 Some(tx.transaction_hash),
+        //                                 tx.block_number,
+        //                                 tx.gas_used,
+        //                                 tx.effective_gas_price,
+        //                                 wei_to_gwei(tx.gas_used.unwrap() ) * wei_to_gwei( tx.effective_gas_price.unwrap()),
+        //                                 Some(tx.from),
         //                                 tx.to );
         // // let block_num = match tx.block_number {
         //     None => None,
@@ -298,16 +326,16 @@ impl NFTsRepository for GanacheRepo {
         let tx_paylaod = BlockchainTx::new(
             asset_id.to_owned(),
             Utc::now(),
-            Some(tx.transaction_hash), 
-            tx.block_number, 
-            tx.gas_used, 
-            tx.effective_gas_price, 
-            Some(wei_to_gwei(tx.gas_used.unwrap() ) * wei_to_gwei( tx.effective_gas_price.unwrap())), 
+            Some(tx.transaction_hash),
+            tx.block_number,
+            tx.gas_used,
+            tx.effective_gas_price,
+            Some(wei_to_gwei(tx.gas_used.unwrap()) * wei_to_gwei(tx.effective_gas_price.unwrap())),
             Some("gweis".to_string()),
-            Some(tx.from), 
+            Some(tx.from),
             tx.to,
             self.contract_id,
-            None
+            None,
         );
         Ok(tx_paylaod)
     }
@@ -357,7 +385,6 @@ fn wei_to_gwei(wei_val: U256) -> f64 {
     let res = wei_val.as_u128() as f64;
     res / 1_000_000_000.0
 }
-
 
 pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
     let latest_block = client

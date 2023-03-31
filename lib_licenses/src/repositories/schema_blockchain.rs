@@ -7,7 +7,7 @@ use aws_sdk_dynamodb::{model::{
 pub const BLOCKCHAIN_TABLE_NAME: &str = "truly_blockchain";
 pub const BLOCKCHAIN_ID_FIELD_PK: &str = "blockchain_id";
 
-pub async fn create_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
+pub async fn create_schema_blockchains(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
 
 
     let id_ad = AttributeDefinition::builder()

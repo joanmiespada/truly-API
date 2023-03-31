@@ -10,7 +10,7 @@ pub const CONTRACT_BLOCKCHAIN_FIELD: &str = "blockchain";
 pub const CONTRACT_BLOCKCHAIN_INDEX: &str = "blockchain_index";
 pub const CONTRACT_STATUS_FIELD_NAME: &str = "status";
 
-pub async fn create_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
+pub async fn create_schema_contracts(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
 
 
     let id_ad = AttributeDefinition::builder()

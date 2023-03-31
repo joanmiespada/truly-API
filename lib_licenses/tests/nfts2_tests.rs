@@ -1,4 +1,5 @@
 use crate::nfts_tests::MNEMONIC_TEST;
+use chrono::Utc;
 use ethers::utils::Ganache;
 use lib_config::config::Config;
 use lib_config::infra::{
@@ -6,12 +7,18 @@ use lib_config::infra::{
     create_secret_manager_secret_key, store_secret_key,
 };
 use lib_licenses::models::asset::{MintingStatus, VideoLicensingStatus, SourceType};
+use lib_licenses::models::blockchain::Blockchain;
+use lib_licenses::models::contract::{Contract, ContractStatus};
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::block_tx::BlockchainTxRepo;
+use lib_licenses::repositories::blockchain::{BlockchainRepo, BlockchainRepository};
+use lib_licenses::repositories::contract::{ContractRepo, ContractRepository};
 use lib_licenses::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::repositories::schema_asset::create_schema_assets_all;
 use lib_licenses::repositories::schema_block_tx::create_schema_transactions;
+use lib_licenses::repositories::schema_blockchain::create_schema_blockchains;
+use lib_licenses::repositories::schema_contract::create_schema_contracts;
 use lib_licenses::repositories::schema_keypairs::create_schema_keypairs;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
 use lib_licenses::repositories::shorter::ShorterRepo;
@@ -25,6 +32,7 @@ use lib_licenses::{
 };
 
 use spectral::{assert_that, result::ResultAssertions};
+use web3::types::H160;
 use std::{env, str::FromStr};
 use testcontainers::*;
 use url::Url;
@@ -50,17 +58,23 @@ async fn create_contract_and_mint_nft_test_sync(
 
     let dynamo_client = aws_sdk_dynamodb::Client::new(&shared_config);
 
-    let creation1 = create_schema_assets_all(&dynamo_client).await;
+    let creation1 = create_schema_blockchains(&dynamo_client).await;
     assert_that(&creation1).is_ok();
 
-    let creation2 = create_schema_owners(&dynamo_client).await;
+    let creation2 = create_schema_contracts(&dynamo_client).await;
     assert_that(&creation2).is_ok();
 
-    let creation3 = create_schema_keypairs(&dynamo_client).await;
+    let creation3 = create_schema_assets_all(&dynamo_client).await;
     assert_that(&creation3).is_ok();
 
-    let creation4 = create_schema_transactions(&dynamo_client).await;
+    let creation4 = create_schema_owners(&dynamo_client).await;
     assert_that(&creation4).is_ok();
+
+    let creation5 = create_schema_keypairs(&dynamo_client).await;
+    assert_that(&creation5).is_ok();
+
+    let creation6 = create_schema_transactions(&dynamo_client).await;
+    assert_that(&creation6).is_ok();
 
     //create secrets and keys
 
@@ -73,7 +87,6 @@ async fn create_contract_and_mint_nft_test_sync(
     {
         "HMAC_SECRET" : "localtest_hmac_1234RGsdfg#$%",
         "JWT_TOKEN_BASE": "localtest_jwt_sd543ERGds235$%^",
-        "BLOCKCHAIN_GATEWAY_API_KEY": ""
     }
     "#;
     create_secret_manager_keys(secrets_json, &secrets_client).await?;
@@ -98,7 +111,10 @@ async fn create_contract_and_mint_nft_test_sync(
 
     let repo_keys = KeyPairRepo::new(&config.clone());
 
+
     let mut new_configuration = config.env_vars().clone();
+
+
 
     //create fake test asset and user
 
@@ -139,10 +155,14 @@ async fn create_contract_and_mint_nft_test_sync(
     // let contract_owner_address  = format!("{:#?}", contract_owner_wallet.address());
 
     //Web3
-    let secret: &str = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // example fake secret key
+    let contract_owner_secret: &str = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // example fake secret key
     let key_id = config.env_vars().kms_key_id();
-    store_secret_key(secret, key_id, &config).await?;
+    let contract_owner_secret_cyphered =  store_secret_key(contract_owner_secret, key_id, &config).await?;
     let contract_owner_address = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1".to_string(); //address based on the previous fake secret key
+
+    //create blockchain ganache object and contract
+    let blockChainsRepo = BlockchainRepo::new(&config.clone());
+    let contractsRepo = ContractRepo::new(&config.clone());
 
     //create contract and deploy to blockchain
     let url = ganache.endpoint();
@@ -151,12 +171,40 @@ async fn create_contract_and_mint_nft_test_sync(
         deploy_contract_locally(url.as_str(), contract_owner_address.clone()).await?;
     //let contract_address = deploy_contract_ethers(url.as_str(), &contract_owner_wallet).await?;
 
-    new_configuration.set_blockchain_url(url.clone());
-    new_configuration.set_contract_address(contract_address);
-    new_configuration.set_contract_owner_address(contract_owner_address.clone());
+    let confirmations=1;
+    let blochain_id = "ganache".to_string();
+
+    let ganache_entity = Blockchain::new(
+        blochain_id.to_owned(),
+        Url::parse(url.as_str()).unwrap().clone(), 
+        "no-api-key".to_string(),
+        confirmations,
+        Url::parse("http://localhost/explorer").unwrap().clone(), 
+        "no-api-key-explorer".to_string(),
+    );
+    blockChainsRepo.add(&ganache_entity).await?;
+
+    let contact_id = 1;
+
+    let contract_entity = Contract::new_c(
+        contact_id,
+        Utc::now(),
+        blochain_id.to_owned(),
+        Some(H160::from_str(contract_address.as_str() ).unwrap()),
+        Some(H160::from_str(contract_owner_address.as_str()).unwrap()),
+        Some(contract_owner_secret_cyphered),
+        Some("no-details".to_string()),
+        ContractStatus::Enabled
+    );
+    contractsRepo.add(&contract_entity).await?;
+
+    // new_configuration.set_blockchain_url(url.clone());
+    // new_configuration.set_contract_address(contract_address);
+    // new_configuration.set_contract_owner_address(contract_owner_address.clone());
+    new_configuration.set_contract_id(contact_id);
     config.set_env_vars(&new_configuration);
 
-    let blockchain = GanacheRepo::new(&config.clone()).unwrap();
+    let blockchain = GanacheRepo::new(&config.clone(), &contractsRepo, &blockChainsRepo ).await.unwrap();
 
     let nft_service = NFTsService::new(
         blockchain,
@@ -202,8 +250,8 @@ async fn create_contract_and_mint_nft_test_sync(
     let tx_tx = tx_service.get_by_hash(&find).await;
     assert_that!(&tx_tx).is_ok();
     let final_tx = tx_tx.unwrap();
-    let content1 = tx_in_chain.result().clone().unwrap();
-    let content2 = final_tx.result().clone().unwrap();
+    let content1 = tx_in_chain.tx().clone().unwrap();
+    let content2 = final_tx.tx().clone().unwrap();
     assert_eq!(content1, content2);
 
     let txs_op = tx_service.get_by_asset_id(content_minted.id()).await;

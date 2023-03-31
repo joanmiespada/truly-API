@@ -21,7 +21,8 @@ use super::schema_contract::{
 
 pub const CREATIONTIME_FIELD_NAME: &str = "creationTime";
 pub const CONTRACT_ADDRESS_FIELD_NAME: &str = "address";
-pub const CONTRACT_OWNER_FIELD_NAME: &str = "owners";
+pub const CONTRACT_OWNER_ADDRESS_FIELD_NAME: &str = "owner_address";
+pub const CONTRACT_OWNER_SECRET_FIELD_NAME: &str = "owner_secret";
 pub const CONTRACT_DETAILS_FIELD_NAME: &str = "details";
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
@@ -49,7 +50,8 @@ impl ContractRepo {
         let id_av = AttributeValue::N(contract.id().to_string());
         let blockchain_av = AttributeValue::S(contract.blockchain().to_string());
         let address_av = AttributeValue::S(contract.address().unwrap().to_string());
-        let owner_av = AttributeValue::S(contract.owner().unwrap().to_string());
+        let owner_address_av = AttributeValue::S(contract.owner_address().unwrap().to_string());
+        let owner_secret_av = AttributeValue::S(contract.owner_secret().clone().unwrap());
         let details_av = AttributeValue::S(contract.details().clone().unwrap().to_string());
         let status_av = AttributeValue::S(contract.status().to_string());
         let creation_time_av = AttributeValue::S(iso8601(contract.creation_time()));
@@ -59,7 +61,8 @@ impl ContractRepo {
             .item(CONTRACT_ID_FIELD_PK, id_av)
             .item(CONTRACT_BLOCKCHAIN_FIELD, blockchain_av)
             .item(CONTRACT_ADDRESS_FIELD_NAME, address_av)
-            .item(CONTRACT_OWNER_FIELD_NAME, owner_av)
+            .item(CONTRACT_OWNER_ADDRESS_FIELD_NAME, owner_address_av)
+            .item(CONTRACT_OWNER_SECRET_FIELD_NAME, owner_secret_av)
             .item(CONTRACT_DETAILS_FIELD_NAME, details_av)
             .item(CONTRACT_STATUS_FIELD_NAME, status_av)
             .item(CREATIONTIME_FIELD_NAME, creation_time_av);
@@ -224,10 +227,14 @@ pub fn mapping_from_doc_to_contract(
     let address_h = H160::from_str(address1).unwrap();
     contract.set_address(&address_h);
 
-    let owner = doc.get(CONTRACT_OWNER_FIELD_NAME).unwrap();
-    let owner1 = owner.as_s().unwrap();
-    let owner_h = H160::from_str(owner1).unwrap();
-    contract.set_owner(&owner_h);
+    let owner_address = doc.get(CONTRACT_OWNER_ADDRESS_FIELD_NAME).unwrap();
+    let owner1_address = owner_address.as_s().unwrap();
+    let owner_h_address = H160::from_str(owner1_address).unwrap();
+    contract.set_owner_address(&owner_h_address);
+
+    let owner_secret = doc.get(CONTRACT_OWNER_SECRET_FIELD_NAME).unwrap();
+    let owner1_secret = owner_secret.as_s().unwrap();
+    contract.set_owner_secret(&owner1_secret);
 
     let details = doc.get(CONTRACT_DETAILS_FIELD_NAME).unwrap();
     let details1 = details.as_s().unwrap();

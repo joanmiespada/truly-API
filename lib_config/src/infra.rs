@@ -97,7 +97,7 @@ pub async fn store_secret_key(
     info_to_be_encrypted: &str,
     kms_key_id: &str,
     config: &Config,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync >> {
+) -> Result<String, Box<dyn std::error::Error + Send + Sync >> {
     let aws = config.aws_config();
 
     let client = aws_sdk_kms::Client::new(aws);
@@ -116,6 +116,7 @@ pub async fn store_secret_key(
 
     let value = general_purpose::STANDARD.encode(bytes);
 
+/* 
     let client2 = aws_sdk_secretsmanager::Client::new(aws);
 
     client2
@@ -124,16 +125,18 @@ pub async fn store_secret_key(
         .secret_string(value)
         .send()
         .await?;
+*/
 
-    Ok(())
+    Ok(value)
 }
 
 pub async fn restore_secret_key(
+    info_to_be_decyphered: String,
     kms_key_id: &str,
     config: &Config,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let aws = config.aws_config();
-
+/* 
     let client = aws_sdk_secretsmanager::Client::new(&aws);
     let scr = client
         .get_secret_value()
@@ -142,9 +145,9 @@ pub async fn restore_secret_key(
         .await?;
 
     let secret_key_cyphered = scr.secret_string().unwrap();
-
+*/
     let value = general_purpose::STANDARD
-        .decode(secret_key_cyphered)
+        .decode(info_to_be_decyphered)
         .unwrap();
 
     let client2 = aws_sdk_kms::Client::new(&aws);

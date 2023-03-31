@@ -81,11 +81,11 @@ impl EnvironmentVariables {
         return aux;
     }
 
-    pub fn contract_id(&self) -> &u16{
-        &self.contract_id
+    pub fn contract_id(&self) -> u16{
+        self.contract_id
     }
-    pub fn set_contract_id(&mut self, val: &u16) {
-        self.contract_id = *val;
+    pub fn set_contract_id(&mut self, val: u16) {
+        self.contract_id = val;
     }
     
     // pub fn blockchain_url(&self) -> &String {
@@ -120,14 +120,14 @@ impl EnvironmentVariables {
     pub fn set_kms_key_id(&mut self, value: String) {
         self.kms_key_id = Some(value.clone());
     }
-
+/* 
     pub fn blockchain_confirmations(&self) -> &usize {
         let aux = self.blockchain_confirmations.as_ref().unwrap();
         return aux;
     }
     pub fn set_blockchain_confirmations(&mut self, value: usize) {
         self.blockchain_confirmations = Some(value.clone());
-    }
+    }*/
     pub fn queue_mint_async (&self) -> &String {
         let aux = self.queue_mint_async.as_ref().unwrap();
         return aux;

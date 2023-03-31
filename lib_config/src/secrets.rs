@@ -11,6 +11,6 @@ pub struct Secrets {
     pub hmac_secret: String,
     #[serde(rename = "JWT_TOKEN_BASE")]
     pub jwt_token_base: String,
-    #[serde(rename = "BLOCKCHAIN_GATEWAY_API_KEY")]
-    pub blockchain_gateway_api_key: String,
+    //#[serde(rename = "BLOCKCHAIN_GATEWAY_API_KEY")]
+    //pub blockchain_gateway_api_key: String,
 }

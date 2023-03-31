@@ -11,7 +11,8 @@ pub struct Contract {
     creation_time: DateTime<Utc>,
     blockchain: String,
     address: Option<H160>,
-    owner: Option<H160>,
+    owner_address: Option<H160>,
+    owner_secret: Option<String>,
     details: Option<String>,
     status: ContractStatus,
 }
@@ -29,9 +30,32 @@ impl Contract {
             creation_time: Utc::now(),
             blockchain: "".to_string(),
             address: None,
-            owner: None,
+            owner_address: None,
+            owner_secret: None,
             details: None,
             status: ContractStatus::Disabled,
+        }
+    }
+
+    pub fn new_c(
+        id: u16,
+        creation_time: DateTime<Utc>,
+        blockchain: String,
+        address: Option<H160>,
+        owner_address: Option<H160>,
+        owner_secret: Option<String>,
+        details: Option<String>,
+        status: ContractStatus,
+    ) -> Contract {
+        Contract {
+            id,
+            creation_time,
+            blockchain,
+            address,
+            owner_address,
+            owner_secret,
+            details,
+            status,
         }
     }
 
@@ -59,12 +83,19 @@ impl Contract {
     pub fn set_address(&mut self, val: &H160) {
         self.address = Some(val.clone())
     }
-    pub fn owner(&self) -> &Option<H160> {
-        &self.owner
+    pub fn owner_address(&self) -> &Option<H160> {
+        &self.owner_address
     }
-    pub fn set_owner(&mut self, val: &H160) {
-        self.owner = Some(val.clone())
+    pub fn set_owner_address(&mut self, val: &H160) {
+        self.owner_address = Some(val.clone())
     }
+    pub fn owner_secret(&self) -> &Option<String> {
+        &self.owner_secret
+    }
+    pub fn set_owner_secret(&mut self, val: &String) {
+        self.owner_secret = Some(val.clone())
+    }
+
     pub fn details(&self) -> &Option<String> {
         &self.details
     }
