@@ -37,8 +37,8 @@ async fn set_up_secret() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
 
     let secret: &str = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // secret key example
     
-    store_secret_key(secret, kms_id.as_str(), &config).await?;
-    let res = restore_secret_key(kms_id.as_str(), &config).await?;
+    let cyphered = store_secret_key(secret, kms_id.as_str(), &config).await?;
+    let res = restore_secret_key(cyphered ,kms_id.as_str(), &config).await?;
 
     assert_eq!(secret, res);
 

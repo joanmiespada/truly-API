@@ -6,7 +6,7 @@ use lib_config::infra::{
     build_local_stack_connection, create_key, create_secret_manager_keys,
     create_secret_manager_secret_key, store_secret_key,
 };
-use lib_licenses::models::asset::{MintingStatus, VideoLicensingStatus, SourceType};
+use lib_licenses::models::asset::{MintingStatus, SourceType, VideoLicensingStatus};
 use lib_licenses::models::blockchain::Blockchain;
 use lib_licenses::models::contract::{Contract, ContractStatus};
 use lib_licenses::repositories::assets::AssetRepo;
@@ -32,10 +32,10 @@ use lib_licenses::{
 };
 
 use spectral::{assert_that, result::ResultAssertions};
-use web3::types::H160;
 use std::{env, str::FromStr};
 use testcontainers::*;
 use url::Url;
+use web3::types::H160;
 
 #[tokio::test]
 async fn create_contract_and_mint_nft_test_sync(
@@ -86,7 +86,7 @@ async fn create_contract_and_mint_nft_test_sync(
     let secrets_json = r#"
     {
         "HMAC_SECRET" : "localtest_hmac_1234RGsdfg#$%",
-        "JWT_TOKEN_BASE": "localtest_jwt_sd543ERGds235$%^",
+        "JWT_TOKEN_BASE": "localtest_jwt_sd543ERGds235$%^"
     }
     "#;
     create_secret_manager_keys(secrets_json, &secrets_client).await?;
@@ -111,10 +111,7 @@ async fn create_contract_and_mint_nft_test_sync(
 
     let repo_keys = KeyPairRepo::new(&config.clone());
 
-
     let mut new_configuration = config.env_vars().clone();
-
-
 
     //create fake test asset and user
 
@@ -155,14 +152,16 @@ async fn create_contract_and_mint_nft_test_sync(
     // let contract_owner_address  = format!("{:#?}", contract_owner_wallet.address());
 
     //Web3
-    let contract_owner_secret: &str = "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // example fake secret key
+    let contract_owner_secret: &str =
+        "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // example fake secret key
     let key_id = config.env_vars().kms_key_id();
-    let contract_owner_secret_cyphered =  store_secret_key(contract_owner_secret, key_id, &config).await?;
+    let contract_owner_secret_cyphered =
+        store_secret_key(contract_owner_secret, key_id, &config).await?;
     let contract_owner_address = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1".to_string(); //address based on the previous fake secret key
 
     //create blockchain ganache object and contract
-    let blockChainsRepo = BlockchainRepo::new(&config.clone());
-    let contractsRepo = ContractRepo::new(&config.clone());
+    let block_chains_repo = BlockchainRepo::new(&config.clone());
+    let contracts_repo = ContractRepo::new(&config.clone());
 
     //create contract and deploy to blockchain
     let url = ganache.endpoint();
@@ -171,18 +170,18 @@ async fn create_contract_and_mint_nft_test_sync(
         deploy_contract_locally(url.as_str(), contract_owner_address.clone()).await?;
     //let contract_address = deploy_contract_ethers(url.as_str(), &contract_owner_wallet).await?;
 
-    let confirmations=1;
+    let confirmations = 0;
     let blochain_id = "ganache".to_string();
 
     let ganache_entity = Blockchain::new(
         blochain_id.to_owned(),
-        Url::parse(url.as_str()).unwrap().clone(), 
+        Url::parse(url.as_str()).unwrap().clone(),
         "no-api-key".to_string(),
         confirmations,
-        Url::parse("http://localhost/explorer").unwrap().clone(), 
+        Url::parse("http://localhost/explorer").unwrap().clone(),
         "no-api-key-explorer".to_string(),
     );
-    blockChainsRepo.add(&ganache_entity).await?;
+    block_chains_repo.add(&ganache_entity).await?;
 
     let contact_id = 1;
 
@@ -190,13 +189,13 @@ async fn create_contract_and_mint_nft_test_sync(
         contact_id,
         Utc::now(),
         blochain_id.to_owned(),
-        Some(H160::from_str(contract_address.as_str() ).unwrap()),
+        Some(H160::from_str(contract_address.as_str()).unwrap()),
         Some(H160::from_str(contract_owner_address.as_str()).unwrap()),
         Some(contract_owner_secret_cyphered),
         Some("no-details".to_string()),
-        ContractStatus::Enabled
+        ContractStatus::Enabled,
     );
-    contractsRepo.add(&contract_entity).await?;
+    contracts_repo.add(&contract_entity).await?;
 
     // new_configuration.set_blockchain_url(url.clone());
     // new_configuration.set_contract_address(contract_address);
@@ -204,7 +203,9 @@ async fn create_contract_and_mint_nft_test_sync(
     new_configuration.set_contract_id(contact_id);
     config.set_env_vars(&new_configuration);
 
-    let blockchain = GanacheRepo::new(&config.clone(), &contractsRepo, &blockChainsRepo ).await.unwrap();
+    let blockchain = GanacheRepo::new(&config.clone(), &contracts_repo, &block_chains_repo)
+        .await
+        .unwrap();
 
     let nft_service = NFTsService::new(
         blockchain,

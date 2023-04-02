@@ -22,7 +22,10 @@ pub async fn create_schema_contracts(client: &aws_sdk_dynamodb::Client) -> Resul
         .attribute_name(CONTRACT_BLOCKCHAIN_FIELD)
         .attribute_type(ScalarAttributeType::S)
         .build();
-
+    let status_ad = AttributeDefinition::builder()
+        .attribute_name(CONTRACT_STATUS_FIELD_NAME)
+        .attribute_type(ScalarAttributeType::S)
+        .build();
 
     let ks1 = KeySchemaElement::builder()
         .attribute_name(CONTRACT_ID_FIELD_PK)
@@ -58,6 +61,7 @@ pub async fn create_schema_contracts(client: &aws_sdk_dynamodb::Client) -> Resul
         .global_secondary_indexes(second_index)
         .attribute_definitions(id_ad)
         .attribute_definitions(blockchain_ad)
+        .attribute_definitions(status_ad)
         .billing_mode(BillingMode::PayPerRequest)
         .send()
         .await;
@@ -69,7 +73,7 @@ pub async fn create_schema_contracts(client: &aws_sdk_dynamodb::Client) -> Resul
     } 
 
 }
-pub async fn delete_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
+pub async fn delete_schema_contracts(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
 
     client.delete_table().table_name(CONTRACT_TABLE_NAME).send().await?;
 

@@ -49,12 +49,12 @@ impl ContractRepo {
     fn new_or_update(&self, contract: &Contract) -> ResultE<aws_sdk_dynamodb::model::put::Builder> {
         let id_av = AttributeValue::N(contract.id().to_string());
         let blockchain_av = AttributeValue::S(contract.blockchain().to_string());
-        let address_av = AttributeValue::S(contract.address().unwrap().to_string());
-        let owner_address_av = AttributeValue::S(contract.owner_address().unwrap().to_string());
+        let address_av = AttributeValue::S(format!("{:?}", contract.address().unwrap()));
+        let owner_address_av = AttributeValue::S(format!("{:?}", contract.owner_address().unwrap()));
         let owner_secret_av = AttributeValue::S(contract.owner_secret().clone().unwrap());
         let details_av = AttributeValue::S(contract.details().clone().unwrap().to_string());
-        let status_av = AttributeValue::S(contract.status().to_string());
         let creation_time_av = AttributeValue::S(iso8601(contract.creation_time()));
+        let status_av = AttributeValue::S(contract.status().to_string());
 
         let mut items = Put::builder();
         items = items

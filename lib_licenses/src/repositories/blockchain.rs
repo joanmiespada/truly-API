@@ -111,7 +111,7 @@ impl BlockchainRepository for BlockchainRepo {
         }
     }
     async fn get_by_id(&self, id: &String) -> ResultE<Blockchain> {
-        let id_av = AttributeValue::N(id.to_string());
+        let id_av = AttributeValue::S(id.to_string());
         let request = self
             .client
             .get_item()

@@ -37,7 +37,7 @@ pub async fn create_schema_blockchains(client: &aws_sdk_dynamodb::Client) -> Res
     } 
 
 }
-pub async fn delete_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
+pub async fn delete_schema_blockchains(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
 
     client.delete_table().table_name(BLOCKCHAIN_TABLE_NAME).send().await?;
 

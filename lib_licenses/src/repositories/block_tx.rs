@@ -198,7 +198,7 @@ impl BlockchainTxRepository for BlockchainTxRepo {
         match tx.cost() {
             None => {}
             Some(data) => {
-                let data_av = AttributeValue::S(data.clone().to_string());
+                let data_av = AttributeValue::N(data.clone().to_string());
                 items = items.item(TX_COST, data_av);
             }
         }
