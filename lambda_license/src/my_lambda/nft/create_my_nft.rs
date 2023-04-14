@@ -82,7 +82,8 @@ pub async fn create_my_nft(
                 return build_resp("unknonw error working with the blockchain".to_string(), StatusCode::INTERNAL_SERVER_ERROR);
             }
         },
-        Ok(tx) => tx.result().clone().unwrap(),
+        Ok(tx) => format!("{}", tx)
+        //result().clone().unwrap(),
     };
     
     return build_resp(transaction, StatusCode::OK);

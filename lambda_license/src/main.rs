@@ -20,7 +20,7 @@ use tracing::info;
 mod my_lambda;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(),Box<dyn std::error::Error + Sync + Send>> {
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         // disable printing the name of the module in every log line.
@@ -45,9 +45,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let owners_service = OwnerService::new(owners_repo);
 
     let key_repo = KeyPairRepo::new(&config);
+
     let blockchains_repo =BlockchainRepo::new(&config);
     let contracts_repo= ContractRepo::new(&config);
+    
     let blockchain = GanacheRepo::new(&config, &contracts_repo, &blockchains_repo).await?;
+
     let blockchain_service = NFTsService::new(
         blockchain,
         key_repo,

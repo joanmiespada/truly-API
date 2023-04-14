@@ -25,7 +25,6 @@ pub struct EnvironmentVariables {
     contract_id: u16,
 
     kms_key_id: Option<String>,
-    blockchain_confirmations: Option<usize>,
     queue_mint_async: Option<String>,
     topic_arn_mint_async: Option<String>,
     dead_letter_queue_mint: Option<String>,

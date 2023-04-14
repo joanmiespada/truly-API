@@ -1,4 +1,3 @@
-use alldeps::non_terraformed_dependencies;
 use aws_sdk_dynamodb::error::ResourceNotFoundException;
 use lib_async_ops::sns::create as create_topic;
 use lib_async_ops::sqs::create as create_queue;
@@ -6,7 +5,7 @@ use lib_config::config::Config;
 use lib_config::infra::{
     create_key, create_secret_manager_keys, create_secret_manager_secret_key, store_secret_key,
 };
-use lib_licenses::repositories::{schema_asset, schema_block_tx, schema_keypairs, schema_owners};
+use lib_licenses::repositories::{schema_asset, schema_block_tx, schema_keypairs, schema_owners, schema_blockchain, schema_contract};
 use lib_licenses::services::contract::deploy_contract_locally;
 use lib_users::models::user::User;
 use lib_users::repositories::schema_user;
@@ -16,7 +15,6 @@ use serde::{Deserialize, Serialize};
 use std::{env, process};
 use structopt::StructOpt;
 
-mod alldeps;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct NewUser {
@@ -99,14 +97,36 @@ async fn command(
                         return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
                     }
                 }
+                "blockchains" => {
+                    if create {
+                        schema_blockchain::create_schema_blockchains(&client).await?;
+                    } else if delete {
+                        schema_blockchain::delete_schema_blockchains(&client).await?;
+                    } else {
+                        return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
+                    }
+                }
+                "contracts" => {
+                    if create {
+                        schema_contract::create_schema_contracts(&client).await?;
+                    } else if delete {
+                        schema_contract::delete_schema_contracts(&client).await?;
+                    } else {
+                        return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
+                    }
+                }
                 "all" =>{
                     if create {
+                        schema_blockchain::create_schema_blockchains(&client).await?;
+                        schema_contract::create_schema_contracts(&client).await?;
                         schema_owners::create_schema_owners(&client).await?;
                         schema_asset::create_schema_assets_all(&client).await?;
                         schema_keypairs::create_schema_keypairs(&client).await?;
                         schema_block_tx::create_schema_transactions(&client).await?;
                         schema_user::create_schema_users(&client).await?;
                     } else if delete{
+                        schema_blockchain::delete_schema_blockchains(&client).await?;
+                        schema_contract::delete_schema_contracts(&client).await?;
                         schema_owners::delete_schema_owners(&client).await?;
                         schema_asset::delete_schema_assets_all(&client).await?;
                         schema_keypairs::delete_schema_keypairs(&client).await?;
@@ -234,12 +254,7 @@ async fn command(
             println!("contract address deployed at: {}", address);
         }
     }
-    match all {
-        None => {}
-        Some(_) => {
-            non_terraformed_dependencies(environment, &config).await?;
-        }
-    }
+    
     match async_jobs {
         None => {}
         Some(keys_ok) => {

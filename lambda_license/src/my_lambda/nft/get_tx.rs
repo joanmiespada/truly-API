@@ -30,7 +30,7 @@ pub async fn get_tx(
                 );
             }
         }
-        Ok(tx) => tx.result().clone().unwrap(),
+        Ok(tx) => format!("{}", tx),
     };
 
     return build_resp(transaction, StatusCode::OK);

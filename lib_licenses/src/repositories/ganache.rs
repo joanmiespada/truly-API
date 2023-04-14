@@ -1,9 +1,7 @@
 use async_trait::async_trait;
-use aws_config::SdkConfig;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use lib_config::{
-    config::Config, environment::DEV_ENV, infra::restore_secret_key,
-    secrets::SECRETS_MANAGER_SECRET_KEY,
+    config::Config, environment::DEV_ENV, infra::restore_secret_key
 };
 use log::debug;
 use mac_address::get_mac_address;

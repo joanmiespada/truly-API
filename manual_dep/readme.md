@@ -15,33 +15,28 @@ cargo build -p manual_dep
 In local dev environment (docker localstack)
 
 ```bash
-ENVIRONMENT=development cargo run -p manual_dep -- --table owners --create
-ENVIRONMENT=development cargo run -p manual_dep -- --table assets --create
-ENVIRONMENT=development cargo run -p manual_dep -- --table keypairs --create
-ENVIRONMENT=development cargo run -p manual_dep -- --table transactions --create
-ENVIRONMENT=development cargo run -p manual_dep -- --table users --create
+ENVIRONMENT=development cargo run -p manual_dep -- --table all --create
 ```
 
 In stage environment (eu-west-1)
 
 ```bash
-ENVIRONMENT=stage cargo run -p manual_dep -- --table owners --create
-ENVIRONMENT=stage cargo run -p manual_dep -- --table assets --create
-ENVIRONMENT=stage cargo run -p manual_dep -- --table keypairs --create
-ENVIRONMENT=stage cargo run -p manual_dep -- --table transactions --create
-ENVIRONMENT=stage cargo run -p manual_dep -- --table users --create
-or 
 ENVIRONMENT=stage cargo run -p manual_dep -- --table all --create
 ```
 
 In stage *production* (eu-central-1)
 
 ```bash
-ENVIRONMENT=production cargo run -p manual_dep -- --table owners --create
-ENVIRONMENT=production cargo run -p manual_dep -- --table assets --create
-ENVIRONMENT=production cargo run -p manual_dep -- --table keypairs --create
-ENVIRONMENT=production cargo run -p manual_dep -- --table transactions --create
-ENVIRONMENT=production cargo run -p manual_dep -- --table users --create
+ENVIRONMENT=production cargo run -p manual_dep -- --table all --create
+```
+
+## Create Blockchain and Contract datasets
+
+In local dev environment (docker localstack)
+
+```bash
+ENVIRONMENT=development cargo run -p manual_dep -- --blockchain  --create
+ENVIRONMENT=development cargo run -p manual_dep -- --contract  --create
 ```
 
 ## Create Secrets
