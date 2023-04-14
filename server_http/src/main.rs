@@ -7,20 +7,20 @@ use handlers::appstate::AppState;
 use handlers::{asset_hd, auth_middleware, jwt_middleware, login_hd, nft_hd, user_my_hd, users_hd};
 use lib_config::config::Config;
 use lib_licenses::repositories::assets::AssetRepo;
-use lib_licenses::repositories::block_tx::BlockchainTxRepo;
-use lib_licenses::repositories::blockchain::BlockchainRepo;
-use lib_licenses::repositories::contract::ContractRepo;
-use lib_licenses::repositories::keypairs::KeyPairRepo;
+use lib_blockchain::repositories::block_tx::BlockchainTxRepo;
+use lib_blockchain::repositories::blockchain::BlockchainRepo;
+use lib_blockchain::repositories::contract::ContractRepo;
+use lib_blockchain::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::AssetService;
-use lib_licenses::services::block_tx::BlockchainTxService;
+use lib_blockchain::services::block_tx::BlockchainTxService;
 use lib_licenses::services::owners::OwnerService;
 use log::debug;
 use tracing_actix_web::TracingLogger;
 
-use lib_licenses::repositories::ganache::GanacheRepo;
-use lib_licenses::services::nfts::NFTsService;
+use lib_blockchain::repositories::ganache::GanacheRepo;
+use lib_blockchain::services::nfts::NFTsService;
 
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;

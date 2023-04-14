@@ -1,7 +1,7 @@
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
-use lib_licenses::errors::block_tx::{BlockchainTxError, BlockchainTxNoExistsError};
-use lib_licenses::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
+use lib_blockchain::errors::block_tx::{BlockchainTxError, BlockchainTxNoExistsError};
+use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
 use serde_json::json;
 use uuid::Uuid;
 

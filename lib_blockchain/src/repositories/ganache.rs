@@ -32,7 +32,7 @@ use crate::{
 const CONTRACT_METHOD_MINTING: &'static str = "mint";
 const CONTRACT_METHOD_GET_CONTENT_BY_TOKEN: &'static str = "getContentByToken";
 
-use crate::errors::asset::AssetBlockachainError;
+use lib_licenses::errors::asset::AssetBlockachainError;
 
 use super::{
     blockchain::{BlockchainRepo, BlockchainRepository},

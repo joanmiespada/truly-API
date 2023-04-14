@@ -1,17 +1,18 @@
 use chrono::{DateTime, Utc};
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
+use lib_blockchain::models::block_tx::BlockchainTx;
 use lib_config::config::Config;
-use lib_licenses::errors::block_tx::{BlockchainTxError, BlockchainTxNoExistsError};
+use lib_blockchain::errors::block_tx::{BlockchainTxError, BlockchainTxNoExistsError};
 use lib_licenses::models::asset::{AssetStatus, MintingStatus, VideoLicensingStatus};
 use lib_licenses::services::owners::OwnerService;
 use lib_licenses::{
     errors::asset::{AssetDynamoDBError, AssetNoExistsError},
-    models::{asset::Asset, block_tx::BlockchainTx},
+    models::asset::Asset,
     services::{
         assets::{AssetManipulation, AssetService},
-        block_tx::{BlockchainTxManipulation, BlockchainTxService},
     },
 };
+use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tracing::instrument;

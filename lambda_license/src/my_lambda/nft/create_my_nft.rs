@@ -3,7 +3,7 @@ use lambda_http::RequestExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
 use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError, AssetBlockachainError};
-use lib_licenses::errors::nft::NftUserAddressMalformedError;
+use lib_blockchain::errors::nft::NftUserAddressMalformedError;
 use lib_licenses::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
@@ -11,7 +11,7 @@ use lib_users::services::users::UsersService;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::{Validate};
-use lib_licenses::services::nfts::{NFTsService, NFTsManipulation };
+use lib_blockchain::services::nfts::{NFTsService, NFTsManipulation };
 
 use crate::my_lambda::build_resp;
 

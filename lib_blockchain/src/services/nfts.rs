@@ -9,13 +9,13 @@ use uuid::Uuid;
 use crate::errors::nft::{
     TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError,
 };
-use crate::errors::video::VideoNotYetLicensed;
-use crate::models::asset::{Asset, MintingStatus, VideoLicensingStatus};
+use lib_licenses::errors::video::VideoNotYetLicensed;
+use lib_licenses::models::asset::{Asset, MintingStatus, VideoLicensingStatus};
 use crate::models::block_tx::BlockchainTx;
 use crate::repositories::ganache::{GanacheRepo, NFTsRepository};
 use crate::repositories::keypairs::{KeyPairRepo, KeyPairRepository};
-use crate::services::assets::{AssetManipulation, AssetService};
-use crate::services::owners::{OwnerManipulation, OwnerService};
+use lib_licenses::services::assets::{AssetManipulation, AssetService};
+use lib_licenses::services::owners::{OwnerManipulation, OwnerService};
 
 use super::block_tx::{BlockchainTxManipulation, BlockchainTxService};
 

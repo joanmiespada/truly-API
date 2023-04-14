@@ -1,14 +1,19 @@
-
 // https://blog.logrocket.com/deploy-lambda-functions-rust/
 
-use lambda_runtime::{run, service_fn, Error };
+use lambda_runtime::{run, service_fn, Error};
 
+use lib_blockchain::{repositories::{block_tx::BlockchainTxRepo, keypairs::KeyPairRepo, blockchain::BlockchainRepo, contract::ContractRepo, ganache::GanacheRepo}, services::{block_tx::BlockchainTxService, nfts::NFTsService}};
 use lib_config::config::Config;
-use lib_licenses::{repositories::{assets::AssetRepo, owners::OwnerRepo, keypairs::KeyPairRepo, ganache::GanacheRepo, block_tx::BlockchainTxRepo, shorter::ShorterRepo, blockchain::BlockchainRepo, contract::ContractRepo}, services::{owners::OwnerService, assets::AssetService, nfts::NFTsService, block_tx::BlockchainTxService}};
-use my_lambda::{ function_handler};
+use lib_licenses::{
+    repositories::{assets::AssetRepo, owners::OwnerRepo, shorter::ShorterRepo},
+    services::{
+        assets::AssetService,
+        owners::OwnerService,
+    },
+};
+use my_lambda::function_handler;
 
 mod my_lambda;
-
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -31,9 +36,9 @@ async fn main() -> Result<(), Error> {
     let owners_repo = OwnerRepo::new(&config);
     let owners_service = OwnerService::new(owners_repo);
 
-    let key_repo= KeyPairRepo::new(&config);
-    let blockchains_repo =BlockchainRepo::new(&config);
-    let contracts_repo= ContractRepo::new(&config);
+    let key_repo = KeyPairRepo::new(&config);
+    let blockchains_repo = BlockchainRepo::new(&config);
+    let contracts_repo = ContractRepo::new(&config);
     let blockchain = GanacheRepo::new(&config, &contracts_repo, &blockchains_repo).await?;
     let blockchain_service = NFTsService::new(
         blockchain,
@@ -41,7 +46,10 @@ async fn main() -> Result<(), Error> {
         asset_service.to_owned(),
         owners_service.to_owned(),
         tx_service.to_owned(),
-        config.to_owned()
+        config.to_owned(),
     );
-    run(service_fn(|e| {  function_handler(e,&config,&blockchain_service, &asset_service) })).await
+    run(service_fn(|e| {
+        function_handler(e, &config, &blockchain_service, &asset_service)
+    }))
+    .await
 }

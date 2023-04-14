@@ -4,8 +4,9 @@ use std::str::FromStr;
 
 use aws_lambda_events::sqs::SqsEventObj;
 use lambda_runtime::LambdaEvent;
+use lib_blockchain::services::nfts::{NFTsService, CreateNFTAsync};
 use lib_config::config::Config;
-use lib_licenses::services::{nfts::{CreateNFTAsync, NFTsService}, assets::AssetService};
+use lib_licenses::services::assets::AssetService;
 use serde_json::{Error,Value};
 use tracing::{instrument, error, info};
 

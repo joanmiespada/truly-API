@@ -5,7 +5,7 @@ use lib_async_ops::sns::{send as send_sns, SNSMessage};
 use lib_config::config::Config;
 use lib_licenses::models::asset::MintingStatus;
 use lib_licenses::services::assets::{AssetService, AssetManipulation};
-use lib_licenses::services::nfts::{CreateNFTAsync, NFTsManipulation, NFTsService};
+use lib_blockchain::services::nfts::{CreateNFTAsync, NFTsManipulation, NFTsService};
 use lib_licenses::services::owners::OwnerService;
 use lib_users::services::users::UsersService;
 use validator::Validate;

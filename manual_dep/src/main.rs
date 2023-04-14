@@ -5,8 +5,9 @@ use lib_config::config::Config;
 use lib_config::infra::{
     create_key, create_secret_manager_keys, create_secret_manager_secret_key, store_secret_key,
 };
-use lib_licenses::repositories::{schema_asset, schema_block_tx, schema_keypairs, schema_owners, schema_blockchain, schema_contract};
-use lib_licenses::services::contract::deploy_contract_locally;
+use lib_licenses::repositories::{schema_asset, schema_owners};
+use lib_blockchain::repositories::{schema_block_tx, schema_keypairs, schema_blockchain, schema_contract};
+use lib_blockchain::services::contract::deploy_contract_locally;
 use lib_users::models::user::User;
 use lib_users::repositories::schema_user;
 use lib_users::repositories::users::UsersRepo;

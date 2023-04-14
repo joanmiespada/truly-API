@@ -13,6 +13,7 @@ lib_users = { path = "../lib_users" }
 lib_licenses = { path = "../lib_licenses" }
 lib_util_jwt = { path = "../lib_util_jwt" }
 lib_async_ops = { path = "../lib_async_ops" }
+lib_blockchain = { path = "../lib_blockchain"}
 chrono = {version="0.4.23", features = ["serde"] }
 tower-http = { version="0.3.5", features=["full"]  }
 lambda_http = { version = "0.7", features = ["apigw_rest"]}

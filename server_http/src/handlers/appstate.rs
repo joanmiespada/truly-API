@@ -2,7 +2,7 @@ use lib_users::services::users::UsersService;
 use lib_licenses::services::assets::AssetService;
 use lib_config::config::Config;
 use lib_licenses::services::owners::OwnerService;
-use lib_licenses::services::nfts::NFTsService;
+use lib_blockchain::services::nfts::NFTsService;
 
 pub struct AppState {
     pub user_service: UsersService,

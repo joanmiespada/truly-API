@@ -1,10 +1,10 @@
 use lib_async_ops::sns::{send as send_sns, SNSMessage};
+use lib_blockchain::services::nfts::{CreateNFTAsync, NFTsService, NFTsManipulation};
 use lib_config::config::Config;
 use lib_licenses::{
     models::asset::MintingStatus,
     services::{
         assets::{AssetManipulation, AssetService},
-        nfts::{CreateNFTAsync, NFTsManipulation, NFTsService},
     },
 };
 use tracing::{error, info, instrument};

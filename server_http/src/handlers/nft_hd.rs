@@ -1,9 +1,9 @@
 use crate::handlers::appstate::AppState;
 use actix_web:: {http::StatusCode, web ,Responder, HttpRequest };
+use lib_blockchain::services::nfts::NFTsManipulation;
 use lib_licenses::errors::asset::{AssetBlockachainError, AssetDynamoDBError, AssetNoExistsError};
-use lib_licenses::errors::nft::NftUserAddressMalformedError;
+use lib_blockchain::errors::nft::NftUserAddressMalformedError;
 use lib_licenses::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
-use lib_licenses::services::nfts::NFTsManipulation;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use crate::handlers::build_resp;

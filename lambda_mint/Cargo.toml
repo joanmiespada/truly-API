@@ -13,6 +13,7 @@ path="src/main.rs"
 lib_config = { path = "../lib_config" }
 lib_licenses = { path = "../lib_licenses" }
 lib_async_ops = { path = "../lib_async_ops" }
+lib_blockchain = { path = "../lib_blockchain"}
 tower-http = { version="0.3.5", features=["full"]  }
 lambda_http = { version = "0.7", features = ["apigw_rest"]}
 lambda_runtime = "0.7"

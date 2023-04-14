@@ -12,7 +12,7 @@ lib_users = { path = "../lib_users" }
 lib_config = { path = "../lib_config" }
 lib_util_jwt = { path = "../lib_util_jwt" }
 lib_licenses = {path = "../lib_licenses"}
-
+lib_blockchain = { path = "../lib_blockchain"}
 
 actix-web = "4.3.0"
 actix-rt = "2.8.0"

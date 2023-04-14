@@ -1,29 +1,45 @@
 [package]
-name="manual_dep"
+name="lib_blockchain"
 version="0.0.1"
 edition = "2021"
+autotests = false
+
+[lib]
+name="lib_blockchain"
+crate-type=["lib"]
+
+[[test]]
+name="integration"
+path="tests/lib.rs"
 
 
 [dependencies]
 lib_config = { path = "../lib_config" }
-lib_licenses = { path = "../lib_licenses" }
-lib_users = { path = "../lib_users" }
-lib_async_ops = { path = "../lib_async_ops"}
-lib_blockchain = { path = "../lib_blockchain"}
-env_logger = "0.10.0"
+lib_async_ops = {path = "../lib_async_ops"}
+lib_licenses = {path = "../lib_licenses"}
+log = "0.4.17"
 chrono = {version="0.4.23", features = ["serde"] }
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.91"
+rust-argon2 = "1.0.0"
 aws-config = "0.54.1"
 aws-sdk-dynamodb = "0.24.0"
-aws-sdk-secretsmanager = "0.24.0"
-aws-sdk-kms = "0.24.0"
 async-trait = "0.1.63"
+tracing = { version = "0.1", features = ["log"] }
 validator = { version = "0.16", features = ["derive"] }
-tokio = { version = "1", features = ["full"] }
-structopt = "0.3.26"
-uuid = { version = "1.2.2", features=["v4","fast-rng","macro-diagnostics","serde"]}
+http = "0.2.8"
+http-serde = "1.1.2"
 url = {version="2.3.1", features=["serde"] }
+hex = "0.4.3"
+web3 = {version="0.18.0", default-features = false, features=["http-rustls-tls","signing" ]}
+rs-snowflake = "0.6.0"
+mac_address = "1.1.4"
+secp256k1 = { version = "0.21", features = ["rand"] }
+rand = "0.8.5"
+aws-sdk-kms = "0.24.0"
+aws-sdk-secretsmanager = "0.24.0"
+base64 = "0.21.0"
+uuid = { version = "1.2.2", features=["v4","fast-rng","macro-diagnostics","serde"]}
 
 [dev-dependencies]
 env_logger = "0.10.0"
@@ -36,5 +52,4 @@ lib_config = { path = "../lib_config" }
 ethers = "1.0.2"
 base64 = "0.21.0"
 ethers-solc = "1.0.2"
-
 

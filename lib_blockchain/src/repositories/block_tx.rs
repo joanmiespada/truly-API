@@ -8,13 +8,13 @@ use chrono::{
     Local,
 };
 use lib_config::config::Config;
+use lib_licenses::errors::asset::AssetNoExistsError;
 use std::{collections::HashMap, str::FromStr};
 use uuid::Uuid;
 use web3::types::{H256, H160, U64, U256};
 
 use crate::{
     errors::{
-        asset::AssetNoExistsError,
         block_tx::{BlockchainTxError, BlockchainTxNoExistsError},
     },
     models::block_tx::BlockchainTx,
