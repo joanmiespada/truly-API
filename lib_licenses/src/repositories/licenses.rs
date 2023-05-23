@@ -4,7 +4,7 @@ use std::str::FromStr;
 use aws_sdk_dynamodb::types::Select;
 use uuid::Uuid;
 
-use crate::errors::license::{LicenseCreationError, LicenseNotFoundError};
+use crate::errors::license::{LicenseCreationError, LicenseNotFoundError, LicenseDynamoDBError};
 use crate::models::license::{License, LicenseStatus, Royalty};
 use async_trait::async_trait;
 use aws_sdk_dynamodb::{types::AttributeValue, Client};
@@ -14,6 +14,7 @@ use chrono::{
 };
 use lib_config::config::Config;
 
+use super::schema_asset::ASSETS_TABLE_NAME;
 use super::schema_licenses::{
     LICENSES_ASSET_ID_INDEX, LICENSES_TABLE_NAME, LICENSE_ASSET_ID_FIELD_PK, LICENSE_ID_FIELD_PK,
 };
@@ -34,8 +35,9 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 #[async_trait]
 pub trait LicenseRepository {
     async fn create(&self, license: &mut License) -> ResultE<()>;
-    async fn get_by_id(&self, id: &Uuid) -> ResultE<License>;
+    async fn get_by_id(&self, id: &Uuid) -> ResultE<Option<License>>;
     async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<License>>;
+    async fn get_all(&self, _page_number: u32, _page_size: u32) -> ResultE<Vec<License>>;
     async fn update(&self, license: &License) -> ResultE<()>;
     async fn delete(&self, id: &Uuid) -> ResultE<()>;
 }
@@ -134,7 +136,7 @@ impl LicenseRepository for LicenseRepo {
         }
     }
 
-    async fn get_by_id(&self, id: &Uuid) -> ResultE<License> {
+    async fn get_by_id(&self, id: &Uuid) -> ResultE<Option<License>> {
         let id_av = AttributeValue::S(id.to_string());
 
         let mut filter = "".to_string();
@@ -146,10 +148,10 @@ impl LicenseRepository for LicenseRepo {
             .await?;
 
         if res.is_empty() {
-            Err(LicenseNotFoundError("License not found".to_string()).into())
+            Ok(None)
         } else {
             let license = res.into_iter().next().unwrap();
-            Ok(license)
+            Ok(Some(license))
         }
     }
 
@@ -171,6 +173,43 @@ impl LicenseRepository for LicenseRepo {
 
         Ok(res)
     }
+
+    async fn get_all(&self, _page_number: u32, _page_size: u32) -> ResultE<Vec<License>> {
+        let mut queried = Vec::new();
+
+        let results = self
+            .client
+            .scan()
+            .table_name(ASSETS_TABLE_NAME)
+            .send()
+            .await;
+
+        match results {
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(LicenseDynamoDBError(e.to_string()).into());
+            }
+            Ok(result) => {
+                if let Some(docs) = result.items {
+                    for doc in docs {
+                        let mut lic = License::new();
+
+                        mapping_from_doc_to_license(&doc, &mut lic);
+
+                        queried.push(lic.clone());
+                    }
+                }
+            }
+        }
+
+        Ok(queried)
+    }
+
 
     async fn update(&self, license: &License) -> ResultE<()> {
         let last_update_time_av = AttributeValue::S(iso8601(*license.last_update_time()));
