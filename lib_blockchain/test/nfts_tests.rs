@@ -104,8 +104,10 @@ async fn create_simple_contract_test() -> web3::Result<()> {
     let mut config = Config::new();
     config.setup().await;
 
-    let ganache = Ganache::new().mnemonic(MNEMONIC_TEST).spawn();
+    let ganache_params = vec!["-l 10000000".to_string()];
+    let ganache = Ganache::new().mnemonic(MNEMONIC_TEST).args(ganache_params) .spawn();
     let url = ganache.endpoint();
+    
 
     let transport = web3::transports::Http::new(url.as_str())?;
     let web3 = web3::Web3::new(transport);
@@ -125,7 +127,7 @@ async fn create_simple_contract_test() -> web3::Result<()> {
         .options(Options::with(|opt| {
             //    opt.value       = Some(U256::from_str("1").unwrap()); //Some(0.into());
             //opt.gas_price   = Some(U256::from_str("2000000000").unwrap());
-            opt.gas = Some(U256::from_str("1000000").unwrap());
+            opt.gas = Some(U256::from_str("500000").unwrap());
         }))
         .execute(bytecode, (), contract_owner)
         .await;

@@ -144,7 +144,8 @@ async fn create_contract_and_mint_nft_test_sync(
 
     //Create contract owner account
 
-    let ganache = Ganache::new().mnemonic(MNEMONIC_TEST).spawn();
+    let ganache_params = vec!["-l 100000000".to_string()];
+    let ganache = Ganache::new().mnemonic(MNEMONIC_TEST).args(ganache_params).spawn();
 
     //Ethers
     // let aux_wallet: LocalWallet = ganache.keys()[0].clone().into();

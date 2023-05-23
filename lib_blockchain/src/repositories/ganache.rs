@@ -328,7 +328,7 @@ impl NFTsRepository for GanacheRepo {
             tx.block_number,
             tx.gas_used,
             tx.effective_gas_price,
-            Some(wei_to_gwei(tx.gas_used.unwrap()) * wei_to_gwei(tx.effective_gas_price.unwrap())),
+            Some(wei_to_gwei(tx.gas_used.unwrap()) * wei_to_gwei(tx.effective_gas_price.unwrap_or_default())),
             Some("gweis".to_string()),
             Some(tx.from),
             tx.to,
@@ -404,7 +404,7 @@ pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
             latest_block.transactions.len(),
             latest_block.gas_used,
             latest_block.gas_limit,
-            latest_block.base_fee_per_gas.unwrap(),
+            latest_block.base_fee_per_gas.unwrap_or_default(),
             latest_block.difficulty,
             latest_block.total_difficulty.unwrap()
         );
