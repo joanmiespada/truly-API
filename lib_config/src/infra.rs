@@ -1,7 +1,7 @@
 use aws_config::meta::region::RegionProviderChain;
 use aws_config::SdkConfig;
-use aws_sdk_dynamodb::{types::Blob, Credentials};
-use aws_sdk_kms::model::KeyUsageType;
+use aws_sdk_dynamodb::{primitives::Blob, config::Credentials};
+use aws_sdk_kms::types::KeyUsageType;
 use base64::{engine::general_purpose, Engine as _};
 
 use crate::{
@@ -21,7 +21,7 @@ pub async fn create_secret_manager_keys(
         .name(SECRETS_MANAGER_APP_KEYS.to_string())
         .secret_string(secrets_json)
         .tags(
-            aws_sdk_secretsmanager::model::Tag::builder()
+            aws_sdk_secretsmanager::types::Tag::builder()
                 .key(TAG_PROJECT.to_owned())
                 .value(TAG_VALUE.to_owned())
                 .build(),
@@ -40,7 +40,7 @@ pub async fn create_secret_manager_secret_key(
         .name(SECRETS_MANAGER_SECRET_KEY.to_string())
         .secret_string("--")
         .tags(
-            aws_sdk_secretsmanager::model::Tag::builder()
+            aws_sdk_secretsmanager::types::Tag::builder()
                 .key(TAG_PROJECT.to_owned())
                 .value(TAG_VALUE.to_owned())
                 .build(),
@@ -61,7 +61,7 @@ pub async fn create_key(
         .description("key used to encryp private key for contract owner")
         .key_usage(KeyUsageType::EncryptDecrypt)
         .tags(
-            aws_sdk_kms::model::Tag::builder() 
+            aws_sdk_kms::types::Tag::builder() 
                 .tag_key(TAG_PROJECT.to_owned())
                 .tag_value(TAG_VALUE.to_owned())
                 .build(),
@@ -116,17 +116,6 @@ pub async fn store_secret_key(
 
     let value = general_purpose::STANDARD.encode(bytes);
 
-/* 
-    let client2 = aws_sdk_secretsmanager::Client::new(aws);
-
-    client2
-        .put_secret_value()
-        .secret_id(SECRETS_MANAGER_SECRET_KEY)
-        .secret_string(value)
-        .send()
-        .await?;
-*/
-
     Ok(value)
 }
 
@@ -136,23 +125,14 @@ pub async fn restore_secret_key(
     config: &Config,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let aws = config.aws_config();
-/* 
-    let client = aws_sdk_secretsmanager::Client::new(&aws);
-    let scr = client
-        .get_secret_value()
-        .secret_id(SECRETS_MANAGER_SECRET_KEY)
-        .send()
-        .await?;
 
-    let secret_key_cyphered = scr.secret_string().unwrap();
-*/
     let value = general_purpose::STANDARD
         .decode(info_to_be_decyphered)
         .unwrap();
 
     let client2 = aws_sdk_kms::Client::new(&aws);
 
-    let data = aws_sdk_kms::types::Blob::new(value);
+    let data = aws_sdk_kms::primitives::Blob::new(value);
 
     let resp;
     let resp_op = client2

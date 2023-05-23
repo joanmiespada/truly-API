@@ -1,8 +1,8 @@
-use lambda_http::RequestExt;
 use lambda_http::{
       http::StatusCode, lambda_runtime::Context,
        Request,  Response,
 };
+use lambda_http::RequestPayloadExt;
 use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError};
 use lib_users::services::users::{UsersService, UserManipulation};
 use tracing::{instrument};

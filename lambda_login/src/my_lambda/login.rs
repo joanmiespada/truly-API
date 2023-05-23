@@ -1,8 +1,9 @@
 
 use lambda_http::{
       http::StatusCode, lambda_runtime::Context,
-      Request, RequestExt, Response,
+      Request, Response,
 };
+use lambda_http::RequestPayloadExt;
 use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError, UserStatusError};
 use lib_users::services::login::LoginOps;
 use lib_util_jwt::create_jwt;

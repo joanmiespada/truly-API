@@ -1,7 +1,8 @@
 use std::{collections::HashMap, str::FromStr};
 
+use aws_sdk_dynamodb::types::builders::PutBuilder;
 use async_trait::async_trait;
-use aws_sdk_dynamodb::model::{AttributeValue, Put, Select, TransactWriteItem};
+use aws_sdk_dynamodb::types::{AttributeValue, Put, Select, TransactWriteItem};
 use chrono::{
     prelude::{DateTime, Utc},
     Local,
@@ -46,7 +47,7 @@ impl ContractRepo {
             client: aws_sdk_dynamodb::Client::new(conf.aws_config()),
         }
     }
-    fn new_or_update(&self, contract: &Contract) -> ResultE<aws_sdk_dynamodb::model::put::Builder> {
+    fn new_or_update(&self, contract: &Contract) -> ResultE<PutBuilder> {
         let id_av = AttributeValue::N(contract.id().to_string());
         let blockchain_av = AttributeValue::S(contract.blockchain().to_string());
         let address_av = AttributeValue::S(format!("{:?}", contract.address().unwrap()));

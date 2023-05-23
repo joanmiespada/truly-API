@@ -1,4 +1,4 @@
-use lambda_http::RequestExt;
+use lambda_http::RequestPayloadExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
 use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError};

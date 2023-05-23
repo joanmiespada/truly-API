@@ -1,5 +1,5 @@
 use aws_sdk_dynamodb::{
-    model::{
+    types::{
         AttributeDefinition, BillingMode, GlobalSecondaryIndex, KeySchemaElement, KeyType,
         Projection, ProjectionType, ScalarAttributeType,
     },

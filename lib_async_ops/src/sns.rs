@@ -1,5 +1,5 @@
 
-use aws_sdk_sns::model::Topic;
+use aws_sdk_sns::types::Topic;
 use tracing::log::info;
 
 use crate::errors::AsyncOpError;
@@ -95,7 +95,7 @@ pub async fn create(config: &lib_config::config::Config, name: String) -> Result
         .create_topic()
         .name(name)
         .tags(
-            aws_sdk_sns::model::Tag::builder()
+            aws_sdk_sns::types::Tag::builder()
                 .key("project".to_owned())
                 .value("truly".to_owned())
                 .build(),

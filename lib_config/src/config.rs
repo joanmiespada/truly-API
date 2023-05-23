@@ -67,13 +67,7 @@ impl Config {
         let env = self.env_variables.as_ref().unwrap();
         let config: SdkConfig;
         if env.environment() == DEV_ENV {
-            //let uri = Uri::from_str(env.aws_endpoint()).unwrap();
-            //let endpoint_resolver = aws_sdk_dynamodb::Endpoint::immutable_uri(uri);
-            let region_provider = aws_sdk_dynamodb::Region::new(env.aws_region().clone());
-            /*
-            RegionProviderChain::first_try(env::var("local").ok().map(Region::new))
-                .or_default_provider()
-                .or_else(Region::new("us-east-1")); */
+            let region_provider = RegionProviderChain::first_try(Region::new( env.aws_region().to_owned() ));
             let creden = aws_config::profile::ProfileFileCredentialsProvider::builder()
                 .profile_name("localstack");
             config = aws_config::from_env()
@@ -88,7 +82,6 @@ impl Config {
             config = aws_config::from_env().region(region_provider).load().await;
         } else if env.environment() == STAGE_ENV {
             let region_provider = RegionProviderChain::first_try(Region::new( env.aws_region().to_owned() ));
-            //let region_provider = RegionProviderChain::first_try(provider) default_provider().or_else("eu-west-1");
             config = aws_config::from_env().region(region_provider).load().await;
         } else {
             panic!(

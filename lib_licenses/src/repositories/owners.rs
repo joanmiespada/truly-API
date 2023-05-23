@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use aws_sdk_dynamodb::model::Select;
+use aws_sdk_dynamodb::types::Select;
 use uuid::Uuid;
 
 use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
 use crate::models::owner::Owner;
 use async_trait::async_trait;
-use aws_sdk_dynamodb::{model::AttributeValue, Client};
+use aws_sdk_dynamodb::{types::AttributeValue, Client};
 use chrono::{
     prelude::{DateTime, Utc},
     Local,

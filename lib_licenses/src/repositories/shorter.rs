@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use async_trait::async_trait;
-use aws_sdk_dynamodb::{model::{AttributeValue, Put, TransactWriteItem}, Client};
+use aws_sdk_dynamodb::{types::{AttributeValue, Put, TransactWriteItem}, Client};
 use chrono::Local;
 use lib_config::config::Config;
 use uuid::Uuid;

@@ -12,7 +12,7 @@ use crate::models::asset::{Asset, AssetStatus, MintingStatus, VideoLicensingStat
 use crate::models::owner::Owner;
 use crate::models::video::VideoProcessStatus;
 use async_trait::async_trait;
-use aws_sdk_dynamodb::model::{AttributeValue, Put, Select, TransactWriteItem};
+use aws_sdk_dynamodb::types::{AttributeValue, Put, Select, TransactWriteItem};
 use aws_sdk_dynamodb::Client;
 use chrono::{
     prelude::{DateTime, Utc},
@@ -107,7 +107,7 @@ impl AssetRepo {
         }
     }
 
-    fn new_or_update(&self, asset: &Asset) -> ResultE<aws_sdk_dynamodb::model::put::Builder> {
+    fn new_or_update(&self, asset: &Asset) -> ResultE<aws_sdk_dynamodb::types::builders::PutBuilder> {
         let asset_id_av = AttributeValue::S(asset.id().to_string());
         let url_av = AttributeValue::S(asset.url().clone().unwrap().to_string());
         let creation_time_av = AttributeValue::S(iso8601(asset.creation_time()));
@@ -846,16 +846,5 @@ let source_details = doc.get(SOURCE_DETAILS_FIELD_NAME   );
             }
         }
     }
-    /*let _x_ = doc.get(   );
-    match _x_ {
-        None => asset.set_(&None),
-        Some(lati) => {
-            let val = lati.as_s().unwrap();
-            if val == NULLABLE {
-                asset.set_(&None)
-            } else {
-                asset.set_(&Some(val.clone()))
-            }
-        }
-    }*/
+    
 }

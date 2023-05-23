@@ -1,6 +1,6 @@
 
 
-use aws_sdk_dynamodb::{model::{
+use aws_sdk_dynamodb::{types::{
     AttributeDefinition, KeySchemaElement, KeyType, ScalarAttributeType, BillingMode, ProjectionType, Projection, GlobalSecondaryIndex
 },  Error};
 

@@ -1,7 +1,7 @@
 use std::{collections::HashMap, str::FromStr};
-
+use aws_sdk_dynamodb::types::builders::PutBuilder;
 use async_trait::async_trait;
-use aws_sdk_dynamodb::model::{AttributeValue, Put, TransactWriteItem};
+use aws_sdk_dynamodb::types::{AttributeValue, Put, TransactWriteItem};
 use chrono::Local;
 use lib_config::config::Config;
 use url::Url;
@@ -43,7 +43,7 @@ impl BlockchainRepo {
     fn new_or_update(
         &self,
         blockchain: &Blockchain,
-    ) -> ResultE<aws_sdk_dynamodb::model::put::Builder> {
+    ) -> ResultE<PutBuilder> {
         let id_av = AttributeValue::S(blockchain.id().to_string());
 
         let url_av = AttributeValue::S(blockchain.url().to_string());

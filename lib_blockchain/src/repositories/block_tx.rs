@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use aws_sdk_dynamodb::{
-    model::{AttributeValue, Put, Select, TransactWriteItem},
+    types::{AttributeValue, Put, Select, TransactWriteItem},
     Client,
 };
 use chrono::{

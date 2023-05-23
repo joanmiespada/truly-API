@@ -1,4 +1,4 @@
-use aws_sdk_dynamodb::error::ResourceNotFoundException;
+use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
 use lib_async_ops::sns::create as create_topic;
 use lib_async_ops::sqs::create as create_queue;
 use lib_config::config::Config;

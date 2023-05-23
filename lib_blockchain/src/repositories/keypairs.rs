@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use crate::errors::keypair::{KeyPairDynamoDBError, KeyPairNoExistsError};
 use crate::models::keypair::KeyPair;
 use async_trait::async_trait;
-use aws_sdk_dynamodb::model::AttributeValue;
-use aws_sdk_kms::types::Blob;
+use aws_sdk_dynamodb::types::AttributeValue;
+use aws_sdk_kms::primitives::Blob;
 use chrono::{
     prelude::{DateTime, Utc},
     Local,
@@ -75,7 +75,7 @@ impl KeyPairRepo {
 
         let value = general_purpose::STANDARD.decode( info_encrypted_b64 ).unwrap();
 
-        let data = aws_sdk_kms::types::Blob::new(value);
+        let data = aws_sdk_kms::primitives::Blob::new(value);
 
         let resp = self
             .client_kms
