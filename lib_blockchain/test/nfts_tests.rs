@@ -4,7 +4,7 @@ use ethers::signers::LocalWallet;
 use ethers::utils::Ganache;
 use ethers_solc::Solc;
 use lib_config::config::Config;
-use lib_licenses::repositories::ganache::block_status;
+use lib_blockchain::repositories::ganache::block_status;
 use spectral::{assert_that, result::ResultAssertions};
 use std::time::Duration;
 use std::{env, str::FromStr};

@@ -7,26 +7,26 @@ use lib_config::infra::{
     create_secret_manager_secret_key, store_secret_key,
 };
 use lib_licenses::models::asset::{MintingStatus, SourceType, VideoLicensingStatus};
-use lib_licenses::models::blockchain::Blockchain;
-use lib_licenses::models::contract::{Contract, ContractStatus};
+use lib_blockchain::models::blockchain::Blockchain;
+use lib_blockchain::models::contract::{Contract, ContractStatus};
 use lib_licenses::repositories::assets::AssetRepo;
-use lib_licenses::repositories::block_tx::BlockchainTxRepo;
-use lib_licenses::repositories::blockchain::{BlockchainRepo, BlockchainRepository};
-use lib_licenses::repositories::contract::{ContractRepo, ContractRepository};
-use lib_licenses::repositories::keypairs::KeyPairRepo;
+use lib_blockchain::repositories::block_tx::BlockchainTxRepo;
+use lib_blockchain::repositories::blockchain::{BlockchainRepo, BlockchainRepository};
+use lib_blockchain::repositories::contract::{ContractRepo, ContractRepository};
+use lib_blockchain::repositories::keypairs::KeyPairRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::repositories::schema_asset::create_schema_assets_all;
-use lib_licenses::repositories::schema_block_tx::create_schema_transactions;
-use lib_licenses::repositories::schema_blockchain::create_schema_blockchains;
-use lib_licenses::repositories::schema_contract::create_schema_contracts;
-use lib_licenses::repositories::schema_keypairs::create_schema_keypairs;
+use lib_blockchain::repositories::schema_block_tx::create_schema_transactions;
+use lib_blockchain::repositories::schema_blockchain::create_schema_blockchains;
+use lib_blockchain::repositories::schema_contract::create_schema_contracts;
+use lib_blockchain::repositories::schema_keypairs::create_schema_keypairs;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
 use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
-use lib_licenses::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
-use lib_licenses::services::contract::deploy_contract_locally;
+use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
+use lib_blockchain::services::contract::deploy_contract_locally;
 use lib_licenses::services::owners::OwnerService;
-use lib_licenses::{
+use lib_blockchain::{
     repositories::ganache::GanacheRepo,
     services::nfts::{NFTsManipulation, NFTsService, NTFState},
 };

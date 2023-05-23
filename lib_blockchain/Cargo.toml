@@ -10,7 +10,7 @@ crate-type=["lib"]
 
 [[test]]
 name="integration"
-path="tests/lib.rs"
+path="test/lib.rs"
 
 
 [dependencies]
