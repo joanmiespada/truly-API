@@ -1,10 +1,9 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use url::Url;
 use uuid::Uuid;
 use validator::Validate;
 
-
-//structure to communicate from VideoAPI: sns_topic video in 
+//structure to communicate from VideoAPI: sns_topic video in
 #[derive(Debug, Serialize, Deserialize, Clone, Validate)]
 pub struct CreateShorter {
     pub url_file: Url,
@@ -13,5 +12,5 @@ pub struct CreateShorter {
     pub user_id: String,
     #[validate(length(max = 2000))]
     pub hash: String,
-    pub keep_original: bool
+    pub keep_original: bool,
 }

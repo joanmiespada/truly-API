@@ -38,7 +38,11 @@ pub async fn get_my_asset(
             } else if let Some(m) = e.downcast_ref::<ValidationError>() {
                 return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
             } else {
-                return build_resp_env(config.env_vars().environment(), e, StatusCode::INTERNAL_SERVER_ERROR);
+                return build_resp_env(
+                    config.env_vars().environment(),
+                    e,
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                );
             }
         }
     }
@@ -66,7 +70,11 @@ pub async fn get_my_assets_all(
             } else if let Some(m) = e.downcast_ref::<ValidationError>() {
                 return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
             } else {
-                return build_resp_env(config.env_vars().environment(), e, StatusCode::INTERNAL_SERVER_ERROR);
+                return build_resp_env(
+                    config.env_vars().environment(),
+                    e,
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                );
             }
         }
     }

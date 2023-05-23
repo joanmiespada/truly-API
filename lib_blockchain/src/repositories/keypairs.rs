@@ -56,11 +56,11 @@ impl KeyPairRepo {
             .plaintext(blob)
             .send()
             .await;
-        match resp_op{
-            Err(e)=>{
-                panic!("{}",e)
-            },
-            Ok(value)=>{resp=value}
+        match resp_op {
+            Err(e) => {
+                panic!("{}", e)
+            }
+            Ok(value) => resp = value,
         }
 
         let blob = resp.ciphertext_blob.unwrap();
@@ -70,10 +70,12 @@ impl KeyPairRepo {
 
         Ok(value)
     }
-    async fn _decrypt(&self, info_encrypted_b64: String) -> ResultE<String>{
+    async fn _decrypt(&self, info_encrypted_b64: String) -> ResultE<String> {
         use base64::{engine::general_purpose, Engine as _};
 
-        let value = general_purpose::STANDARD.decode( info_encrypted_b64 ).unwrap();
+        let value = general_purpose::STANDARD
+            .decode(info_encrypted_b64)
+            .unwrap();
 
         let data = aws_sdk_kms::primitives::Blob::new(value);
 
@@ -81,7 +83,7 @@ impl KeyPairRepo {
             .client_kms
             .decrypt()
             .key_id(self.kms_key_id.to_owned())
-            .ciphertext_blob(data.to_owned() )
+            .ciphertext_blob(data.to_owned())
             .send()
             .await?;
 
@@ -92,8 +94,6 @@ impl KeyPairRepo {
 
         Ok(secret_text_raw)
     }
-
-
 }
 
 #[async_trait]

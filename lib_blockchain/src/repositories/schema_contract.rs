@@ -1,8 +1,10 @@
-
-
-use aws_sdk_dynamodb::{types::{
-    AttributeDefinition, KeySchemaElement, KeyType, ScalarAttributeType, BillingMode, GlobalSecondaryIndex, Projection, ProjectionType,
-},  Error};
+use aws_sdk_dynamodb::{
+    types::{
+        AttributeDefinition, BillingMode, GlobalSecondaryIndex, KeySchemaElement, KeyType,
+        Projection, ProjectionType, ScalarAttributeType,
+    },
+    Error,
+};
 
 pub const CONTRACT_TABLE_NAME: &str = "truly_contract";
 pub const CONTRACT_ID_FIELD_PK: &str = "contract_id";
@@ -10,9 +12,7 @@ pub const CONTRACT_BLOCKCHAIN_FIELD: &str = "blockchain";
 pub const CONTRACT_BLOCKCHAIN_INDEX: &str = "blockchain_index";
 pub const CONTRACT_STATUS_FIELD_NAME: &str = "status";
 
-pub async fn create_schema_contracts(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
-
-
+pub async fn create_schema_contracts(client: &aws_sdk_dynamodb::Client) -> Result<(), Error> {
     let id_ad = AttributeDefinition::builder()
         .attribute_name(CONTRACT_ID_FIELD_PK)
         .attribute_type(ScalarAttributeType::N)
@@ -53,7 +53,6 @@ pub async fn create_schema_contracts(client: &aws_sdk_dynamodb::Client) -> Resul
         )
         .build();
 
-
     let op = client
         .create_table()
         .table_name(CONTRACT_TABLE_NAME)
@@ -66,17 +65,16 @@ pub async fn create_schema_contracts(client: &aws_sdk_dynamodb::Client) -> Resul
         .send()
         .await;
     match op {
-        Err(e)=> {
-            return Err(e.into())
-        },
-        Ok(_)=> Ok(())
-    } 
-
+        Err(e) => return Err(e.into()),
+        Ok(_) => Ok(()),
+    }
 }
-pub async fn delete_schema_contracts(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
-
-    client.delete_table().table_name(CONTRACT_TABLE_NAME).send().await?;
+pub async fn delete_schema_contracts(client: &aws_sdk_dynamodb::Client) -> Result<(), Error> {
+    client
+        .delete_table()
+        .table_name(CONTRACT_TABLE_NAME)
+        .send()
+        .await?;
 
     Ok(())
 }
-

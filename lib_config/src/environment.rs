@@ -28,12 +28,11 @@ pub struct EnvironmentVariables {
     queue_mint_async: Option<String>,
     topic_arn_mint_async: Option<String>,
     dead_letter_queue_mint: Option<String>,
-    
+
     shorter_video_in_topic: Option<String>,
     shorter_video_out_topic: Option<String>,
 
-    minting_fails_topic : Option<String>
-
+    minting_fails_topic: Option<String>,
 }
 
 impl EnvironmentVariables {
@@ -51,7 +50,7 @@ impl EnvironmentVariables {
         let aux = self.hmac_secret.as_ref().unwrap();
         return aux;
     }
-    
+
     pub fn set_hmac_secret(&mut self, value: String) {
         self.hmac_secret = Some(value.clone());
     }
@@ -60,11 +59,10 @@ impl EnvironmentVariables {
         let aux = self.jwt_token_base.as_ref().unwrap();
         return aux;
     }
-    
+
     pub fn set_jwt_token_base(&mut self, value: String) {
         self.jwt_token_base = Some(value.clone());
     }
-
 
     pub fn aws_region(&self) -> &String {
         let aux = self.aws_region.as_ref().unwrap();
@@ -80,13 +78,13 @@ impl EnvironmentVariables {
         return aux;
     }
 
-    pub fn contract_id(&self) -> u16{
+    pub fn contract_id(&self) -> u16 {
         self.contract_id
     }
     pub fn set_contract_id(&mut self, val: u16) {
         self.contract_id = val;
     }
-    
+
     // pub fn blockchain_url(&self) -> &String {
     //     let aux = self.blockchain_url.as_ref().unwrap();
     //     return aux;
@@ -119,7 +117,7 @@ impl EnvironmentVariables {
     pub fn set_kms_key_id(&mut self, value: String) {
         self.kms_key_id = Some(value.clone());
     }
-/* 
+    /*
     pub fn blockchain_confirmations(&self) -> &usize {
         let aux = self.blockchain_confirmations.as_ref().unwrap();
         return aux;
@@ -127,14 +125,14 @@ impl EnvironmentVariables {
     pub fn set_blockchain_confirmations(&mut self, value: usize) {
         self.blockchain_confirmations = Some(value.clone());
     }*/
-    pub fn queue_mint_async (&self) -> &String {
+    pub fn queue_mint_async(&self) -> &String {
         let aux = self.queue_mint_async.as_ref().unwrap();
         return aux;
     }
     pub fn set_queue_mint_async(&mut self, value: String) {
         self.queue_mint_async = Some(value.clone());
     }
-    pub fn dead_letter_queue_mint (&self) -> &String {
+    pub fn dead_letter_queue_mint(&self) -> &String {
         let aux = self.dead_letter_queue_mint.as_ref().unwrap();
         return aux;
     }
@@ -142,7 +140,7 @@ impl EnvironmentVariables {
         self.dead_letter_queue_mint = Some(value.clone());
     }
 
-    pub fn topic_arn_mint_async(&self)-> &String {
+    pub fn topic_arn_mint_async(&self) -> &String {
         let aux = self.topic_arn_mint_async.as_ref().unwrap();
         return aux;
     }
@@ -157,36 +155,36 @@ impl EnvironmentVariables {
     //     self.blockchain_gateway_api_key = Some(value.clone());
     // }
 
-    pub fn topic_arn_shorter_video_start(&self)-> &String{
+    pub fn topic_arn_shorter_video_start(&self) -> &String {
         self.shorter_video_in_topic.as_ref().unwrap()
     }
     pub fn set_topic_arn_shorter_video_start(&mut self, value: String) {
-        self.shorter_video_in_topic= Some(value.clone());
+        self.shorter_video_in_topic = Some(value.clone());
     }
 
-    pub fn topic_arn_shorter_video_result(&self)-> &String{
+    pub fn topic_arn_shorter_video_result(&self) -> &String {
         self.shorter_video_out_topic.as_ref().unwrap()
     }
     pub fn set_topic_arn_shorter_video_result(&mut self, value: String) {
-        self.shorter_video_out_topic= Some(value.clone());
+        self.shorter_video_out_topic = Some(value.clone());
     }
 
-    pub fn topic_arn_mint_fails (&self)-> &String{
+    pub fn topic_arn_mint_fails(&self) -> &String {
         self.minting_fails_topic.as_ref().unwrap()
     }
     pub fn set_topic_arn_mint_fails(&mut self, value: String) {
         self.minting_fails_topic = Some(value.clone());
     }
-
 }
 
 impl Display for EnvironmentVariables {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, 
-            "{{ 'env': '{}', 'rust_log': '{}', 'aws': '{}', }}", 
-                self.environment,
-                self.rust_log, 
-                self.aws_region.clone().unwrap()
-    )
+        write!(
+            f,
+            "{{ 'env': '{}', 'rust_log': '{}', 'aws': '{}', }}",
+            self.environment,
+            self.rust_log,
+            self.aws_region.clone().unwrap()
+        )
     }
 }

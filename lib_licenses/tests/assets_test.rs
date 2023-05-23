@@ -71,7 +71,6 @@ async fn add_assets() {
         father: None,
         source: SourceType::Others,
         source_details: None,
-
     };
 
     let user = String::from_str("user1").unwrap();
@@ -218,7 +217,6 @@ async fn check_ownership() {
                 father: None,
                 source: SourceType::Others,
                 source_details: None,
-
             };
 
             let new_op = service.add(&mut as1, &username).await;

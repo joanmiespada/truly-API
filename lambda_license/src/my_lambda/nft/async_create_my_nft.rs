@@ -2,10 +2,10 @@ use lambda_http::RequestPayloadExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_async_ops::errors::AsyncOpError;
 use lib_async_ops::sns::{send as send_sns, SNSMessage};
+use lib_blockchain::services::nfts::{CreateNFTAsync, NFTsManipulation, NFTsService};
 use lib_config::config::Config;
 use lib_licenses::models::asset::MintingStatus;
-use lib_licenses::services::assets::{AssetService, AssetManipulation};
-use lib_blockchain::services::nfts::{CreateNFTAsync, NFTsManipulation, NFTsService};
+use lib_licenses::services::assets::{AssetManipulation, AssetService};
 use lib_licenses::services::owners::OwnerService;
 use lib_users::services::users::UsersService;
 use validator::Validate;
@@ -45,25 +45,21 @@ pub async fn async_create_my_nft_sns(
         },
     }
 
-    let checks_op =blockchain_service
+    let checks_op = blockchain_service
         .prechecks_before_minting(&new_nft.asset_id, user_id, &new_nft.price)
         .await;
-    match checks_op{
-        Err(e)=>{
-                return build_resp(e.to_string(), StatusCode::CONFLICT);
-        },
-        Ok(asset)=>{
-            if *asset.mint_status() == MintingStatus::Scheduled{
+    match checks_op {
+        Err(e) => {
+            return build_resp(e.to_string(), StatusCode::CONFLICT);
+        }
+        Ok(asset) => {
+            if *asset.mint_status() == MintingStatus::Scheduled {
                 return build_resp("it has been already scheduled. Please await until current process report any new status.".to_string(), StatusCode::CONFLICT);
             }
         }
     }
 
-    let new_nft_async = CreateNFTAsync::new(
-        user_id,
-        &new_nft.asset_id,
-        new_nft.price
-    );
+    let new_nft_async = CreateNFTAsync::new(user_id, &new_nft.asset_id, new_nft.price);
 
     let json_text = serde_json::to_string(&new_nft_async)?;
 

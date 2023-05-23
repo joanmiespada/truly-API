@@ -34,7 +34,6 @@ async fn creation_table() {
 
 #[tokio::test]
 async fn add_owners() {
-
     env::set_var("RUST_LOG", "debug");
     env::set_var("ENVIRONMENT", "development");
 
@@ -75,23 +74,19 @@ async fn add_owners() {
     let mut res_op = service.get_by_user(&"user1".to_string()).await;
     assert_that!(&res_op).is_ok();
     let mut res = res_op.unwrap();
-    assert_eq!(res.len(), 2 );
+    assert_eq!(res.len(), 2);
     res_op = service.get_by_user(&"user2".to_string()).await;
     assert_that!(&res_op).is_ok();
     res = res_op.unwrap();
-    assert_eq!(res.len(), 1 );
+    assert_eq!(res.len(), 1);
 
     let mut res_op2 = service.get_by_asset(&asset1).await;
     assert_that!(&res_op2).is_ok();
     let mut res2 = res_op2.unwrap();
-    assert_eq!("user1", res2.user_id() );
+    assert_eq!("user1", res2.user_id());
 
     res_op2 = service.get_by_asset(&asset3).await;
     assert_that!(&res_op2).is_ok();
     res2 = res_op2.unwrap();
-    assert_eq!("user2", res2.user_id() );
-
-
-
-
+    assert_eq!("user2", res2.user_id());
 }

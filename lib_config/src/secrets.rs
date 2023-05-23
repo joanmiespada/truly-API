@@ -1,6 +1,4 @@
-
 use serde::Deserialize;
-
 
 pub const SECRETS_MANAGER_APP_KEYS: &str = "truly_app_keys";
 pub const SECRETS_MANAGER_SECRET_KEY: &str = "truly_contract_owners_secret_key";

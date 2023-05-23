@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-
 #[derive(Debug)]
 pub struct OwnerAlreadyExistsError(pub String);
 
@@ -12,12 +11,10 @@ impl Display for OwnerAlreadyExistsError {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct OwnerDynamoDBError(pub String);
 
-
 impl std::error::Error for OwnerDynamoDBError {}
-
 
 impl Display for OwnerDynamoDBError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -35,6 +32,3 @@ impl Display for OwnerNoExistsError {
         write!(f, "owner doesn't exists in database: {}", self.0)
     }
 }
-
-
-

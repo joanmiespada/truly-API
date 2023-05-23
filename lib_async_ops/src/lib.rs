@@ -1,3 +1,3 @@
-pub mod sqs;
-pub mod sns;
 pub mod errors;
+pub mod sns;
+pub mod sqs;

@@ -9,10 +9,10 @@ use std::str::FromStr;
 use crate::my_lambda::assets::get_asset::get_asset_by_shorter;
 use crate::my_lambda::nft::get_tx::{get_tx, get_txs};
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
-use lib_config::config::Config;
-use lib_config::environment::{DEV_ENV, STAGE_ENV};
 use lib_blockchain::services::block_tx::BlockchainTxService;
 use lib_blockchain::services::nfts::NFTsService;
+use lib_config::config::Config;
+use lib_config::environment::{DEV_ENV, STAGE_ENV};
 use lib_licenses::services::video::VideoService;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
@@ -124,7 +124,7 @@ pub async fn function_handler(
                         Err(e) => {
                             return Ok(e);
                         }
-                        Ok(_) => {},
+                        Ok(_) => {}
                     };
                     let tx_hash = matched.params.get("hash").unwrap().to_string();
                     return get_tx(&req, &context, config, tx_service, &tx_hash).await;
@@ -134,7 +134,7 @@ pub async fn function_handler(
                         Err(e) => {
                             return Ok(e);
                         }
-                        Ok(_) => {},
+                        Ok(_) => {}
                     };
                     let id = matched.params.get("id").unwrap().to_string();
                     let asset_id = Uuid::from_str(id.as_str())?;

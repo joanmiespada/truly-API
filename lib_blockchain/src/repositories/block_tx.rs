@@ -11,12 +11,10 @@ use lib_config::config::Config;
 use lib_licenses::errors::asset::AssetNoExistsError;
 use std::{collections::HashMap, str::FromStr};
 use uuid::Uuid;
-use web3::types::{H256, H160, U64, U256};
+use web3::types::{H160, H256, U256, U64};
 
 use crate::{
-    errors::{
-        block_tx::{BlockchainTxError, BlockchainTxNoExistsError},
-    },
+    errors::block_tx::{BlockchainTxError, BlockchainTxNoExistsError},
     models::block_tx::BlockchainTx,
 };
 
@@ -401,7 +399,7 @@ pub fn mapping_from_doc_to_blockchain(doc: &HashMap<String, AttributeValue>) -> 
     let _contract_id = doc.get(TX_CONTRACT_ID).unwrap();
     let contract_id1 = _contract_id.as_n().unwrap();
     let contract_id = u16::from_str(contract_id1).unwrap();
-    
+
     let tx_error;
     match doc.get(TX_ERROR) {
         None => tx_error = None,
@@ -423,7 +421,7 @@ pub fn mapping_from_doc_to_blockchain(doc: &HashMap<String, AttributeValue>) -> 
         from,
         to,
         contract_id,
-        tx_error
+        tx_error,
     );
     res
 }

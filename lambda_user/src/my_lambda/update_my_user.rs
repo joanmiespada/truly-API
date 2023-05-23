@@ -5,14 +5,14 @@ use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError};
 use lib_users::services::users::{UpdatableFildsUser, UserManipulation, UsersService};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
-use validator::{Validate,ValidationError};
+use validator::{Validate, ValidationError};
 
 #[derive(Debug, Serialize, Validate, Deserialize)]
 pub struct UpdateUser {
     pub device: Option<String>,
     #[validate(email)]
     pub email: Option<String>,
-    //pub status: Option<String>, //forbidden, only by admins. Roles idem, only admin can change it 
+    //pub status: Option<String>, //forbidden, only by admins. Roles idem, only admin can change it
 }
 use super::build_resp;
 #[instrument]
@@ -41,8 +41,7 @@ pub async fn update_my_user(
                         device: payload.device.clone(),
                         email: payload.email.clone(),
                         wallet: None,
-                        status: None
-                        //status: payload.status.clone(), //forbidden here, only at admins lambda
+                        status: None, //status: payload.status.clone(), //forbidden here, only at admins lambda
                     };
                 }
             },

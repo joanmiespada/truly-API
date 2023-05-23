@@ -1,2 +1,2 @@
-pub mod users;
 pub mod schema_user;
+pub mod users;

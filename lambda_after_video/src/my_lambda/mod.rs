@@ -2,15 +2,14 @@ mod after_video;
 
 use std::str::FromStr;
 
+use crate::my_lambda::after_video::store_after_video_process;
 use aws_lambda_events::sqs::SqsEventObj;
 use lambda_runtime::LambdaEvent;
-use serde_json::{Value,Error};
-use tracing::{instrument, info, error};
 use lib_config::config::Config;
 use lib_licenses::models::video::VideoResult;
 use lib_licenses::services::assets::AssetService;
-use crate::my_lambda::after_video::store_after_video_process;
-
+use serde_json::{Error, Value};
+use tracing::{error, info, instrument};
 
 #[derive(Debug)]
 pub struct ApiLambdaError(pub String);
@@ -34,9 +33,8 @@ pub async fn function_handler(
     config: &Config,
     asset_service: &AssetService,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-
     let aux = event.payload.records;
-    for event in aux { 
+    for event in aux {
         let data = event.body;
 
         let data_of = data["Message"].to_owned();
@@ -64,8 +62,6 @@ pub async fn function_handler(
                 store_after_video_process(&data, config, asset_service).await?;
             }
         }
-
-
     }
     Ok(())
 }

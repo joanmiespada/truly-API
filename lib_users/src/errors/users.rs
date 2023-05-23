@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-
 #[derive(Debug)]
 pub struct UserAlreadyExistsError(pub String);
 
@@ -12,12 +11,10 @@ impl Display for UserAlreadyExistsError {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct UserDynamoDBError(pub String);
 
-
 impl std::error::Error for UserDynamoDBError {}
-
 
 impl Display for UserDynamoDBError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -59,9 +56,9 @@ impl Display for UserPasswordError {
 #[derive(Debug)]
 pub struct UserParamNotAccepted(pub String);
 
-impl std::error::Error for UserParamNotAccepted{}
+impl std::error::Error for UserParamNotAccepted {}
 
-impl Display for UserParamNotAccepted{
+impl Display for UserParamNotAccepted {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "user's data is unacceptable: {}", self.0)
     }
@@ -70,21 +67,20 @@ impl Display for UserParamNotAccepted{
 #[derive(Debug)]
 pub struct UserStatusError(pub String);
 
-impl std::error::Error for UserStatusError{}
+impl std::error::Error for UserStatusError {}
 
-impl Display for UserStatusError{
+impl Display for UserStatusError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "user's status: {}", self.0)
     }
 }
 
-
 #[derive(Debug)]
 pub struct UserNoPasswordError;
 
-impl std::error::Error for UserNoPasswordError{}
+impl std::error::Error for UserNoPasswordError {}
 
-impl Display for UserNoPasswordError{
+impl Display for UserNoPasswordError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "you can't create a user with email and without password")
     }

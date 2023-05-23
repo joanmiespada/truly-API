@@ -7,7 +7,7 @@ use tracing::instrument;
 use super::users::UserManipulation;
 use super::users::UsersService;
 
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
 #[derive(Clone, Debug)]
 pub struct LoginInfo {
@@ -46,18 +46,20 @@ impl LoginOps for UsersService {
         } else if let Some(eml) = email {
             // && let Some(pwd) = passw {
             match passw {
-                None => { return Err(UserNoExistsError("password is empty".to_string()).into());},
+                None => {
+                    return Err(UserNoExistsError("password is empty".to_string()).into());
+                }
                 Some(pss) => {
                     usr = self.get_by_email_and_password(eml, pss).await?;
                 }
             }
-        } else if let Some(wall) = wallet  {
+        } else if let Some(wall) = wallet {
             usr = self.get_by_wallet(wall).await?
         } else {
             return Err(UserNoExistsError("not correct parameters".to_string()).into());
         }
 
-        if usr.status().is_disabled(){
+        if usr.status().is_disabled() {
             return Err(UserStatusError("user has been disabled".to_string()).into());
         } else {
             llt.user_id = usr.user_id().clone();

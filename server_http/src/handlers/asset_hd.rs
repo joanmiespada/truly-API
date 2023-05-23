@@ -28,12 +28,15 @@ pub async fn get_asset_by_token_id(
 
     let op_res = asset_service.get_by_id(&token_id).await;
     match op_res {
-        Ok(asset) => //HttpResponse::Ok().json(asset) ,
-        build_resp( serde_json::to_string(&asset).unwrap(), StatusCode::OK),
+        Ok(asset) =>
+        //HttpResponse::Ok().json(asset) ,
+        {
+            build_resp(serde_json::to_string(&asset).unwrap(), StatusCode::OK)
+        }
         //build_resp( asset, StatusCode::OK),
         Err(e) => {
             if let Some(e) = e.downcast_ref::<AssetDynamoDBError>() {
-                build_resp( e.to_string(), StatusCode::SERVICE_UNAVAILABLE) 
+                build_resp(e.to_string(), StatusCode::SERVICE_UNAVAILABLE)
             } else if let Some(_) = e.downcast_ref::<AssetNoExistsError>() {
                 build_resp("".to_string(), StatusCode::NO_CONTENT)
             } else {
@@ -43,10 +46,7 @@ pub async fn get_asset_by_token_id(
     }
 }
 
-pub async fn get_all_my_assets(
-    req: HttpRequest,
-    state: web::Data<AppState>,
-) -> impl Responder {
+pub async fn get_all_my_assets(req: HttpRequest, state: web::Data<AppState>) -> impl Responder {
     let asset_service = &state.asset_service;
 
     let user_id = get_user_id(&req);
@@ -93,7 +93,7 @@ pub async fn create_my_asset(
     //         return build_resp(e.to_string(), StatusCode::BAD_REQUEST);
     //     }
     //     Ok(_) => {
-    //          asset_fields = CreatableFildsAsset { 
+    //          asset_fields = CreatableFildsAsset {
 
     //          };
     //     }
@@ -114,7 +114,6 @@ pub async fn create_my_asset(
         Ok(val) => build_resp(val.to_string(), StatusCode::OK),
     }
 }
-
 
 // #[derive(Debug, Serialize, Deserialize)]
 // pub struct CreateNFT {
@@ -158,11 +157,11 @@ pub async fn create_my_asset(
 //     }
 
 //     let op_res = blockchain_service.add(
-//         &asset_id, 
-//         &user_id, 
+//         &asset_id,
+//         &user_id,
 //         &user_address,
 //         &payload.price).await;
-    
+
 //     let transaction = match op_res {
 //         Err(e) => {
 //             if let Some(m) = e.downcast_ref::<AssetBlockachainError>() {
@@ -181,10 +180,7 @@ pub async fn create_my_asset(
 //         },
 //         Ok(tx) => tx,
 //     };
-    
+
 //     return build_resp(transaction, StatusCode::OK);
-
-
-
 
 // }

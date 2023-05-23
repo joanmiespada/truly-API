@@ -1,12 +1,12 @@
+use crate::my_lambda::{build_resp, build_resp_env};
 use lambda_http::RequestPayloadExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
 use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
-use lib_licenses::services::owners::OwnerService;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
-use tracing::{instrument, info};
+use lib_licenses::services::owners::OwnerService;
+use tracing::{info, instrument};
 use validator::ValidationError;
-use crate::my_lambda::{build_resp, build_resp_env};
 
 #[instrument]
 pub async fn create_my_asset(
@@ -16,9 +16,9 @@ pub async fn create_my_asset(
     asset_service: &AssetService,
     owner_service: &OwnerService,
     id: &String,
-) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync >> {
+) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     let asset_fields;
-    match req.payload::<CreatableFildsAsset>() { 
+    match req.payload::<CreatableFildsAsset>() {
         Err(e) => {
             return build_resp(e.to_string(), StatusCode::BAD_REQUEST);
         }
@@ -26,8 +26,7 @@ pub async fn create_my_asset(
             None => {
                 return build_resp("no payload found".to_string(), StatusCode::BAD_REQUEST);
             }
-            Some(payload) =>  asset_fields = payload.clone()
-            
+            Some(payload) => asset_fields = payload.clone(),
         },
     }
     info!("calling asset service: add");
@@ -41,10 +40,13 @@ pub async fn create_my_asset(
             } else if let Some(m) = e.downcast_ref::<ValidationError>() {
                 return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
             } else {
-                return build_resp_env(config.env_vars().environment(),e, StatusCode::INTERNAL_SERVER_ERROR);
+                return build_resp_env(
+                    config.env_vars().environment(),
+                    e,
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                );
             }
         }
         Ok(val) => build_resp(val.to_string(), StatusCode::OK),
     }
-
 }

@@ -1,12 +1,9 @@
 use std::fmt::Display;
 
-
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct ContractDynamoDBError(pub String);
 
-
 impl std::error::Error for ContractDynamoDBError {}
-
 
 impl Display for ContractDynamoDBError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -24,4 +21,3 @@ impl Display for ContractNoExistsError {
         write!(f, "contract doesn't exists in database: {}", self.0)
     }
 }
-

@@ -71,7 +71,7 @@ async fn login_user_email_password_test() -> Result<(), Box<dyn std::error::Erro
 
     let new_id = user_service.add(&mut new_user, &None).await?;
 
-    let res = user_service.login( &None, &wallet,&None, &None ).await?;
+    let res = user_service.login(&None, &wallet, &None, &None).await?;
 
     assert_eq!(new_id, res.user_id);
 

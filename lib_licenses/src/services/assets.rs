@@ -82,7 +82,7 @@ pub struct CreatableFildsAsset {
 
     pub source: SourceType,
     #[validate(length(max = 1000))]
-    pub source_details: Option<String>
+    pub source_details: Option<String>,
 }
 
 #[async_trait]
@@ -312,7 +312,7 @@ impl Clone for AssetService {
     fn clone(&self) -> AssetService {
         let aux = AssetService {
             repository: self.repository.clone(),
-            short_repository: self.short_repository.clone()
+            short_repository: self.short_repository.clone(),
         };
         return aux;
     }

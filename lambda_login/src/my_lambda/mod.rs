@@ -1,16 +1,16 @@
 mod login;
 mod signup;
 
+use self::signup::create_basic_user;
 use lambda_http::{
-     http::Method, http::StatusCode, lambda_runtime::Context,
-      IntoResponse, Request, RequestExt, Response,
+    http::Method, http::StatusCode, lambda_runtime::Context, IntoResponse, Request, RequestExt,
+    Response,
 };
-use serde_json::json;
-use tracing::{instrument};
 use lib_config::config::Config;
 use lib_users::services::users::UsersService;
 use login::login;
-use self::signup::create_basic_user;
+use serde_json::json;
+use tracing::instrument;
 
 #[derive(Debug)]
 pub struct ApiLambdaError(pub String);
@@ -39,7 +39,7 @@ pub async fn function_handler(
 
     match req.method() {
         &Method::POST => match req.uri().path() {
-            "/auth/login" =>  login(&req, &context, config, user_service).await,
+            "/auth/login" => login(&req, &context, config, user_service).await,
             "/auth/signup" => create_basic_user(&req, &context, config, user_service).await,
             &_ => build_resp(
                 "method not allowed".to_string(),
@@ -84,4 +84,3 @@ fn not_allowed(
     }
     //Ok(res);
 }
-

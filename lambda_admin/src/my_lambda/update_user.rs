@@ -43,7 +43,7 @@ pub async fn update_user(
                         device: payload.device.clone(),
                         email: payload.email.clone(),
                         status: payload.status.clone(),
-                        wallet: None
+                        wallet: None,
                     };
                 }
             },

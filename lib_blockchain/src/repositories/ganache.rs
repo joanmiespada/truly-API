@@ -1,8 +1,6 @@
 use async_trait::async_trait;
 use chrono::{DateTime, NaiveDateTime, Utc};
-use lib_config::{
-    config::Config, environment::DEV_ENV, infra::restore_secret_key
-};
+use lib_config::{config::Config, environment::DEV_ENV, infra::restore_secret_key};
 use log::debug;
 use mac_address::get_mac_address;
 use secp256k1::SecretKey;
@@ -20,7 +18,7 @@ use web3::{
     contract::{tokens::Detokenize, Contract, Options},
     transports::Http,
     types::{Address, Block, BlockId, BlockNumber, H160, H256, U256},
-    Web3 //, signing::SecretKey,
+    Web3, //, signing::SecretKey,
 };
 
 use crate::{errors::nft::HydrateMasterSecretKeyError, models::block_tx::BlockchainTx};
@@ -281,9 +279,14 @@ impl NFTsRepository for GanacheRepo {
         let contract_owner_private_key;
         //let contract_owner_private_key_op = self.decrypt_contract_owner_secret_key().await;
         let contract_owner_private_key_op = SecretKey::from_str(
-            restore_secret_key(self.contract_owner_secret.to_owned(), &self.kms_key_id, &self.config)
-                .await
-                .unwrap().as_str(),
+            restore_secret_key(
+                self.contract_owner_secret.to_owned(),
+                &self.kms_key_id,
+                &self.config,
+            )
+            .await
+            .unwrap()
+            .as_str(),
         );
 
         match contract_owner_private_key_op {
@@ -328,7 +331,10 @@ impl NFTsRepository for GanacheRepo {
             tx.block_number,
             tx.gas_used,
             tx.effective_gas_price,
-            Some(wei_to_gwei(tx.gas_used.unwrap()) * wei_to_gwei(tx.effective_gas_price.unwrap_or_default())),
+            Some(
+                wei_to_gwei(tx.gas_used.unwrap())
+                    * wei_to_gwei(tx.effective_gas_price.unwrap_or_default()),
+            ),
             Some("gweis".to_string()),
             Some(tx.from),
             tx.to,

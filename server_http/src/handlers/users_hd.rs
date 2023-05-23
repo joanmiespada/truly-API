@@ -139,7 +139,7 @@ pub async fn _update_user(
         device: payload.device.clone(),
         email: payload.email.clone(),
         status: payload.status.clone(),
-        wallet: None
+        wallet: None,
     };
 
     let op_res = user_service.update(&id, &user_fields).await;

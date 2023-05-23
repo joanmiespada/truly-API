@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use uuid::Uuid;
 
 use validator::Validate;
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
 #[async_trait]
 pub trait UserManipulation {
@@ -13,11 +13,7 @@ pub trait UserManipulation {
     async fn get_by_id(&self, id: &String) -> ResultE<User>;
     async fn get_by_device(&self, device: &String) -> ResultE<User>;
     async fn get_by_wallet(&self, wallet_address: &String) -> ResultE<User>;
-    async fn get_by_email_and_password(
-        &self,
-        email: &String,
-        password: &String,
-    ) -> ResultE<User>;
+    async fn get_by_email_and_password(&self, email: &String, password: &String) -> ResultE<User>;
     async fn add(&self, user: &mut User, password: &Option<String>) -> ResultE<String>;
     //async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>>;
     async fn update(&self, id: &String, user: &UpdatableFildsUser) -> ResultE<()>;
@@ -41,18 +37,17 @@ pub enum PromoteUser {
     Downgrade,
     Upgrade,
 }
-#[derive(Debug,Validate)]
+#[derive(Debug, Validate)]
 pub struct UpdatableFildsUser {
     #[validate(email)]
     pub email: Option<String>,
-    #[validate(length(max=100))]
+    #[validate(length(max = 100))]
     pub device: Option<String>,
-    #[validate(length(max=10))]
+    #[validate(length(max = 10))]
     pub status: Option<String>,
-    #[validate(length(max=100))]
+    #[validate(length(max = 100))]
     pub wallet: Option<String>,
 }
-
 
 #[async_trait]
 impl UserManipulation for UsersService {
@@ -74,18 +69,17 @@ impl UserManipulation for UsersService {
         let res = self.repository.get_by_device(device).await?;
         Ok(res)
     }
-    async fn get_by_wallet(&self, wallet_address: &String) -> ResultE<User>{
-
-        tracing::Span::current().record("wallet_address", &tracing::field::display(&wallet_address));
-        let res = self.repository.get_by_wallet_address(wallet_address).await?;
+    async fn get_by_wallet(&self, wallet_address: &String) -> ResultE<User> {
+        tracing::Span::current()
+            .record("wallet_address", &tracing::field::display(&wallet_address));
+        let res = self
+            .repository
+            .get_by_wallet_address(wallet_address)
+            .await?;
         Ok(res)
     }
     #[tracing::instrument(fields(email, success = false))]
-    async fn get_by_email_and_password(
-        &self,
-        email: &String,
-        password: &String,
-    ) -> ResultE<User> {
+    async fn get_by_email_and_password(&self, email: &String, password: &String) -> ResultE<User> {
         tracing::Span::current().record("email", &tracing::field::display(&email));
 
         let res = self
@@ -99,10 +93,9 @@ impl UserManipulation for UsersService {
 
     #[tracing::instrument()]
     async fn add(&self, user: &mut User, password: &Option<String>) -> ResultE<String> {
-
         match password {
-            None=> {},
-            Some(pass) => validate_password(pass)?
+            None => {}
+            Some(pass) => validate_password(pass)?,
         }
 
         let id = Uuid::new_v4();
@@ -114,7 +107,7 @@ impl UserManipulation for UsersService {
         self.repository.add(user, password).await?;
         Ok(id.to_string())
     }
-    
+
     #[tracing::instrument()]
     async fn remove_by_id(&self, id: &String) -> ResultE<()> {
         let user = self.get_by_id(id).await?;
@@ -124,9 +117,8 @@ impl UserManipulation for UsersService {
 
     #[tracing::instrument()]
     async fn update(&self, id: &String, user: &UpdatableFildsUser) -> ResultE<()> {
-        
         user.validate()?;
-        
+
         let dbuser = self.repository.get_by_id(id).await?;
         let mut res: User = dbuser.clone();
 
@@ -159,7 +151,6 @@ impl UserManipulation for UsersService {
 
     #[tracing::instrument()]
     async fn update_password(&self, id: &String, password: &String) -> ResultE<()> {
-
         validate_password(password)?;
         _ = self.repository.update_password(id, password).await?;
         Ok(())

@@ -3,8 +3,8 @@ use ethers::providers::{Http, Provider};
 use ethers::signers::LocalWallet;
 use ethers::utils::Ganache;
 use ethers_solc::Solc;
-use lib_config::config::Config;
 use lib_blockchain::repositories::ganache::block_status;
+use lib_config::config::Config;
 use spectral::{assert_that, result::ResultAssertions};
 use std::time::Duration;
 use std::{env, str::FromStr};
@@ -46,8 +46,6 @@ async fn ganache_bootstrap_get_balance_test() {
 
     drop(ganache)
 }
-
-
 
 pub async fn _deploy_contract_ethers(
     url: &str,
@@ -94,8 +92,6 @@ pub async fn _deploy_contract_ethers(
     return Ok(addr_string);
 }
 
-
-
 #[tokio::test]
 async fn create_simple_contract_test() -> web3::Result<()> {
     env::set_var("RUST_LOG", "debug");
@@ -105,9 +101,11 @@ async fn create_simple_contract_test() -> web3::Result<()> {
     config.setup().await;
 
     let ganache_params = vec!["-l 10000000".to_string()];
-    let ganache = Ganache::new().mnemonic(MNEMONIC_TEST).args(ganache_params) .spawn();
+    let ganache = Ganache::new()
+        .mnemonic(MNEMONIC_TEST)
+        .args(ganache_params)
+        .spawn();
     let url = ganache.endpoint();
-    
 
     let transport = web3::transports::Http::new(url.as_str())?;
     let web3 = web3::Web3::new(transport);
@@ -211,4 +209,3 @@ fn _wei_to_eth(wei_val: U256) -> f64 {
     let res = wei_val.as_u128() as f64;
     res / 1_000_000_000_000_000_000.0
 }
-

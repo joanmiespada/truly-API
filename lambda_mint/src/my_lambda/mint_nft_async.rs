@@ -1,11 +1,9 @@
 use lib_async_ops::sns::{send as send_sns, SNSMessage};
-use lib_blockchain::services::nfts::{CreateNFTAsync, NFTsService, NFTsManipulation};
+use lib_blockchain::services::nfts::{CreateNFTAsync, NFTsManipulation, NFTsService};
 use lib_config::config::Config;
 use lib_licenses::{
     models::asset::MintingStatus,
-    services::{
-        assets::{AssetManipulation, AssetService},
-    },
+    services::assets::{AssetManipulation, AssetService},
 };
 use tracing::{error, info, instrument};
 
@@ -67,7 +65,7 @@ pub async fn async_minting(
         match op_res {
             Err(e) => {
                 let err_str = e.to_string();
-                info!("{}",err_str);
+                info!("{}", err_str);
                 if err_str.contains("token is already in use") {
                     info!("pervios tries were successfully minted, let's discard this one");
                 } else {

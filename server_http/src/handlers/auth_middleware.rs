@@ -65,7 +65,7 @@ where
                 let matches = clm
                     .roles
                     .into_iter()
-                    .map(|i| UserRoles::deserialize(i.as_str()).unwrap() )
+                    .map(|i| UserRoles::deserialize(i.as_str()).unwrap())
                     .filter(|i| i.is_admin())
                     .count();
                 if matches == 0 {

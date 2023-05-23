@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-
 #[derive(Debug)]
 pub struct KeyPairAlreadyExistsError(pub String);
 
@@ -12,12 +11,10 @@ impl Display for KeyPairAlreadyExistsError {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct KeyPairDynamoDBError(pub String);
 
-
 impl std::error::Error for KeyPairDynamoDBError {}
-
 
 impl Display for KeyPairDynamoDBError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -35,4 +32,3 @@ impl Display for KeyPairNoExistsError {
         write!(f, "keypair doesn't exists in database: {}", self.0)
     }
 }
-

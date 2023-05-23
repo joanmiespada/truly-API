@@ -1,8 +1,8 @@
-use std::fmt::Display;
 use aws_config::{meta::region::RegionProviderChain, SdkConfig};
 use aws_types::region::Region;
 use dotenv::dotenv;
 use log::{debug, info};
+use std::fmt::Display;
 
 use crate::{
     environment::{EnvironmentVariables, DEV_ENV, ENV_VAR_ENVIRONMENT, PROD_ENV, STAGE_ENV},
@@ -61,13 +61,13 @@ impl Config {
         self._setup_basic().await;
     }
     async fn _setup_basic(&mut self) {
-
-        self.refresh_env_vars();        
+        self.refresh_env_vars();
 
         let env = self.env_variables.as_ref().unwrap();
         let config: SdkConfig;
         if env.environment() == DEV_ENV {
-            let region_provider = RegionProviderChain::first_try(Region::new( env.aws_region().to_owned() ));
+            let region_provider =
+                RegionProviderChain::first_try(Region::new(env.aws_region().to_owned()));
             let creden = aws_config::profile::ProfileFileCredentialsProvider::builder()
                 .profile_name("localstack");
             config = aws_config::from_env()
@@ -81,7 +81,8 @@ impl Config {
             let region_provider = RegionProviderChain::default_provider().or_else("eu-central-1");
             config = aws_config::from_env().region(region_provider).load().await;
         } else if env.environment() == STAGE_ENV {
-            let region_provider = RegionProviderChain::first_try(Region::new( env.aws_region().to_owned() ));
+            let region_provider =
+                RegionProviderChain::first_try(Region::new(env.aws_region().to_owned()));
             config = aws_config::from_env().region(region_provider).load().await;
         } else {
             panic!(
@@ -168,9 +169,10 @@ impl Config {
 
 impl Display for Config {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, 
-            "{{ 'aws_config': '--', 'environment': '{}' }}", 
-                self.env_variables.clone().unwrap(), 
-    )
+        write!(
+            f,
+            "{{ 'aws_config': '--', 'environment': '{}' }}",
+            self.env_variables.clone().unwrap(),
+        )
     }
 }

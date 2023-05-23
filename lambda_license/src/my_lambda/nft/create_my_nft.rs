@@ -1,17 +1,16 @@
-
 use lambda_http::RequestPayloadExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
-use lib_config::config::Config;
-use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError, AssetBlockachainError};
 use lib_blockchain::errors::nft::NftUserAddressMalformedError;
+use lib_blockchain::services::nfts::{NFTsManipulation, NFTsService};
+use lib_config::config::Config;
+use lib_licenses::errors::asset::{AssetBlockachainError, AssetDynamoDBError, AssetNoExistsError};
 use lib_licenses::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
 use lib_users::services::users::UsersService;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use validator::{Validate};
-use lib_blockchain::services::nfts::{NFTsService, NFTsManipulation };
+use validator::Validate;
 
 use crate::my_lambda::build_resp;
 
@@ -20,9 +19,8 @@ pub struct CreateNFT {
     //#[validate(length(max = 1000))]
     //pub hash: String,
     pub price: u64,
-    pub asset_id: Uuid
-    //#[validate(length(max = 100))]
-    //pub user_blockchain_address: String,
+    pub asset_id: Uuid, //#[validate(length(max = 100))]
+                        //pub user_blockchain_address: String,
 }
 #[tracing::instrument]
 pub async fn create_my_nft(
@@ -34,11 +32,10 @@ pub async fn create_my_nft(
     blockchain_service: &NFTsService,
     user_service: &UsersService,
     user_id: &String,
-) -> Result<Response<String>, Box<dyn std::error::Error + Send+ Sync >> {
- 
+) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     let price: u64;
     let asset_id: Uuid;
-    
+
     match req.payload::<CreateNFT>() {
         Err(e) => {
             return build_resp(e.to_string(), StatusCode::BAD_REQUEST);
@@ -59,11 +56,10 @@ pub async fn create_my_nft(
         },
     }
 
-    let op_res = blockchain_service.try_mint(
-        &asset_id, 
-        user_id, 
-        &price).await;
-    
+    let op_res = blockchain_service
+        .try_mint(&asset_id, user_id, &price)
+        .await;
+
     let transaction = match op_res {
         Err(e) => {
             if let Some(m) = e.downcast_ref::<AssetBlockachainError>() {
@@ -79,13 +75,14 @@ pub async fn create_my_nft(
             } else if let Some(m) = e.downcast_ref::<NftUserAddressMalformedError>() {
                 return build_resp(m.to_string(), StatusCode::NOT_ACCEPTABLE);
             } else {
-                return build_resp("unknonw error working with the blockchain".to_string(), StatusCode::INTERNAL_SERVER_ERROR);
+                return build_resp(
+                    "unknonw error working with the blockchain".to_string(),
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                );
             }
-        },
-        Ok(tx) => format!("{}", tx)
-        //result().clone().unwrap(),
+        }
+        Ok(tx) => format!("{}", tx), //result().clone().unwrap(),
     };
-    
-    return build_resp(transaction, StatusCode::OK);
 
+    return build_resp(transaction, StatusCode::OK);
 }

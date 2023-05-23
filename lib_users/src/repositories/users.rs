@@ -7,8 +7,7 @@ use tracing::error;
 use uuid::Uuid;
 
 use crate::errors::users::{
-    UserAlreadyExistsError, UserDynamoDBError, UserNoExistsError,
-    UserParamNotAccepted,
+    UserAlreadyExistsError, UserDynamoDBError, UserNoExistsError, UserParamNotAccepted,
 };
 use crate::models::user::{User, UserRoles, UserStatus};
 use async_trait::async_trait;
@@ -340,7 +339,8 @@ impl UsersRepo {
         &self,
         user: &User,
         password: &Option<String>,
-    ) -> ResultE<TransactWriteItemsFluentBuilder>{ // TransactWriteItems> {
+    ) -> ResultE<TransactWriteItemsFluentBuilder> {
+        // TransactWriteItems> {
         let mut request = self.client.transact_write_items();
 
         let creation_time_av = AttributeValue::S(iso8601(user.creation_time()));
@@ -362,7 +362,7 @@ impl UsersRepo {
                 .put(user_fields.table_name(USERS_TABLE_NAME).build())
                 .build(),
         );
-        
+
         match user.device() {
             None => {}
             Some(dvc) => {
@@ -439,7 +439,6 @@ impl UsersRepo {
                         .put(email_fields.table_name(LOGIN_EMAIL_TABLE_NAME).build())
                         .build(),
                 );
-                
             }
         }
         Ok(request)
@@ -474,7 +473,6 @@ impl UserRepository for UsersRepo {
                 return Err(UserDynamoDBError(e.to_string()).into());
             }
         }
-        
     }
 
     async fn get_all(&self, _page_number: u32, _page_size: u32) -> ResultE<Vec<User>> {
@@ -726,7 +724,6 @@ impl UserRepository for UsersRepo {
     }
 
     async fn update_password(&self, id: &String, password: &String) -> ResultE<()> {
-
         let user = self.get_by_id(id).await?;
         let pass = Some(password.to_owned());
         let request = self.new_or_update_builder(&user, &pass).await?;

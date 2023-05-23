@@ -8,7 +8,7 @@ use web3::types::H256;
 
 use crate::errors::asset::{AssetDynamoDBError, AssetNoExistsError, AssetTreeError};
 use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
-use crate::models::asset::{Asset, AssetStatus, MintingStatus, VideoLicensingStatus, SourceType};
+use crate::models::asset::{Asset, AssetStatus, MintingStatus, SourceType, VideoLicensingStatus};
 use crate::models::owner::Owner;
 use crate::models::video::VideoProcessStatus;
 use async_trait::async_trait;
@@ -23,8 +23,7 @@ use lib_config::config::Config;
 use super::owners::mapping_from_doc_to_owner;
 use super::schema_asset::{
     ASSETS_TABLE_NAME, ASSET_ID_FIELD_PK, ASSET_TREE_FATHER_ID_FIELD_PK, ASSET_TREE_FATHER_INDEX,
-    ASSET_TREE_SON_ID_FIELD_PK, ASSET_TREE_TABLE_NAME,
-    URL_FIELD_NAME, URL_INDEX_NAME,
+    ASSET_TREE_SON_ID_FIELD_PK, ASSET_TREE_TABLE_NAME, URL_FIELD_NAME, URL_INDEX_NAME,
 };
 use super::schema_owners::{OWNERS_TABLE_NAME, OWNER_ASSET_ID_FIELD_PK, OWNER_USER_ID_FIELD_PK};
 const CREATIONTIME_FIELD_NAME: &str = "creationTime";
@@ -107,7 +106,10 @@ impl AssetRepo {
         }
     }
 
-    fn new_or_update(&self, asset: &Asset) -> ResultE<aws_sdk_dynamodb::types::builders::PutBuilder> {
+    fn new_or_update(
+        &self,
+        asset: &Asset,
+    ) -> ResultE<aws_sdk_dynamodb::types::builders::PutBuilder> {
         let asset_id_av = AttributeValue::S(asset.id().to_string());
         let url_av = AttributeValue::S(asset.url().clone().unwrap().to_string());
         let creation_time_av = AttributeValue::S(iso8601(asset.creation_time()));
@@ -203,14 +205,14 @@ impl AssetRepo {
         match asset.source() {
             Some(value) => {
                 let source_av = AttributeValue::S(value.to_string());
-                items = items.item( SOURCE_FIELD_NAME , source_av);
+                items = items.item(SOURCE_FIELD_NAME, source_av);
             }
             None => {}
         }
         match asset.source_details() {
             Some(value) => {
                 let source_det_av = AttributeValue::S(value.to_string());
-                items = items.item( SOURCE_DETAILS_FIELD_NAME , source_det_av);
+                items = items.item(SOURCE_DETAILS_FIELD_NAME, source_det_av);
             }
             None => {}
         }
@@ -395,8 +397,6 @@ impl AssetRepository for AssetRepo {
             }
         }
     }
-
-    
 
     async fn update(&self, asset: &Asset) -> ResultE<()> {
         let items = self.new_or_update(asset).unwrap();
@@ -813,8 +813,8 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
             }
         }
     }
-let source = doc.get( SOURCE_FIELD_NAME   );
-    match source{
+    let source = doc.get(SOURCE_FIELD_NAME);
+    match source {
         None => asset.set_source(&None),
         Some(value) => {
             let val = value.as_s().unwrap();
@@ -834,7 +834,7 @@ let source = doc.get( SOURCE_FIELD_NAME   );
         }
     }
 
-let source_details = doc.get(SOURCE_DETAILS_FIELD_NAME   );
+    let source_details = doc.get(SOURCE_DETAILS_FIELD_NAME);
     match source_details {
         None => asset.set_source_details(&None),
         Some(lati) => {
@@ -846,5 +846,4 @@ let source_details = doc.get(SOURCE_DETAILS_FIELD_NAME   );
             }
         }
     }
-    
 }

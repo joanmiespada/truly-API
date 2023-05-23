@@ -5,11 +5,10 @@ use std::fmt;
 use uuid::Uuid;
 use validator::Validate;
 
-
-#[derive(Clone, Serialize,Validate, Deserialize, Debug)]
+#[derive(Clone, Serialize, Validate, Deserialize, Debug)]
 pub struct Owner {
     asset_id: Uuid,
-    #[validate(length( max=100))]
+    #[validate(length(max = 100))]
     user_id: String,
     creation_time: DateTime<Utc>,
     last_update_time: DateTime<Utc>,
@@ -17,7 +16,7 @@ pub struct Owner {
 
 impl fmt::Display for Owner {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f,"{}", json!(self).to_string())
+        write!(f, "{}", json!(self).to_string())
     }
 }
 
@@ -27,7 +26,7 @@ impl Owner {
             asset_id: Uuid::nil(),
             creation_time: Utc::now(),
             last_update_time: Utc::now(),
-            user_id: String::new()
+            user_id: String::new(),
         }
     }
 

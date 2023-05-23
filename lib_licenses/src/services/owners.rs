@@ -1,12 +1,10 @@
-
-
 use crate::models::owner::Owner;
-use crate::repositories::owners::{OwnerRepository, OwnerRepo};
+use crate::repositories::owners::{OwnerRepo, OwnerRepository};
 use async_trait::async_trait;
 use uuid::Uuid;
 
 use validator::Validate;
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error +Sync + Send >>;
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
 #[async_trait]
 pub trait OwnerManipulation {
@@ -29,13 +27,11 @@ impl OwnerService {
     }
 }
 
-#[derive(Debug,Validate)]
+#[derive(Debug, Validate)]
 pub struct UpdatableFildsOwner {
-
-    #[validate(length(max=100))]
+    #[validate(length(max = 100))]
     pub new_owner: Option<String>,
 }
-
 
 #[async_trait]
 impl OwnerManipulation for OwnerService {
@@ -50,7 +46,7 @@ impl OwnerManipulation for OwnerService {
         let res = self.repository.get_by_asset(asset_id).await?;
         Ok(res)
     }
-    
+
     #[tracing::instrument()]
     async fn get_by_user(&self, user_id: &String) -> ResultE<Vec<Owner>> {
         let res = self.repository.get_by_user(user_id).await?;
@@ -59,25 +55,22 @@ impl OwnerManipulation for OwnerService {
 
     #[tracing::instrument()]
     async fn add(&self, owner: &mut Owner) -> ResultE<()> {
-
         owner.validate()?;
         self.repository.add(owner).await?;
         Ok(())
     }
 
     async fn update(&self, current_owner: &Owner, new_owner: &UpdatableFildsOwner) -> ResultE<()> {
-      
         new_owner.validate()?;
         let aux = new_owner.new_owner.clone().unwrap();
-        
-        self.repository.update(current_owner, &aux ).await?;
-        
+
+        self.repository.update(current_owner, &aux).await?;
+
         Ok(())
     }
-    
-    async fn get_by_user_asset_ids(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Owner>{
 
-        let res = self.repository.get_by_user_asset(asset_id,user_id).await?;
+    async fn get_by_user_asset_ids(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Owner> {
+        let res = self.repository.get_by_user_asset(asset_id, user_id).await?;
         Ok(res)
     }
 }

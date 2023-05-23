@@ -9,11 +9,11 @@ use uuid::Uuid;
 use crate::errors::nft::{
     TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError,
 };
-use lib_licenses::errors::video::VideoNotYetLicensed;
-use lib_licenses::models::asset::{Asset, MintingStatus, VideoLicensingStatus};
 use crate::models::block_tx::BlockchainTx;
 use crate::repositories::ganache::{GanacheRepo, NFTsRepository};
 use crate::repositories::keypairs::{KeyPairRepo, KeyPairRepository};
+use lib_licenses::errors::video::VideoNotYetLicensed;
+use lib_licenses::models::asset::{Asset, MintingStatus, VideoLicensingStatus};
 use lib_licenses::services::assets::{AssetManipulation, AssetService};
 use lib_licenses::services::owners::{OwnerManipulation, OwnerService};
 
@@ -158,7 +158,7 @@ impl NFTsManipulation for NFTsService {
                         None,
                         None,
                         self.blockchain.contract_id(),
-                        Some(e.to_string())
+                        Some(e.to_string()),
                     );
                     //tx_paylaod.set_asset_id(asset_id);
                     //tx_paylaod.set_result(&e.to_string());

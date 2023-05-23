@@ -1,16 +1,16 @@
 use lambda_http::service_fn;
-use lib_config::config::Config;
 use lib_blockchain::repositories::block_tx::BlockchainTxRepo;
 use lib_blockchain::repositories::blockchain::BlockchainRepo;
 use lib_blockchain::repositories::contract::ContractRepo;
-use lib_blockchain::repositories::keypairs::KeyPairRepo;
-use lib_licenses::repositories::owners::OwnerRepo;
-use lib_licenses::repositories::shorter::ShorterRepo;
-use lib_licenses::repositories::assets::AssetRepo;
 use lib_blockchain::repositories::ganache::GanacheRepo;
-use lib_licenses::services::assets::AssetService;
+use lib_blockchain::repositories::keypairs::KeyPairRepo;
 use lib_blockchain::services::block_tx::BlockchainTxService;
 use lib_blockchain::services::nfts::NFTsService;
+use lib_config::config::Config;
+use lib_licenses::repositories::assets::AssetRepo;
+use lib_licenses::repositories::owners::OwnerRepo;
+use lib_licenses::repositories::shorter::ShorterRepo;
+use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
 use lib_licenses::services::video::VideoService;
 use lib_users::repositories::users::UsersRepo;
@@ -21,7 +21,7 @@ use tracing::info;
 mod my_lambda;
 
 #[tokio::main]
-async fn main() -> Result<(),Box<dyn std::error::Error + Sync + Send>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         // disable printing the name of the module in every log line.
@@ -47,9 +47,9 @@ async fn main() -> Result<(),Box<dyn std::error::Error + Sync + Send>> {
 
     let key_repo = KeyPairRepo::new(&config);
 
-    let blockchains_repo =BlockchainRepo::new(&config);
-    let contracts_repo= ContractRepo::new(&config);
-    
+    let blockchains_repo = BlockchainRepo::new(&config);
+    let contracts_repo = ContractRepo::new(&config);
+
     let blockchain = GanacheRepo::new(&config, &contracts_repo, &blockchains_repo).await?;
 
     let blockchain_service = NFTsService::new(

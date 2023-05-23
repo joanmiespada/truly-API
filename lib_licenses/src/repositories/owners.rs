@@ -15,7 +15,8 @@ use chrono::{
 use lib_config::config::Config;
 
 use super::schema_owners::{
-    OWNERS_TABLE_NAME, OWNERS_USER_ID_INDEX, OWNER_ASSET_ID_FIELD_PK, OWNER_USER_ID_FIELD_PK, OWNERS_ASSET_ID_INDEX,
+    OWNERS_ASSET_ID_INDEX, OWNERS_TABLE_NAME, OWNERS_USER_ID_INDEX, OWNER_ASSET_ID_FIELD_PK,
+    OWNER_USER_ID_FIELD_PK,
 };
 pub const CREATIONTIME_FIELD_NAME: &str = "creationTime";
 pub const LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
@@ -51,17 +52,11 @@ impl OwnerRepo {
         av: AttributeValue,
     ) -> ResultE<Vec<Owner>> {
         let mut queried = Vec::new();
-        //let user_id_av = AttributeValue::S(id.to_string());
-
-        // let mut filter = "".to_string();
-        //filter.push_str(OWNER_USER_ID_FIELD_PK);
-        //filter.push_str(" = :value");
 
         let request = self
             .client
             .query()
             .table_name(OWNERS_TABLE_NAME)
-            //.index_name(OWNERS_USER_ID_INDEX)
             .index_name(index_name)
             .key_condition_expression(filter)
             .expression_attribute_values(label, av)
@@ -88,16 +83,6 @@ impl OwnerRepo {
                         for doc in aux {
                             let mut owner = Owner::new();
                             mapping_from_doc_to_owner(doc, &mut owner);
-                            /*
-                            let ass1_id = doc.get(OWNER_ASSET_ID_FIELD_PK).unwrap();
-                            let ass1_id1 = ass1_id.as_s().unwrap();
-                            let ass1_id1_1 = Uuid::from_str(ass1_id1).unwrap();
-
-                            let usr1_id = doc.get(OWNER_USER_ID_FIELD_PK).unwrap();
-                            let usr1_id1 = usr1_id.as_s().unwrap();*/
-
-                            //owner.set_asset_id(&ass1_id1_1 );
-                            //owner.set_user_id(&usr1_id1);
                             queried.push(owner.clone());
                         }
                     }
@@ -185,59 +170,10 @@ impl OwnerRepository for OwnerRepo {
         filter.push_str(" = :value");
 
         let res = self
-            .get_by_filter(&filter, &":value".to_string(),OWNERS_USER_ID_INDEX, id_av)
+            .get_by_filter(&filter, &":value".to_string(), OWNERS_USER_ID_INDEX, id_av)
             .await?;
 
         Ok(res)
-        /*
-
-        let request = self
-            .client
-            .query()
-            .table_name(OWNERS_TABLE_NAME)
-            .index_name(OWNERS_USER_ID_INDEX)
-            .key_condition_expression(filter)
-            .expression_attribute_values(":value".to_string(), user_id_av)
-            .select(Select::AllProjectedAttributes);
-
-        let results = request.send().await;
-        match results {
-            Err(e) => {
-                let mssag = format!(
-                    "Error at [{}] - {} ",
-                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
-                    e
-                );
-                tracing::error!(mssag);
-                return Err( OwnerDynamoDBError(e.to_string()).into());
-            }
-            Ok(data) => {
-                let op_items = data.items();
-                match op_items {
-                    None => {
-                        return Err(OwnerNoExistsError("id doesn't exist".to_string()).into());
-                    }
-                    Some(aux) => {
-                        for doc in aux {
-                            let ass1_id = doc.get(OWNER_ASSET_ID_FIELD_PK).unwrap();
-                            let ass1_id1 = ass1_id.as_s().unwrap();
-                            let ass1_id1_1 = Uuid::from_str(ass1_id1).unwrap();
-
-                            let usr1_id = doc.get(OWNER_USER_ID_FIELD_PK).unwrap();
-                            let usr1_id1 = usr1_id.as_s().unwrap();
-
-                            let mut owner = Owner::new();
-                            owner.set_asset_id(&ass1_id1_1 );
-                            owner.set_user_id(&usr1_id1);
-                            queried.push(owner.clone());
-                        }
-                    }
-                }
-            }
-        }
-
-        Ok(queried)
-        */
     }
 
     async fn get_by_asset(&self, id: &Uuid) -> ResultE<Owner> {
@@ -247,7 +183,12 @@ impl OwnerRepository for OwnerRepo {
         filter.push_str(" = :value");
 
         let res = self
-            .get_by_filter(&filter, &":value".to_string(),OWNERS_ASSET_ID_INDEX, _id_av)
+            .get_by_filter(
+                &filter,
+                &":value".to_string(),
+                OWNERS_ASSET_ID_INDEX,
+                _id_av,
+            )
             .await?;
 
         if res.len() == 0 {
@@ -256,40 +197,6 @@ impl OwnerRepository for OwnerRepo {
             let first = res[0].to_owned();
             Ok(first)
         }
-        /*
-        let request = self
-            .client
-            .get_item()
-            .table_name(OWNERS_TABLE_NAME)
-            .key(OWNER_USER_ID_FIELD_PK, _id_av.clone());
-
-
-
-        let results = request.send().await;
-        match results {
-            Err(e) => {
-                let mssag = format!(
-                    "Error at [{}] - {} ",
-                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
-                    e
-                );
-                tracing::error!(mssag);
-                return Err(OwnerDynamoDBError(e.to_string()).into());
-            }
-            Ok(_) => {}
-        }
-        match results.unwrap().item {
-            None => Err(OwnerNoExistsError("id doesn't exist".to_string()).into()),
-            Some(aux) => {
-                // for doc in docs {
-                let mut owner = Owner::new();
-
-                mapping_from_doc_to_owner(&aux, &mut owner);
-
-                // }
-                Ok(owner)
-            }
-        }*/
     }
 
     async fn get_by_user_asset(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Owner> {
@@ -347,12 +254,7 @@ impl OwnerRepository for OwnerRepo {
             .expression_attribute_values(":new_owner", new_owner_id_av);
 
         match request.send().await {
-            Ok(_) => {
-                //let mut ow = Owner::new();
-                //ow.set_asset_id(old_owner.asset_id());
-                //ow.set_user_id(new_owner );
-                Ok(())
-            }
+            Ok(_) => Ok(()),
             Err(e) => {
                 let mssag = format!(
                     "Error at [{}] - {} ",

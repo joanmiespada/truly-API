@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-
 #[derive(Debug)]
 pub struct AssetAlreadyExistsError(pub String);
 
@@ -12,12 +11,10 @@ impl Display for AssetAlreadyExistsError {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct AssetDynamoDBError(pub String);
 
-
 impl std::error::Error for AssetDynamoDBError {}
-
 
 impl Display for AssetDynamoDBError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -50,9 +47,9 @@ impl Display for AssetMismatchError {
 #[derive(Debug)]
 pub struct AssetParamNotAccepted(pub String);
 
-impl std::error::Error for AssetParamNotAccepted{}
+impl std::error::Error for AssetParamNotAccepted {}
 
-impl Display for AssetParamNotAccepted{
+impl Display for AssetParamNotAccepted {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "asset's data is unacceptable: {}", self.0)
     }
@@ -61,9 +58,9 @@ impl Display for AssetParamNotAccepted{
 #[derive(Debug)]
 pub struct AssetStatusError(pub String);
 
-impl std::error::Error for AssetStatusError{}
+impl std::error::Error for AssetStatusError {}
 
-impl Display for AssetStatusError{
+impl Display for AssetStatusError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "asset's status: {}", self.0)
     }
@@ -72,9 +69,9 @@ impl Display for AssetStatusError{
 #[derive(Debug)]
 pub struct AssetBlockachainError(pub String);
 
-impl std::error::Error for AssetBlockachainError{}
+impl std::error::Error for AssetBlockachainError {}
 
-impl Display for AssetBlockachainError{
+impl Display for AssetBlockachainError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "blockchain error: {}", self.0)
     }
@@ -83,9 +80,9 @@ impl Display for AssetBlockachainError{
 #[derive(Debug)]
 pub struct AssetTreeError(pub String);
 
-impl std::error::Error for AssetTreeError{}
+impl std::error::Error for AssetTreeError {}
 
-impl Display for AssetTreeError{
+impl Display for AssetTreeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "asset tree error: {}", self.0)
     }

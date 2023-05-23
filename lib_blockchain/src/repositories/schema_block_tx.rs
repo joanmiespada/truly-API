@@ -1,8 +1,10 @@
-
-
-use aws_sdk_dynamodb::{types::{
-    AttributeDefinition, KeySchemaElement, KeyType, ScalarAttributeType, BillingMode, GlobalSecondaryIndex, Projection, ProjectionType,
-},  Error};
+use aws_sdk_dynamodb::{
+    types::{
+        AttributeDefinition, BillingMode, GlobalSecondaryIndex, KeySchemaElement, KeyType,
+        Projection, ProjectionType, ScalarAttributeType,
+    },
+    Error,
+};
 
 pub const TX_TABLE_NAME: &str = "truly_blockchain_txs";
 pub const TX_ASSET_ID_FIELD_PK: &str = "assetId";
@@ -10,19 +12,17 @@ pub const TX_TIMESTAMP_PK: &str = "timestamp";
 pub const TX_FIELD: &str = "tx";
 pub const TX_INDEX_NAME: &str = "tx_index";
 
-pub async fn create_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
-
-
+pub async fn create_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Result<(), Error> {
     let asset_ad = AttributeDefinition::builder()
         .attribute_name(TX_ASSET_ID_FIELD_PK)
         .attribute_type(ScalarAttributeType::S)
         .build();
     let time_ad = AttributeDefinition::builder()
-        .attribute_name( TX_TIMESTAMP_PK)
+        .attribute_name(TX_TIMESTAMP_PK)
         .attribute_type(ScalarAttributeType::S)
         .build();
     let tx_ad = AttributeDefinition::builder()
-        .attribute_name( TX_FIELD)
+        .attribute_name(TX_FIELD)
         .attribute_type(ScalarAttributeType::S)
         .build();
 
@@ -50,7 +50,6 @@ pub async fn create_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Re
         )
         .build();
 
-
     let op = client
         .create_table()
         .table_name(TX_TABLE_NAME)
@@ -64,17 +63,16 @@ pub async fn create_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Re
         .send()
         .await;
     match op {
-        Err(e)=> {
-            return Err(e.into())
-        },
-        Ok(_)=> Ok(())
-    } 
-
+        Err(e) => return Err(e.into()),
+        Ok(_) => Ok(()),
+    }
 }
-pub async fn delete_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Result<(),Error> {
-
-    client.delete_table().table_name(TX_TABLE_NAME).send().await?;
+pub async fn delete_schema_transactions(client: &aws_sdk_dynamodb::Client) -> Result<(), Error> {
+    client
+        .delete_table()
+        .table_name(TX_TABLE_NAME)
+        .send()
+        .await?;
 
     Ok(())
 }
-

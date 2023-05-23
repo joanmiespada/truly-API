@@ -1,9 +1,9 @@
-use std::{collections::HashMap, str::FromStr};
-use aws_sdk_dynamodb::types::builders::PutBuilder;
 use async_trait::async_trait;
+use aws_sdk_dynamodb::types::builders::PutBuilder;
 use aws_sdk_dynamodb::types::{AttributeValue, Put, TransactWriteItem};
 use chrono::Local;
 use lib_config::config::Config;
+use std::{collections::HashMap, str::FromStr};
 use url::Url;
 
 use crate::{
@@ -40,10 +40,7 @@ impl BlockchainRepo {
         }
     }
 
-    fn new_or_update(
-        &self,
-        blockchain: &Blockchain,
-    ) -> ResultE<PutBuilder> {
+    fn new_or_update(&self, blockchain: &Blockchain) -> ResultE<PutBuilder> {
         let id_av = AttributeValue::S(blockchain.id().to_string());
 
         let url_av = AttributeValue::S(blockchain.url().to_string());
@@ -134,7 +131,6 @@ impl BlockchainRepository for BlockchainRepo {
         match results.unwrap().item {
             None => Err(BlockchainNoExistsError("id doesn't exist".to_string()).into()),
             Some(aux) => {
-
                 let cont = mapping_from_doc_to_blockchain(&aux);
 
                 Ok(cont)
@@ -143,21 +139,18 @@ impl BlockchainRepository for BlockchainRepo {
     }
 }
 
-pub fn mapping_from_doc_to_blockchain(
-    doc: &HashMap<String, AttributeValue>) ->Blockchain
-{ 
-    
+pub fn mapping_from_doc_to_blockchain(doc: &HashMap<String, AttributeValue>) -> Blockchain {
     let _id = doc.get(BLOCKCHAIN_ID_FIELD_PK).unwrap();
     let id = _id.as_s().unwrap().to_owned();
 
-    let _url = doc.get(BLOCKCHAIN_URL_FIELD_NAME ).unwrap();
+    let _url = doc.get(BLOCKCHAIN_URL_FIELD_NAME).unwrap();
     let url1 = _url.as_s().unwrap();
     let url = Url::from_str(url1.as_str()).unwrap();
 
-    let _api_key= doc.get( BLOCKCHAIN_API_KEY_FIELD_NAME ).unwrap();
-    let api_key= _api_key.as_s().unwrap().to_owned();
+    let _api_key = doc.get(BLOCKCHAIN_API_KEY_FIELD_NAME).unwrap();
+    let api_key = _api_key.as_s().unwrap().to_owned();
 
-    let _confir = doc.get( BLOCKCHAIN_CONFIRMATIONS_FIELD_NAME).unwrap();
+    let _confir = doc.get(BLOCKCHAIN_CONFIRMATIONS_FIELD_NAME).unwrap();
     let confirm = _confir.as_n().unwrap();
     let confirmations = u16::from_str(confirm).unwrap();
 
@@ -168,14 +161,6 @@ pub fn mapping_from_doc_to_blockchain(
     let _explorer_api_key = doc.get(BLOCKCHAIN_EXPLORER_API_KEY_FIELD_NAME).unwrap();
     let explorer_api_key = _explorer_api_key.as_s().unwrap().to_owned();
 
-    let res = Blockchain::new(
-        id,
-        url,
-        api_key,
-        confirmations,
-        explorer,
-        explorer_api_key
-    );
+    let res = Blockchain::new(id, url, api_key, confirmations, explorer, explorer_api_key);
     return res;
-
 }

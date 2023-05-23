@@ -4,7 +4,7 @@ use serde_json::json;
 use std::fmt;
 use uuid::Uuid;
 use validator::Validate;
-use web3::types::{H256,H160, U64, U256};
+use web3::types::{H160, H256, U256, U64};
 
 #[derive(Clone, Serialize, Validate, Deserialize, Debug)]
 pub struct BlockchainTx {
@@ -19,7 +19,7 @@ pub struct BlockchainTx {
     from: Option<H160>,
     to: Option<H160>,
     contract_id: u16,
-    tx_error: Option<String>
+    tx_error: Option<String>,
 }
 
 impl fmt::Display for BlockchainTx {
@@ -41,7 +41,7 @@ impl BlockchainTx {
         from: Option<H160>,
         to: Option<H160>,
         contract_id: u16,
-        tx_error: Option<String>
+        tx_error: Option<String>,
     ) -> BlockchainTx {
         //let creation_time = Utc::now();
         BlockchainTx {
@@ -56,7 +56,7 @@ impl BlockchainTx {
             from,
             to,
             contract_id,
-            tx_error
+            tx_error,
         }
     }
 

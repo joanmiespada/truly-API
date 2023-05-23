@@ -4,7 +4,6 @@ use std::fmt;
 use uuid::Uuid;
 use validator::Validate;
 
-
 pub trait Userer {
     fn check_login(&self) -> bool;
     fn promote_to_admin(&mut self);
@@ -63,7 +62,7 @@ pub enum UserStatus {
     Disabled,
 }
 
-impl UserStatus{
+impl UserStatus {
     pub fn is_disabled(&self) -> bool {
         match *self {
             UserStatus::Disabled => true,
@@ -72,18 +71,18 @@ impl UserStatus{
     }
 }
 
-#[derive(Clone, Serialize,Validate, Deserialize, Debug)]
+#[derive(Clone, Serialize, Validate, Deserialize, Debug)]
 pub struct User {
-    #[validate(length( max=100))]
+    #[validate(length(max = 100))]
     user_id: String,
     creation_time: DateTime<Utc>,
     last_update_time: DateTime<Utc>,
     #[validate(email)]
     email: Option<String>,
     //password: String, // don't use it here!
-    #[validate(length( max=100))]
+    #[validate(length(max = 100))]
     device: Option<String>,
-    #[validate(length( max=100))]
+    #[validate(length(max = 100))]
     wallet_address: Option<String>,
     roles: Vec<UserRoles>,
     status: UserStatus,
@@ -154,11 +153,11 @@ impl User {
             _ => true,
         }
     }
-    
-    pub fn wallet_address (&self) -> &Option<String> {
+
+    pub fn wallet_address(&self) -> &Option<String> {
         &self.wallet_address
     }
-    pub fn set_wallet_address(&mut self, val: &String ) {
+    pub fn set_wallet_address(&mut self, val: &String) {
         self.wallet_address = Some(val.clone())
     }
     pub fn status(&self) -> &UserStatus {
@@ -193,7 +192,7 @@ impl UserStatus {
         match input {
             "Enabled" => Some(UserStatus::Enabled),
             "Disabled" => Some(UserStatus::Disabled),
-            _ => None, 
+            _ => None,
         }
     }
 }

@@ -1,12 +1,9 @@
 use std::fmt::Display;
 
-
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct BlockchainDynamoDBError(pub String);
 
-
 impl std::error::Error for BlockchainDynamoDBError {}
-
 
 impl Display for BlockchainDynamoDBError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -24,4 +21,3 @@ impl Display for BlockchainNoExistsError {
         write!(f, "blockchain doesn't exists in database: {}", self.0)
     }
 }
-

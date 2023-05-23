@@ -2,7 +2,7 @@
 
 use std::{fmt, str::FromStr};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use url::Url;
 use uuid::Uuid;
 
@@ -17,14 +17,13 @@ pub struct VideoResult {
     pub video_op: Option<bool>,
     pub video_error: Option<String>,
     pub video_licensed_asset_id: Option<Uuid>,
-    pub video_licensed : Option<Url>, //final and permanent bucket
+    pub video_licensed: Option<Url>, //final and permanent bucket
     pub video_licensed_hash: Option<String>,
     pub keep_original: bool,
-    pub video_original : Option<Url>, //final and permanent bucket
-    pub video_original_hash: Option<String>, 
-    pub video_process_status: Option<VideoProcessStatus>
+    pub video_original: Option<Url>, //final and permanent bucket
+    pub video_original_hash: Option<String>,
+    pub video_process_status: Option<VideoProcessStatus>,
 }
-
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub enum VideoProcessStatus {
@@ -36,7 +35,7 @@ pub enum VideoProcessStatus {
     UploadedLicensed,
     UploadedOriginal,
     CompletedSuccessfully,
-    Error
+    Error,
 }
 
 impl fmt::Display for VideoProcessStatus {
@@ -50,7 +49,7 @@ impl fmt::Display for VideoProcessStatus {
             VideoProcessStatus::Uploading => write!(f, "Uploading"),
             VideoProcessStatus::UploadedLicensed => write!(f, "Uploaded license asset"),
             VideoProcessStatus::UploadedOriginal => write!(f, "Uploaded original asset"),
-            VideoProcessStatus::Downloaded => write!(f, "Downloaded")
+            VideoProcessStatus::Downloaded => write!(f, "Downloaded"),
         }
     }
 }
@@ -58,7 +57,7 @@ impl fmt::Display for VideoProcessStatus {
 #[derive(Debug, PartialEq, Eq)]
 pub struct VideoProcessStatusParseError;
 
-impl FromStr for VideoProcessStatus{
+impl FromStr for VideoProcessStatus {
     type Err = VideoProcessStatusParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -72,14 +71,13 @@ impl FromStr for VideoProcessStatus{
             "Uploaded license asset" => Ok(VideoProcessStatus::UploadedLicensed),
             "Uploaded original asset" => Ok(VideoProcessStatus::UploadedOriginal),
             "Downloaded" => Ok(VideoProcessStatus::Downloaded),
-            _ => Err(VideoProcessStatusParseError)
-            
+            _ => Err(VideoProcessStatusParseError),
         }
     }
 }
 
-impl fmt::Display for VideoProcessStatusParseError{
+impl fmt::Display for VideoProcessStatusParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,"error parsing video process status")
+        write!(f, "error parsing video process status")
     }
 }

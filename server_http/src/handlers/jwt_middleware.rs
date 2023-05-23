@@ -2,27 +2,27 @@ use actix_web::{
     body::EitherBody,
     dev::{self, Service, ServiceRequest, ServiceResponse, Transform},
     http::header::{HeaderMap, HeaderName, HeaderValue, AUTHORIZATION},
-    Error,  HttpResponse, 
+    Error, HttpResponse,
 };
 use futures_util::future::LocalBoxFuture;
 use std::future::{ready, Ready};
 
 pub const UID_HEAD_KEY: &str = "api-user-uid";
 
-use lib_util_jwt::{check_jwt_token, Claims };
+use lib_util_jwt::{check_jwt_token, Claims};
 
 // There are two steps in middleware processing.
 // 1. Middleware initialization, middleware factory gets called with
 //    next service in chain as parameter.
 // 2. Middleware's call method gets called with normal request.
 pub struct Jwt; //{
-    //environment_vars: EnvironmentVariables
-//}
+                //environment_vars: EnvironmentVariables
+                //}
 
 //impl Jwt{
 //    pub fn new() -> Jwt {
-//        Jwt { 
-           // environment_vars: cnf.env_vars().clone(),
+//        Jwt {
+// environment_vars: cnf.env_vars().clone(),
 //        }
 //    }
 //}
@@ -73,8 +73,8 @@ where
 
         let claim_ops = get_header_jwt(req_headers);
         match claim_ops {
-            Err(e) => { error_message = e.clone() },
-            Ok(claims)=>{
+            Err(e) => error_message = e.clone(),
+            Ok(claims) => {
                 jwt_token = true;
                 uid = Some(claims.uid);
             }
@@ -113,7 +113,7 @@ pub fn get_header_jwt(req_headers: &HeaderMap) -> Result<Claims, String> {
             match std::str::from_utf8(header_v.as_bytes()) {
                 Ok(header_field_value) => {
                     let jwt_secret = std::env::var("JWT_TOKEN_BASE").unwrap(); //TODO! Remove it here and inject config!!!
-                    //let jwt_secret = .unwrap(); //TODO! Remove it here and inject config!!!
+                                                                               //let jwt_secret = .unwrap(); //TODO! Remove it here and inject config!!!
 
                     let claim = check_jwt_token(&header_field_value.to_string(), &jwt_secret);
 
@@ -132,4 +132,3 @@ pub fn get_header_jwt(req_headers: &HeaderMap) -> Result<Claims, String> {
         None => Err("jwt error: no auth header field present".to_string()),
     }
 }
-

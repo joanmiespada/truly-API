@@ -2,14 +2,17 @@
 
 use lambda_runtime::{run, service_fn, Error};
 
-use lib_blockchain::{repositories::{block_tx::BlockchainTxRepo, keypairs::KeyPairRepo, blockchain::BlockchainRepo, contract::ContractRepo, ganache::GanacheRepo}, services::{block_tx::BlockchainTxService, nfts::NFTsService}};
+use lib_blockchain::{
+    repositories::{
+        block_tx::BlockchainTxRepo, blockchain::BlockchainRepo, contract::ContractRepo,
+        ganache::GanacheRepo, keypairs::KeyPairRepo,
+    },
+    services::{block_tx::BlockchainTxService, nfts::NFTsService},
+};
 use lib_config::config::Config;
 use lib_licenses::{
     repositories::{assets::AssetRepo, owners::OwnerRepo, shorter::ShorterRepo},
-    services::{
-        assets::AssetService,
-        owners::OwnerService,
-    },
+    services::{assets::AssetService, owners::OwnerService},
 };
 use my_lambda::function_handler;
 

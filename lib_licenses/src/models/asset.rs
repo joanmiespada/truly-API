@@ -1,15 +1,13 @@
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use url::Url;
-use web3::types::H256;
 use std::{fmt, str::FromStr};
+use url::Url;
 use uuid::Uuid;
 use validator::Validate;
+use web3::types::H256;
 
 use super::video::VideoProcessStatus;
-
 
 #[derive(Clone, Serialize, Validate, Deserialize, Debug)]
 pub struct Asset {
@@ -21,9 +19,9 @@ pub struct Asset {
 
     latitude: Option<f64>,
     longitude: Option<f64>,
-    #[validate(length( max=1000))]
+    #[validate(length(max = 1000))]
     hash: Option<String>,
-    #[validate(length( max=1000))]
+    #[validate(length(max = 1000))]
     license: Option<String>,
 
     //#[validate(length( max=1000))]
@@ -41,13 +39,12 @@ pub struct Asset {
     father: Option<Uuid>,
 
     source: Option<SourceType>,
-    source_details: Option<String>
-
+    source_details: Option<String>,
 }
 
 impl fmt::Display for Asset {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f,"{}", json!(self).to_string())
+        write!(f, "{}", json!(self).to_string())
     }
 }
 
@@ -72,7 +69,7 @@ impl Asset {
             video_licensing_status: VideoLicensingStatus::NeverStarted,
             video_process_status: None,
             source: None,
-            source_details: None
+            source_details: None,
         }
     }
 
@@ -178,10 +175,10 @@ impl Asset {
     pub fn set_video_licensing_status(&mut self, val: VideoLicensingStatus) {
         self.video_licensing_status = val.clone()
     }
-    pub fn video_process_status (&self) -> &Option<VideoProcessStatus> {
+    pub fn video_process_status(&self) -> &Option<VideoProcessStatus> {
         &self.video_process_status
     }
-    pub fn set_video_process_status (&mut self, val: &Option<VideoProcessStatus>) {
+    pub fn set_video_process_status(&mut self, val: &Option<VideoProcessStatus>) {
         self.video_process_status = val.clone()
     }
     pub fn source(&self) -> &Option<SourceType> {
@@ -190,27 +187,26 @@ impl Asset {
     pub fn set_source(&mut self, val: &Option<SourceType>) {
         self.source = val.clone()
     }
-    pub fn source_details (&self) -> &Option<String> {
+    pub fn source_details(&self) -> &Option<String> {
         &self.source_details
     }
     pub fn set_source_details(&mut self, val: &Option<String>) {
         self.source_details = val.clone()
     }
-/* 
-    pub fn (&self) -> &Option<> {
-        &self.
-    }
-    pub fn set_(&mut self, val: &Option<>) {
-        self. = val.clone()
-    }
-*/
-
+    /*
+        pub fn (&self) -> &Option<> {
+            &self.
+        }
+        pub fn set_(&mut self, val: &Option<>) {
+            self. = val.clone()
+        }
+    */
 }
 
 #[derive(Clone, Serialize, Validate, Deserialize, Debug)]
-pub struct AssetEnhanced{
+pub struct AssetEnhanced {
     pub asset: Asset,
-    pub sons: Vec<Asset>
+    pub sons: Vec<Asset>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
@@ -219,7 +215,7 @@ pub enum AssetStatus {
     Disabled,
 }
 
-impl AssetStatus{
+impl AssetStatus {
     pub fn is_disabled(&self) -> bool {
         match *self {
             AssetStatus::Disabled => true,
@@ -239,12 +235,12 @@ impl fmt::Display for AssetStatus {
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseAssetStatusError;
 impl FromStr for AssetStatus {
-    type Err = ParseAssetStatusError ;
+    type Err = ParseAssetStatusError;
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         match input {
             "Enabled" => Ok(AssetStatus::Enabled),
             "Disabled" => Ok(AssetStatus::Disabled),
-            _ => Err(ParseAssetStatusError), 
+            _ => Err(ParseAssetStatusError),
         }
     }
 }
@@ -255,15 +251,13 @@ impl fmt::Display for ParseAssetStatusError {
     }
 }
 
-
-
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub enum MintingStatus {
     NeverMinted,
     Scheduled,
     Started,
     CompletedSuccessfully,
-    Error
+    Error,
 }
 
 impl fmt::Display for MintingStatus {
@@ -273,7 +267,7 @@ impl fmt::Display for MintingStatus {
             MintingStatus::Started => write!(f, "Started"),
             MintingStatus::CompletedSuccessfully => write!(f, "Completed successfully"),
             MintingStatus::Error => write!(f, "Error"),
-            MintingStatus::NeverMinted => write!(f, "Never minted")
+            MintingStatus::NeverMinted => write!(f, "Never minted"),
         }
     }
 }
@@ -291,8 +285,7 @@ impl FromStr for MintingStatus {
             "Completed successfully" => Ok(MintingStatus::CompletedSuccessfully),
             "Error" => Ok(MintingStatus::Error),
             "Never minted" => Ok(MintingStatus::NeverMinted),
-            _ => Err(MintinStatusParseError)
-            
+            _ => Err(MintinStatusParseError),
         }
     }
 }
@@ -304,7 +297,7 @@ pub enum VideoLicensingStatus {
     Started,
     CompletedSuccessfully,
     AlreadyLicensed,
-    Error
+    Error,
 }
 
 impl fmt::Display for VideoLicensingStatus {
@@ -315,7 +308,7 @@ impl fmt::Display for VideoLicensingStatus {
             VideoLicensingStatus::CompletedSuccessfully => write!(f, "Completed successfully"),
             VideoLicensingStatus::Error => write!(f, "Error"),
             VideoLicensingStatus::NeverStarted => write!(f, "Never started"),
-            VideoLicensingStatus::AlreadyLicensed => write!(f, "Already licensed")
+            VideoLicensingStatus::AlreadyLicensed => write!(f, "Already licensed"),
         }
     }
 }
@@ -334,8 +327,7 @@ impl FromStr for VideoLicensingStatus {
             "Error" => Ok(VideoLicensingStatus::Error),
             "Never started" => Ok(VideoLicensingStatus::NeverStarted),
             "Already licensed" => Ok(VideoLicensingStatus::AlreadyLicensed),
-            _ => Err(VideoLicensingStatusParseError)
-            
+            _ => Err(VideoLicensingStatusParseError),
         }
     }
 }
@@ -361,14 +353,14 @@ impl fmt::Display for SourceType {
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseSourceTypeError;
 impl FromStr for SourceType {
-    type Err = ParseSourceTypeError ;
+    type Err = ParseSourceTypeError;
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         match input {
             "TrulyApp" => Ok(SourceType::TrulyApp),
             "TrulyWeb" => Ok(SourceType::TrulyWeb),
             "TrulyApi" => Ok(SourceType::TrulyApi),
             "Others" => Ok(SourceType::Others),
-            _ => Err(ParseSourceTypeError), 
+            _ => Err(ParseSourceTypeError),
         }
     }
 }
@@ -377,4 +369,3 @@ impl fmt::Display for ParseSourceTypeError {
         write!(f, "error parsing source type")
     }
 }
- 

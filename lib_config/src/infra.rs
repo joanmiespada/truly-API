@@ -1,6 +1,6 @@
 use aws_config::meta::region::RegionProviderChain;
 use aws_config::SdkConfig;
-use aws_sdk_dynamodb::{primitives::Blob, config::Credentials};
+use aws_sdk_dynamodb::{config::Credentials, primitives::Blob};
 use aws_sdk_kms::types::KeyUsageType;
 use base64::{engine::general_purpose, Engine as _};
 
@@ -15,7 +15,7 @@ const TAG_VALUE: &str = "Truly";
 pub async fn create_secret_manager_keys(
     secrets_json: &str,
     client: &aws_sdk_secretsmanager::Client,
-) -> Result<(), Box<dyn std::error::Error + Send +Sync>> {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     client
         .create_secret()
         .name(SECRETS_MANAGER_APP_KEYS.to_string())
@@ -48,8 +48,8 @@ pub async fn create_secret_manager_secret_key(
         .send()
         .await;
     match aux {
-        Err(e) => panic!("{}",e.to_string()),
-        Ok(_) => Ok(())
+        Err(e) => panic!("{}", e.to_string()),
+        Ok(_) => Ok(()),
     }
 }
 
@@ -61,7 +61,7 @@ pub async fn create_key(
         .description("key used to encryp private key for contract owner")
         .key_usage(KeyUsageType::EncryptDecrypt)
         .tags(
-            aws_sdk_kms::types::Tag::builder() 
+            aws_sdk_kms::types::Tag::builder()
                 .tag_key(TAG_PROJECT.to_owned())
                 .tag_value(TAG_VALUE.to_owned())
                 .build(),
@@ -97,7 +97,7 @@ pub async fn store_secret_key(
     info_to_be_encrypted: &str,
     kms_key_id: &str,
     config: &Config,
-) -> Result<String, Box<dyn std::error::Error + Send + Sync >> {
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let aws = config.aws_config();
 
     let client = aws_sdk_kms::Client::new(aws);

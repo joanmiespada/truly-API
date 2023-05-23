@@ -3,13 +3,13 @@ use lib_config::config::Config;
 use lib_users::models::user::UserRoles;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
-use tracing::{instrument, info};
+use tracing::{info, instrument};
 
 use self::error::ApiLambdaAdminUserError;
 use self::get_user_by_id::get_user_by_id;
 use self::get_users::get_users;
 use self::password_update_user::password_update_user;
-use self::promote_user::{promote_user,downgrade_user };
+use self::promote_user::{downgrade_user, promote_user};
 use self::update_user::update_user;
 use matchit::Router;
 
@@ -34,12 +34,15 @@ pub async fn function_handler(
         Err(e) => {
             return build_resp(e.to_string(), StatusCode::UNAUTHORIZED);
         }
-        Ok(value) => {
-            match value{
-                false => {return build_resp("you aren't admin, please login as admin".to_string(), StatusCode::UNAUTHORIZED);}
-                _ =>{}
+        Ok(value) => match value {
+            false => {
+                return build_resp(
+                    "you aren't admin, please login as admin".to_string(),
+                    StatusCode::UNAUTHORIZED,
+                );
             }
-        }
+            _ => {}
+        },
     }
 
     let mut router = Router::new();

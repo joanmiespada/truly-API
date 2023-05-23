@@ -44,7 +44,7 @@ pub async fn get_users(
     }
     if page_number < PAGENUM_MIN {
         let message = format!("pageNumber is {}, when the minimum value is 1", page_number);
-        return build_resp( message.to_string(), StatusCode::BAD_REQUEST );
+        return build_resp(message.to_string(), StatusCode::BAD_REQUEST);
         //return HttpResponse::BadRequest().body(message);
     }
     if page_size < PAGESIZE_MIN || page_size > PAGESIZE_MAX {
@@ -53,7 +53,7 @@ pub async fn get_users(
             page_size, PAGENUM_MIN, PAGESIZE_MAX
         );
         //return HttpResponse::BadRequest().body(message);
-        return build_resp( message.to_string(), StatusCode::BAD_REQUEST );
+        return build_resp(message.to_string(), StatusCode::BAD_REQUEST);
     }
 
     let res = user_service.get_all(page_number, page_size).await;
@@ -66,7 +66,7 @@ pub async fn get_users(
         Ok(vec_user) =>
         //HttpResponse::Ok().json(vec_user)
         {
-            return build_resp( json!(vec_user).to_string(), StatusCode::OK );
+            return build_resp(json!(vec_user).to_string(), StatusCode::OK);
         }
     }
 }

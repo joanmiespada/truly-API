@@ -1,11 +1,11 @@
-use std::{time::Duration, str::FromStr};
+use std::{str::FromStr, time::Duration};
 
 use web3::{
     contract::{Contract, Options},
     types::{H160, U256},
 };
 
-/// run it after local ganache bootstrapped. 
+/// run it after local ganache bootstrapped.
 
 pub async fn deploy_contract_locally(
     url: &str,
@@ -38,7 +38,6 @@ pub async fn deploy_contract_locally(
         )
         //.sign_with_key_and_execute(bytecode, (), &contract_owner_private, Some(chain_id))
         .await?;
-
 
     let contract_address = format!("{:?}", contract_deploy.address());
 

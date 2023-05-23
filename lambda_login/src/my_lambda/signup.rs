@@ -2,7 +2,7 @@ use crate::my_lambda::build_resp;
 use lambda_http::RequestPayloadExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
-use lib_users::errors::users::{UserDynamoDBError, UserAlreadyExistsError, UserMismatchError};
+use lib_users::errors::users::{UserAlreadyExistsError, UserDynamoDBError, UserMismatchError};
 use lib_users::models::user::User;
 use lib_users::services::users::{UserManipulation, UsersService};
 use lib_users::validate_password;
@@ -31,7 +31,6 @@ pub async fn create_basic_user(
     config: &Config,
     user_service: &UsersService,
 ) -> Result<Response<String>, Box<dyn std::error::Error>> {
-
     let mut user = User::new();
     let new_password;
     match _req.payload::<NewUser>() {
@@ -71,9 +70,9 @@ pub async fn create_basic_user(
             } else if let Some(err) = e.downcast_ref::<UserMismatchError>() {
                 //HttpResponse::BadRequest().body( err.to_string())
                 build_resp(err.to_string(), StatusCode::NOT_ACCEPTABLE)
-            }else if let Some(m) = e.downcast_ref::<ValidationError>() {
+            } else if let Some(m) = e.downcast_ref::<ValidationError>() {
                 return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
-            }else {
+            } else {
                 //HttpResponse::InternalServerError().finish()
                 build_resp(e.to_string(), StatusCode::INTERNAL_SERVER_ERROR)
             }

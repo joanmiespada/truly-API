@@ -2,14 +2,12 @@ use lambda_http::service_fn;
 use lib_config::config::Config;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
-use my_lambda::{ error::ApiLambdaUserError, function_handler};
+use my_lambda::{error::ApiLambdaUserError, function_handler};
 
 mod my_lambda;
 
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         // disable printing the name of the module in every log line.
@@ -24,8 +22,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);
 
-
-    let resp = lambda_http::run(service_fn(|event | {
+    let resp = lambda_http::run(service_fn(|event| {
         function_handler(&config, &user_service, event)
     }))
     .await;

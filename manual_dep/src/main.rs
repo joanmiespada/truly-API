@@ -1,13 +1,15 @@
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
 use lib_async_ops::sns::create as create_topic;
 use lib_async_ops::sqs::create as create_queue;
+use lib_blockchain::repositories::{
+    schema_block_tx, schema_blockchain, schema_contract, schema_keypairs,
+};
+use lib_blockchain::services::contract::deploy_contract_locally;
 use lib_config::config::Config;
 use lib_config::infra::{
     create_key, create_secret_manager_keys, create_secret_manager_secret_key, store_secret_key,
 };
 use lib_licenses::repositories::{schema_asset, schema_owners};
-use lib_blockchain::repositories::{schema_block_tx, schema_keypairs, schema_blockchain, schema_contract};
-use lib_blockchain::services::contract::deploy_contract_locally;
 use lib_users::models::user::User;
 use lib_users::repositories::schema_user;
 use lib_users::repositories::users::UsersRepo;
@@ -15,7 +17,6 @@ use lib_users::services::users::{PromoteUser, UserManipulation, UsersService};
 use serde::{Deserialize, Serialize};
 use std::{env, process};
 use structopt::StructOpt;
-
 
 #[derive(Debug, Serialize, Deserialize)]
 struct NewUser {
@@ -116,7 +117,7 @@ async fn command(
                         return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
                     }
                 }
-                "all" =>{
+                "all" => {
                     if create {
                         schema_blockchain::create_schema_blockchains(&client).await?;
                         schema_contract::create_schema_contracts(&client).await?;
@@ -125,7 +126,7 @@ async fn command(
                         schema_keypairs::create_schema_keypairs(&client).await?;
                         schema_block_tx::create_schema_transactions(&client).await?;
                         schema_user::create_schema_users(&client).await?;
-                    } else if delete{
+                    } else if delete {
                         schema_blockchain::delete_schema_blockchains(&client).await?;
                         schema_contract::delete_schema_contracts(&client).await?;
                         schema_owners::delete_schema_owners(&client).await?;
@@ -210,7 +211,6 @@ async fn command(
             let user_repo = UsersRepo::new(&config);
             let user_service = UsersService::new(user_repo);
             if create {
-                
                 let mut user = User::new();
                 user.set_email(&email);
                 let device = uuid::Uuid::new_v4().to_string();
@@ -226,9 +226,9 @@ async fn command(
             }
         }
     }
-    match user_id{
-        None=>{},
-        Some(id)=>{
+    match user_id {
+        None => {}
+        Some(id) => {
             config.load_secrets().await;
             let user_repo = UsersRepo::new(&config);
             let user_service = UsersService::new(user_repo);
@@ -255,7 +255,7 @@ async fn command(
             println!("contract address deployed at: {}", address);
         }
     }
-    
+
     match async_jobs {
         None => {}
         Some(keys_ok) => {
@@ -310,7 +310,7 @@ pub struct Opt {
 
     #[structopt(long = "adminuser")]
     pub adminuser: Option<String>,
-    
+
     #[structopt(long = "user_id")]
     pub user_id: Option<String>,
 

@@ -1,34 +1,28 @@
-
-use lambda_http::{
-      http::StatusCode, lambda_runtime::Context,
-      Request, Response,
-};
 use lambda_http::RequestPayloadExt;
+use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
+use lib_config::config::Config;
 use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError, UserStatusError};
 use lib_users::services::login::LoginOps;
+use lib_users::services::users::UsersService;
 use lib_util_jwt::create_jwt;
 use serde::Deserialize;
 use serde_json::json;
 use tracing::instrument;
-use lib_config::config::Config;
-use lib_users::services::users::UsersService;
 
 use crate::my_lambda::build_resp;
 use validator::{Validate, ValidationError};
 
-#[derive(Debug, Deserialize, Validate )]
+#[derive(Debug, Deserialize, Validate)]
 pub struct LoginPayload {
     #[serde(default)]
     #[validate(email)]
     pub email: Option<String>,
     #[serde(default)]
-    #[validate(length(min = 8, max=50))]
+    #[validate(length(min = 8, max = 50))]
     pub password: Option<String>,
     #[serde(default)]
     pub device: Option<String>,
 }
-
-
 
 #[instrument]
 pub async fn login(
@@ -39,8 +33,8 @@ pub async fn login(
 ) -> Result<Response<String>, Box<dyn std::error::Error>> {
     //let method_name = event.into_parts().0;
     let args = _req.payload::<LoginPayload>();
-    
-     match args{
+
+    match args{
          Err(_) => build_resp("no correct payload attached to the request: either username and password, or device, are mandatories".to_string(), StatusCode::BAD_REQUEST ),
          Ok(user_pass) => {
              match user_pass {
@@ -85,5 +79,3 @@ pub async fn login(
          }
      }
 }
-
-

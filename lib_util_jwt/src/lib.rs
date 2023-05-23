@@ -1,6 +1,5 @@
-
-use http::{HeaderMap, HeaderValue};
 use http::header::AUTHORIZATION;
+use http::{HeaderMap, HeaderValue};
 
 use chrono::Utc;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
@@ -17,7 +16,11 @@ pub struct Claims {
 
 impl std::fmt::Display for Claims {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "uid: {}, roles: {:?}, expire: {}", self.uid, self.roles, self.exp)
+        write!(
+            f,
+            "uid: {}, roles: {:?}, expire: {}",
+            self.uid, self.roles, self.exp
+        )
     }
 }
 
@@ -25,9 +28,8 @@ pub fn create_jwt(
     uid: &str,
     roles: Vec<String>,
     token_secret: &String,
-    exp_hours: i64
+    exp_hours: i64,
 ) -> Result<String, JWTSecurityError> {
-
     let expiration = Utc::now()
         .checked_add_signed(chrono::Duration::hours(exp_hours))
         .expect("valid timestamp")
@@ -35,7 +37,7 @@ pub fn create_jwt(
 
     let claims = Claims {
         uid: uid.to_owned(),
-        roles,//.clone(),
+        roles, //.clone(),
         exp: expiration as usize,
     };
     let header = Header::new(Algorithm::HS512);
@@ -48,7 +50,6 @@ pub fn create_jwt(
 }
 
 pub fn check_jwt_token(token: &str, token_secret: &String) -> Result<Claims, JWTSecurityError> {
-
     if !token.starts_with(BEARER) {
         return Err(JWTSecurityError::from("jwt error".to_string()));
     }
@@ -60,14 +61,16 @@ pub fn check_jwt_token(token: &str, token_secret: &String) -> Result<Claims, JWT
         &Validation::new(Algorithm::HS512),
     );
     match decoded {
-        Err(_) => Err(JWTSecurityError::from("token present but invalid, login again".to_string())),
-        Ok(deco) => Ok(deco.claims)
+        Err(_) => Err(JWTSecurityError::from(
+            "token present but invalid, login again".to_string(),
+        )),
+        Ok(deco) => Ok(deco.claims),
     }
 }
 
 #[derive(Debug)]
 pub struct JWTSecurityError {
-    message: String
+    message: String,
 }
 
 impl std::fmt::Display for JWTSecurityError {
@@ -84,7 +87,7 @@ impl From<String> for JWTSecurityError {
 
 pub fn get_header_jwt(
     req_headers: &HeaderMap<HeaderValue>,
-    jwt_secret: &String
+    jwt_secret: &String,
 ) -> Result<Claims, JWTSecurityError> {
     match req_headers.get(AUTHORIZATION) {
         Some(header_v) => {
@@ -95,15 +98,17 @@ pub fn get_header_jwt(
                     let claim = check_jwt_token(header_field_value, jwt_secret);
 
                     match claim {
-                        Ok(clm) => {
-                            Ok(clm)
-                        }
+                        Ok(clm) => Ok(clm),
                         Err(e) => Err(e),
                     }
                 }
-                Err(_) => Err(JWTSecurityError::from("jwt error: no auth header field with value valid".to_string())),
+                Err(_) => Err(JWTSecurityError::from(
+                    "jwt error: no auth header field with value valid".to_string(),
+                )),
             }
         }
-        None => Err(JWTSecurityError::from("jwt error: no auth header field present".to_string())) ,
+        None => Err(JWTSecurityError::from(
+            "jwt error: no auth header field present".to_string(),
+        )),
     }
 }

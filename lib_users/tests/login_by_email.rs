@@ -4,7 +4,7 @@ use lib_users::models::user::{User, UserStatus};
 use lib_users::repositories::schema_user::create_schema_users;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::login::LoginOps;
-use lib_users::services::users::{UserManipulation, UsersService, UpdatableFildsUser};
+use lib_users::services::users::{UpdatableFildsUser, UserManipulation, UsersService};
 use spectral::{assert_that, result::ResultAssertions};
 use std::env;
 use testcontainers::*;
@@ -73,19 +73,19 @@ async fn login_user_email_password_test() -> Result<(), Box<dyn std::error::Erro
 
     let new_id = user_service.add(&mut new_user, &password).await?;
 
-    let res = user_service.login(&None, &None,&email, &password).await?;
+    let res = user_service.login(&None, &None, &email, &password).await?;
     assert_eq!(new_id, res.user_id);
 
-    let update_fields = UpdatableFildsUser{
+    let update_fields = UpdatableFildsUser {
         email: None,
         device: None,
-        status: Some(UserStatus::Disabled.to_string() ),
-        wallet: None
+        status: Some(UserStatus::Disabled.to_string()),
+        wallet: None,
     };
 
     user_service.update(&new_id, &update_fields).await?;
 
-    let fail = user_service.login(&None, &None,&email, &password).await;
+    let fail = user_service.login(&None, &None, &email, &password).await;
     assert_that(&fail).is_err();
 
     Ok(())
