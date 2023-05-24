@@ -1,5 +1,5 @@
 use crate::models::license::License;
-use crate::repositories::licenses::{LicenseRepository, LicenseRepo};
+use crate::repositories::licenses::{LicenseRepo, LicenseRepository};
 use async_trait::async_trait;
 use chrono::Utc;
 use uuid::Uuid;
@@ -9,7 +9,7 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 #[async_trait]
 pub trait LicenseManipulation {
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<License>>;
-    async fn get_by_id(&self, id: &Uuid) -> ResultE<Option<License>>;
+    async fn get_by_id(&self, license_id: &Uuid, asset_id: &Uuid) -> ResultE<Option<License>>;
     async fn create(&self, license: &mut License) -> ResultE<()>;
     async fn update(&self, license: &License) -> ResultE<()>;
     async fn delete(&self, id: &Uuid) -> ResultE<()>;
@@ -33,8 +33,8 @@ impl LicenseManipulation for LicenseService {
         Ok(res)
     }
 
-    async fn get_by_id(&self, id: &Uuid) -> ResultE<Option<License>> {
-        let res = self.repository.get_by_id(id).await?;
+    async fn get_by_id(&self, license_id: &Uuid, asset_id: &Uuid) -> ResultE<Option<License>> {
+        let res = self.repository.get_by_id(license_id, asset_id ).await?;
         Ok(res)
     }
 

@@ -224,3 +224,27 @@ pub struct Royalty {
     pub price: f32,
     pub location: String,
 }
+
+impl PartialEq for License {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.creation_time == other.creation_time
+            && self.last_update_time == other.last_update_time
+            && self.asset_id == other.asset_id
+            && self.version == other.version
+            && self.right_to_free_distribute == other.right_to_free_distribute
+            && self.if_you_distribute_mention_me == other.if_you_distribute_mention_me
+            && self.right_to_modify == other.right_to_modify
+            && self.if_you_modify_mention_me == other.if_you_modify_mention_me
+            && self.right_to_use_broadcast_media == other.right_to_use_broadcast_media
+            && self.right_to_use_press_media == other.right_to_use_press_media
+            && self.rights == other.rights
+            && self.status == other.status
+    }
+}
+
+impl PartialEq for Royalty {
+    fn eq(&self, other: &Self) -> bool {
+        self.price == other.price && self.location == other.location
+    }
+}

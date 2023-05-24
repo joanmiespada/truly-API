@@ -1,10 +1,9 @@
+use aws_sdk_dynamodb::types::Select;
 use std::collections::HashMap;
 use std::str::FromStr;
-
-use aws_sdk_dynamodb::types::Select;
 use uuid::Uuid;
 
-use crate::errors::license::{LicenseCreationError, LicenseNotFoundError, LicenseDynamoDBError};
+use crate::errors::license::{LicenseCreationError, LicenseDynamoDBError, LicenseNotFoundError};
 use crate::models::license::{License, LicenseStatus, Royalty};
 use async_trait::async_trait;
 use aws_sdk_dynamodb::{types::AttributeValue, Client};
@@ -14,7 +13,6 @@ use chrono::{
 };
 use lib_config::config::Config;
 
-use super::schema_asset::ASSETS_TABLE_NAME;
 use super::schema_licenses::{
     LICENSES_ASSET_ID_INDEX, LICENSES_TABLE_NAME, LICENSE_ASSET_ID_FIELD_PK, LICENSE_ID_FIELD_PK,
 };
@@ -35,7 +33,7 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 #[async_trait]
 pub trait LicenseRepository {
     async fn create(&self, license: &mut License) -> ResultE<()>;
-    async fn get_by_id(&self, id: &Uuid) -> ResultE<Option<License>>;
+    async fn get_by_id(&self, license_id: &Uuid, asset_id: &Uuid ) -> ResultE<Option<License>>;
     async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<License>>;
     async fn get_all(&self, _page_number: u32, _page_size: u32) -> ResultE<Vec<License>>;
     async fn update(&self, license: &License) -> ResultE<()>;
@@ -101,16 +99,70 @@ impl LicenseRepo {
 
         Ok(queried)
     }
+
+    async fn _get_by_id(
+        &self,
+        license_id: &Uuid,
+        asset_id: &Uuid,
+    ) -> Result<HashMap<String, AttributeValue>, Box<dyn std::error::Error + Sync + Send>> {
+        let asset_id_av = AttributeValue::S(asset_id.to_string());
+        let license_id_av = AttributeValue::S(license_id.to_string());
+
+        let request = self
+            .client
+            .get_item()
+            .table_name(LICENSES_TABLE_NAME)
+            .key(LICENSE_ID_FIELD_PK, license_id_av)
+            .key(LICENSE_ASSET_ID_FIELD_PK, asset_id_av);
+
+        let results = request.send().await;
+        match results {
+            Err(e) => {
+                let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                tracing::error!(mssag);
+                return Err(LicenseDynamoDBError(e.to_string()).into());
+            }
+            Ok(res) => match res.item {
+                None => Err(LicenseNotFoundError("id doesn't exist".to_string()).into()),
+                Some(aux) => Ok(aux),
+            },
+        }
+    }
 }
 
 #[async_trait]
 impl LicenseRepository for LicenseRepo {
     async fn create(&self, license: &mut License) -> ResultE<()> {
         let id_av = AttributeValue::S(license.id().to_string());
-        let creation_time_av = AttributeValue::S(iso8601(*license.creation_time()));
-        let last_update_time_av = AttributeValue::S(iso8601(*license.last_update_time()));
+        let creation_time_av = AttributeValue::S(license.creation_time().to_rfc3339());
+        let last_update_time_av = AttributeValue::S(license.last_update_time().to_rfc3339());
         let asset_id_av = AttributeValue::S(license.asset_id().to_string());
         let version_av = AttributeValue::N(license.version().to_string());
+        let right_to_free_distribute_av = AttributeValue::Bool(license.right_to_free_distribute());
+        let if_you_distribute_mention_me_av =
+            AttributeValue::Bool(license.if_you_distribute_mention_me());
+        let right_to_modify_av = AttributeValue::Bool(license.right_to_modify());
+        let if_you_modify_mention_me_av = AttributeValue::Bool(license.if_you_modify_mention_me());
+        let right_to_use_broadcast_media_av =
+            AttributeValue::Bool(license.right_to_use_broadcast_media());
+        let right_to_use_press_media_av = AttributeValue::Bool(license.right_to_use_press_media());
+        let status_av = AttributeValue::S(license.status().to_string());
+
+        let mut rights_av = Vec::new();
+        for royalty in license.rights() {
+            let royalty_av = AttributeValue::M(
+                maplit::hashmap! {
+                    "price".to_string() => AttributeValue::N(royalty.price.to_string()),
+                    "location".to_string() => AttributeValue::S(royalty.location.to_string()),
+                }
+                .into(),
+            );
+            rights_av.push(royalty_av);
+        }
 
         let request = self
             .client
@@ -120,39 +172,43 @@ impl LicenseRepository for LicenseRepo {
             .item(CREATION_TIME_FIELD_NAME, creation_time_av)
             .item(LAST_UPDATE_TIME_FIELD_NAME, last_update_time_av)
             .item(LICENSE_ASSET_ID_FIELD_PK, asset_id_av)
-            .item(LICENSE_VERSION_FIELD, version_av);
+            .item(LICENSE_VERSION_FIELD, version_av)
+            .item(RIGHT_TO_FREE_DISTRIBUTE_FIELD, right_to_free_distribute_av)
+            .item(
+                IF_YOU_DISTRIBUTE_MENTION_ME_FIELD,
+                if_you_distribute_mention_me_av,
+            )
+            .item(RIGHT_TO_MODIFY_FIELD, right_to_modify_av)
+            .item(IF_YOU_MODIFY_MENTION_ME_FIELD, if_you_modify_mention_me_av)
+            .item(
+                RIGHT_TO_USE_BROADCAST_MEDIA_FIELD,
+                right_to_use_broadcast_media_av,
+            )
+            .item(RIGHT_TO_USE_PRESS_MEDIA_FIELD, right_to_use_press_media_av)
+            .item(LICENSE_STATUS_FIELD, status_av)
+            .item(ROYALTIES_FIELD, AttributeValue::L(rights_av));
 
         match request.send().await {
             Ok(_) => Ok(()),
             Err(e) => {
-                let message = format!(
-                    "Error at [{}] - {} ",
-                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
-                    e
-                );
-                tracing::error!(message);
-                return Err(LicenseCreationError(e.to_string()).into());
+                let message = format!("Error creating license: {}", e);
+                tracing::error!("{}", message);
+                Err(LicenseDynamoDBError(message).into())
             }
         }
     }
 
-    async fn get_by_id(&self, id: &Uuid) -> ResultE<Option<License>> {
-        let id_av = AttributeValue::S(id.to_string());
-
-        let mut filter = "".to_string();
-        filter.push_str(LICENSE_ID_FIELD_PK);
-        filter.push_str(" = :value");
-
-        let res = self
-            .get_by_filter(&filter, &":value".to_string(), "", id_av)
-            .await?;
-
-        if res.is_empty() {
-            Ok(None)
-        } else {
-            let license = res.into_iter().next().unwrap();
-            Ok(Some(license))
+    async fn get_by_id(&self, license_id: &Uuid, asset_id: &Uuid) -> ResultE<Option<License>> {
+        let res = self._get_by_id(license_id, asset_id).await;
+        match res {
+            Err(e)=> Ok(None),
+            Ok(doc)=>{
+                let mut license = License::new();
+                mapping_from_doc_to_license(&doc, &mut license);
+                Ok(Some(license))
+            }
         }
+        
     }
 
     async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<License>> {
@@ -180,7 +236,7 @@ impl LicenseRepository for LicenseRepo {
         let results = self
             .client
             .scan()
-            .table_name(ASSETS_TABLE_NAME)
+            .table_name(LICENSES_TABLE_NAME)
             .send()
             .await;
 
@@ -209,7 +265,6 @@ impl LicenseRepository for LicenseRepo {
 
         Ok(queried)
     }
-
 
     async fn update(&self, license: &License) -> ResultE<()> {
         let last_update_time_av = AttributeValue::S(iso8601(*license.last_update_time()));
