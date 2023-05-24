@@ -33,7 +33,8 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 #[async_trait]
 pub trait LicenseRepository {
     async fn create(&self, license: &mut License) -> ResultE<()>;
-    async fn get_by_id(&self, license_id: &Uuid, asset_id: &Uuid ) -> ResultE<Option<License>>;
+    async fn get_by_id(&self, license_id: &Uuid, asset_id: &Uuid) -> ResultE<Option<License>>;
+    async fn get_by_license_id(&self, license_id: &Uuid) -> ResultE<Option<License>>;
     async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<License>>;
     async fn get_all(&self, _page_number: u32, _page_size: u32) -> ResultE<Vec<License>>;
     async fn update(&self, license: &License) -> ResultE<()>;
@@ -201,16 +202,36 @@ impl LicenseRepository for LicenseRepo {
     async fn get_by_id(&self, license_id: &Uuid, asset_id: &Uuid) -> ResultE<Option<License>> {
         let res = self._get_by_id(license_id, asset_id).await;
         match res {
-            Err(e)=> Ok(None),
-            Ok(doc)=>{
+            Err(_) => Ok(None),
+            Ok(doc) => {
                 let mut license = License::new();
                 mapping_from_doc_to_license(&doc, &mut license);
                 Ok(Some(license))
             }
         }
-        
     }
 
+    async fn get_by_license_id(&self, license_id: &Uuid) -> ResultE<Option<License>> {
+        let asset_id_av = AttributeValue::S(license_id.to_string());
+
+        let mut filter = "".to_string();
+        filter.push_str(LICENSE_ASSET_ID_FIELD_PK);
+        filter.push_str(" = :value");
+
+        let res = self
+            .get_by_filter(
+                &filter,
+                &":value".to_string(),
+                LICENSES_ASSET_ID_INDEX,
+                asset_id_av,
+            )
+            .await?;
+        if res.len() == 0 {
+            return Ok(None);
+        } else {
+            return Ok( Some(res[0].clone()));
+        }
+    }
     async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<License>> {
         let asset_id_av = AttributeValue::S(asset_id.to_string());
 

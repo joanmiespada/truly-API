@@ -10,6 +10,8 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 pub trait LicenseManipulation {
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<License>>;
     async fn get_by_id(&self, license_id: &Uuid, asset_id: &Uuid) -> ResultE<Option<License>>;
+    async fn get_by_license(&self, license_id: &Uuid) -> ResultE<Option<License>>;
+    async fn get_by_asset(&self, asset_id: &Uuid) -> ResultE<Vec<License>>;
     async fn create(&self, license: &mut License) -> ResultE<()>;
     async fn update(&self, license: &License) -> ResultE<()>;
     async fn delete(&self, id: &Uuid) -> ResultE<()>;
@@ -35,6 +37,14 @@ impl LicenseManipulation for LicenseService {
 
     async fn get_by_id(&self, license_id: &Uuid, asset_id: &Uuid) -> ResultE<Option<License>> {
         let res = self.repository.get_by_id(license_id, asset_id ).await?;
+        Ok(res)
+    }
+    async fn get_by_license(&self, license_id: &Uuid) -> ResultE<Option<License>> {
+        let res = self.repository.get_by_license_id(license_id ).await?;
+        Ok(res)
+    }
+    async fn get_by_asset(&self, asset_id: &Uuid) -> ResultE<Vec<License>>{
+        let res = self.repository.get_by_asset_id(asset_id ).await?;
         Ok(res)
     }
 
