@@ -1,14 +1,12 @@
 use aws_sdk_dynamodb::Client;
-use chrono::Utc;
 use lib_config::infra::build_local_stack_connection;
 use lib_licenses::models::asset::Asset;
-use lib_licenses::models::license::{CreatableFildsLicense, License, LicenseStatus, Royalty};
+use lib_licenses::models::license::{CreatableFildsLicense, Royalty};
 use lib_licenses::repositories::assets::{AssetRepo, AssetRepository};
 use lib_licenses::repositories::licenses::LicenseRepo;
 use lib_licenses::repositories::schema_asset::create_schema_assets_all;
 use lib_licenses::repositories::schema_licenses::create_schema_licenses;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
-use lib_licenses::services::assets::CreatableFildsAsset;
 use lib_licenses::services::licenses::{LicenseManipulation, LicenseService};
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -94,7 +92,7 @@ async fn run_licenses() -> ResultE<()> {
         generate_random_license(asset_id2),
     ];
     let total_len = licenses.len();
-    for mut license in licenses.iter_mut() {
+    for license in licenses.iter_mut() {
         let new_op = service.create(&license).await;
         assert_that!(&new_op).is_ok();
     }
@@ -133,14 +131,12 @@ async fn run_licenses() -> ResultE<()> {
 fn generate_random_license(asset_id: Uuid) -> CreatableFildsLicense {
     let mut rng = rand::thread_rng();
 
-    
-
     let rights = vec![
         generate_random_royalty(),
         generate_random_royalty(),
         generate_random_royalty(),
     ];
-    let mut license = CreatableFildsLicense {
+    let license = CreatableFildsLicense {
         asset_id,
         right_to_free_distribute: rng.gen::<bool>(),
         if_you_distribute_mention_me:rng.gen::<bool>(),
