@@ -248,3 +248,38 @@ impl PartialEq for Royalty {
         self.price == other.price && self.location == other.location
     }
 }
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CreatableFildsLicense {
+    pub asset_id: Uuid,
+    pub right_to_free_distribute: bool,
+    pub if_you_distribute_mention_me: bool,
+    pub right_to_modify: bool,
+    pub if_you_modify_mention_me: bool,
+    pub right_to_use_broadcast_media: bool,
+    pub right_to_use_press_media: bool,
+    pub rights: Vec<Royalty>,
+}
+
+impl CreatableFildsLicense {
+    pub fn to_license(&self) -> License {
+        let mut license = License::default();
+        license.set_id(Uuid::new_v4());
+        license.set_creation_time(Utc::now());
+        license.set_last_update_time(Utc::now());
+        license.set_asset_id(self.asset_id);
+
+        license.set_version(1);
+
+        license.set_right_to_free_distribute(self.right_to_free_distribute );
+        license.set_if_you_distribute_mention_me( self.if_you_distribute_mention_me);
+        license.set_right_to_modify(self.right_to_modify);
+        license.set_if_you_modify_mention_me(self.if_you_modify_mention_me);
+        license.set_right_to_use_broadcast_media(self.right_to_use_broadcast_media);
+        license.set_right_to_use_press_media(self.right_to_use_press_media);
+        license.set_rights(self.rights.clone());
+
+        license.set_status(LicenseStatus::Enabled);
+
+        license
+    }
+}

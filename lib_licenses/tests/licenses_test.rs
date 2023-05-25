@@ -2,19 +2,20 @@ use aws_sdk_dynamodb::Client;
 use chrono::Utc;
 use lib_config::infra::build_local_stack_connection;
 use lib_licenses::models::asset::Asset;
-use lib_licenses::models::license::{License, LicenseStatus, Royalty};
+use lib_licenses::models::license::{CreatableFildsLicense, License, LicenseStatus, Royalty};
 use lib_licenses::repositories::assets::{AssetRepo, AssetRepository};
 use lib_licenses::repositories::licenses::LicenseRepo;
 use lib_licenses::repositories::schema_asset::create_schema_assets_all;
 use lib_licenses::repositories::schema_licenses::create_schema_licenses;
 use lib_licenses::repositories::schema_owners::create_schema_owners;
+use lib_licenses::services::assets::CreatableFildsAsset;
 use lib_licenses::services::licenses::{LicenseManipulation, LicenseService};
 use rand::seq::SliceRandom;
 use rand::Rng;
 use spectral::prelude::*;
-use url::Url;
 use std::env;
 use testcontainers::*;
+use url::Url;
 use uuid::Uuid;
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
@@ -42,7 +43,7 @@ async fn creation_table() {
 }
 
 #[tokio::test]
-async fn run_licenses()-> ResultE<()> {
+async fn run_licenses() -> ResultE<()> {
     env::set_var("RUST_LOG", "debug");
     env::set_var("ENVIRONMENT", "development");
 
@@ -70,23 +71,31 @@ async fn run_licenses()-> ResultE<()> {
     let user_id = Uuid::new_v4().to_string();
     let asset_id1;
     let asset_id2;
-    
-    let mut asset = Asset::new2( Uuid::new_v4(),  Url::parse("http://a.xyz")? ,  "hash1234".to_string());
+
+    let mut asset = Asset::new2(
+        Uuid::new_v4(),
+        Url::parse("http://a.xyz")?,
+        "hash1234".to_string(),
+    );
     asset_id1 = ass_repo.add(&asset, &user_id).await?;
 
-    asset = Asset::new2( Uuid::new_v4(), Url::parse("http://b.xyz")? ,  "hash5678".to_string());
+    asset = Asset::new2(
+        Uuid::new_v4(),
+        Url::parse("http://b.xyz")?,
+        "hash5678".to_string(),
+    );
     asset_id2 = ass_repo.add(&asset, &user_id).await?;
 
-    let service = LicenseService::new(repo,ass_repo);
+    let service = LicenseService::new(repo, ass_repo);
 
     let mut licenses = vec![
-        generate_random_license(Some(asset_id1)),
-        generate_random_license(Some(asset_id2)),
-        generate_random_license(Some(asset_id2)),
+        generate_random_license(asset_id1),
+        generate_random_license(asset_id2),
+        generate_random_license(asset_id2),
     ];
     let total_len = licenses.len();
     for mut license in licenses.iter_mut() {
-        let new_op = service.create(&mut license).await;
+        let new_op = service.create(&license).await;
         assert_that!(&new_op).is_ok();
     }
 
@@ -95,7 +104,7 @@ async fn run_licenses()-> ResultE<()> {
     let res = res_op.unwrap();
     assert_eq!(res.len(), total_len);
 
-    for license in licenses.iter() {
+    for license in res.iter() {
         let new_op = service.get_by_id(license.id(), license.asset_id()).await;
 
         assert_that!(&new_op).is_ok();
@@ -107,51 +116,40 @@ async fn run_licenses()-> ResultE<()> {
     assert_that!(&search_op).is_ok();
     assert_eq!(search_op.unwrap().len(), 2);
 
-    let search_op2 = service.get_by_license(licenses.first().unwrap().id()).await;
+    let search_op2 = service.get_by_license(res.first().unwrap().id()).await;
     assert_that!(&search_op2).is_ok();
-    assert_eq!(search_op2.unwrap().unwrap(), *licenses.first().unwrap());
+    assert_eq!(search_op2.unwrap().unwrap(), *res.first().unwrap());
 
-    let target = licenses.first().unwrap().clone();
+    let target = res.first().unwrap().clone();
     let search_op3 = service.delete(&target).await;
     assert_that!(&search_op3).is_ok();
     let after_del_op = service.get_all(0, 10).await;
-    let after_del = after_del_op .unwrap();
-    assert_eq!(after_del.len(), total_len-1);
+    let after_del = after_del_op.unwrap();
+    assert_eq!(after_del.len(), total_len - 1);
 
     Ok(())
-
-
 }
 
-fn generate_random_license(asset_id: Option<Uuid>) -> License {
+fn generate_random_license(asset_id: Uuid) -> CreatableFildsLicense {
     let mut rng = rand::thread_rng();
 
-    let mut license = License::new();
-
-    license.set_id(Uuid::nil());
-    license.set_creation_time(Utc::now());
-    license.set_last_update_time(Utc::now());
-    match asset_id{
-        None =>  license.set_asset_id(Uuid::new_v4()),
-        Some(ass) => license.set_asset_id(ass)
-    }
-    license.set_version(rng.gen_range(1..=10));
-
-    license.set_right_to_free_distribute(rng.gen::<bool>());
-    license.set_if_you_distribute_mention_me(rng.gen::<bool>());
-    license.set_right_to_modify(rng.gen::<bool>());
-    license.set_if_you_modify_mention_me(rng.gen::<bool>());
-    license.set_right_to_use_broadcast_media(rng.gen::<bool>());
-    license.set_right_to_use_press_media(rng.gen::<bool>());
+    
 
     let rights = vec![
         generate_random_royalty(),
         generate_random_royalty(),
         generate_random_royalty(),
     ];
-
-    license.set_rights(rights);
-    license.set_status(LicenseStatus::Enabled);
+    let mut license = CreatableFildsLicense {
+        asset_id,
+        right_to_free_distribute: rng.gen::<bool>(),
+        if_you_distribute_mention_me:rng.gen::<bool>(),
+        right_to_modify:rng.gen::<bool>(),
+        if_you_modify_mention_me:rng.gen::<bool>(),
+        right_to_use_broadcast_media:rng.gen::<bool>(),
+        right_to_use_press_media:rng.gen::<bool>(),
+        rights
+    };
 
     license
 }
