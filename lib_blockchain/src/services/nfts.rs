@@ -10,7 +10,7 @@ use crate::errors::nft::{
     TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError,
 };
 use crate::models::block_tx::BlockchainTx;
-use crate::repositories::ganache::{GanacheRepo, NFTsRepository};
+use crate::blockchains::ganache::{GanacheRepo, NFTsRepository};
 use crate::repositories::keypairs::{KeyPairRepo, KeyPairRepository};
 use lib_licenses::errors::video::VideoNotYetLicensed;
 use lib_licenses::models::asset::{Asset, MintingStatus, VideoLicensingStatus};

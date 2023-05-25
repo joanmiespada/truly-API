@@ -21,7 +21,14 @@ use web3::{
     Web3, //, signing::SecretKey,
 };
 
-use crate::{errors::nft::HydrateMasterSecretKeyError, models::block_tx::BlockchainTx};
+use crate::{
+    errors::nft::HydrateMasterSecretKeyError,
+    models::block_tx::BlockchainTx,
+    repositories::{
+        blockchain::BlockchainRepo, blockchain::BlockchainRepository, contract::ContractRepo,
+        contract::ContractRepository,
+    },
+};
 use crate::{
     errors::nft::{NftBlockChainNonceMalformedError, NftUserAddressMalformedError},
     models::keypair::KeyPair,
@@ -31,11 +38,6 @@ const CONTRACT_METHOD_MINTING: &'static str = "mint";
 const CONTRACT_METHOD_GET_CONTENT_BY_TOKEN: &'static str = "getContentByToken";
 
 use lib_licenses::errors::asset::AssetBlockachainError;
-
-use super::{
-    blockchain::{BlockchainRepo, BlockchainRepository},
-    contract::{ContractRepo, ContractRepository},
-};
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 #[async_trait]

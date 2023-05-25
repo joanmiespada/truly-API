@@ -5,9 +5,9 @@ use lambda_runtime::{run, service_fn, Error};
 use lib_blockchain::{
     repositories::{
         block_tx::BlockchainTxRepo, blockchain::BlockchainRepo, contract::ContractRepo,
-        ganache::GanacheRepo, keypairs::KeyPairRepo,
+         keypairs::KeyPairRepo,
     },
-    services::{block_tx::BlockchainTxService, nfts::NFTsService},
+    services::{block_tx::BlockchainTxService, nfts::NFTsService}, blockchains::ganache::GanacheRepo,
 };
 use lib_config::config::Config;
 use lib_licenses::{

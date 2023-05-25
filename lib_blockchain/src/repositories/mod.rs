@@ -1,7 +1,6 @@
 pub mod block_tx;
 pub mod blockchain;
 pub mod contract;
-pub mod ganache;
 pub mod keypairs;
 pub mod schema_block_tx;
 pub mod schema_blockchain;

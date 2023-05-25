@@ -1,6 +1,7 @@
 {
     //"editor.formatOnSave": true,
     "rust-analyzer.cargo.allFeatures": true,
+    "rust-analyzer.showUnlinkedFileNotification": false,
     // "serverlessConsole.services": [],
     // "rust-analyzer.checkOnSave.overrideCommand": [
     //     "cargo",

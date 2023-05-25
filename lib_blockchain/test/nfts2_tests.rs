@@ -1,6 +1,7 @@
 use crate::nfts_tests::MNEMONIC_TEST;
 use chrono::Utc;
 use ethers::utils::Ganache;
+use lib_blockchain::blockchains::ganache::GanacheRepo;
 use lib_blockchain::models::blockchain::Blockchain;
 use lib_blockchain::models::contract::{Contract, ContractStatus};
 use lib_blockchain::repositories::block_tx::BlockchainTxRepo;
@@ -14,7 +15,6 @@ use lib_blockchain::repositories::schema_keypairs::create_schema_keypairs;
 use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
 use lib_blockchain::services::contract::deploy_contract_locally;
 use lib_blockchain::{
-    repositories::ganache::GanacheRepo,
     services::nfts::{NFTsManipulation, NFTsService, NTFState},
 };
 use lib_config::config::Config;

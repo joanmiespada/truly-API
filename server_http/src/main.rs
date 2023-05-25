@@ -18,7 +18,7 @@ use lib_licenses::services::owners::OwnerService;
 use log::debug;
 use tracing_actix_web::TracingLogger;
 
-use lib_blockchain::repositories::ganache::GanacheRepo;
+use lib_blockchain::blockchains::ganache::GanacheRepo;
 use lib_blockchain::services::nfts::NFTsService;
 
 use lib_users::repositories::users::UsersRepo;
