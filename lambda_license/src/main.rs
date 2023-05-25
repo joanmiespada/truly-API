@@ -7,7 +7,8 @@ use lib_blockchain::repositories::keypairs::KeyPairRepo;
 use lib_blockchain::services::block_tx::BlockchainTxService;
 use lib_blockchain::services::nfts::NFTsService;
 use lib_config::config::Config;
-use lib_licenses::repositories::assets::AssetRepo;
+use lib_licenses::repositories::licenses::LicenseRepo;
+use lib_licenses::{repositories::assets::AssetRepo, services::licenses::LicenseService};
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::AssetService;
@@ -40,7 +41,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
 
     let asset_repo = AssetRepo::new(&config);
     let shorter_repo = ShorterRepo::new(&config);
-    let asset_service = AssetService::new(asset_repo, shorter_repo);
+    let asset_service = AssetService::new(asset_repo.clone(), shorter_repo);
 
     let owners_repo = OwnerRepo::new(&config);
     let owners_service = OwnerService::new(owners_repo);
@@ -66,6 +67,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
 
     let video_service = VideoService::new(asset_service.to_owned(), config.to_owned());
 
+    let license_repo = LicenseRepo::new(&config);
+    let license_service = LicenseService::new(license_repo, asset_repo);
+
     info!("bootstrapping dependencies: completed. Lambda ready.");
     let resp = lambda_http::run(service_fn(|event| {
         function_handler(
@@ -76,6 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
             &user_service,
             &video_service,
             &tx_service,
+            &license_service,
             event,
         )
     }))

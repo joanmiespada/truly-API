@@ -7,12 +7,15 @@ mod licenses;
 use std::str::FromStr;
 
 use crate::my_lambda::assets::get_asset::get_asset_by_shorter;
+use crate::my_lambda::licenses::get_licenses::get_licenses;
+use crate::my_lambda::licenses::get_my_license::get_my_licenses_all;
 use crate::my_lambda::nft::get_tx::{get_tx, get_txs};
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_blockchain::services::block_tx::BlockchainTxService;
 use lib_blockchain::services::nfts::NFTsService;
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, STAGE_ENV};
+use lib_licenses::services::licenses::LicenseService;
 use lib_licenses::services::video::VideoService;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
@@ -45,6 +48,7 @@ pub async fn function_handler(
     user_service: &UsersService,
     video_service: &VideoService,
     tx_service: &BlockchainTxService,
+    license_service: &LicenseService,
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error + Send + Sync>> {
     info!("income new request");
@@ -64,7 +68,9 @@ pub async fn function_handler(
     router.insert("/api/asset/:id", Some("2"))?;
     router.insert("/api/nft", Some("3"))?;
     router.insert("/api/license", Some("4"))?;
+    router.insert("/api/license/:id", Some("44"))?;
     router.insert("/api/shorter/:id", Some("5"))?;
+    router.insert("/api/shorter", Some("55"))?;
     router.insert("/api/tx/:hash", Some("6"))?;
     router.insert("/api/txs/:id", Some("7"))?;
 
@@ -102,6 +108,37 @@ pub async fn function_handler(
                         config,
                         asset_service,
                         owners_service,
+                        &asset_id,
+                    )
+                    .await;
+                }
+                "4" => {
+                    match jwt_mandatory(&req, config) {
+                        Err(e) => {
+                            return Ok(e);
+                        }
+                        Ok(user) => user_id = user,
+                    };
+                    get_my_licenses_all(
+                        &req,
+                        &context,
+                        config,
+                        license_service,
+                        asset_service,
+                        &user_id,
+                    )
+                    .await
+                }
+                "44" => {
+                    // public, not required jwt token
+                    let id = matched.params.get("id").unwrap().to_string();
+                    let asset_id = Uuid::from_str(id.as_str())?;
+                    return get_licenses(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        license_service,
                         &asset_id,
                     )
                     .await;
@@ -215,9 +252,7 @@ pub async fn function_handler(
                     .await;
                 }
 
-                "4" => {
-                    //let id = matched.params.get("id").unwrap().to_string();
-                    //let asset_id = Uuid::from_str(id.as_str())?;
+                "55" => {
 
                     match jwt_mandatory(&req, config) {
                         Err(e) => {
@@ -232,8 +267,6 @@ pub async fn function_handler(
                         config,
                         asset_service,
                         video_service,
-                        //owners_service,
-                        //user_service,
                         &user_id,
                     )
                     .await;
