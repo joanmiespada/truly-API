@@ -9,7 +9,7 @@ use lib_config::config::Config;
 use lib_config::infra::{
     create_key, create_secret_manager_keys, create_secret_manager_secret_key, store_secret_key,
 };
-use lib_licenses::repositories::{schema_asset, schema_owners};
+use lib_licenses::repositories::{schema_asset, schema_owners, schema_licenses};
 use lib_users::models::user::User;
 use lib_users::repositories::schema_user;
 use lib_users::repositories::users::UsersRepo;
@@ -117,6 +117,15 @@ async fn command(
                         return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
                     }
                 }
+                "licenses" => {
+                    if create {
+                        schema_licenses::create_schema_licenses(&client).await?;
+                    } else if delete {
+                        schema_licenses::delete_schema_licenses(&client).await?;
+                    } else {
+                        return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
+                    }
+                }
                 "all" => {
                     if create {
                         schema_blockchain::create_schema_blockchains(&client).await?;
@@ -126,6 +135,7 @@ async fn command(
                         schema_keypairs::create_schema_keypairs(&client).await?;
                         schema_block_tx::create_schema_transactions(&client).await?;
                         schema_user::create_schema_users(&client).await?;
+                        schema_licenses::create_schema_licenses(&client).await?;
                     } else if delete {
                         schema_blockchain::delete_schema_blockchains(&client).await?;
                         schema_contract::delete_schema_contracts(&client).await?;
@@ -134,7 +144,11 @@ async fn command(
                         schema_keypairs::delete_schema_keypairs(&client).await?;
                         schema_block_tx::delete_schema_transactions(&client).await?;
                         schema_user::delete_schema_users(&client).await?;
+                        schema_licenses::delete_schema_licenses(&client).await?;
+                    } else {
+                        return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
                     }
+
                 }
                 _ => {
                     return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());

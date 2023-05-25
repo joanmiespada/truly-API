@@ -14,7 +14,7 @@ use chrono::{
 use lib_config::config::Config;
 
 use super::schema_licenses::{
-    LICENSES_ASSET_ID_INDEX, LICENSES_TABLE_NAME, LICENSE_ASSET_ID_FIELD_PK, LICENSE_ID_FIELD_PK,
+    LICENSES_ASSET_ID_INDEX, LICENSES_TABLE_NAME, LICENSE_ASSET_ID_FIELD_PK, LICENSE_ID_FIELD_PK,LICENSES_LICENSE_ID_INDEX
 };
 pub const CREATION_TIME_FIELD_NAME: &str = "creationTime";
 pub const LAST_UPDATE_TIME_FIELD_NAME: &str = "lastUpdateTime";
@@ -212,24 +212,33 @@ impl LicenseRepository for LicenseRepo {
     }
 
     async fn get_by_license_id(&self, license_id: &Uuid) -> ResultE<Option<License>> {
-        let asset_id_av = AttributeValue::S(license_id.to_string());
+        let license_id_av = AttributeValue::S(license_id.to_string());
 
         let mut filter = "".to_string();
-        filter.push_str(LICENSE_ASSET_ID_FIELD_PK);
+        filter.push_str( LICENSE_ID_FIELD_PK);
         filter.push_str(" = :value");
 
         let res = self
             .get_by_filter(
                 &filter,
                 &":value".to_string(),
-                LICENSES_ASSET_ID_INDEX,
-                asset_id_av,
+               LICENSES_LICENSE_ID_INDEX,
+                license_id_av,
             )
-            .await?;
-        if res.len() == 0 {
-            return Ok(None);
-        } else {
-            return Ok( Some(res[0].clone()));
+            .await;
+        match res {
+            Err(e) => {
+                Err(e)
+                //error!("{}", e);
+                //return Err(LicenseDynamoDBError(e.to_string()).into());
+            }
+            Ok(res) => {
+                if res.len() == 0 {
+                    return Ok(None);
+                } else {
+                    return Ok(Some(res[0].clone()));
+                }
+            }
         }
     }
     async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<License>> {

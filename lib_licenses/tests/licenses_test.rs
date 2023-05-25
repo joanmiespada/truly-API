@@ -57,11 +57,11 @@ async fn add_licenses() {
 
     let repo = LicenseRepo::new(&conf);
     let service = LicenseService::new(repo);
-
+    let asset_id = Some(Uuid::new_v4());
     let mut licenses = vec![
-        generate_random_license(),
-        generate_random_license(),
-        generate_random_license(),
+        generate_random_license(None),
+        generate_random_license(asset_id),
+        generate_random_license(asset_id),
     ];
     let total_len = licenses.len();
     for mut license in licenses.iter_mut() {
@@ -82,9 +82,20 @@ async fn add_licenses() {
         let lic = new_op.ok().unwrap().unwrap();
         assert_eq!(lic, *license)
     }
+
+    let search_op = service.get_by_asset(&asset_id.unwrap()).await;
+    assert_that!(&search_op).is_ok();
+    assert_eq!(search_op.unwrap().len(), 2);
+
+    let search_op2 = service.get_by_license(licenses.first().unwrap().id()).await;
+    assert_that!(&search_op2).is_ok();
+    assert_eq!(search_op2.unwrap().unwrap(), *licenses.first().unwrap());
+
+
+
 }
 
-fn generate_random_license() -> License {
+fn generate_random_license(asset_id: Option<Uuid>) -> License {
     let mut rng = rand::thread_rng();
 
     let mut license = License::new();
@@ -92,7 +103,10 @@ fn generate_random_license() -> License {
     license.set_id(Uuid::nil());
     license.set_creation_time(Utc::now());
     license.set_last_update_time(Utc::now());
-    license.set_asset_id(Uuid::new_v4());
+    match asset_id{
+        None =>  license.set_asset_id(Uuid::new_v4()),
+        Some(ass) => license.set_asset_id(ass)
+    }
     license.set_version(rng.gen_range(1..=10));
 
     license.set_right_to_free_distribute(rng.gen::<bool>());
