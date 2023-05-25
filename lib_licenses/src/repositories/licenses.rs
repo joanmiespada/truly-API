@@ -38,7 +38,7 @@ pub trait LicenseRepository {
     async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<License>>;
     async fn get_all(&self, _page_number: u32, _page_size: u32) -> ResultE<Vec<License>>;
     async fn update(&self, license: &License) -> ResultE<()>;
-    async fn delete(&self, id: &Uuid) -> ResultE<()>;
+    async fn delete(&self, license: &License) -> ResultE<()>;
 }
 
 #[derive(Clone, Debug)]
@@ -324,14 +324,16 @@ impl LicenseRepository for LicenseRepo {
         }
     }
 
-    async fn delete(&self, id: &Uuid) -> ResultE<()> {
-        let id_av = AttributeValue::S(id.to_string());
+    async fn delete(&self, license: &License) -> ResultE<()> {
+        let id_av = AttributeValue::S( license.id().to_string());
+        let ass_av = AttributeValue::S( license.asset_id().to_string());
 
         let request = self
             .client
             .delete_item()
             .table_name(LICENSES_TABLE_NAME)
-            .key(LICENSE_ID_FIELD_PK, id_av);
+            .key(LICENSE_ID_FIELD_PK, id_av)
+            .key(LICENSE_ASSET_ID_FIELD_PK, ass_av);
 
         match request.send().await {
             Ok(_) => Ok(()),

@@ -340,10 +340,13 @@ impl AssetRepository for AssetRepo {
         let res = self._get_by_id(id).await?;
         let mut asset = Asset::new();
         mapping_from_doc_to_asset(&res, &mut asset);
-        match self.get_father(id).await? {
-            None => {}
-            Some(val) => asset.set_father(&Some(val)),
+        if let Some(val) = self.get_father(id).await? {
+            asset.set_father(&Some(val))
         }
+        //match self.get_father(id).await? {
+        //    None => {}
+        //    Some(val) => asset.set_father(&Some(val)),
+        //}
         Ok(asset)
     }
 

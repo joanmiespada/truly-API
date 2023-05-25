@@ -72,6 +72,29 @@ impl Asset {
             source_details: None,
         }
     }
+    pub fn new2(id: Uuid, url: Url, hash: String) -> Asset {
+        Asset {
+            id,
+            creation_time: Utc::now(),
+            last_update_time: Utc::now(),
+            url: Some(url),
+            status: AssetStatus::Enabled,
+            hash: Some(hash),
+            latitude: None,
+            longitude: None,
+            license: None,
+            last_minted_tx: None,
+            mint_status: MintingStatus::NeverMinted,
+            shorter: None,
+            counter: None,
+            father: None,
+            video_licensing_error: None,
+            video_licensing_status: VideoLicensingStatus::NeverStarted,
+            video_process_status: None,
+            source: None,
+            source_details: None,
+        }
+    }
 
     pub fn id(&self) -> &Uuid {
         &self.id

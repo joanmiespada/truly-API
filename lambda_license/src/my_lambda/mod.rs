@@ -1,8 +1,8 @@
 mod assets;
 pub mod error;
 mod nft;
-mod owners;
 mod video;
+mod licenses;
 
 use std::str::FromStr;
 
