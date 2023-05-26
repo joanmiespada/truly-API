@@ -33,7 +33,6 @@ const STATUS_FIELD_NAME: &str = "assetStatus";
 const HASH_FIELD_NAME: &str = "hash_uri";
 const LATITUDE_FIELD_NAME: &str = "latitude";
 const LONGITUDE_FIELD_NAME: &str = "longitude";
-const LICENSE_FIELD_NAME: &str = "license";
 const MINTED_FIELD_NAME: &str = "minted";
 const MINTED_STATUS_FIELD_NAME: &str = "minting_status";
 
@@ -143,14 +142,7 @@ impl AssetRepo {
             }
             None => {} //latitude_av = AttributeValue::S(NULLABLE.to_string()),
         }
-        //let license_av;
-        match asset.license() {
-            Some(value) => {
-                let license_av = AttributeValue::S(value.to_string());
-                items = items.item(LICENSE_FIELD_NAME, license_av);
-            }
-            None => {} // license_av = AttributeValue::S(NULLABLE.to_string()),
-        }
+        
         //let shorter_av;
         match asset.shorter() {
             Some(value) => {
@@ -702,19 +694,6 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
                     Err(_) => asset.set_latitude(&None),
                     Ok(final_number) => asset.set_latitude(&Some(final_number)),
                 }
-            }
-        }
-    }
-
-    let license_t = doc.get(LICENSE_FIELD_NAME);
-    match license_t {
-        None => asset.set_license(&None),
-        Some(lati) => {
-            let val = lati.as_s().unwrap();
-            if val == NULLABLE {
-                asset.set_license(&None)
-            } else {
-                asset.set_license(&Some(val.clone()))
             }
         }
     }

@@ -5,6 +5,8 @@ use lib_blockchain::models::block_tx::BlockchainTx;
 use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
 use lib_config::config::Config;
 use lib_licenses::models::asset::{AssetStatus, MintingStatus, VideoLicensingStatus};
+use lib_licenses::models::license::License;
+use lib_licenses::services::licenses::{LicenseService, LicenseManipulation};
 use lib_licenses::services::owners::OwnerService;
 use lib_licenses::{
     errors::asset::{AssetDynamoDBError, AssetNoExistsError},
@@ -57,14 +59,14 @@ pub struct AssetTx {
     pub latitude: Option<f64>,
     pub longitude: Option<f64>,
     pub hash: String,
-    pub license: Option<String>,
+    pub license: Option<Vec<License>>,
     pub mint_status: MintingStatus,
     pub video_licensing_status: VideoLicensingStatus,
     pub tx: Option<BlockchainTx>,
 }
 
 impl AssetTx {
-    pub fn new(asset: &Asset, tx: &Option<BlockchainTx>) -> AssetTx {
+    pub fn new(asset: &Asset, tx: &Option<BlockchainTx>, lics: &Option<Vec<License>>) -> AssetTx {
         AssetTx {
             id: asset.id().clone(),
             creation_time: asset.creation_time().clone(),
@@ -73,10 +75,10 @@ impl AssetTx {
             latitude: asset.latitude().clone(),
             longitude: asset.longitude().clone(),
             hash: asset.hash().clone().unwrap().clone(),
-            license: asset.license().clone(),
             mint_status: asset.mint_status().clone(),
             video_licensing_status: asset.video_licensing_status().clone(),
             tx: tx.clone(),
+            license: lics.clone(),
         }
     }
 }
@@ -88,13 +90,16 @@ pub async fn get_asset_by_shorter(
     config: &Config,
     asset_service: &AssetService,
     tx_service: &BlockchainTxService,
+    license_service: &LicenseService,
     shorter_id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     let op_res = asset_service.get_by_shorter(shorter_id).await;
     match op_res {
-        Ok(asset) => match asset.minted_tx() {
+        Ok(asset) =>{
+             let licenses = license_service.get_by_asset(asset.id()).await?;
+             match asset.minted_tx() {
             None => {
-                let res = AssetTx::new(&asset, &None);
+                let res = AssetTx::new(&asset, &None, &Some(licenses));
 
                 build_resp_no_cache(json!(res.to_owned()).to_string(), StatusCode::OK)
             }
@@ -102,7 +107,7 @@ pub async fn get_asset_by_shorter(
                 let tx_op = tx_service.get_by_hash(hash).await;
                 match tx_op {
                     Ok(tx) => {
-                        let res = AssetTx::new(&asset, &Some(tx));
+                        let res = AssetTx::new(&asset, &Some(tx), &Some(licenses));
                         build_resp_no_cache(json!(res).to_string(), StatusCode::OK)
                     }
                     Err(e) => {
@@ -120,7 +125,8 @@ pub async fn get_asset_by_shorter(
                     }
                 }
             }
-        },
+        }
+    },
         Err(e) => {
             if let Some(e) = e.downcast_ref::<AssetDynamoDBError>() {
                 return build_resp(e.to_string(), StatusCode::SERVICE_UNAVAILABLE);

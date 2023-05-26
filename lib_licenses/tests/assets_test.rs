@@ -87,8 +87,6 @@ async fn add_assets() {
     assert_eq!(url.to_string(), as1.url);
     let hash = aass11.hash().clone().unwrap();
     assert_eq!(hash, as1.hash);
-    let lic = aass11.license().clone().unwrap();
-    assert_eq!(lic, as1.license);
 
     let up_as = UpdatableFildsAsset {
         license: Some("mit".to_string()),

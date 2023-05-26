@@ -7,6 +7,7 @@ mod licenses;
 use std::str::FromStr;
 
 use crate::my_lambda::assets::get_asset::get_asset_by_shorter;
+use crate::my_lambda::licenses::create_my_license::create_my_license;
 use crate::my_lambda::licenses::get_licenses::get_licenses;
 use crate::my_lambda::licenses::get_my_license::get_my_licenses_all;
 use crate::my_lambda::nft::get_tx::{get_tx, get_txs};
@@ -152,6 +153,7 @@ pub async fn function_handler(
                         config,
                         asset_service,
                         tx_service,
+                        license_service,
                         &shorter_id,
                     )
                     .await;
@@ -206,28 +208,7 @@ pub async fn function_handler(
                     )
                     .await
                 }
-                // only useful in local development
-                // "4" => {
-                //     //let id = matched.params.get("id").unwrap().to_string();
-                //     //let asset_id = Uuid::from_str(id.as_str())?;
-
-                //     match jwt_mandatory(&req, config){
-                //         Err(e) => { return Ok(e);},
-                //         Ok(user)=> user_id = user
-                //     };
-
-                //     return create_my_nft(
-                //         &req,
-                //         &context,
-                //         config,
-                //         asset_service,
-                //         owners_service,
-                //         blockchain_service,
-                //         user_service,
-                //         &user_id,
-                //     )
-                //     .await;
-                // }
+                
                 "3" => {
                     //let id = matched.params.get("id").unwrap().to_string();
                     //let asset_id = Uuid::from_str(id.as_str())?;
@@ -250,6 +231,22 @@ pub async fn function_handler(
                         &user_id,
                     )
                     .await;
+                }
+                "4" => {
+                    match jwt_mandatory(&req, config) {
+                        Err(e) => {
+                            return Ok(e);
+                        }
+                        Ok(user) => user_id = user,
+                    };
+                    create_my_license(
+                        &req,
+                        &context,
+                        config,
+                        license_service,
+                        &user_id,
+                    )
+                    .await
                 }
 
                 "55" => {

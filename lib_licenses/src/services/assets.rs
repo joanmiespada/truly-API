@@ -145,7 +145,6 @@ impl AssetManipulation for AssetService {
         let aux = creation_asset.url.clone();
         asset.set_url(&Some(url::Url::parse(aux.as_str())?));
         asset.set_hash(&Some(creation_asset.hash.clone()));
-        asset.set_license(&Some(creation_asset.license.clone()));
 
         asset.set_longitude(&creation_asset.longitude);
         asset.set_latitude(&creation_asset.latitude);
@@ -163,11 +162,6 @@ impl AssetManipulation for AssetService {
 
         let dbasset = self.repository.get_by_id(id).await?;
         let mut res: Asset = dbasset.clone();
-
-        match &asset.license {
-            None => (),
-            Some(val) => res.set_license(&Some(val.to_string())),
-        }
 
         match &asset.status {
             None => (),
@@ -254,7 +248,6 @@ impl AssetManipulation for AssetService {
                     new_licensed_asset.set_state(original_asset.state());
                     new_licensed_asset.set_longitude(original_asset.longitude());
                     new_licensed_asset.set_latitude(original_asset.latitude());
-                    new_licensed_asset.set_license(original_asset.license());
                     new_licensed_asset.set_hash(&video_res.video_licensed_hash);
                     new_licensed_asset.set_url(&video_res.video_licensed);
                     new_licensed_asset.set_last_update_time(&Utc::now());

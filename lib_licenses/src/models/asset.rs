@@ -21,8 +21,6 @@ pub struct Asset {
     longitude: Option<f64>,
     #[validate(length(max = 1000))]
     hash: Option<String>,
-    #[validate(length(max = 1000))]
-    license: Option<String>,
 
     //#[validate(length( max=1000))]
     last_minted_tx: Option<H256>,
@@ -59,7 +57,6 @@ impl Asset {
             hash: None,
             latitude: None,
             longitude: None,
-            license: None,
             last_minted_tx: None,
             mint_status: MintingStatus::NeverMinted,
             shorter: None,
@@ -82,7 +79,6 @@ impl Asset {
             hash: Some(hash),
             latitude: None,
             longitude: None,
-            license: None,
             last_minted_tx: None,
             mint_status: MintingStatus::NeverMinted,
             shorter: None,
@@ -147,13 +143,7 @@ impl Asset {
     pub fn set_latitude(&mut self, val: &Option<f64>) {
         self.latitude = val.clone()
     }
-
-    pub fn license(&self) -> &Option<String> {
-        &self.license
-    }
-    pub fn set_license(&mut self, val: &Option<String>) {
-        self.license = val.clone()
-    }
+    
     pub fn minted_tx(&self) -> &Option<H256> {
         &self.last_minted_tx
     }

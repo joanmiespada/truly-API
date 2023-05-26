@@ -14,7 +14,7 @@ pub trait LicenseManipulation {
     async fn get_by_id(&self, license_id: &Uuid, asset_id: &Uuid) -> ResultE<Option<License>>;
     async fn get_by_license(&self, license_id: &Uuid) -> ResultE<Option<License>>;
     async fn get_by_asset(&self, asset_id: &Uuid) -> ResultE<Vec<License>>;
-    async fn create(&self, license: &CreatableFildsLicense) -> ResultE<Uuid>;
+    async fn create(&self, license: &CreatableFildsLicense, user_id: &Option<String>) -> ResultE<Uuid>;
     async fn update(&self, license: &License) -> ResultE<()>;
     async fn delete(&self, license: &License) -> ResultE<()>;
 }
@@ -35,6 +35,11 @@ impl LicenseService {
 
     async fn check_if_asset_exist(&self, asset_id: &Uuid) -> ResultE<bool> {
         let _ = self.asset_repo.get_by_id(asset_id).await?;
+        Ok(true)
+    }
+    
+    async fn check_ownership(&self, asset_id: &Uuid, user_id: &String) -> ResultE<bool> {
+        let _ = self.asset_repo.get_by_user_asset_id(asset_id, user_id).await?;
         Ok(true)
     }
 }
@@ -59,8 +64,11 @@ impl LicenseManipulation for LicenseService {
         Ok(res)
     }
 
-    async fn create(&self, license_new: &CreatableFildsLicense) -> ResultE<Uuid> {
+    async fn create(&self, license_new: &CreatableFildsLicense, user_id: &Option<String>) -> ResultE<Uuid> {
         self.check_if_asset_exist(&license_new.asset_id).await?;
+        if let Some(user) = user_id {
+            self.check_ownership(&license_new.asset_id, user).await?;
+        }
         let mut license = license_new.to_license();
         self.repository.create(&mut license).await?;
         Ok(license.id().clone())
