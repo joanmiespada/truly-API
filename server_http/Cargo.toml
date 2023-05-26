@@ -16,8 +16,8 @@ lib_blockchain = { path = "../lib_blockchain"}
 
 actix-web = "4.3.1"
 actix-rt = "2.8.0"
-aws-config = "0.55.2"
-aws-sdk-dynamodb = "0.27.0"
+aws-config = "0.55.3"
+aws-sdk-dynamodb = "0.28.0"
 async-trait = "0.1.68"
 chrono = "0.4.24"
 serde = { version = "1.0.163", features = ["derive"] }
@@ -30,7 +30,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = ["f
 dotenv = "0.15.0"
 envy = "0.4.2"
 jsonwebtoken = "8.3.0"
-tracing-actix-web = "0.7.4"
+tracing-actix-web = "0.7.5"
 actix-cors = "0.6.4"
 futures-util = "0.3.28"
 rustc-serialize = "0.3.24"

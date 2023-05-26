@@ -17,24 +17,24 @@ chrono = {version="0.4.24", features = ["serde"] }
 serde = { version = "1.0.163", features = ["derive"] }
 serde_json = "1.0.96"
 rust-argon2 = "1.0.0"
-aws-config = "0.55.2"
-aws-sdk-dynamodb = "0.27.0"
+aws-config = "0.55.3"
+aws-sdk-dynamodb = "0.28.0"
 async-trait = "0.1.68"
 tracing = { version = "0.1", features = ["log"] }
 tokio =  { version="1.28.1", features = ["macros"] }
 validator = { version = "0.16", features = ["derive"] }
-regex = "1.8.2"
+regex = "1.8.3"
 zxcvbn = "2.2.2"
 uuid = { version = "1.3.3", features=["v4","fast-rng","macro-diagnostics","serde"]}
 
 
 [dev-dependencies]
 env_logger = "0.10.0"
-aws-types = "0.55.2"
+aws-types = "0.55.3"
 spectral = "0.6.0"
 #testcontainers = "0.14.0"
 testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack2"  }
 tokio = { version="1.28.1", features=["full"]}
 lib_config = { path = "../lib_config" }
-aws-sdk-secretsmanager = "0.27.0"
+aws-sdk-secretsmanager = "0.28.0"
 
