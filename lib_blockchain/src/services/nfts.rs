@@ -10,7 +10,8 @@ use crate::errors::nft::{
     TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError,
 };
 use crate::models::block_tx::BlockchainTx;
-use crate::blockchains::ganache::{GanacheRepo, NFTsRepository};
+use crate::blockchains::ganache::GanacheBlockChain;
+use crate::blockchains::chain::NFTsRepository;
 use crate::repositories::keypairs::{KeyPairRepo, KeyPairRepository};
 use lib_licenses::errors::video::VideoNotYetLicensed;
 use lib_licenses::models::asset::{Asset, MintingStatus, VideoLicensingStatus};
@@ -40,7 +41,7 @@ pub trait NFTsManipulation {
 
 #[derive(Debug)]
 pub struct NFTsService {
-    blockchain: GanacheRepo,
+    blockchain: GanacheBlockChain,
     keys_repo: KeyPairRepo,
     asset_service: AssetService,
     owner_service: OwnerService,
@@ -50,7 +51,7 @@ pub struct NFTsService {
 
 impl NFTsService {
     pub fn new(
-        repo: GanacheRepo,
+        repo: GanacheBlockChain,
         keys_repo: KeyPairRepo,
         asset_service: AssetService,
         owner_service: OwnerService,

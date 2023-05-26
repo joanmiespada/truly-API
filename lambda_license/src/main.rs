@@ -2,7 +2,7 @@ use lambda_http::service_fn;
 use lib_blockchain::repositories::block_tx::BlockchainTxRepo;
 use lib_blockchain::repositories::blockchain::BlockchainRepo;
 use lib_blockchain::repositories::contract::ContractRepo;
-use lib_blockchain::blockchains::ganache::GanacheRepo;
+use lib_blockchain::blockchains::ganache::GanacheBlockChain;
 use lib_blockchain::repositories::keypairs::KeyPairRepo;
 use lib_blockchain::services::block_tx::BlockchainTxService;
 use lib_blockchain::services::nfts::NFTsService;
@@ -51,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let blockchains_repo = BlockchainRepo::new(&config);
     let contracts_repo = ContractRepo::new(&config);
 
-    let blockchain = GanacheRepo::new(&config, &contracts_repo, &blockchains_repo).await?;
+    let blockchain = GanacheBlockChain::new(&config, &contracts_repo, &blockchains_repo).await?;
 
     let blockchain_service = NFTsService::new(
         blockchain,

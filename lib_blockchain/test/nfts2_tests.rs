@@ -1,7 +1,7 @@
 use crate::nfts_tests::MNEMONIC_TEST;
 use chrono::Utc;
 use ethers::utils::Ganache;
-use lib_blockchain::blockchains::ganache::GanacheRepo;
+use lib_blockchain::blockchains::ganache::GanacheBlockChain;
 use lib_blockchain::models::blockchain::Blockchain;
 use lib_blockchain::models::contract::{Contract, ContractStatus};
 use lib_blockchain::repositories::block_tx::BlockchainTxRepo;
@@ -207,7 +207,7 @@ async fn create_contract_and_mint_nft_test_sync(
     new_configuration.set_contract_id(contact_id);
     config.set_env_vars(&new_configuration);
 
-    let blockchain = GanacheRepo::new(&config.clone(), &contracts_repo, &block_chains_repo)
+    let blockchain = GanacheBlockChain::new(&config.clone(), &contracts_repo, &block_chains_repo)
         .await
         .unwrap();
 

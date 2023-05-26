@@ -115,9 +115,9 @@ async fn create_simple_contract_test() -> web3::Result<()> {
     let contract_owner_account_str = format!("{:?}", accounts_op.clone().unwrap()[0]);
     let contract_owner = H160::from_str(contract_owner_account_str.as_str()).unwrap();
 
-    let bytecode = include_str!("../res/SimpleTest.bin").trim_end();
+    let bytecode = include_str!("../res/evm/SimpleTest.bin").trim_end();
 
-    let contract_deploy_op = Contract::deploy(web3.eth(), include_bytes!("../res/SimpleTest.abi"))
+    let contract_deploy_op = Contract::deploy(web3.eth(), include_bytes!("../res/evm//SimpleTest.abi"))
         .unwrap()
         .confirmations(0)
         .poll_interval(Duration::from_secs(10))
@@ -142,7 +142,7 @@ async fn create_simple_contract_test() -> web3::Result<()> {
     let contract_op = Contract::from_json(
         web3.eth(),
         contract_address,
-        include_bytes!("../res/SimpleTest.abi"),
+        include_bytes!("../res/evm/SimpleTest.abi"),
     );
     assert_that!(&contract_op).is_ok();
 

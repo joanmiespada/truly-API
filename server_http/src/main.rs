@@ -18,7 +18,7 @@ use lib_licenses::services::owners::OwnerService;
 use log::debug;
 use tracing_actix_web::TracingLogger;
 
-use lib_blockchain::blockchains::ganache::GanacheRepo;
+use lib_blockchain::blockchains::ganache::GanacheBlockChain;
 use lib_blockchain::services::nfts::NFTsService;
 
 use lib_users::repositories::users::UsersRepo;
@@ -104,7 +104,7 @@ async fn main() {
     let blockchains_repo = BlockchainRepo::new(&config);
     let contracts_repo = ContractRepo::new(&config);
 
-    let blockchain = GanacheRepo::new(&config, &contracts_repo, &blockchains_repo)
+    let blockchain = GanacheBlockChain::new(&config, &contracts_repo, &blockchains_repo)
         .await
         .unwrap();
 

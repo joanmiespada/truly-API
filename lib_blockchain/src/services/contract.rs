@@ -17,8 +17,8 @@ pub async fn deploy_contract_locally(
     let gas_price = web3.eth().gas_price().await.unwrap();
     //let chain_id = web3.eth().chain_id().await.unwrap().as_u64();
 
-    let bytecode = include_str!("../../res/LightNFT.bin").trim_end();
-    let abi = include_bytes!("../../res/LightNFT.abi");
+    let bytecode = include_str!("../../res/evm/LightNFT.bin").trim_end();
+    let abi = include_bytes!("../../res/evm/LightNFT.abi");
 
     let contract_deploy = Contract::deploy(web3.eth(), abi)
         .unwrap()

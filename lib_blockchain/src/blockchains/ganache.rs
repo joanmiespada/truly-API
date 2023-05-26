@@ -2,14 +2,9 @@ use async_trait::async_trait;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use lib_config::{config::Config, environment::DEV_ENV, infra::restore_secret_key};
 use log::debug;
-use mac_address::get_mac_address;
 use secp256k1::SecretKey;
-use serde::{Deserialize, Serialize};
-use snowflake::SnowflakeIdGenerator;
 use std::{
-    fmt,
     str::FromStr,
-    sync::{Arc, Mutex},
 };
 use url::Url;
 use uuid::Uuid;
@@ -30,7 +25,7 @@ use crate::{
     },
 };
 use crate::{
-    errors::nft::{NftBlockChainNonceMalformedError, NftUserAddressMalformedError},
+    errors::nft::NftUserAddressMalformedError,
     models::keypair::KeyPair,
 };
 
@@ -39,24 +34,13 @@ const CONTRACT_METHOD_GET_CONTENT_BY_TOKEN: &'static str = "getContentByToken";
 
 use lib_licenses::errors::asset::AssetBlockachainError;
 
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
-#[async_trait]
-pub trait NFTsRepository {
-    async fn add(
-        &self,
-        asset_id: &Uuid,
-        user_key: &KeyPair,
-        hash_file: &String,
-        price: &u64,
-        counter: &u64,
-    ) -> ResultE<BlockchainTx>;
+use super::chain::{ContractContentInfo, NFTsRepository, ContentState};
 
-    async fn get(&self, asset_id: &Uuid) -> ResultE<GanacheContentInfo>;
-    fn contract_id(&self) -> u16;
-}
+type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
+
 
 #[derive(Clone, Debug)]
-pub struct GanacheRepo {
+pub struct GanacheBlockChain {
     url: Url,
     contract_address: Address,
     contract_owner_address: Address,
@@ -68,12 +52,12 @@ pub struct GanacheRepo {
     contract_id: u16,
 }
 
-impl GanacheRepo {
+impl GanacheBlockChain {
     pub async fn new(
         conf: &Config,
         contracts_repo: &ContractRepo,
         blockchains_repo: &BlockchainRepo,
-    ) -> ResultE<GanacheRepo> {
+    ) -> ResultE<GanacheBlockChain> {
         //TODO: read from contracts table!
         /*
                 let contract_address_position;
@@ -115,7 +99,7 @@ impl GanacheRepo {
             .unwrap();
         }
 
-        Ok(GanacheRepo {
+        Ok(GanacheBlockChain {
             url: blockchain_url.to_owned(),
             contract_address: contract.address().unwrap().to_owned(), //contract_address_position,
             contract_owner_address: contract.owner_address().unwrap().to_owned(), //contract_owner_position,
@@ -128,64 +112,11 @@ impl GanacheRepo {
         })
     }
 
-    /*
-    async fn decrypt_contract_owner_secret_key(&self) -> ResultE<SecretKey> {
-        use base64::{engine::general_purpose, Engine as _};
-
-        // let client = aws_sdk_secretsmanager::Client::new(&self.aws);
-        // let scr = client
-        //     .get_secret_value()
-        //     .secret_id(SECRETS_MANAGER_SECRET_KEY)
-        //     .send()
-        //     .await?;
-
-        // let secret_key_cyphered_b64 = scr.secret_string().unwrap();
-        let secret_key_cyphered_b64 = self.contract_owner_secret.to_owned();
-
-
-        let secret_key_cyphered = general_purpose::STANDARD
-            .decode(secret_key_cyphered_b64)
-            .unwrap();
-
-        let data = aws_sdk_kms::types::Blob::new(secret_key_cyphered);
-
-        let client = aws_sdk_kms::Client::new(&self.aws);
-
-        let resp;
-        let resp_op = client
-            .decrypt()
-            .key_id(self.kms_key_id.to_owned())
-            .ciphertext_blob(data)
-            .send()
-            .await;
-        match resp_op {
-            Err(e) => {
-                return Err(e.into());
-            }
-            Ok(val) => resp = val,
-        }
-
-        let inner = resp.plaintext.unwrap();
-        let bytes = inner.as_ref();
-
-        let secret_key_raw = String::from_utf8(bytes.to_vec()).unwrap(); // .expect("Could not convert to UTF-8");
-
-        let secret_key: SecretKey;
-        let secret_key_op = SecretKey::from_str(secret_key_raw.as_str());
-        match secret_key_op {
-            Err(e) => {
-                return Err(e.into());
-            }
-            Ok(val) => secret_key = val,
-        }
-
-        Ok(secret_key)
-    }
-    */
+    
 }
 
 #[async_trait]
-impl NFTsRepository for GanacheRepo {
+impl NFTsRepository for GanacheBlockChain {
     fn contract_id(&self) -> u16 {
         self.contract_id
     }
@@ -218,7 +149,7 @@ impl NFTsRepository for GanacheRepo {
         let contract_op = Contract::from_json(
             web3.eth(),
             self.contract_address.clone(),
-            include_bytes!("../../res/LightNFT.abi"),
+            include_bytes!("../../res/evm/LightNFT.abi"),
         );
         let contract = match contract_op {
             Err(e) => {
@@ -346,7 +277,7 @@ impl NFTsRepository for GanacheRepo {
         Ok(tx_paylaod)
     }
 
-    async fn get(&self, asset_id: &Uuid) -> ResultE<GanacheContentInfo> {
+    async fn get(&self, asset_id: &Uuid) -> ResultE<ContractContentInfo> {
         let token = asset_id.to_string();
 
         let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
@@ -356,7 +287,7 @@ impl NFTsRepository for GanacheRepo {
         let contract_op = Contract::from_json(
             web3.eth(),
             self.contract_address.clone(),
-            include_bytes!("../../res/LightNFT.abi"),
+            include_bytes!("../../res/evm/LightNFT.abi"),
         );
         let contract = match contract_op {
             Err(e) => {
@@ -372,7 +303,7 @@ impl NFTsRepository for GanacheRepo {
             Options::default(),
             None,
         );
-        let call_contract_op: Result<GanacheContentInfo, web3::contract::Error> = caller.await;
+        let call_contract_op: Result<ContractContentInfo, web3::contract::Error> = caller.await;
         let res = match call_contract_op {
             Err(e) => {
                 return Err(AssetBlockachainError(e.to_string()).into());
@@ -418,53 +349,8 @@ pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
         );
     return latest_block;
 }
-#[derive(Clone, Serialize, Deserialize, Debug)]
-#[allow(non_snake_case)]
-pub struct GanacheContentInfo {
-    //field names coming from Solidity
-    pub hashFile: String,
-    pub uri: String,
-    pub price: u64,
-    pub state: ContentState,
-}
 
-#[derive(Clone, Serialize, Deserialize)]
-pub enum ContentState {
-    Active,
-    Inactive,
-}
-impl fmt::Debug for ContentState {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Active => write!(f, "Active"),
-            Self::Inactive => write!(f, "Inactive"),
-        }
-    }
-}
-
-impl fmt::Display for ContentState {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Active => write!(f, "Active"),
-            Self::Inactive => write!(f, "Inactive"),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseContentStateError;
-impl std::str::FromStr for ContentState {
-    type Err = ParseContentStateError;
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        match input {
-            "Active" => Ok(ContentState::Active),
-            "Inactive" => Ok(ContentState::Inactive),
-            _ => Err(ParseContentStateError),
-        }
-    }
-}
-
-impl Detokenize for GanacheContentInfo {
+impl Detokenize for ContractContentInfo {
     #[allow(non_snake_case)]
     fn from_tokens(tokens: Vec<web3::ethabi::Token>) -> Result<Self, web3::contract::Error>
     where
@@ -496,48 +382,3 @@ impl Detokenize for GanacheContentInfo {
     }
 }
 
-/*
-fn generate_keypair() -> SecretKey {
-    //let secp = secp256k1::Secp256k1::new();
-    //let mut rng = rngs::StdRng::seed_from_u64(111); //TODO!!!! ojo!!!!!!!!!
-    //secp.generate_keypair(&mut rng)
-
-
-    let secp = Secp256k1::new();
-    let secret_key = SecretKey::new(&mut rand::thread_rng());
-    return secret_key;
-}*/
-
-fn _generate_nonce(counter: &Arc<Mutex<i32>>) -> Result<U256, NftBlockChainNonceMalformedError> {
-    //generate unique nonce number
-    let machine_id: i32;
-    match get_mac_address() {
-        Ok(Some(ma)) => {
-            debug!("MAC addr = {}", ma);
-            debug!("bytes = {:?}", ma.bytes());
-            let original = ma.bytes();
-            let original2 = [original[0], original[1], original[2], original[3]];
-            let num = i32::from_be_bytes(original2);
-            machine_id = num;
-        }
-        Ok(None) => {
-            return Err(NftBlockChainNonceMalformedError(
-                "no mac address found to choose the nodeId".to_string(),
-            )
-            .into())
-        } // println!("No MAC address found."),
-        Err(e) => return Err(NftBlockChainNonceMalformedError(e.to_string()).into()),
-    }
-    let counter_id: i32;
-    {
-        let data = Arc::clone(counter);
-        let mut cont = data.lock().unwrap();
-        counter_id = (*cont).clone();
-        *cont += 1;
-    }
-    let mut id_generator_generator = SnowflakeIdGenerator::new(machine_id, counter_id);
-    let id = id_generator_generator.real_time_generate();
-    let nonce = U256::from(id);
-
-    Ok(nonce)
-}
