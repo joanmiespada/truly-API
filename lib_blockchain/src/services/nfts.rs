@@ -5,6 +5,7 @@ use chrono::Utc;
 use lib_config::config::Config;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use web3::types::H256;
 
 use crate::errors::nft::{
     TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError,
@@ -139,8 +140,9 @@ impl NFTsManipulation for NFTsService {
                 let asset = self.asset_service.get_by_id(asset_id).await?;
                 //it has been previously minted by other process...
                 if *asset.mint_status() == MintingStatus::CompletedSuccessfully {
-                    let tx = asset.minted_tx().unwrap();
-                    let transact = self.tx_service.get_by_hash(&tx).await?;
+                    let tx = asset.minted_tx().clone().unwrap();
+                    let tx_hash = H256::from_str(tx.as_str()).unwrap();
+                    let transact = self.tx_service.get_by_hash(&tx_hash).await?;
                     return Ok(transact);
                 } else {
                     self.asset_service
@@ -169,10 +171,15 @@ impl NFTsManipulation for NFTsService {
                 }
             }
             Ok(transaction) => {
+                let tx_res =  match *transaction.tx() {
+                    None => None,
+                    Some(x)=>{ Some( H256::to_string(&x)  )}
+                };
                 self.asset_service
                     .mint_status(
                         asset_id,
-                        transaction.tx(),
+                        //transaction.tx(),
+                        &tx_res,
                         MintingStatus::CompletedSuccessfully,
                     )
                     .await?;

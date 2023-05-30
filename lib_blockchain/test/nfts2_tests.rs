@@ -35,7 +35,7 @@ use spectral::{assert_that, result::ResultAssertions};
 use std::{env, str::FromStr};
 use testcontainers::*;
 use url::Url;
-use web3::types::H160;
+use web3::types::{H160, H256};
 
 #[tokio::test]
 async fn create_contract_and_mint_nft_test_sync(
@@ -251,8 +251,9 @@ async fn create_contract_and_mint_nft_test_sync(
     );
     assert_ne!(*content_minted.minted_tx(), None);
 
-    let find = content_minted.minted_tx().unwrap();
-    let tx_tx = tx_service.get_by_hash(&find).await;
+    let find = content_minted.minted_tx().clone().unwrap();
+    let tx_find = H256::from_str(&find).unwrap();
+    let tx_tx = tx_service.get_by_hash(&tx_find).await;
     assert_that!(&tx_tx).is_ok();
     let final_tx = tx_tx.unwrap();
     let content1 = tx_in_chain.tx().clone().unwrap();

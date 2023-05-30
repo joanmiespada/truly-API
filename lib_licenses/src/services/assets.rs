@@ -12,7 +12,6 @@ use url::Url;
 use uuid::Uuid;
 
 use validator::Validate;
-use web3::types::H256;
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
@@ -31,7 +30,7 @@ pub trait AssetManipulation {
     async fn mint_status(
         &self,
         id: &Uuid,
-        transaction: &Option<H256>,
+        transaction: &Option<String>,
         sts: MintingStatus,
     ) -> ResultE<()>;
     async fn store_video_process(&self, video_res: &VideoResult) -> ResultE<()>;
@@ -188,7 +187,7 @@ impl AssetManipulation for AssetService {
     async fn mint_status(
         &self,
         id: &Uuid,
-        transaction: &Option<H256>,
+        transaction: &Option<String>,
         sts: MintingStatus,
     ) -> ResultE<()> {
         let dbasset = self.repository.get_by_id(id).await?;

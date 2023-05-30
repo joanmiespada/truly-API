@@ -4,7 +4,6 @@ use std::str::FromStr;
 use tracing::{error, info};
 use url::Url;
 use uuid::Uuid;
-use web3::types::H256;
 
 use crate::errors::asset::{AssetDynamoDBError, AssetNoExistsError, AssetTreeError};
 use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
@@ -706,8 +705,7 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
             if val == NULLABLE {
                 asset.set_minted_tx(&None)
             } else {
-                let hash = H256::from_str(val).unwrap();
-                asset.set_minted_tx(&Some(hash.clone()))
+                asset.set_minted_tx(&Some(val.clone()))
             }
         }
     }
