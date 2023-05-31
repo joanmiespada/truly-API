@@ -138,4 +138,38 @@ unicode-xid = { version = "0.2" }
 url = { version = "2", features = ["serde"] }
 webpki = { version = "0.22", default-features = false, features = ["std"] }
 
+[target.aarch64-unknown-linux-gnu.dependencies]
+crunchy = { version = "0.2", features = ["limit_256", "std"] }
+ethers-etherscan = { version = "2", default-features = false, features = ["ethers-solc", "rustls"] }
+ethers-solc = { version = "2" }
+io-lifetimes = { version = "1" }
+libc = { version = "0.2", features = ["extra_traits"] }
+once_cell = { version = "1" }
+rand_core = { version = "0.6", default-features = false, features = ["std"] }
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+rustls = { version = "0.20" }
+tokio-rustls = { version = "0.23" }
+unicode-xid = { version = "0.2" }
+webpki = { version = "0.22", default-features = false, features = ["std"] }
+
+[target.aarch64-unknown-linux-gnu.build-dependencies]
+crunchy = { version = "0.2", features = ["limit_256", "std"] }
+ethers-etherscan = { version = "2", default-features = false, features = ["ethers-solc", "rustls"] }
+ethers-solc = { version = "2" }
+futures-channel = { version = "0.3", features = ["sink"] }
+futures-task = { version = "0.3" }
+futures-util = { version = "0.3", features = ["channel", "io", "sink"] }
+hyper = { version = "0.14", features = ["client", "http1", "http2", "runtime", "server", "stream"] }
+io-lifetimes = { version = "1" }
+libc = { version = "0.2", features = ["extra_traits"] }
+once_cell = { version = "1" }
+rand_core = { version = "0.6", default-features = false, features = ["std"] }
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+ring = { version = "0.16", features = ["std"] }
+tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0.7", features = ["codec", "io"] }
+unicode-xid = { version = "0.2" }
+url = { version = "2", features = ["serde"] }
+webpki = { version = "0.22", default-features = false, features = ["std"] }
+
 ### END HAKARI SECTION
