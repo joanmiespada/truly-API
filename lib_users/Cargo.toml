@@ -26,6 +26,7 @@ validator = { version = "0.16", features = ["derive"] }
 regex = "1.8.3"
 zxcvbn = "2.2.2"
 uuid = { version = "1.3.3", features=["v4","fast-rng","macro-diagnostics","serde"]}
+workspace-hack = { version = "0.1", path = "../workspace-hack" }
 
 
 [dev-dependencies]

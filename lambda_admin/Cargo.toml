@@ -23,6 +23,7 @@ tracing-subscriber = { version = "0.3.17", default-features = false, features = 
 tokio = { version = "1", features = ["full"] }
 matchit = "0.7.0"
 validator = { version = "0.16", features = ["derive"] }
+workspace-hack = { version = "0.1", path = "../workspace-hack" }
 
 
 

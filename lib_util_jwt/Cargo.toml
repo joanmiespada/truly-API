@@ -18,3 +18,4 @@ chrono = "0.4.24"
 #actix-web = "4.2.1"
 jsonwebtoken = "8.3.0"
 http = "0.2.9"
+workspace-hack = { version = "0.1", path = "../workspace-hack" }

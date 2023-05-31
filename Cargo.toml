@@ -14,7 +14,8 @@ members = [
     "lambda_admin",
     "lambda_after_video",
     "server_http",
-    "manual_dep"
+    "manual_dep",
+    "workspace-hack"
 ]
 
 

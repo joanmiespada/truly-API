@@ -3128,6 +3128,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "validator",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -3148,6 +3149,7 @@ dependencies = [
  "tracing-subscriber",
  "uuid 1.3.3",
  "validator",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -3198,6 +3200,7 @@ dependencies = [
  "url",
  "uuid 1.3.3",
  "validator",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -3217,6 +3220,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "validator",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -3239,6 +3243,7 @@ dependencies = [
  "tracing-subscriber",
  "uuid 1.3.3",
  "validator",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -3290,6 +3295,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "validator",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -3322,6 +3328,7 @@ dependencies = [
  "url",
  "uuid 1.3.3",
  "validator",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -3359,6 +3366,7 @@ dependencies = [
  "uuid 1.3.3",
  "validator",
  "web3",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -3381,6 +3389,7 @@ dependencies = [
  "spectral",
  "testcontainers",
  "tokio",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -3414,6 +3423,7 @@ dependencies = [
  "url",
  "uuid 1.3.3",
  "validator",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -3438,6 +3448,7 @@ dependencies = [
  "tracing",
  "uuid 1.3.3",
  "validator",
+ "workspace-hack",
  "zxcvbn",
 ]
 
@@ -3450,6 +3461,7 @@ dependencies = [
  "jsonwebtoken",
  "serde",
  "serde_json",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -3545,6 +3557,7 @@ dependencies = [
  "url",
  "uuid 1.3.3",
  "validator",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -4976,6 +4989,7 @@ dependencies = [
  "url",
  "uuid 1.3.3",
  "validator",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -6284,6 +6298,75 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "80d0f4e272c85def139476380b12f9ac60926689dd2e01d4923222f40580869d"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "workspace-hack"
+version = "0.1.0"
+dependencies = [
+ "actix-rt",
+ "arrayvec",
+ "bit-set",
+ "bit-vec",
+ "byteorder",
+ "bytes",
+ "cc",
+ "chrono",
+ "crunchy",
+ "derive_more",
+ "digest 0.10.7",
+ "ecdsa",
+ "either",
+ "elliptic-curve",
+ "ethers-contract-abigen",
+ "ethers-etherscan",
+ "ethers-solc",
+ "futures-channel",
+ "futures-executor",
+ "futures-task",
+ "futures-timer",
+ "futures-util",
+ "generic-array",
+ "hmac",
+ "hyper",
+ "io-lifetimes",
+ "itertools",
+ "k256",
+ "lalrpop-util",
+ "libc",
+ "log",
+ "num-integer",
+ "num-traits",
+ "phf_shared 0.11.1",
+ "proc-macro2",
+ "rand 0.8.5",
+ "rand_core 0.6.4",
+ "regex-syntax 0.6.28",
+ "reqwest",
+ "ring",
+ "rlp",
+ "rustls 0.20.8",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2 0.10.6",
+ "sha3 0.10.6",
+ "spki",
+ "subtle",
+ "syn 1.0.109",
+ "syn 2.0.16",
+ "time 0.3.21",
+ "tiny-keccak",
+ "tokio",
+ "tokio-rustls 0.23.4",
+ "tokio-util",
+ "tracing",
+ "tracing-core",
+ "uint",
+ "unicode-xid",
+ "url",
+ "webpki",
+ "zeroize",
 ]
 
 [[package]]

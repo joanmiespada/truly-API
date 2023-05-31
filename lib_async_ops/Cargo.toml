@@ -20,6 +20,7 @@ uuid = { version = "1.3.3", features = ["v4","fast-rng",  "macro-diagnostics",  
 aws-sdk-sqs = "0.28.0"
 aws-sdk-sns = "0.28.0"
 env_logger = "0.10.0"
+workspace-hack = { version = "0.1", path = "../workspace-hack" }
 
 [dev-dependencies]
 tokio = { version="1.28.1", features=["full"]}
