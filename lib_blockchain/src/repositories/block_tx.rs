@@ -11,7 +11,7 @@ use lib_config::config::Config;
 use lib_licenses::errors::asset::AssetNoExistsError;
 use std::{collections::HashMap, str::FromStr};
 use uuid::Uuid;
-use web3::types::{H160, H256, U256, U64};
+//use web3::types::{H160, H256, U256, U64};
 
 use crate::{
     errors::block_tx::{BlockchainTxError, BlockchainTxNoExistsError},
@@ -36,7 +36,7 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 #[async_trait]
 pub trait BlockchainTxRepository {
     async fn add(&self, tx: &BlockchainTx) -> ResultE<()>;
-    async fn get_by_tx(&self, hash: &H256) -> ResultE<BlockchainTx>;
+    async fn get_by_tx(&self, hash: &String) -> ResultE<BlockchainTx>;
     async fn get_by_ids(&self, asset_id: &Uuid, timestamp: &DateTime<Utc>)
         -> ResultE<BlockchainTx>;
     async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<BlockchainTx>>;
@@ -57,7 +57,7 @@ impl BlockchainTxRepo {
 
 #[async_trait]
 impl BlockchainTxRepository for BlockchainTxRepo {
-    async fn get_by_tx(&self, hash: &H256) -> ResultE<BlockchainTx> {
+    async fn get_by_tx(&self, hash: &String) -> ResultE<BlockchainTx> {
         let hash_av = AttributeValue::S(format!("{:?}", hash));
 
         let filter = format!("{} = :value", TX_FIELD);
@@ -330,8 +330,8 @@ pub fn mapping_from_doc_to_blockchain(doc: &HashMap<String, AttributeValue>) -> 
         None => tx_hash = None,
         Some(v) => {
             let tx_id = v.as_s().unwrap();
-            let hash = H256::from_str(tx_id).unwrap();
-            tx_hash = Some(hash);
+            //let hash = H256::from_str(tx_id).unwrap();
+            tx_hash = Some(tx_id.clone());
         }
     }
     let block_numer;
@@ -339,7 +339,8 @@ pub fn mapping_from_doc_to_blockchain(doc: &HashMap<String, AttributeValue>) -> 
         None => block_numer = None,
         Some(v) => {
             let s_val = v.as_n().unwrap();
-            let val = U64::from_str(s_val).unwrap();
+            //let val = U64::from_str(s_val).unwrap();
+            let val = u64::from_str(s_val).unwrap();
             block_numer = Some(val);
         }
     }
@@ -348,8 +349,8 @@ pub fn mapping_from_doc_to_blockchain(doc: &HashMap<String, AttributeValue>) -> 
         None => gas_used = None,
         Some(v) => {
             let s_val = v.as_n().unwrap();
-            let val = U256::from_str(s_val).unwrap();
-            gas_used = Some(val);
+            //let val = U256::from_str(s_val).unwrap();
+            gas_used = Some(s_val.clone());
         }
     }
     let effective_gas_price;
@@ -357,8 +358,8 @@ pub fn mapping_from_doc_to_blockchain(doc: &HashMap<String, AttributeValue>) -> 
         None => effective_gas_price = None,
         Some(v) => {
             let s_val = v.as_n().unwrap();
-            let val = U256::from_str(s_val).unwrap();
-            effective_gas_price = Some(val);
+            //let val = U256::from_str(s_val).unwrap();
+            effective_gas_price = Some(s_val.clone());
         }
     }
     let cost;
@@ -383,8 +384,8 @@ pub fn mapping_from_doc_to_blockchain(doc: &HashMap<String, AttributeValue>) -> 
         None => from = None,
         Some(v) => {
             let s_val = v.as_s().unwrap();
-            let val = H160::from_str(&s_val).unwrap();
-            from = Some(val);
+            //let val = H160::from_str(&s_val).unwrap();
+            from = Some(s_val.clone());
         }
     }
     let to;
@@ -392,8 +393,8 @@ pub fn mapping_from_doc_to_blockchain(doc: &HashMap<String, AttributeValue>) -> 
         None => to = None,
         Some(v) => {
             let s_val = v.as_s().unwrap();
-            let val = H160::from_str(&s_val).unwrap();
-            to = Some(val);
+            //let val = H160::from_str(&s_val).unwrap();
+            to = Some(s_val.clone());
         }
     }
     let _contract_id = doc.get(TX_CONTRACT_ID).unwrap();

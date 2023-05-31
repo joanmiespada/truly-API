@@ -20,6 +20,8 @@ pub struct Asset {
     longitude: Option<f64>,
     #[validate(length(max = 1000))]
     hash: Option<String>,
+    #[validate(length(max = 1000))]
+    hash_algorithm: Option<String>,
 
     //#[validate(length( max=1000))]
     last_minted_tx: Option<String>,
@@ -54,6 +56,7 @@ impl Asset {
             url: None,
             status: AssetStatus::Enabled,
             hash: None,
+            hash_algorithm: None,
             latitude: None,
             longitude: None,
             last_minted_tx: None,
@@ -68,7 +71,7 @@ impl Asset {
             source_details: None,
         }
     }
-    pub fn new2(id: Uuid, url: Url, hash: String) -> Asset {
+    pub fn new2(id: Uuid, url: Url, hash: String, hash_algorithm: String) -> Asset {
         Asset {
             id,
             creation_time: Utc::now(),
@@ -76,6 +79,7 @@ impl Asset {
             url: Some(url),
             status: AssetStatus::Enabled,
             hash: Some(hash),
+            hash_algorithm: Some(hash_algorithm),
             latitude: None,
             longitude: None,
             last_minted_tx: None,
@@ -127,6 +131,12 @@ impl Asset {
     }
     pub fn set_hash(&mut self, val: &Option<String>) {
         self.hash = val.clone()
+    }
+    pub fn hash_algorithm(&self) -> &Option<String> {
+        &self.hash_algorithm
+    }
+    pub fn set_hash_algorithm(&mut self, val: &Option<String>) {
+        self.hash_algorithm = val.clone()
     }
 
     pub fn longitude(&self) -> &Option<f64> {

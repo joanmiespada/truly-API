@@ -30,6 +30,7 @@ const LASTUPDATETIME_FIELD_NAME: &str = "lastUpdateTime";
 const STATUS_FIELD_NAME: &str = "assetStatus";
 
 const HASH_FIELD_NAME: &str = "hash_uri";
+const HASH_ALGORITHM_FIELD_NAME: &str = "hash_algorithm";
 const LATITUDE_FIELD_NAME: &str = "latitude";
 const LONGITUDE_FIELD_NAME: &str = "longitude";
 const MINTED_FIELD_NAME: &str = "minted";
@@ -115,6 +116,7 @@ impl AssetRepo {
         let status_av = AttributeValue::S(asset.state().to_string());
 
         let hash_av = AttributeValue::S(asset.hash().clone().unwrap().to_string());
+        let hash_algo_av = AttributeValue::S(asset.hash_algorithm().clone().unwrap().to_string());
 
         let mut items = Put::builder();
         items = items
@@ -123,59 +125,34 @@ impl AssetRepo {
             .item(LASTUPDATETIME_FIELD_NAME, update_time_av)
             .item(URL_FIELD_NAME, url_av)
             .item(STATUS_FIELD_NAME, status_av)
-            .item(HASH_FIELD_NAME, hash_av);
+            .item(HASH_FIELD_NAME, hash_av)
+            .item(HASH_ALGORITHM_FIELD_NAME, hash_algo_av);
 
-        //let longitude_av;
-        match asset.longitude() {
-            Some(value) => {
+        if let Some(value) = asset.longitude() {
                 let longitude_av = AttributeValue::S(value.to_string());
                 items = items.item(LONGITUDE_FIELD_NAME, longitude_av);
-            }
-            None => {} // longitude_av = AttributeValue::S(NULLABLE.to_string()),
         }
-        //let latitude_av;
-        match asset.latitude() {
-            Some(value) => {
+        if let Some(value)= asset.latitude() {
                 let latitude_av = AttributeValue::S(value.to_string());
                 items = items.item(LATITUDE_FIELD_NAME, latitude_av);
-            }
-            None => {} //latitude_av = AttributeValue::S(NULLABLE.to_string()),
         }
         
-        //let shorter_av;
-        match asset.shorter() {
-            Some(value) => {
+        if let Some(value) = asset.shorter() {
                 let shorter_av = AttributeValue::S(value.to_string());
                 items = items.item(SHORTER_FIELD_NAME, shorter_av);
-            }
-            None => {} //shorter_av = AttributeValue::S(NULLABLE.to_string()),
         }
-        //let counter_av;
-        match asset.counter() {
-            Some(value) => {
+        if let Some(value) =  asset.counter() {
                 let counter_av = AttributeValue::N(value.to_string());
                 items = items.item(COUNTER_FIELD_NAME, counter_av);
-            }
-            None => {} // counter_av = AttributeValue::N(NULLABLE.to_string()),
         }
-        //let video_licensing_error_av;
-        match asset.video_licensing_error() {
-            Some(value) => {
+        if let Some(value) =  asset.video_licensing_error() {
                 let video_licensing_error_av = AttributeValue::S(value.to_string());
                 items = items.item(VIDEO_LICENSING_FIELD_NAME, video_licensing_error_av);
-            }
-            None => {}
         }
-        //let minted_tx_av;
-        match asset.minted_tx() {
-            Some(value) => {
+        if let Some(value) =  asset.minted_tx() {
                 let minted_tx_av = AttributeValue::S(format!("{:?}", value));
                 items = items.item(MINTED_FIELD_NAME, minted_tx_av);
-            }
-            None => {}
         }
-
-        //let video_licensing_status_av = AttributeValue::S(asset.video_licensing_status().to_string());
         items = items.item(
             VIDEO_LICENSING_STATUS_FIELD_NAME,
             AttributeValue::S(asset.video_licensing_status().to_string()),
@@ -186,26 +163,17 @@ impl AssetRepo {
             AttributeValue::S(asset.mint_status().to_string()),
         );
 
-        match asset.video_process_status() {
-            Some(value) => {
+        if let Some(value) = asset.video_process_status() {
                 let video_process_status_av = AttributeValue::S(value.to_string());
                 items = items.item(VIDEO_PROCESS_STATUS_FIELD_NAME, video_process_status_av);
-            }
-            None => {}
         }
-        match asset.source() {
-            Some(value) => {
+        if let Some(value) =  asset.source() {
                 let source_av = AttributeValue::S(value.to_string());
                 items = items.item(SOURCE_FIELD_NAME, source_av);
-            }
-            None => {}
         }
-        match asset.source_details() {
-            Some(value) => {
+        if let Some(value) = asset.source_details() {
                 let source_det_av = AttributeValue::S(value.to_string());
                 items = items.item(SOURCE_DETAILS_FIELD_NAME, source_det_av);
-            }
-            None => {}
         }
         Ok(items)
     }
@@ -646,6 +614,11 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
     let _hash = doc.get(HASH_FIELD_NAME).unwrap();
     let asset_hash = _hash.as_s().unwrap();
     asset.set_hash(&Some(asset_hash.to_string()));
+
+    let _hash_algo = doc.get(HASH_ALGORITHM_FIELD_NAME).unwrap();
+    let asset_hash_algo = _hash_algo.as_s().unwrap();
+    asset.set_hash_algorithm(&Some(asset_hash_algo.to_string()));
+
 
     let creation_time_t = doc.get(CREATIONTIME_FIELD_NAME);
     match creation_time_t {

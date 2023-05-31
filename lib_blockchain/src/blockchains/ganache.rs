@@ -58,28 +58,7 @@ impl GanacheBlockChain {
         contracts_repo: &ContractRepo,
         blockchains_repo: &BlockchainRepo,
     ) -> ResultE<GanacheBlockChain> {
-        //TODO: read from contracts table!
-        /*
-                let contract_address_position;
-                let aux = conf.env_vars().contract_address();
-                let contract_address_position_op = Address::from_str(aux.as_str()); //.unwrap();
-                match contract_address_position_op {
-                    Err(e) => {
-                        return Err(e.to_string());
-                    }
-                    Ok(val) => contract_address_position = val,
-                }
-                let contract_owner_position;
-                let aux2 = conf.env_vars().contract_owner_address();
-                let contract_owner_position_op = Address::from_str(aux2.as_str()); //.unwrap();
-                match contract_owner_position_op {
-                    Err(e) => return Err(e.to_string()),
-                    Ok(val) => contract_owner_position = val,
-                }
-
-
-
-        */
+        
         let aux = conf.env_vars().contract_id();
         let contract = contracts_repo.get_by_id(&aux).await?;
         let blockchain = blockchains_repo.get_by_id(contract.blockchain()).await?;
@@ -99,10 +78,12 @@ impl GanacheBlockChain {
             .unwrap();
         }
 
+        let contract_address = H160::from_str(contract.address().clone().unwrap().as_str() ).unwrap();
+        let contract_owner_address = H160::from_str(contract.owner_address().clone().unwrap().as_str() ).unwrap();
         Ok(GanacheBlockChain {
             url: blockchain_url.to_owned(),
-            contract_address: contract.address().unwrap().to_owned(), //contract_address_position,
-            contract_owner_address: contract.owner_address().unwrap().to_owned(), //contract_owner_position,
+            contract_address, //contract_address_position,
+            contract_owner_address, //contract_owner_position,
             contract_owner_secret: contract.owner_secret().clone().unwrap().to_owned(), //contract_owner_position,
             kms_key_id: conf.env_vars().kms_key_id().to_owned(),
             //aws: conf.aws_config().to_owned(),
@@ -125,6 +106,7 @@ impl NFTsRepository for GanacheBlockChain {
         asset_id: &Uuid,
         user_key: &KeyPair,
         hash_file: &String,
+        _hash_algorithm: &String,
         prc: &u64,
         _cntr: &u64,
     ) -> ResultE<BlockchainTx> {

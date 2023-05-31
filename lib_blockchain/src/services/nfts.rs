@@ -130,9 +130,10 @@ impl NFTsManipulation for NFTsService {
             .await?;
         let counter = asset.counter().unwrap();
         let hash_file = asset.hash().to_owned().unwrap();
+        let hash_algo = asset.hash_algorithm().to_owned().unwrap();
         let transaction_op = self
             .blockchain
-            .add(asset_id, &user_wallet_address, &hash_file, price, &counter)
+            .add(asset_id, &user_wallet_address, &hash_file, &hash_algo , price, &counter)
             .await;
 
         match transaction_op {
@@ -141,8 +142,8 @@ impl NFTsManipulation for NFTsService {
                 //it has been previously minted by other process...
                 if *asset.mint_status() == MintingStatus::CompletedSuccessfully {
                     let tx = asset.minted_tx().clone().unwrap();
-                    let tx_hash = H256::from_str(tx.as_str()).unwrap();
-                    let transact = self.tx_service.get_by_hash(&tx_hash).await?;
+                    //let tx_hash = H256::from_str(tx.as_str()).unwrap();
+                    let transact = self.tx_service.get_by_id(&tx).await?;
                     return Ok(transact);
                 } else {
                     self.asset_service
@@ -171,10 +172,11 @@ impl NFTsManipulation for NFTsService {
                 }
             }
             Ok(transaction) => {
-                let tx_res =  match *transaction.tx() {
-                    None => None,
-                    Some(x)=>{ Some( H256::to_string(&x)  )}
-                };
+                // let tx_res =  match *transaction.tx() {
+                //     None => None,
+                //     Some(x)=>{ Some( H256::to_string(&x)  )}
+                // };
+                let tx_res = *transaction.tx();
                 self.asset_service
                     .mint_status(
                         asset_id,

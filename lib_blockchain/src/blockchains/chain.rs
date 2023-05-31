@@ -20,6 +20,7 @@ pub trait NFTsRepository {
         asset_id: &Uuid,
         user_key: &KeyPair,
         hash_file: &String,
+        hash_algorithm: &String,
         price: &u64,
         counter: &u64,
     ) -> ResultE<BlockchainTx>;

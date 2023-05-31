@@ -74,6 +74,7 @@ async fn run_licenses() -> ResultE<()> {
         Uuid::new_v4(),
         Url::parse("http://a.xyz")?,
         "hash1234".to_string(),
+        "MD5".to_string(),
     );
     asset_id1 = ass_repo.add(&asset, &user_id).await?;
 
@@ -81,6 +82,7 @@ async fn run_licenses() -> ResultE<()> {
         Uuid::new_v4(),
         Url::parse("http://b.xyz")?,
         "hash5678".to_string(),
+        "MD5".to_string(),
     );
     asset_id2 = ass_repo.add(&asset, &user_id).await?;
 

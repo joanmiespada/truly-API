@@ -3,16 +3,17 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{fmt, str::FromStr};
 use validator::Validate;
-use web3::types::H160;
+//use web3::types::H160;
 
 #[derive(Clone, Serialize, Validate, Deserialize, Debug)]
 pub struct Contract {
     id: u16,
     creation_time: DateTime<Utc>,
     blockchain: String,
-    address: Option<H160>,
-    owner_address: Option<H160>,
+    address: Option<String>,
+    owner_address: Option<String>,
     owner_secret: Option<String>,
+    owner_cash: Option<String>,
     details: Option<String>,
     status: ContractStatus,
 }
@@ -32,6 +33,7 @@ impl Contract {
             address: None,
             owner_address: None,
             owner_secret: None,
+            owner_cash: None,
             details: None,
             status: ContractStatus::Disabled,
         }
@@ -41,9 +43,10 @@ impl Contract {
         id: u16,
         creation_time: DateTime<Utc>,
         blockchain: String,
-        address: Option<H160>,
-        owner_address: Option<H160>,
+        address: Option<String>,
+        owner_address: Option<String>,
         owner_secret: Option<String>,
+        owner_cash: Option<String>,
         details: Option<String>,
         status: ContractStatus,
     ) -> Contract {
@@ -54,6 +57,7 @@ impl Contract {
             address,
             owner_address,
             owner_secret,
+            owner_cash,
             details,
             status,
         }
@@ -77,16 +81,16 @@ impl Contract {
     pub fn set_blockchain(&mut self, val: &String) {
         self.blockchain = val.clone()
     }
-    pub fn address(&self) -> &Option<H160> {
+    pub fn address(&self) -> &Option<String> {
         &self.address
     }
-    pub fn set_address(&mut self, val: &H160) {
+    pub fn set_address(&mut self, val: &String) {
         self.address = Some(val.clone())
     }
-    pub fn owner_address(&self) -> &Option<H160> {
+    pub fn owner_address(&self) -> &Option<String> {
         &self.owner_address
     }
-    pub fn set_owner_address(&mut self, val: &H160) {
+    pub fn set_owner_address(&mut self, val: &String) {
         self.owner_address = Some(val.clone())
     }
     pub fn owner_secret(&self) -> &Option<String> {
@@ -94,6 +98,12 @@ impl Contract {
     }
     pub fn set_owner_secret(&mut self, val: &String) {
         self.owner_secret = Some(val.clone())
+    }
+    pub fn owner_cash(&self) -> &Option<String> {
+        &self.owner_cash
+    }
+    pub fn set_owner_cash(&mut self, val: &String) {
+        self.owner_cash = Some(val.clone())
     }
 
     pub fn details(&self) -> &Option<String> {

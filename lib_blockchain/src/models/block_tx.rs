@@ -4,20 +4,20 @@ use serde_json::json;
 use std::fmt;
 use uuid::Uuid;
 use validator::Validate;
-use web3::types::{H160, H256, U256, U64};
+//use web3::types::{H160, H256, U256, U64};
 
 #[derive(Clone, Serialize, Validate, Deserialize, Debug)]
 pub struct BlockchainTx {
     asset_id: Uuid,
     creation_time: DateTime<Utc>,
-    tx_hash: Option<H256>,
-    block_number: Option<U64>,
-    gas_used: Option<U256>,
-    effective_gas_price: Option<U256>,
+    tx_hash: Option<String>,
+    block_number: Option<u64>,
+    gas_used: Option<String>,
+    effective_gas_price: Option<String>,
     cost: Option<f64>,
     currency: Option<String>,
-    from: Option<H160>,
-    to: Option<H160>,
+    from: Option<String>,
+    to: Option<String>,
     contract_id: u16,
     tx_error: Option<String>,
 }
@@ -32,14 +32,14 @@ impl BlockchainTx {
     pub fn new(
         asset_id: Uuid,
         creation_time: DateTime<Utc>,
-        tx_hash: Option<H256>,
-        block_number: Option<U64>,
-        gas_used: Option<U256>,
-        effective_gas_price: Option<U256>,
+        tx_hash: Option<String>,
+        block_number: Option<u64>,
+        gas_used: Option<String>,
+        effective_gas_price: Option<String>,
         cost: Option<f64>,
         currency: Option<String>,
-        from: Option<H160>,
-        to: Option<H160>,
+        from: Option<String>,
+        to: Option<String>,
         contract_id: u16,
         tx_error: Option<String>,
     ) -> BlockchainTx {
@@ -73,29 +73,29 @@ impl BlockchainTx {
         self.creation_time = val.clone()
     }
 
-    pub fn tx(&self) -> &Option<H256> {
+    pub fn tx(&self) -> &Option<String> {
         &self.tx_hash
     }
-    pub fn set_tx(&mut self, val: &H256) {
+    pub fn set_tx(&mut self, val: &String) {
         self.tx_hash = Some(val.clone())
     }
-    pub fn block_number(&self) -> &Option<U64> {
+    pub fn block_number(&self) -> &Option<u64> {
         &self.block_number
     }
-    pub fn set_block_number(&mut self, val: &U64) {
+    pub fn set_block_number(&mut self, val: &u64) {
         self.block_number = Some(val.clone())
     }
-    pub fn gas_used(&self) -> &Option<U256> {
+    pub fn gas_used(&self) -> &Option<String> {
         &self.gas_used
     }
-    pub fn set_gas_used(&mut self, val: &U256) {
+    pub fn set_gas_used(&mut self, val: &String) {
         self.gas_used = Some(val.clone())
     }
 
-    pub fn effective_gas_price(&self) -> &Option<U256> {
+    pub fn effective_gas_price(&self) -> &Option<String> {
         &self.effective_gas_price
     }
-    pub fn set_effective_gas_price(&mut self, val: &U256) {
+    pub fn set_effective_gas_price(&mut self, val: &String) {
         self.effective_gas_price = Some(val.clone())
     }
     pub fn cost(&self) -> &Option<f64> {
@@ -110,16 +110,16 @@ impl BlockchainTx {
     pub fn set_currency(&mut self, val: &String) {
         self.currency = Some(val.clone())
     }
-    pub fn from(&self) -> &Option<H160> {
+    pub fn from(&self) -> &Option<String> {
         &self.from
     }
-    pub fn set_from(&mut self, val: &H160) {
+    pub fn set_from(&mut self, val: &String) {
         self.from = Some(val.clone())
     }
-    pub fn to(&self) -> &Option<H160> {
+    pub fn to(&self) -> &Option<String> {
         &self.to
     }
-    pub fn set_to(&mut self, val: &H160) {
+    pub fn set_to(&mut self, val: &String) {
         self.to = Some(val.clone())
     }
     pub fn contract_id(&self) -> &u16 {
