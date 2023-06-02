@@ -4,6 +4,7 @@ use actix_web::web;
 use actix_web::{http::header, App, HttpServer};
 use handlers::appstate::AppState;
 use handlers::{asset_hd, auth_middleware, jwt_middleware, login_hd, nft_hd, user_my_hd, users_hd};
+use lib_blockchain::blockchains::chain::CloneBoxNFTsRepository;
 use lib_blockchain::repositories::block_tx::BlockchainTxRepo;
 use lib_blockchain::repositories::blockchain::BlockchainRepo;
 use lib_blockchain::repositories::contract::ContractRepo;
@@ -109,7 +110,7 @@ async fn main() {
         .unwrap();
 
     let blockchain_service = NFTsService::new(
-        blockchain,
+        blockchain.clone_box(),
         key_repo.to_owned(),
         asset_service.to_owned(),
         owners_service.to_owned(),

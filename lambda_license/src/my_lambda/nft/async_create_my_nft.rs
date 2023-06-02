@@ -46,7 +46,7 @@ pub async fn async_create_my_nft_sns(
     }
 
     let checks_op = blockchain_service
-        .prechecks_before_minting(&new_nft.asset_id, user_id, &new_nft.price)
+        .prechecks_before_minting(&new_nft.asset_id, user_id, &Some(new_nft.price))
         .await;
     match checks_op {
         Err(e) => {

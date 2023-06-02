@@ -66,6 +66,7 @@ async fn add_assets() {
         url: "http://www.file1.com/test1.mp4".to_string(),
         hash: "hash1234".to_string(),
         license: "gnu".to_string(),
+        hash_algorithm: "MD5".to_string(),
         longitude: None,
         latitude: None,
         father: None,
@@ -209,6 +210,7 @@ async fn check_ownership() {
             let mut as1 = CreatableFildsAsset {
                 url: ass.to_string(),
                 hash: "hash1234".to_string(),
+                hash_algorithm: "MD5".to_string(),
                 license: String::from_str("gnu").unwrap(),
                 longitude: None,
                 latitude: None,
@@ -283,6 +285,7 @@ async fn check_asset_tree_father_son() {
             let mut as1 = CreatableFildsAsset {
                 url: ass.to_string(),
                 hash: "hash1234".to_string(),
+                hash_algorithm: "MD5".to_string(),
                 license: String::from_str("gnu").unwrap(),
                 longitude: None,
                 latitude: None,

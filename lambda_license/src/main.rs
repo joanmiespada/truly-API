@@ -1,4 +1,5 @@
 use lambda_http::service_fn;
+use lib_blockchain::blockchains::chain::CloneBoxNFTsRepository;
 use lib_blockchain::repositories::block_tx::BlockchainTxRepo;
 use lib_blockchain::repositories::blockchain::BlockchainRepo;
 use lib_blockchain::repositories::contract::ContractRepo;
@@ -54,7 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let blockchain = GanacheBlockChain::new(&config, &contracts_repo, &blockchains_repo).await?;
 
     let blockchain_service = NFTsService::new(
-        blockchain,
+        blockchain.clone_box(),
         key_repo,
         asset_service.to_owned(),
         owners_service.to_owned(),

@@ -1,6 +1,7 @@
 use crate::nfts_tests::MNEMONIC_TEST;
 use chrono::Utc;
 use ethers::utils::Ganache;
+use lib_blockchain::blockchains::chain::CloneBoxNFTsRepository;
 use lib_blockchain::blockchains::ganache::GanacheBlockChain;
 use lib_blockchain::models::blockchain::Blockchain;
 use lib_blockchain::models::contract::{Contract, ContractStatus};
@@ -35,7 +36,6 @@ use spectral::{assert_that, result::ResultAssertions};
 use std::{env, str::FromStr};
 use testcontainers::*;
 use url::Url;
-use web3::types::{H160, H256};
 
 #[tokio::test]
 async fn create_contract_and_mint_nft_test_sync(
@@ -123,6 +123,7 @@ async fn create_contract_and_mint_nft_test_sync(
     let mut as0 = CreatableFildsAsset {
         url: asset_url.to_string(),
         hash: asset_hash,
+        hash_algorithm: "MD5".to_string(),
         license: asset_license,
         longitude: None,
         latitude: None,
@@ -193,9 +194,10 @@ async fn create_contract_and_mint_nft_test_sync(
         contact_id,
         Utc::now(),
         blochain_id.to_owned(),
-        Some(H160::from_str(contract_address.as_str()).unwrap()),
-        Some(H160::from_str(contract_owner_address.as_str()).unwrap()),
+        Some(contract_address),
+        Some(contract_owner_address),
         Some(contract_owner_secret_cyphered),
+        Some("".to_string()),
         Some("no-details".to_string()),
         ContractStatus::Enabled,
     );
@@ -212,7 +214,7 @@ async fn create_contract_and_mint_nft_test_sync(
         .unwrap();
 
     let nft_service = NFTsService::new(
-        blockchain,
+        blockchain.clone_box(),
         repo_keys,
         asset_service.clone(),
         owner_service.clone(),
@@ -227,7 +229,7 @@ async fn create_contract_and_mint_nft_test_sync(
     let update_op = asset_service.update_full(&as1).await;
     assert_that!(&update_op).is_ok();
 
-    let mint_op = nft_service.try_mint(as1.id(), &user_id, &asset_price).await;
+    let mint_op = nft_service.try_mint(as1.id(), &user_id, & Some(asset_price)).await;
     assert_that!(&mint_op).is_ok();
     let tx_in_chain = mint_op.unwrap();
 
@@ -252,8 +254,8 @@ async fn create_contract_and_mint_nft_test_sync(
     assert_ne!(*content_minted.minted_tx(), None);
 
     let find = content_minted.minted_tx().clone().unwrap();
-    let tx_find = H256::from_str(&find).unwrap();
-    let tx_tx = tx_service.get_by_hash(&tx_find).await;
+    //let tx_find = H256::from_str(&find).unwrap();
+    let tx_tx = tx_service.get_by_id(&find).await;
     assert_that!(&tx_tx).is_ok();
     let final_tx = tx_tx.unwrap();
     let content1 = tx_in_chain.tx().clone().unwrap();

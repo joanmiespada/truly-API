@@ -57,7 +57,7 @@ pub async fn create_my_nft(
     }
 
     let op_res = blockchain_service
-        .try_mint(&asset_id, user_id, &price)
+        .try_mint(&asset_id, user_id, &Some(price))
         .await;
 
     let transaction = match op_res {

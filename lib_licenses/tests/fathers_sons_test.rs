@@ -97,6 +97,7 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
                 as1 = CreatableFildsAsset {
                     url: user.1 .0.to_string(),
                     hash: "hash1234".to_string(),
+                    hash_algorithm: "MD5".to_string(),
                     license: String::from_str("gnu").unwrap(),
                     longitude: None,
                     latitude: None,
@@ -111,6 +112,7 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
                 as1 = CreatableFildsAsset {
                     url: user.1 .0.to_string(),
                     hash: "hash1234".to_string(),
+                    hash_algorithm: "MD5".to_string(),
                     license: String::from_str("gnu").unwrap(),
                     longitude: None,
                     latitude: None,

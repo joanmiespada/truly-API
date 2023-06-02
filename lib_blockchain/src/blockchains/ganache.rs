@@ -3,9 +3,7 @@ use chrono::{DateTime, NaiveDateTime, Utc};
 use lib_config::{config::Config, environment::DEV_ENV, infra::restore_secret_key};
 use log::debug;
 use secp256k1::SecretKey;
-use std::{
-    str::FromStr,
-};
+use std::str::FromStr;
 use url::Url;
 use uuid::Uuid;
 
@@ -24,20 +22,16 @@ use crate::{
         contract::ContractRepository,
     },
 };
-use crate::{
-    errors::nft::NftUserAddressMalformedError,
-    models::keypair::KeyPair,
-};
+use crate::{errors::nft::NftUserAddressMalformedError, models::keypair::KeyPair};
 
 const CONTRACT_METHOD_MINTING: &'static str = "mint";
 const CONTRACT_METHOD_GET_CONTENT_BY_TOKEN: &'static str = "getContentByToken";
 
 use lib_licenses::errors::asset::AssetBlockachainError;
 
-use super::chain::{ContractContentInfo, NFTsRepository, ContentState};
+use super::chain::{CloneBoxNFTsRepository, ContentState, ContractContentInfo, NFTsRepository};
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
-
 
 #[derive(Clone, Debug)]
 pub struct GanacheBlockChain {
@@ -58,7 +52,6 @@ impl GanacheBlockChain {
         contracts_repo: &ContractRepo,
         blockchains_repo: &BlockchainRepo,
     ) -> ResultE<GanacheBlockChain> {
-        
         let aux = conf.env_vars().contract_id();
         let contract = contracts_repo.get_by_id(&aux).await?;
         let blockchain = blockchains_repo.get_by_id(contract.blockchain()).await?;
@@ -78,11 +71,13 @@ impl GanacheBlockChain {
             .unwrap();
         }
 
-        let contract_address = H160::from_str(contract.address().clone().unwrap().as_str() ).unwrap();
-        let contract_owner_address = H160::from_str(contract.owner_address().clone().unwrap().as_str() ).unwrap();
+        let contract_address =
+            H160::from_str(contract.address().clone().unwrap().as_str()).unwrap();
+        let contract_owner_address =
+            H160::from_str(contract.owner_address().clone().unwrap().as_str()).unwrap();
         Ok(GanacheBlockChain {
             url: blockchain_url.to_owned(),
-            contract_address, //contract_address_position,
+            contract_address,       //contract_address_position,
             contract_owner_address, //contract_owner_position,
             contract_owner_secret: contract.owner_secret().clone().unwrap().to_owned(), //contract_owner_position,
             kms_key_id: conf.env_vars().kms_key_id().to_owned(),
@@ -92,8 +87,6 @@ impl GanacheBlockChain {
             contract_id: aux.to_owned(), //contract.to_owned(),
         })
     }
-
-    
 }
 
 #[async_trait]
@@ -107,7 +100,7 @@ impl NFTsRepository for GanacheBlockChain {
         user_key: &KeyPair,
         hash_file: &String,
         _hash_algorithm: &String,
-        prc: &u64,
+        prc: &Option<u64>,
         _cntr: &u64,
     ) -> ResultE<BlockchainTx> {
         let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
@@ -125,7 +118,7 @@ impl NFTsRepository for GanacheBlockChain {
         }
 
         let token = asset_id.to_string();
-        let price = U256::from_dec_str((*prc).to_string().as_str()).unwrap();
+        let price = U256::from_dec_str(( prc.unwrap()  ).to_string().as_str()).unwrap();
         //let counter = U256::from_dec_str((*cntr).to_string().as_str()).unwrap();
 
         let contract_op = Contract::from_json(
@@ -239,20 +232,21 @@ impl NFTsRepository for GanacheBlockChain {
         //     None => None,
         //     Some(bn) => Some(bn.as_u64())
         // };
+
         let tx_paylaod = BlockchainTx::new(
             asset_id.to_owned(),
             Utc::now(),
-            Some(tx.transaction_hash),
-            tx.block_number,
-            tx.gas_used,
-            tx.effective_gas_price,
+            Some(tx.transaction_hash.to_string()),
+            Some(tx.block_number.unwrap().as_u64()),
+            Some(tx.gas_used.unwrap().to_string()),
+            Some(tx.effective_gas_price.unwrap().to_string()),
             Some(
                 wei_to_gwei(tx.gas_used.unwrap())
                     * wei_to_gwei(tx.effective_gas_price.unwrap_or_default()),
             ),
             Some("gweis".to_string()),
-            Some(tx.from),
-            tx.to,
+            Some(tx.from.to_string()),
+            Some(tx.to.unwrap().to_string()),
             self.contract_id,
             None,
         );
@@ -339,6 +333,7 @@ impl Detokenize for ContractContentInfo {
         Self: Sized,
     {
         let mut hashFile = "".to_string();
+        let mut hashAlgo = "".to_string();
         let mut uri = "".to_string();
         let mut state = ContentState::Active;
         let mut price = 0;
@@ -350,6 +345,7 @@ impl Detokenize for ContractContentInfo {
                 1 => uri = token.into_string().unwrap(),
                 2 => price = token.into_uint().unwrap().as_u64(),
                 3 => state = ContentState::from_str(token.into_string().unwrap().as_str()).unwrap(),
+                4 => hashAlgo = token.into_string().unwrap(),
                 _ => {}
             };
             i += 1;
@@ -357,6 +353,7 @@ impl Detokenize for ContractContentInfo {
         //let t = tokens[0].clone(); // .iter().next().unwrap().into_string().unwrap().clone();
         Ok(Self {
             hashFile,
+            hashAlgo,
             uri,
             price,
             state,
@@ -364,3 +361,24 @@ impl Detokenize for ContractContentInfo {
     }
 }
 
+// impl CloneBoxNFTsRepository for GanacheBlockChain {
+//     fn clone_box(&self) -> Box<dyn NFTsRepository> {
+//         GanacheBlockChain {
+//             url: self.url.clone(),
+//             contract_address: self.contract_address.clone(),
+//             contract_owner_address: self.contract_owner_address.clone(),
+//             contract_owner_secret: self.contract_owner_secret.clone(),
+//             kms_key_id: self.kms_key_id.clone(),
+//             //aws: SdkConfig,
+//             config: self.config.clone(),
+//             blockhain_node_confirmations: self.blockhain_node_confirmations.clone(),
+//             contract_id: self.contract_id.clone(),
+//         }
+//     }
+// }
+
+// impl CloneBoxNFTsRepository for GanacheBlockChain {
+//     fn clone_box(&self) -> Box<dyn NFTsRepository> {
+//         Box::new(self.clone())
+//     }
+//}

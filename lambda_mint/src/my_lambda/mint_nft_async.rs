@@ -59,7 +59,7 @@ pub async fn async_minting(
         info!("minting...");
         info!("{}", data);
         let op_res = blockchain_service
-            .try_mint(&data.asset_id, &data.user_id, &data.price)
+            .try_mint(&data.asset_id, &data.user_id, &Some(data.price))
             .await;
 
         match op_res {

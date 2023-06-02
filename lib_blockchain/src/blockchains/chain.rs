@@ -4,24 +4,20 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{
-    models::block_tx::BlockchainTx,
-};
-use crate::{
-    models::keypair::KeyPair,
-};
+use crate::models::block_tx::BlockchainTx;
+use crate::models::keypair::KeyPair;
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
 #[async_trait]
-pub trait NFTsRepository {
+pub trait NFTsRepository: Send + Sync + CloneBoxNFTsRepository {
     async fn add(
         &self,
         asset_id: &Uuid,
         user_key: &KeyPair,
         hash_file: &String,
         hash_algorithm: &String,
-        price: &u64,
+        price: &Option<u64>,
         counter: &u64,
     ) -> ResultE<BlockchainTx>;
 
@@ -29,11 +25,37 @@ pub trait NFTsRepository {
     fn contract_id(&self) -> u16;
 }
 
+impl fmt::Debug for dyn NFTsRepository + Sync + Send {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Blockchain")
+    }
+}
+
+pub trait CloneBoxNFTsRepository {
+    fn clone_box(&self) -> Box<dyn NFTsRepository + Sync + Send>;
+}
+
+impl<T> CloneBoxNFTsRepository for T
+where
+    T: 'static + NFTsRepository + Clone + Send + Sync,
+{
+    fn clone_box(&self) -> Box<dyn NFTsRepository + Send + Sync> {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for Box<dyn NFTsRepository + Send + Sync> {
+    fn clone(&self) -> Box<dyn NFTsRepository + Send + Sync> {
+        self.clone_box()
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[allow(non_snake_case)]
 pub struct ContractContentInfo {
     //field names coming from Solidity
     pub hashFile: String,
+    pub hashAlgo: String,
     pub uri: String,
     pub price: u64,
     pub state: ContentState,
@@ -75,4 +97,3 @@ impl std::str::FromStr for ContentState {
         }
     }
 }
-

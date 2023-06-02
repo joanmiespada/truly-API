@@ -27,7 +27,7 @@ pub async fn add_nft(
     let user_id = get_user_id(&req);
 
     let op_res = blockchain_service
-        .try_mint(&payload.asset_id, &user_id, &payload.price)
+        .try_mint(&payload.asset_id, &user_id, &Some(payload.price))
         .await;
 
     let transaction = match op_res {

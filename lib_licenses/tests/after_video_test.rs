@@ -61,6 +61,7 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
         longitude: None,
         url: "http://w111.test.com/f1.mov".to_string(),
         hash: "hash_f1".to_string(),
+        hash_algorithm: "MD5".to_string(),
         father: None,
         source: SourceType::Others,
         source_details: None,

@@ -49,28 +49,46 @@ impl ContractRepo {
         }
     }
     fn new_or_update(&self, contract: &Contract) -> ResultE<PutBuilder> {
+
         let id_av = AttributeValue::N(contract.id().to_string());
         let blockchain_av = AttributeValue::S(contract.blockchain().to_string());
-        let address_av = AttributeValue::S(format!("{:?}", contract.address().unwrap()));
-        let owner_address_av =
-            AttributeValue::S(format!("{:?}", contract.owner_address().unwrap()));
-        let owner_secret_av = AttributeValue::S(contract.owner_secret().clone().unwrap());
-        let owner_cash_av = AttributeValue::S(contract.owner_cash().clone().unwrap());
-        let details_av = AttributeValue::S(contract.details().clone().unwrap().to_string());
-        let creation_time_av = AttributeValue::S(iso8601(contract.creation_time()));
         let status_av = AttributeValue::S(contract.status().to_string());
+        let creation_time_av = AttributeValue::S(iso8601(contract.creation_time()));
 
         let mut items = Put::builder();
+
         items = items
             .item(CONTRACT_ID_FIELD_PK, id_av)
             .item(CONTRACT_BLOCKCHAIN_FIELD, blockchain_av)
-            .item(CONTRACT_ADDRESS_FIELD_NAME, address_av)
-            .item(CONTRACT_OWNER_ADDRESS_FIELD_NAME, owner_address_av)
-            .item(CONTRACT_OWNER_SECRET_FIELD_NAME, owner_secret_av)
-            .item(CONTRACT_OWNER_CASH_FIELD_NAME, owner_cash_av)
-            .item(CONTRACT_DETAILS_FIELD_NAME, details_av)
             .item(CONTRACT_STATUS_FIELD_NAME, status_av)
             .item(CREATIONTIME_FIELD_NAME, creation_time_av);
+
+        if let Some(val) = contract.address() {
+            let av = AttributeValue::S(val.clone());
+            items = items
+            .item(CONTRACT_ADDRESS_FIELD_NAME, av)
+        }
+        if let Some(val) = contract.owner_address() {
+            let av = AttributeValue::S(val.clone());
+            items = items
+            .item(CONTRACT_OWNER_ADDRESS_FIELD_NAME, av)
+        }
+        if let Some(val) = contract.owner_secret() {
+            let av = AttributeValue::S(val.clone());
+            items = items
+            .item(CONTRACT_OWNER_SECRET_FIELD_NAME, av)
+        }
+        if let Some(val) = contract.owner_cash() {
+            let av = AttributeValue::S(val.clone());
+            items = items
+            .item(CONTRACT_OWNER_CASH_FIELD_NAME, av)
+        }
+        if let Some(val) = contract.details() {
+            let av = AttributeValue::S(val.clone());
+            items = items
+            .item(CONTRACT_DETAILS_FIELD_NAME, av)
+        }
+
         Ok(items)
     }
 }
@@ -227,39 +245,38 @@ pub fn mapping_from_doc_to_contract(
     let blockchain1 = blockchain.as_s().unwrap();
     contract.set_blockchain(blockchain1);
 
-    let address = doc.get(CONTRACT_ADDRESS_FIELD_NAME).unwrap();
-    let address1 = address.as_s().unwrap();
-    //let address_h = H160::from_str(address1).unwrap();
-    contract.set_address(&address1);
+    if let Some(value) = doc.get(CONTRACT_ADDRESS_FIELD_NAME) {
+            let value1 = value.as_s().unwrap();
+            contract.set_address(&value1);
+    }
 
-    let owner_address = doc.get(CONTRACT_OWNER_ADDRESS_FIELD_NAME).unwrap();
-    let owner1_address = owner_address.as_s().unwrap();
-    //let owner_h_address = H160::from_str(owner1_address).unwrap();
-    contract.set_owner_address(&owner1_address);
+    if let Some(value) = doc.get(CONTRACT_OWNER_ADDRESS_FIELD_NAME) {
+            let value1 = value.as_s().unwrap();
+            contract.set_owner_address(&value1);
+    }
+    
+    if let Some(value) = doc.get(CONTRACT_OWNER_SECRET_FIELD_NAME) {
+            let value1 = value.as_s().unwrap();
+            contract.set_owner_secret(&value1);
+    }
+    
+    if let Some(value) = doc.get(CONTRACT_OWNER_CASH_FIELD_NAME) {
+            let value1 = value.as_s().unwrap();
+            contract.set_owner_cash(&value1);
+    }
 
-    let owner_secret = doc.get(CONTRACT_OWNER_SECRET_FIELD_NAME).unwrap();
-    let owner1_secret = owner_secret.as_s().unwrap();
-    contract.set_owner_secret(&owner1_secret);
-
-    let owner_cash = doc.get(CONTRACT_OWNER_CASH_FIELD_NAME).unwrap();
-    let owner1_cash = owner_cash.as_s().unwrap();
-    contract.set_owner_cash(&owner1_cash);
-
-
-    let details = doc.get(CONTRACT_DETAILS_FIELD_NAME).unwrap();
-    let details1 = details.as_s().unwrap();
-    contract.set_details(details1);
+    if let Some(value) = doc.get(CONTRACT_DETAILS_FIELD_NAME) {
+            let value1 = value.as_s().unwrap();
+            contract.set_details(&value1);
+    }
 
     let status = doc.get(CONTRACT_STATUS_FIELD_NAME).unwrap();
     let status1 = status.as_s().unwrap();
     let sts = ContractStatus::from_str(status1).unwrap();
     contract.set_status(&sts);
 
-    let creation_time_t = doc.get(CREATIONTIME_FIELD_NAME);
-    match creation_time_t {
-        None => {}
-        Some(creation_time) => {
+    if let Some(creation_time) = doc.get(CREATIONTIME_FIELD_NAME) {
             contract.set_creation_time(&from_iso8601(creation_time.as_s().unwrap()));
-        }
     }
+    
 }

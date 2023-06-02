@@ -7,7 +7,7 @@ use lib_blockchain::{
         block_tx::BlockchainTxRepo, blockchain::BlockchainRepo, contract::ContractRepo,
          keypairs::KeyPairRepo,
     },
-    services::{block_tx::BlockchainTxService, nfts::NFTsService}, blockchains::ganache::GanacheBlockChain,
+    services::{block_tx::BlockchainTxService, nfts::NFTsService}, blockchains::{ganache::GanacheBlockChain, chain::CloneBoxNFTsRepository},
 };
 use lib_config::config::Config;
 use lib_licenses::{
@@ -44,7 +44,7 @@ async fn main() -> Result<(), Error> {
     let contracts_repo = ContractRepo::new(&config);
     let blockchain = GanacheBlockChain::new(&config, &contracts_repo, &blockchains_repo).await?;
     let blockchain_service = NFTsService::new(
-        blockchain,
+        blockchain.clone_box(),
         key_repo,
         asset_service.to_owned(),
         owners_service.to_owned(),

@@ -5,13 +5,11 @@ use chrono::Utc;
 use lib_config::config::Config;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use web3::types::H256;
 
 use crate::errors::nft::{
     TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError,
 };
 use crate::models::block_tx::BlockchainTx;
-use crate::blockchains::ganache::GanacheBlockChain;
 use crate::blockchains::chain::NFTsRepository;
 use crate::repositories::keypairs::{KeyPairRepo, KeyPairRepository};
 use lib_licenses::errors::video::VideoNotYetLicensed;
@@ -29,20 +27,20 @@ pub trait NFTsManipulation {
         &self,
         asset_id: &Uuid,
         user_id: &String,
-        price: &u64,
+        price: &Option<u64>,
     ) -> ResultE<Asset>;
     async fn try_mint(
         &self,
         asset_id: &Uuid,
         user_id: &String,
-        price: &u64,
+        price: &Option<u64>,
     ) -> ResultE<BlockchainTx>;
     async fn get(&self, asset_id: &Uuid) -> ResultE<NTFContentInfo>;
 }
 
 #[derive(Debug)]
 pub struct NFTsService {
-    blockchain: GanacheBlockChain,
+    blockchain: Box<dyn NFTsRepository + Sync + Send>,
     keys_repo: KeyPairRepo,
     asset_service: AssetService,
     owner_service: OwnerService,
@@ -52,7 +50,7 @@ pub struct NFTsService {
 
 impl NFTsService {
     pub fn new(
-        repo: GanacheBlockChain,
+        repo: Box<dyn NFTsRepository + Sync + Send>,
         keys_repo: KeyPairRepo,
         asset_service: AssetService,
         owner_service: OwnerService,
@@ -76,7 +74,7 @@ impl NFTsManipulation for NFTsService {
         &self,
         asset_id: &Uuid,
         user_id: &String,
-        _price: &u64,
+        _price: &Option<u64>,
     ) -> ResultE<Asset> {
         let asset = self.asset_service.get_by_id(asset_id).await?;
         if *asset.mint_status() == MintingStatus::CompletedSuccessfully {
@@ -117,7 +115,7 @@ impl NFTsManipulation for NFTsService {
         &self,
         asset_id: &Uuid,
         user_id: &String,
-        price: &u64,
+        price: &Option<u64>,
     ) -> ResultE<BlockchainTx> {
         let asset = self
             .prechecks_before_minting(asset_id, user_id, price)
@@ -176,7 +174,7 @@ impl NFTsManipulation for NFTsService {
                 //     None => None,
                 //     Some(x)=>{ Some( H256::to_string(&x)  )}
                 // };
-                let tx_res = *transaction.tx();
+                let tx_res = transaction.tx().clone();
                 self.asset_service
                     .mint_status(
                         asset_id,
@@ -197,6 +195,7 @@ impl NFTsManipulation for NFTsService {
         let aux = self.blockchain.get(asset_id).await?;
         let res = NTFContentInfo {
             hash_file: aux.hashFile,
+            hash_algorithm: aux.hashAlgo,
             uri: aux.uri,
             price: aux.price,
             state: NTFState::from_str(&aux.state.to_string()).unwrap(),
@@ -223,6 +222,7 @@ impl Clone for NFTsService {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct NTFContentInfo {
     pub hash_file: String,
+    pub hash_algorithm: String,
     pub uri: String,
     pub price: u64,
     pub state: NTFState,

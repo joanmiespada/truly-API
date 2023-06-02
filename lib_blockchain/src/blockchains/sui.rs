@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use lib_config::{config::Config, environment::DEV_ENV, infra::restore_secret_key};
-use log::debug;
+use log::{debug, error};
 use secp256k1::SecretKey;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -22,13 +22,14 @@ use crate::{
     repositories::{
         blockchain::BlockchainRepo, blockchain::BlockchainRepository, contract::ContractRepo,
         contract::ContractRepository,
-    },
+    }, blockchains::sui_models::Response,
 };
 use crate::{errors::nft::NftUserAddressMalformedError, models::keypair::KeyPair};
 
 const CONTRACT_METHOD_MINTING: &'static str = "add_hash";
 const CONTRACT_METHOD_GET_CONTENT_BY_TOKEN: &'static str = "sui_getObject";
-const CONTRACT_METHOD_SAVE_CONTENT: &'static str = "sui_executeTransactionBlock";
+const BLOCKCHAIN_METHOD_EXEC: &'static str = "sui_executeTransactionBlock";
+const BLOCKCHAIN_METHOD_ESTIMATE: &'static str = "sui_dryRunTransactionBlock";
 
 use lib_licenses::errors::asset::AssetBlockachainError;
 
@@ -40,10 +41,10 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 pub struct SuiBlockChain {
     url: Url,
     contract_address: String,
-    contract_owner_address: String,
-    contract_owner_secret: String,
+    //contract_owner_address: String,
+    //contract_owner_secret: String,
     contract_owner_cash: String,
-    kms_key_id: String,
+    //kms_key_id: String,
     //aws: SdkConfig,
     config: Config,
     //blockhain_node_confirmations: u16,
@@ -78,16 +79,24 @@ impl SuiBlockChain {
         Ok(SuiBlockChain {
             url: blockchain_url.to_owned(),
             contract_address: contract.address().clone().unwrap().to_owned(),
-            contract_owner_address: contract.owner_address().clone().unwrap().to_owned(),
-            contract_owner_secret: contract.owner_secret().clone().unwrap().to_owned(),
+            //contract_owner_address: contract.owner_address().clone().unwrap().to_owned(),
+            //contract_owner_secret: contract.owner_secret().clone().unwrap().to_owned(),
             contract_owner_cash: contract.owner_cash().clone().unwrap().to_owned(),
-            kms_key_id: conf.env_vars().kms_key_id().to_owned(),
+            //kms_key_id: conf.env_vars().kms_key_id().to_owned(),
             //aws: conf.aws_config().to_owned(),
             config: conf.clone(),
             //blockhain_node_confirmations: blockchain.confirmations().to_owned(), //conf.env_vars().blockchain_confirmations().to_owned(),
             contract_id: aux.to_owned(), //contract.to_owned(),
         })
     }
+}
+
+#[derive(Debug, Serialize, Deserialize,Clone )]
+struct Payload {
+    jsonrpc: String,
+    id: u32,
+    method: String,
+    params: Vec<serde_json::Value>,
 }
 
 #[async_trait]
@@ -101,12 +110,11 @@ impl NFTsRepository for SuiBlockChain {
         _user_key: &KeyPair,
         hash_file: &String,
         hash_algorithm: &String,
-        _prc: &u64,
+        _prc: &Option<u64>,
         _cntr: &u64,
     ) -> ResultE<BlockchainTx> {
         use base64::{
-            alphabet,
-            engine::{self, general_purpose},
+            engine::{general_purpose},
             Engine as _,
         };
         use bcs::to_bytes;
@@ -119,14 +127,6 @@ impl NFTsRepository for SuiBlockChain {
             showEvents: bool,
             showObjectChanges: bool,
             showBalanceChanges: bool,
-        }
-
-        #[derive(Debug, Serialize, Deserialize)]
-        struct Payload {
-            jsonrpc: String,
-            id: u32,
-            method: String,
-            params: Vec<serde_json::Value>,
         }
 
         #[derive(Debug, Serialize, Deserialize)]
@@ -143,7 +143,11 @@ impl NFTsRepository for SuiBlockChain {
         };
 
         let tx_bytes = to_bytes(&&data)?;
-        let tx_bytes_base64 = general_purpose::STANDARD.encode(tx_bytes.as_ref());
+        let tx_bytes_base64 = general_purpose::STANDARD.encode(tx_bytes);
+
+        let aux = self.contract_owner_cash.clone();
+        let tx_signatures = aux.as_bytes();
+        let tx_signature_base64 =  general_purpose::STANDARD.encode( tx_signatures );
 
         let client = reqwest::Client::new();
 
@@ -159,11 +163,11 @@ impl NFTsRepository for SuiBlockChain {
         let payload = Payload {
             jsonrpc: "2.0".into(),
             id: 1,
-            method: CONTRACT_METHOD_SAVE_CONTENT.into(),
+            method:BLOCKCHAIN_METHOD_ESTIMATE.into(),
             params: vec![
                 Value::String(tx_bytes_base64.into()),
                 //Value::Array(vec![Value::String("AEZc4UMAoxzWtp+i1dvyOgmy+Eeb/5ZNwO5dpHBqX5Rt36+HhYnBby8asFU4b0i7TjQZGgLahT8w3NQUfk0NUQnqvbuA0Q1Bqu4RHV3JPpqmH+C527hWJGUBOZN1j9sg8w==".into())]),
-                Value::Array(vec![Value::String(self.contract_owner_secret.into())]),
+                Value::Array(vec![Value::String( tx_signature_base64.into() )]),
                 Value::Object(
                     serde_json::to_value(&params)
                         .unwrap()
@@ -174,142 +178,33 @@ impl NFTsRepository for SuiBlockChain {
                 Value::String("WaitForLocalExecution".into()),
             ],
         };
-
-        let res = client.post(self.url).json(&payload).send().await?;
-
-        #[derive(Debug, Deserialize)]
-        pub struct Response {
-            jsonrpc: String,
-            result: Result,
+        println!("{:#?}", payload);
+        let res_op = client.post(self.url.clone()).json(&payload).send().await;
+        if let Err(e)= res_op {
+            error!("{}", e);
+            return Err(e)?;
         }
 
-        #[derive(Debug, Deserialize)]
-        pub struct Result {
-            digest: String,
-            transaction: Transaction,
-            rawTransaction: String,
-            effects: Effects,
-            objectChanges: Vec<ObjectChange>,
+        if let Err(e) = res_op.unwrap().json::<Response>().await {
+            error!("{}", e);
+            return Err(e)?;
         }
 
-        #[derive(Debug, Deserialize)]
-        pub struct Transaction {
-            data: Data,
-            txSignatures: Vec<String>,
+
+        let mut payload2 = payload.clone();
+        payload2.method = BLOCKCHAIN_METHOD_EXEC .to_string();
+
+        println!("{:#?}", payload2);
+        let res_op = client.post(self.url.clone()).json(&payload2).send().await;
+        if let Err(e)= res_op {
+            error!("{}", e);
+            return Err(e)?;
         }
 
-        #[derive(Debug, Deserialize)]
-        pub struct Data {
-            messageVersion: String,
-            transaction: InnerTransaction,
-            sender: String,
-            gasData: GasData,
-        }
+        let tx = res_op.unwrap().json::<Response>().await?;
 
-        #[derive(Debug, Deserialize)]
-        pub struct Effects {
-            messageVersion: String,
-            status: Status,
-            executedEpoch: String,
-            gasUsed: GasUsed,
-            transactionDigest: String,
-            mutated: Vec<Mutated>,
-            gasObject: GasObject,
-            eventsDigest: String,
-        }
 
-        #[derive(Debug, Deserialize)]
-        pub struct Status {
-            status: String,
-        }
 
-        #[derive(Debug, Deserialize)]
-        pub struct GasUsed {
-            computationCost: String,
-            storageCost: String,
-            storageRebate: String,
-            nonRefundableStorageFee: String,
-        }
-
-        #[derive(Debug, Deserialize)]
-        pub struct Mutated {
-            owner: Owner,
-            reference: Reference,
-        }
-
-        #[derive(Debug, Deserialize)]
-        pub struct Owner {
-            #[serde(rename = "AddressOwner")]
-            address_owner: String,
-        }
-
-        #[derive(Debug, Deserialize)]
-        pub struct Reference {
-            objectId: String,
-            version: i32,
-            digest: String,
-        }
-
-        #[derive(Debug, Deserialize)]
-        pub struct GasObject {
-            owner: ObjectOwner,
-            reference: Reference,
-        }
-
-        #[derive(Debug, Deserialize)]
-        pub struct ObjectOwner {
-            #[serde(rename = "ObjectOwner")]
-            object_owner: String,
-        }
-
-        #[derive(Serialize, Deserialize, Debug)]
-        pub struct ObjectChange {
-            #[serde(rename = "type")]
-            pub change_type: String,
-            pub sender: String,
-            pub recipient: Owner2,
-            #[serde(rename = "objectType")]
-            pub object_type: String,
-            #[serde(rename = "objectId")]
-            pub object_id: String,
-            pub version: String,
-            pub digest: String,
-        }
-
-        #[derive(Serialize, Deserialize, Debug)]
-        pub struct Owner2 {
-            #[serde(rename = "AddressOwner")]
-            pub address_owner: String,
-        }
-
-        #[derive(Serialize, Deserialize, Debug)]
-        pub struct InnerTransaction {
-            pub TransferObjects: Vec<Vec<Input>>,
-        }
-
-        #[derive(Serialize, Deserialize, Debug)]
-        pub struct Input {
-            pub Input: u64,
-        }
-
-        #[derive(Serialize, Deserialize, Debug)]
-        pub struct GasData {
-            pub payment: Vec<Object2>,
-            pub owner: String,
-            pub price: String,
-            pub budget: String,
-        }
-
-        #[derive(Serialize, Deserialize, Debug)]
-        pub struct Object2 {
-            pub objectId: String,
-            pub version: u64,
-            pub digest: String,
-        }
-
-        let final_res = res.json::<Response>().await?;
-
-        
 
         //Estimate gas to consume
         // let estimate_call = contract.estimate_gas(
@@ -410,20 +305,22 @@ impl NFTsRepository for SuiBlockChain {
         //     None => None,
         //     Some(bn) => Some(bn.as_u64())
         // };
+        let tx = tx.result;
+        //tx.transaction.data.gasData.
         let tx_paylaod = BlockchainTx::new(
             asset_id.to_owned(),
             Utc::now(),
-            Some(tx.transaction_hash),
-            tx.block_number,
-            tx.gas_used,
-            tx.effective_gas_price,
+            Some(tx.digest),
+            Some(0),              //tx.block_number,
+            Some("".to_string()), //tx.gas_used,
+            Some("".to_string()), // tx.effective_gas_price,
             Some(
-                wei_to_gwei(tx.gas_used.unwrap())
-                    * wei_to_gwei(tx.effective_gas_price.unwrap_or_default()),
+                0.0, //wei_to_gwei(tx.gas_used.unwrap())
+                    //    * wei_to_gwei(tx.effective_gas_price.unwrap_or_default()),
             ),
-            Some("gweis".to_string()),
-            Some(tx.from),
-            tx.to,
+            Some("mist".to_string()),
+            Some("".to_string()), //Some(tx.from),
+            Some("".to_string()), //tx.to,
             self.contract_id,
             None,
         );
@@ -433,75 +330,172 @@ impl NFTsRepository for SuiBlockChain {
     async fn get(&self, asset_id: &Uuid) -> ResultE<ContractContentInfo> {
         let token = asset_id.to_string();
 
-        let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
-        let web3 = web3::Web3::new(transport);
+        // let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
+        // let web3 = web3::Web3::new(transport);
 
-        //let contract_address = addr.clone();
-        let contract_op = Contract::from_json(
-            web3.eth(),
-            self.contract_address.clone(),
-            include_bytes!("../../res/evm/LightNFT.abi"),
-        );
-        let contract = match contract_op {
-            Err(e) => {
-                return Err(AssetBlockachainError(e.to_string()).into());
-            }
-            Ok(cnt) => cnt,
+        // //let contract_address = addr.clone();
+        // let contract_op = Contract::from_json(
+        //     web3.eth(),
+        //     self.contract_address.clone(),
+        //     include_bytes!("../../res/evm/LightNFT.abi"),
+        // );
+        // let contract = match contract_op {
+        //     Err(e) => {
+        //         return Err(AssetBlockachainError(e.to_string()).into());
+        //     }
+        //     Ok(cnt) => cnt,
+        // };
+
+        // let caller = contract.query(
+        //     CONTRACT_METHOD_GET_CONTENT_BY_TOKEN,
+        //     (token.clone(),),
+        //     self.contract_address,
+        //     Options::default(),
+        //     None,
+        // );
+        // let call_contract_op: Result<ContractContentInfo, web3::contract::Error> = caller.await;
+
+        #[derive(Debug, Serialize, Deserialize)]
+        struct Params {
+            showType: bool,
+            showOwner: bool,
+            showPreviousTransaction: bool,
+            showDisplay: bool,
+            showContent: bool,
+            showBcs: bool,
+            showStorageRebate: bool,
+        }
+
+        let params = Params {
+            showType: true,
+            showOwner: true,
+            showPreviousTransaction: true,
+            showDisplay: false,
+            showContent: true,
+            showBcs: false,
+            showStorageRebate: true,
         };
 
-        let caller = contract.query(
-            CONTRACT_METHOD_GET_CONTENT_BY_TOKEN,
-            (token.clone(),),
-            self.contract_address,
-            Options::default(),
-            None,
-        );
-        let call_contract_op: Result<ContractContentInfo, web3::contract::Error> = caller.await;
-        let res = match call_contract_op {
-            Err(e) => {
-                return Err(AssetBlockachainError(e.to_string()).into());
-            }
-            Ok(cnt) => cnt,
+        let payload = Payload {
+            jsonrpc: "2.0".into(),
+            id: 1,
+            method: CONTRACT_METHOD_GET_CONTENT_BY_TOKEN.into(),
+            params: vec![
+                Value::String(token.into()),
+                //Value::Array(vec![Value::String("AEZc4UMAoxzWtp+i1dvyOgmy+Eeb/5ZNwO5dpHBqX5Rt36+HhYnBby8asFU4b0i7TjQZGgLahT8w3NQUfk0NUQnqvbuA0Q1Bqu4RHV3JPpqmH+C527hWJGUBOZN1j9sg8w==".into())]),
+                //Value::Array(vec![Value::String(self.contract_owner_secret.into())]),
+                Value::Object(
+                    serde_json::to_value(&params)
+                        .unwrap()
+                        .as_object()
+                        .unwrap()
+                        .clone(),
+                ),
+                Value::String("WaitForLocalExecution".into()),
+            ],
+        };
+        let client = reqwest::Client::new();
+        let res = client.post(self.url.clone()).json(&payload).send().await?;
+
+        use serde::{Deserialize, Serialize};
+
+        #[derive(Serialize, Deserialize, Debug)]
+        pub struct RpcResponse {
+            pub jsonrpc: String,
+            pub result: ResultData,
+        }
+
+        #[derive(Serialize, Deserialize, Debug)]
+        pub struct ResultData {
+            pub data: ObjectData,
+        }
+
+        #[derive(Serialize, Deserialize, Debug)]
+        pub struct ObjectData {
+            pub objectId: String,
+            pub version: String,
+            pub digest: String,
+            #[serde(rename = "type")]
+            pub type_field: String,
+            pub owner: Owner,
+            pub previousTransaction: String,
+            pub storageRebate: String,
+            pub content: Content,
+        }
+
+        #[derive(Serialize, Deserialize, Debug)]
+        pub struct Owner {
+            pub AddressOwner: String,
+        }
+
+        #[derive(Serialize, Deserialize, Debug)]
+        pub struct Content {
+            pub dataType: String,
+            #[serde(rename = "type")]
+            pub type_field: String,
+            pub hasPublicTransfer: bool,
+            pub fields: Fields,
+        }
+
+        #[derive(Serialize, Deserialize, Debug)]
+        pub struct Fields {
+            pub balance: String,
+            pub id: Id,
+        }
+
+        #[derive(Serialize, Deserialize, Debug)]
+        pub struct Id {
+            pub id: String,
+        }
+
+        let _tx = res.json::<RpcResponse>().await?;
+
+        let res = ContractContentInfo {
+            hashAlgo: "".to_string(),
+            hashFile: "".to_string(),
+            uri: "".to_string(),
+            price: 0,
+            state: ContentState::Active,
         };
         Ok(res)
     }
 }
 
-fn _mist_to_sui(wei_val: U256) -> f64 {
-    let res = wei_val.as_u128() as f64;
-    res / 1_000_000_000_000_000_000.0
-}
+// fn _mist_to_sui(val: U256) -> f64 {
+//     let res = val.as_u128() as f64;
+//     res / 1_000_000_000_000_000_000.0
+// }
 // fn wei_to_gwei(wei_val: U256) -> f64 {
 //     let res = wei_val.as_u128() as f64;
 //     res / 1_000_000_000.0
 //}
 
-pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
-    let latest_block = client
-        .eth()
-        .block(BlockId::Number(BlockNumber::Latest))
-        .await
-        .unwrap()
-        .unwrap();
+// pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
+//     let latest_block = client
+//         .eth()
+//         .block(BlockId::Number(BlockNumber::Latest))
+//         .await
+//         .unwrap()
+//         .unwrap();
 
-    let timestamp = latest_block.timestamp.as_u64() as i64;
-    let naive = NaiveDateTime::from_timestamp_opt(timestamp, 0).unwrap();
-    let utc_dt: DateTime<Utc> = DateTime::from_utc(naive, Utc);
+//     let timestamp = latest_block.timestamp.as_u64() as i64;
+//     let naive = NaiveDateTime::from_timestamp_opt(timestamp, 0).unwrap();
+//     let utc_dt: DateTime<Utc> = DateTime::from_utc(naive, Utc);
 
-    debug!(
-            "[{}] block num {}, parent {}, transactions: {}, gas used {}, gas limit {}, base fee {}, difficulty {}, total difficulty {}",
-            utc_dt.format("%Y-%m-%d %H:%M:%S"),
-            latest_block.number.unwrap(),
-            latest_block.parent_hash,
-            latest_block.transactions.len(),
-            latest_block.gas_used,
-            latest_block.gas_limit,
-            latest_block.base_fee_per_gas.unwrap_or_default(),
-            latest_block.difficulty,
-            latest_block.total_difficulty.unwrap()
-        );
-    return latest_block;
-}
+//     debug!(
+//             "[{}] block num {}, parent {}, transactions: {}, gas used {}, gas limit {}, base fee {}, difficulty {}, total difficulty {}",
+//             utc_dt.format("%Y-%m-%d %H:%M:%S"),
+//             latest_block.number.unwrap(),
+//             latest_block.parent_hash,
+//             latest_block.transactions.len(),
+//             latest_block.gas_used,
+//             latest_block.gas_limit,
+//             latest_block.base_fee_per_gas.unwrap_or_default(),
+//             latest_block.difficulty,
+//             latest_block.total_difficulty.unwrap()
+//         );
+//     return latest_block;
+// }
 
 // impl Detokenize for ContractContentInfo {
 //     #[allow(non_snake_case)]
