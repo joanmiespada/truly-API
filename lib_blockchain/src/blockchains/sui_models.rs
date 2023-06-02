@@ -3,7 +3,16 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize)]
 pub struct Response {
     pub jsonrpc: String,
-    pub result: Result,
+    pub result: Option<Result>,
+    pub error: Option<ResultError>,
+    pub id: Option<i32>
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ResultError{
+    pub code: String,
+    pub message: String,
+    pub data: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

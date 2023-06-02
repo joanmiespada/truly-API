@@ -166,16 +166,16 @@ impl NFTsRepository for SuiBlockChain {
             method:BLOCKCHAIN_METHOD_ESTIMATE.into(),
             params: vec![
                 Value::String(tx_bytes_base64.into()),
-                //Value::Array(vec![Value::String("AEZc4UMAoxzWtp+i1dvyOgmy+Eeb/5ZNwO5dpHBqX5Rt36+HhYnBby8asFU4b0i7TjQZGgLahT8w3NQUfk0NUQnqvbuA0Q1Bqu4RHV3JPpqmH+C527hWJGUBOZN1j9sg8w==".into())]),
-                Value::Array(vec![Value::String( tx_signature_base64.into() )]),
-                Value::Object(
-                    serde_json::to_value(&params)
-                        .unwrap()
-                        .as_object()
-                        .unwrap()
-                        .clone(),
-                ),
-                Value::String("WaitForLocalExecution".into()),
+                // .   Value::Array(vec![Value::String("AEZc4UMAoxzWtp+i1dvyOgmy+Eeb/5ZNwO5dpHBqX5Rt36+HhYnBby8asFU4b0i7TjQZGgLahT8w3NQUfk0NUQnqvbuA0Q1Bqu4RHV3JPpqmH+C527hWJGUBOZN1j9sg8w==".into())]),
+                //Value::Array(vec![Value::String( tx_signature_base64.into() )]),
+                // Value::Object(
+                //     serde_json::to_value(&params)
+                //         .unwrap()
+                //         .as_object()
+                //         .unwrap()
+                //         .clone(),
+                // ),
+                // Value::String("WaitForLocalExecution".into()),
             ],
         };
         println!("{:#?}", payload);
@@ -184,11 +184,13 @@ impl NFTsRepository for SuiBlockChain {
             error!("{}", e);
             return Err(e)?;
         }
-
-        if let Err(e) = res_op.unwrap().json::<Response>().await {
+        //println!("{:?}", res_op.unwrap());
+        let res_op = res_op.unwrap().json::<Response>().await;
+        if let Err(e) = res_op {
             error!("{}", e);
             return Err(e)?;
         }
+        println!("{:?}", res_op.unwrap());
 
 
         let mut payload2 = payload.clone();
@@ -305,7 +307,7 @@ impl NFTsRepository for SuiBlockChain {
         //     None => None,
         //     Some(bn) => Some(bn.as_u64())
         // };
-        let tx = tx.result;
+        let tx = tx.result.unwrap();
         //tx.transaction.data.gasData.
         let tx_paylaod = BlockchainTx::new(
             asset_id.to_owned(),
