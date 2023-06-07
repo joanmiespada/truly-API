@@ -150,7 +150,7 @@ impl AssetRepo {
                 items = items.item(VIDEO_LICENSING_FIELD_NAME, video_licensing_error_av);
         }
         if let Some(value) =  asset.minted_tx() {
-                let minted_tx_av = AttributeValue::S(format!("{:?}", value));
+                let minted_tx_av = AttributeValue::S(value.clone());
                 items = items.item(MINTED_FIELD_NAME, minted_tx_av);
         }
         items = items.item(

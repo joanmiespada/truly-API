@@ -58,7 +58,7 @@ impl BlockchainTxRepo {
 #[async_trait]
 impl BlockchainTxRepository for BlockchainTxRepo {
     async fn get_by_tx(&self, hash: &String) -> ResultE<BlockchainTx> {
-        let hash_av = AttributeValue::S(format!("{:?}", hash));
+        let hash_av = AttributeValue::S(hash.clone());
 
         let filter = format!("{} = :value", TX_FIELD);
 
@@ -161,72 +161,45 @@ impl BlockchainTxRepository for BlockchainTxRepo {
             .item(TX_TIMESTAMP_PK, creation_time_av)
             .item(TX_CONTRACT_ID, contract_id_av);
 
-        match tx.tx() {
-            None => {}
-            Some(hash) => {
-                let tx_id_av = AttributeValue::S(format!("{:?}", hash));
+        if  let Some(hash) = tx.tx() {
+                let tx_id_av = AttributeValue::S(hash.clone());
                 items = items.item(TX_FIELD, tx_id_av);
-            }
         }
 
-        match tx.block_number() {
-            None => {}
-            Some(data) => {
+        if let Some(data) = tx.block_number() {
                 let data_av = AttributeValue::N(data.clone().to_string());
                 items = items.item(TX_BLOCK_NUMER, data_av);
-            }
         }
 
-        match tx.gas_used() {
-            None => {}
-            Some(data) => {
+        if let Some(data) =  tx.gas_used() {
                 let data_av = AttributeValue::N(data.clone().to_string());
                 items = items.item(TX_GAS_USED, data_av);
-            }
         }
 
-        match tx.effective_gas_price() {
-            None => {}
-            Some(data) => {
+        if let Some(data) = tx.effective_gas_price() {
                 let data_av = AttributeValue::N(data.clone().to_string());
                 items = items.item(TX_EFECTIVE_GAS_PRICE, data_av);
-            }
         }
 
-        match tx.cost() {
-            None => {}
-            Some(data) => {
+        if let Some(data) = tx.cost() {
                 let data_av = AttributeValue::N(data.clone().to_string());
                 items = items.item(TX_COST, data_av);
-            }
         }
-        match tx.currency() {
-            None => {}
-            Some(data) => {
+        if let Some(data) = tx.currency() {
                 let data_av = AttributeValue::S(data.clone().to_string());
                 items = items.item(TX_CURRENCY, data_av);
-            }
         }
-        match tx.from() {
-            None => {}
-            Some(data) => {
-                let data_av = AttributeValue::S(format!("{:?}", data));
+        if let Some(data) = tx.from() {
+                let data_av = AttributeValue::S(data.clone());
                 items = items.item(TX_FROM, data_av);
-            }
         }
-        match tx.to() {
-            None => {}
-            Some(data) => {
-                let data_av = AttributeValue::S(format!("{:?}", data));
+        if let Some(data) = tx.to() {
+                let data_av = AttributeValue::S(data.clone());
                 items = items.item(TX_TO, data_av);
-            }
         }
-        match tx.tx_error() {
-            None => {}
-            Some(data) => {
+        if let Some(data) = tx.tx_error() {
                 let data_av = AttributeValue::S(data.to_string());
                 items = items.item(TX_ERROR, data_av);
-            }
         }
 
         let request = self.client.transact_write_items().transact_items(

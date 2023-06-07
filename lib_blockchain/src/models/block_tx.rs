@@ -6,7 +6,7 @@ use uuid::Uuid;
 use validator::Validate;
 //use web3::types::{H160, H256, U256, U64};
 
-#[derive(Clone, Serialize, Validate, Deserialize, Debug)]
+#[derive(Clone, Serialize, Validate, Deserialize, Debug, PartialEq)]
 pub struct BlockchainTx {
     asset_id: Uuid,
     creation_time: DateTime<Utc>,

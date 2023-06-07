@@ -238,7 +238,7 @@ async fn create_contract_and_mint_nft_test_sync(
     let content = check_op.unwrap();
 
     assert_eq!(content.hash_file, as1.hash().as_deref().unwrap());
-    assert_eq!(content.price, asset_price);
+    assert_eq!(content.price.unwrap(), asset_price);
     assert_eq!(content.state, NTFState::Active);
 
     let tx_op = asset_service.get_by_id(as1.id()).await;

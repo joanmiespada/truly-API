@@ -253,8 +253,8 @@ impl NFTsRepository for GanacheBlockChain {
         Ok(tx_paylaod)
     }
 
-    async fn get(&self, asset_id: &Uuid) -> ResultE<ContractContentInfo> {
-        let token = asset_id.to_string();
+    async fn get(&self, asset_id: &String) -> ResultE<ContractContentInfo> {
+        let token = asset_id.clone();
 
         let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
         let web3 = web3::Web3::new(transport);
@@ -280,13 +280,14 @@ impl NFTsRepository for GanacheBlockChain {
             None,
         );
         let call_contract_op: Result<ContractContentInfo, web3::contract::Error> = caller.await;
-        let res = match call_contract_op {
-            Err(e) => {
-                return Err(AssetBlockachainError(e.to_string()).into());
-            }
-            Ok(cnt) => cnt,
-        };
-        Ok(res)
+        if let Err(e) =call_contract_op {
+            return Err(AssetBlockachainError(e.to_string()).into());
+        }
+        let mut cnt = call_contract_op.ok().unwrap();
+        cnt.token = Some(asset_id.to_string());
+
+        Ok(cnt)
+
     }
 }
 
@@ -354,9 +355,10 @@ impl Detokenize for ContractContentInfo {
         Ok(Self {
             hashFile,
             hashAlgo,
-            uri,
-            price,
-            state,
+            uri: Some(uri),
+            price:Some(price),
+            state:Some(state),
+            token:None,
         })
     }
 }

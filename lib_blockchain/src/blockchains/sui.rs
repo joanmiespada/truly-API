@@ -1,41 +1,43 @@
 use async_trait::async_trait;
-use chrono::{DateTime, NaiveDateTime, Utc};
-use lib_config::{config::Config, environment::DEV_ENV, infra::restore_secret_key};
-use log::{debug, error};
-use secp256k1::SecretKey;
+use chrono::Utc;
+use lib_config::{config::Config, environment::DEV_ENV};
+use log::error;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::str::FromStr;
 use url::Url;
 use uuid::Uuid;
 
-// use web3::{
-//     contract::{tokens::Detokenize, Contract, Options},
-//     transports::Http,
-//     types::{Address, Block, BlockId, BlockNumber, H160, H256, U256},
-//     Web3, //, signing::SecretKey,
-// };
-
+use crate::models::keypair::KeyPair;
 use crate::{
-    errors::nft::HydrateMasterSecretKeyError,
+    errors::block_tx::BlockchainTxError,
     models::block_tx::BlockchainTx,
     repositories::{
         blockchain::BlockchainRepo, blockchain::BlockchainRepository, contract::ContractRepo,
         contract::ContractRepository,
-    }, blockchains::sui_models::Response,
+    },
 };
-use crate::{errors::nft::NftUserAddressMalformedError, models::keypair::KeyPair};
 
 const CONTRACT_METHOD_MINTING: &'static str = "add_hash";
-const CONTRACT_METHOD_GET_CONTENT_BY_TOKEN: &'static str = "sui_getObject";
-const BLOCKCHAIN_METHOD_EXEC: &'static str = "sui_executeTransactionBlock";
-const BLOCKCHAIN_METHOD_ESTIMATE: &'static str = "sui_dryRunTransactionBlock";
 
-use lib_licenses::errors::asset::AssetBlockachainError;
-
-use super::chain::{ContentState, ContractContentInfo, NFTsRepository};
+use super::chain::{ContractContentInfo, NFTsRepository};
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
+
+use shared_crypto::intent::Intent;
+use sui_json_rpc_types::{SuiTransactionBlockResponseOptions, SuiObjectResponseQuery, SuiObjectDataFilter, SuiObjectDataOptions, SuiParsedData};
+use sui_keys::keystore::{AccountKeystore, FileBasedKeystore, Keystore};
+use sui_sdk::{
+    json::SuiJsonValue,
+    rpc_types::SuiTransactionBlockEffectsAPI,
+    types::{
+        base_types::{ObjectID, SuiAddress},
+        //id::UID,
+        transaction::Transaction,
+    },
+    //SuiClient,
+    SuiClientBuilder,
+};
+use sui_types::quorum_driver_types::ExecuteTransactionRequestType;
 
 #[derive(Clone, Debug)]
 pub struct SuiBlockChain {
@@ -91,7 +93,7 @@ impl SuiBlockChain {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize,Clone )]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct Payload {
     jsonrpc: String,
     id: u32,
@@ -113,420 +115,202 @@ impl NFTsRepository for SuiBlockChain {
         _prc: &Option<u64>,
         _cntr: &u64,
     ) -> ResultE<BlockchainTx> {
-        use base64::{
-            engine::{general_purpose},
-            Engine as _,
-        };
-        use bcs::to_bytes;
+        let sui = SuiClientBuilder::default()
+            .build(self.url.as_str())
+            .await
+            .unwrap();
 
-        #[derive(Debug, Serialize, Deserialize)]
-        struct Params {
-            showInput: bool,
-            showRawInput: bool,
-            showEffects: bool,
-            showEvents: bool,
-            showObjectChanges: bool,
-            showBalanceChanges: bool,
-        }
-
-        #[derive(Debug, Serialize, Deserialize)]
-        struct DataRequest {
-            hash: String,
-            hash_algorithm: String,
-            asset_id: String,
-        }
-
-        let data = DataRequest {
-            hash: hash_file.to_string(),
-            hash_algorithm: hash_algorithm.to_string(),
-            asset_id: asset_id.to_string(),
+        let keystore_path = match dirs::home_dir() {
+            Some(v) => v.join(".sui").join("sui_config").join("sui.keystore"),
+            None => panic!("Cannot obtain home directory path"),
         };
 
-        let tx_bytes = to_bytes(&&data)?;
-        let tx_bytes_base64 = general_purpose::STANDARD.encode(tx_bytes);
+        //let keystore = Keystore::File(FileBasedKeystore::new(&keystore_path)?);
 
-        let aux = self.contract_owner_cash.clone();
-        let tx_signatures = aux.as_bytes();
-        let tx_signature_base64 =  general_purpose::STANDARD.encode( tx_signatures );
+        let my_address = SuiAddress::from_str(
+            "0x042d9857b31cdec48b00332fec4a7adf8bf8e2a5a1561ef7778ce1abf7b91f30",
+            //&self.contract_address.as_str()
+        )?;
+        //let _gas_object_id = ObjectID::from_str(
+        //    "0x1b06b6b809dffa47c03bcef9d4375ca835c2b2053618150b6f54789e4e2c0163",
+        //)?;
 
-        let client = reqwest::Client::new();
+        let package_object_id = ObjectID::from_str(
+            //"0xdd99302b8971ca07d516bea8b09e560ec1b72cc6c722f5f7b5a9f6c6fb1cff29",
+            self.contract_address.as_str(),
+        )?;
 
-        let params = Params {
-            showInput: true,
-            showRawInput: true,
-            showEffects: true,
-            showEvents: true,
-            showObjectChanges: true,
-            showBalanceChanges: true,
-        };
+        let module = "hasher";
 
-        let payload = Payload {
-            jsonrpc: "2.0".into(),
-            id: 1,
-            method:BLOCKCHAIN_METHOD_ESTIMATE.into(),
-            params: vec![
-                Value::String(tx_bytes_base64.into()),
-                // .   Value::Array(vec![Value::String("AEZc4UMAoxzWtp+i1dvyOgmy+Eeb/5ZNwO5dpHBqX5Rt36+HhYnBby8asFU4b0i7TjQZGgLahT8w3NQUfk0NUQnqvbuA0Q1Bqu4RHV3JPpqmH+C527hWJGUBOZN1j9sg8w==".into())]),
-                //Value::Array(vec![Value::String( tx_signature_base64.into() )]),
-                // Value::Object(
-                //     serde_json::to_value(&params)
-                //         .unwrap()
-                //         .as_object()
-                //         .unwrap()
-                //         .clone(),
-                // ),
-                // Value::String("WaitForLocalExecution".into()),
-            ],
-        };
-        println!("{:#?}", payload);
-        let res_op = client.post(self.url.clone()).json(&payload).send().await;
-        if let Err(e)= res_op {
-            error!("{}", e);
-            return Err(e)?;
+        let function = CONTRACT_METHOD_MINTING;
+        let gas_budget = 10000000;
+
+        let transfer_tx_op = sui
+            .transaction_builder()
+            .move_call(
+                my_address,
+                package_object_id,
+                module,
+                function,
+                vec![],
+                vec![
+                    SuiJsonValue::from_str(&hash_file.as_str())?,
+                    SuiJsonValue::from_str(&hash_algorithm.as_str())?,
+                    SuiJsonValue::from_str(&asset_id.to_string().as_str())?,
+                ],
+                None,
+                gas_budget,
+            )
+            .await;
+        if let Err(err) = transfer_tx_op {
+            error!("{}", err);
+            //return Err(err)?;
+            return Err(BlockchainTxError { 0: err.to_string() }.into());
         }
-        //println!("{:?}", res_op.unwrap());
-        let res_op = res_op.unwrap().json::<Response>().await;
-        if let Err(e) = res_op {
-            error!("{}", e);
-            return Err(e)?;
+        let transfer_tx = transfer_tx_op.ok().unwrap();
+
+        // Sign transaction
+        let keystore = Keystore::from(FileBasedKeystore::new(&keystore_path)?);
+        let signature =
+            keystore.sign_secure(&my_address, &transfer_tx, Intent::sui_transaction())?;
+
+        let transaction_response_op = sui
+            .quorum_driver_api()
+            .execute_transaction_block(
+                Transaction::from_data(transfer_tx, Intent::sui_transaction(), vec![signature])
+                    .verify()?,
+                SuiTransactionBlockResponseOptions::full_content(),
+                Some(ExecuteTransactionRequestType::WaitForLocalExecution),
+            )
+            .await;
+        if let Err(err) = transaction_response_op {
+            error!("{}", err);
+            //return Err(err)?;
+            return Err(BlockchainTxError { 0: err.to_string() }.into());
         }
-        println!("{:?}", res_op.unwrap());
+        let transaction_response = transaction_response_op.ok().unwrap();
 
-
-        let mut payload2 = payload.clone();
-        payload2.method = BLOCKCHAIN_METHOD_EXEC .to_string();
-
-        println!("{:#?}", payload2);
-        let res_op = client.post(self.url.clone()).json(&payload2).send().await;
-        if let Err(e)= res_op {
-            error!("{}", e);
-            return Err(e)?;
+        if let Some(confirmation) = transaction_response.confirmed_local_execution {
+            if !confirmation {
+                return Err(BlockchainTxError {
+                    0: "failed transaction - confirmed local exec is false".to_string(),
+                }
+                .into());
+            }
         }
 
-        let tx = res_op.unwrap().json::<Response>().await?;
+        println!("{:#?}", transaction_response);
 
+        let new_tx_address = transaction_response
+            .clone()
+            .effects
+            .as_ref()
+            .unwrap()
+            .created()
+            .first()
+            .unwrap()
+            .reference
+            .object_id;
 
+        let epoch = transaction_response
+            .clone()
+            .effects
+            .as_ref()
+            .unwrap()
+            .executed_epoch();
 
+        let gas_cost = transaction_response
+            .clone()
+            .balance_changes
+            .unwrap()
+            .first()
+            .unwrap()
+            .amount;
 
-        //Estimate gas to consume
-        // let estimate_call = contract.estimate_gas(
-        //     CONTRACT_METHOD_MINTING,
-        //     (to.clone(), token.clone(), hash_file.clone(), price.clone()),
-        //     self.contract_owner_address.clone(), //self.contract_address.clone(), //account_owner,
-        //     Options::default(),
-        // );
+        let paid_from = transaction_response
+            .clone()
+            .object_changes
+            .unwrap()
+            .first()
+            .unwrap()
+            .object_id();
 
-        // let estimate_op = estimate_call.await;
-
-        // let cost_gas: U256 = match estimate_op {
-        //     Err(e) => {
-        //         return Err(AssetBlockachainError(e.to_string()).into());
-        //     }
-        //     Ok(gas) => gas,
-        // };
-        // //request current gas price status
-        // let gas_price_op = web3.eth().gas_price().await;
-        // let gas_price: U256 = match gas_price_op {
-        //     Err(e) => {
-        //         return Err(AssetBlockachainError(e.to_string()).into());
-        //     }
-        //     Ok(gas) => gas,
-        // };
-
-        //let nonce = U256::from(1); //
-        //let nonce = generate_nonce(&self.counter )?;
-        // debug!("nonce calculated: {}", nonce);
-
-        // let counter = web3
-        //     .eth()
-        //     .transaction_count(self.contract_address, None)
-        //     .await
-        //     .unwrap();
-        // debug!("{}", counter);
-        // //counter += U256::from_str_radix("1", 10).unwrap();
-        //debug!("{}", counter);
-
-        // let tx_options = Options {
-        //     gas: Some(cost_gas), // Some(U256::from_str("400000").unwrap()), //250.000 weis  30.000.000 //with 400.000 gas units works!
-        //     gas_price: Some(gas_price), // None,     // Some(U256::from_str("10000000").unwrap()), //10.000.000 weis
-        //     value: None,
-        //     condition: None,
-        //     transaction_type: None,
-        //     nonce: None, //Some(counter), // None
-        //     access_list: None,
-        //     max_fee_per_gas: None,
-        //     max_priority_fee_per_gas: None,
-        // };
-        // debug!("calling from {}", self.contract_address.to_string());
-
-        // let contract_owner_private_key;
-        // //let contract_owner_private_key_op = self.decrypt_contract_owner_secret_key().await;
-        // let contract_owner_private_key_op = SecretKey::from_str(
-        //     restore_secret_key(
-        //         self.contract_owner_secret.to_owned(),
-        //         &self.kms_key_id,
-        //         &self.config,
-        //     )
-        //     .await
-        //     .unwrap()
-        //     .as_str(),
-        // );
-
-        // match contract_owner_private_key_op {
-        //     Err(_) => {
-        //         return Err(HydrateMasterSecretKeyError {}.into());
-        //     }
-        //     Ok(value) => contract_owner_private_key = value,
-        // }
-
-        // let caller = contract.signed_call_with_confirmations(
-        //     CONTRACT_METHOD_MINTING,
-        //     (to.clone(), token.clone(), hash_file.clone(), price.clone()),
-        //     tx_options,
-        //     self.blockhain_node_confirmations.into(),
-        //     &contract_owner_private_key,
-        // );
-
-        // let call_contract_op = caller.await;
-        // let tx = match call_contract_op {
-        //     Err(e) => {
-        //         return Err(AssetBlockachainError(format!("{:?}", e)).into());
-        //     }
-        //     Ok(transact) => transact,
-        // };
-        // let tx_str = format!("blockchain: {} | tx: {:?} blockNum: {:?} gasUsed: {:?} w effectiveGasPrice: {:?} w  cost: {:?} gwei  from: {:?} to: {:?} ",
-        //                                 self.url,
-        //                                 Some(tx.transaction_hash),
-        //                                 tx.block_number,
-        //                                 tx.gas_used,
-        //                                 tx.effective_gas_price,
-        //                                 wei_to_gwei(tx.gas_used.unwrap() ) * wei_to_gwei( tx.effective_gas_price.unwrap()),
-        //                                 Some(tx.from),
-        //                                 tx.to );
-        // // let block_num = match tx.block_number {
-        //     None => None,
-        //     Some(bn) => Some(bn.as_u64())
-        // };
-        let tx = tx.result.unwrap();
         //tx.transaction.data.gasData.
         let tx_paylaod = BlockchainTx::new(
             asset_id.to_owned(),
             Utc::now(),
-            Some(tx.digest),
-            Some(0),              //tx.block_number,
-            Some("".to_string()), //tx.gas_used,
-            Some("".to_string()), // tx.effective_gas_price,
-            Some(
-                0.0, //wei_to_gwei(tx.gas_used.unwrap())
-                    //    * wei_to_gwei(tx.effective_gas_price.unwrap_or_default()),
-            ),
+            Some(new_tx_address.to_string()), //Some(tx.digest),
+            Some(epoch),                      //tx.block_number,
+            Some(gas_cost.to_string()),       //tx.gas_used,
+            None,                             //Some("".to_string()), // tx.effective_gas_price,
+            None,                             //Some(
+            //gas_cost, //wei_to_gwei(tx.gas_used.unwrap())
+            //    * wei_to_gwei(tx.effective_gas_price.unwrap_or_default()),
+            //),
             Some("mist".to_string()),
-            Some("".to_string()), //Some(tx.from),
-            Some("".to_string()), //tx.to,
+            Some(paid_from.to_string()), //Some(tx.from),
+            None,                        //Some("".to_string()), //tx.to,
             self.contract_id,
             None,
         );
         Ok(tx_paylaod)
     }
 
-    async fn get(&self, asset_id: &Uuid) -> ResultE<ContractContentInfo> {
-        let token = asset_id.to_string();
+    async fn get(&self, token: &String) -> ResultE<ContractContentInfo> {
+        let sui = SuiClientBuilder::default()
+            .build(self.url.as_str())
+            .await
+            .unwrap();
 
-        // let transport = web3::transports::Http::new(self.url.as_str()).unwrap();
-        // let web3 = web3::Web3::new(transport);
+        
+        let token = SuiAddress::from_str(
+                token.as_str()
+        )?;
+        
 
-        // //let contract_address = addr.clone();
-        // let contract_op = Contract::from_json(
-        //     web3.eth(),
-        //     self.contract_address.clone(),
-        //     include_bytes!("../../res/evm/LightNFT.abi"),
-        // );
-        // let contract = match contract_op {
-        //     Err(e) => {
-        //         return Err(AssetBlockachainError(e.to_string()).into());
-        //     }
-        //     Ok(cnt) => cnt,
-        // };
-
-        // let caller = contract.query(
-        //     CONTRACT_METHOD_GET_CONTENT_BY_TOKEN,
-        //     (token.clone(),),
-        //     self.contract_address,
-        //     Options::default(),
-        //     None,
-        // );
-        // let call_contract_op: Result<ContractContentInfo, web3::contract::Error> = caller.await;
-
-        #[derive(Debug, Serialize, Deserialize)]
-        struct Params {
-            showType: bool,
-            showOwner: bool,
-            showPreviousTransaction: bool,
-            showDisplay: bool,
-            showContent: bool,
-            showBcs: bool,
-            showStorageRebate: bool,
+        let transaction_response_op = sui
+            .read_api()
+            .get_object_with_options(ObjectID::from_address( token.into() ),SuiObjectDataOptions::new().with_content() )
+            .await;
+        if let Err(err) = transaction_response_op {
+            error!("{}", err);
+            //return Err(err)?;
+            return Err(BlockchainTxError { 0: err.to_string() }.into());
         }
+        let objects = transaction_response_op.ok().unwrap();
 
-        let params = Params {
-            showType: true,
-            showOwner: true,
-            showPreviousTransaction: true,
-            showDisplay: false,
-            showContent: true,
-            showBcs: false,
-            showStorageRebate: true,
-        };
-
-        let payload = Payload {
-            jsonrpc: "2.0".into(),
-            id: 1,
-            method: CONTRACT_METHOD_GET_CONTENT_BY_TOKEN.into(),
-            params: vec![
-                Value::String(token.into()),
-                //Value::Array(vec![Value::String("AEZc4UMAoxzWtp+i1dvyOgmy+Eeb/5ZNwO5dpHBqX5Rt36+HhYnBby8asFU4b0i7TjQZGgLahT8w3NQUfk0NUQnqvbuA0Q1Bqu4RHV3JPpqmH+C527hWJGUBOZN1j9sg8w==".into())]),
-                //Value::Array(vec![Value::String(self.contract_owner_secret.into())]),
-                Value::Object(
-                    serde_json::to_value(&params)
-                        .unwrap()
-                        .as_object()
-                        .unwrap()
-                        .clone(),
-                ),
-                Value::String("WaitForLocalExecution".into()),
-            ],
-        };
-        let client = reqwest::Client::new();
-        let res = client.post(self.url.clone()).json(&payload).send().await?;
-
-        use serde::{Deserialize, Serialize};
-
-        #[derive(Serialize, Deserialize, Debug)]
-        pub struct RpcResponse {
-            pub jsonrpc: String,
-            pub result: ResultData,
+        println!("{:?}", objects.data);
+        #[derive(Deserialize, Debug)]
+        struct Auxi {
+            pub hash: String,
+            pub algorithm: String,
+            pub truly_id: String
         }
-
-        #[derive(Serialize, Deserialize, Debug)]
-        pub struct ResultData {
-            pub data: ObjectData,
+        impl<'a> From<&'a SuiParsedData> for Auxi {
+            fn from(data: &'a SuiParsedData) -> Self {
+                // implementation of the conversion logic goes here
+               let _ppp = format!("{:?}",data);
+               let _p: Auxi = serde_json::from_str(&_ppp).unwrap();
+               
+                Auxi { hash: "".to_string(), algorithm: "".to_string(), truly_id: "".to_string() }
+            }
         }
+        
+       // let _hash = objects.clone().data.unwrap().content.unwrap() ;// .first().content.unwrap().fields.unwrap();
+         let _res: Auxi = objects.object()?.content.as_ref().unwrap().try_into().unwrap();
+        
 
-        #[derive(Serialize, Deserialize, Debug)]
-        pub struct ObjectData {
-            pub objectId: String,
-            pub version: String,
-            pub digest: String,
-            #[serde(rename = "type")]
-            pub type_field: String,
-            pub owner: Owner,
-            pub previousTransaction: String,
-            pub storageRebate: String,
-            pub content: Content,
-        }
-
-        #[derive(Serialize, Deserialize, Debug)]
-        pub struct Owner {
-            pub AddressOwner: String,
-        }
-
-        #[derive(Serialize, Deserialize, Debug)]
-        pub struct Content {
-            pub dataType: String,
-            #[serde(rename = "type")]
-            pub type_field: String,
-            pub hasPublicTransfer: bool,
-            pub fields: Fields,
-        }
-
-        #[derive(Serialize, Deserialize, Debug)]
-        pub struct Fields {
-            pub balance: String,
-            pub id: Id,
-        }
-
-        #[derive(Serialize, Deserialize, Debug)]
-        pub struct Id {
-            pub id: String,
-        }
-
-        let _tx = res.json::<RpcResponse>().await?;
 
         let res = ContractContentInfo {
-            hashAlgo: "".to_string(),
             hashFile: "".to_string(),
-            uri: "".to_string(),
-            price: 0,
-            state: ContentState::Active,
+            hashAlgo: "".to_string(),
+            uri: Some("".to_string()),
+            price: None,
+            state: None,
+            token: None,
         };
+
         Ok(res)
     }
 }
 
-// fn _mist_to_sui(val: U256) -> f64 {
-//     let res = val.as_u128() as f64;
-//     res / 1_000_000_000_000_000_000.0
-// }
-// fn wei_to_gwei(wei_val: U256) -> f64 {
-//     let res = wei_val.as_u128() as f64;
-//     res / 1_000_000_000.0
-//}
-
-// pub async fn block_status(client: &Web3<Http>) -> Block<H256> {
-//     let latest_block = client
-//         .eth()
-//         .block(BlockId::Number(BlockNumber::Latest))
-//         .await
-//         .unwrap()
-//         .unwrap();
-
-//     let timestamp = latest_block.timestamp.as_u64() as i64;
-//     let naive = NaiveDateTime::from_timestamp_opt(timestamp, 0).unwrap();
-//     let utc_dt: DateTime<Utc> = DateTime::from_utc(naive, Utc);
-
-//     debug!(
-//             "[{}] block num {}, parent {}, transactions: {}, gas used {}, gas limit {}, base fee {}, difficulty {}, total difficulty {}",
-//             utc_dt.format("%Y-%m-%d %H:%M:%S"),
-//             latest_block.number.unwrap(),
-//             latest_block.parent_hash,
-//             latest_block.transactions.len(),
-//             latest_block.gas_used,
-//             latest_block.gas_limit,
-//             latest_block.base_fee_per_gas.unwrap_or_default(),
-//             latest_block.difficulty,
-//             latest_block.total_difficulty.unwrap()
-//         );
-//     return latest_block;
-// }
-
-// impl Detokenize for ContractContentInfo {
-//     #[allow(non_snake_case)]
-//     fn from_tokens(tokens: Vec<web3::ethabi::Token>) -> Result<Self, web3::contract::Error>
-//     where
-//         Self: Sized,
-//     {
-//         let mut hashFile = "".to_string();
-//         let mut uri = "".to_string();
-//         let mut state = ContentState::Active;
-//         let mut price = 0;
-//         let mut i = 0;
-//         for token in tokens {
-//             debug!("{:?}", token);
-//             match i {
-//                 0 => hashFile = token.into_string().unwrap(),
-//                 1 => uri = token.into_string().unwrap(),
-//                 2 => price = token.into_uint().unwrap().as_u64(),
-//                 3 => state = ContentState::from_str(token.into_string().unwrap().as_str()).unwrap(),
-//                 _ => {}
-//             };
-//             i += 1;
-//         }
-//         //let t = tokens[0].clone(); // .iter().next().unwrap().into_string().unwrap().clone();
-//         Ok(Self {
-//             hashFile,
-//             uri,
-//             price,
-//             state,
-//         })
-//     }
-// }

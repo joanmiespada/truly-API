@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::errors::nft::{
-    TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError,
+    TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError, TokenNotSuccessfullyMintedPreviously,
 };
 use crate::models::block_tx::BlockchainTx;
 use crate::blockchains::chain::NFTsRepository;
@@ -192,13 +192,31 @@ impl NFTsManipulation for NFTsService {
 
     #[tracing::instrument()]
     async fn get(&self, asset_id: &Uuid) -> ResultE<NTFContentInfo> {
-        let aux = self.blockchain.get(asset_id).await?;
+
+        let txs = self.tx_service.get_by_asset_id(asset_id).await?;
+
+        let successfully = txs.into_iter().filter(|x| x.tx_error().as_deref() == None ).collect::<Vec<BlockchainTx>>(); 
+        let successfully =  successfully.first();
+
+        if successfully == None {
+            return Err( TokenNotSuccessfullyMintedPreviously{ 0: asset_id.clone()}.into());
+        }
+        let successfully = successfully.unwrap();
+        let token = successfully.tx().clone().unwrap();
+
+        let aux = self.blockchain.get(&token).await?;
+        let state;
+        if let Some(sts) = aux.state {
+            state = NTFState::from_str(&sts.to_string()).unwrap()
+        }else{
+            state = NTFState::Active;
+        }
         let res = NTFContentInfo {
             hash_file: aux.hashFile,
             hash_algorithm: aux.hashAlgo,
             uri: aux.uri,
             price: aux.price,
-            state: NTFState::from_str(&aux.state.to_string()).unwrap(),
+            state,
         };
         Ok(res)
     }
@@ -223,8 +241,8 @@ impl Clone for NFTsService {
 pub struct NTFContentInfo {
     pub hash_file: String,
     pub hash_algorithm: String,
-    pub uri: String,
-    pub price: u64,
+    pub uri: Option<String>,
+    pub price: Option<u64>,
     pub state: NTFState,
 }
 

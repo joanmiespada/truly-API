@@ -40,7 +40,7 @@ Deploy the contract
 
 ```bash
 sui client publish ./ --gas <coin address>  --gas-budget=12500000
-sui client publish ./ --gas 0x3572473506bd5fa3983ab0845dccbe88ed80f14e97459e104cea9321a0e9c819  --gas-budget=12500000
+sui client publish ./ --gas 0x1f95b0f6692e4b9909fa3e65b45c300f0302e082e2030c624f2a65b2a24af230  --gas-budget=12500000
 ```
 
 result:

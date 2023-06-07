@@ -21,7 +21,8 @@ pub trait NFTsRepository: Send + Sync + CloneBoxNFTsRepository {
         counter: &u64,
     ) -> ResultE<BlockchainTx>;
 
-    async fn get(&self, asset_id: &Uuid) -> ResultE<ContractContentInfo>;
+    //async fn get(&self, asset_id: &Uuid) -> ResultE<ContractContentInfo>;
+    async fn get(&self, token: &String) -> ResultE<ContractContentInfo>;
     fn contract_id(&self) -> u16;
 }
 
@@ -56,9 +57,10 @@ pub struct ContractContentInfo {
     //field names coming from Solidity
     pub hashFile: String,
     pub hashAlgo: String,
-    pub uri: String,
-    pub price: u64,
-    pub state: ContentState,
+    pub uri: Option<String>,
+    pub price: Option<u64>,
+    pub state: Option<ContentState>,
+    pub token: Option<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
