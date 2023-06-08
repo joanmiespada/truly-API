@@ -1,17 +1,14 @@
 use std::collections::HashMap;
 
-use crate::errors::keypair::{KeyPairDynamoDBError, KeyPairNoExistsError};
+use crate::errors::keypair::KeyPairDynamoDBError;
 use crate::models::keypair::KeyPair;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::AttributeValue;
-use aws_sdk_kms::primitives::Blob;
 use chrono::{
     prelude::{DateTime, Utc},
     Local,
 };
 use lib_config::config::Config;
-use secp256k1::rand::{rngs, SeedableRng};
-use web3::signing::keccak256;
 //use rand::{prelude::*, SeedableRng};
 
 use super::schema_keypairs::{
@@ -26,74 +23,27 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 #[async_trait]
 pub trait KeyPairRepository {
     async fn add(&self, keypair: &KeyPair) -> ResultE<()>;
-    async fn get_by_id(&self, user_id: &String) -> ResultE<KeyPair>;
-    async fn get_or_create(&self, user_id: &String) -> ResultE<KeyPair>;
+    async fn get_by_id(&self, user_id: &String) -> ResultE<Option<KeyPair>>;
+    //async fn save(&self, user_id: &String, keypair: &KeyPair) -> ResultE<()>;
 }
 
 #[derive(Clone, Debug)]
 pub struct KeyPairRepo {
     client_dynamo: aws_sdk_dynamodb::Client,
-    client_kms: aws_sdk_kms::Client,
-    kms_key_id: String,
+    //client_kms: aws_sdk_kms::Client,
+    //kms_key_id: String,
 }
 
 impl KeyPairRepo {
     pub fn new(conf: &Config) -> KeyPairRepo {
         KeyPairRepo {
             client_dynamo: aws_sdk_dynamodb::Client::new(conf.aws_config()),
-            client_kms: aws_sdk_kms::Client::new(conf.aws_config()),
-            kms_key_id: conf.env_vars().kms_key_id().to_owned(),
+            //client_kms: aws_sdk_kms::Client::new(conf.aws_config()),
+            //kms_key_id: conf.env_vars().kms_key_id().to_owned(),
         }
     }
-    async fn encrypt(&self, info_to_be_encrypted: String) -> ResultE<String> {
-        use base64::{engine::general_purpose, Engine as _};
-        let blob = Blob::new(info_to_be_encrypted.as_bytes());
-        let resp;
-        let resp_op = self
-            .client_kms
-            .encrypt()
-            .key_id(self.kms_key_id.clone())
-            .plaintext(blob)
-            .send()
-            .await;
-        match resp_op {
-            Err(e) => {
-                panic!("{}", e)
-            }
-            Ok(value) => resp = value,
-        }
-
-        let blob = resp.ciphertext_blob.unwrap();
-        let bytes = blob.as_ref();
-
-        let value = general_purpose::STANDARD.encode(bytes);
-
-        Ok(value)
-    }
-    async fn _decrypt(&self, info_encrypted_b64: String) -> ResultE<String> {
-        use base64::{engine::general_purpose, Engine as _};
-
-        let value = general_purpose::STANDARD
-            .decode(info_encrypted_b64)
-            .unwrap();
-
-        let data = aws_sdk_kms::primitives::Blob::new(value);
-
-        let resp = self
-            .client_kms
-            .decrypt()
-            .key_id(self.kms_key_id.to_owned())
-            .ciphertext_blob(data.to_owned())
-            .send()
-            .await?;
-
-        let inner = resp.plaintext.unwrap();
-        let bytes = inner.as_ref();
-
-        let secret_text_raw = String::from_utf8(bytes.to_vec())?;
-
-        Ok(secret_text_raw)
-    }
+    
+    
 }
 
 #[async_trait]
@@ -131,7 +81,7 @@ impl KeyPairRepository for KeyPairRepo {
         }
     }
 
-    async fn get_by_id(&self, user_id: &String) -> ResultE<KeyPair> {
+    async fn get_by_id(&self, user_id: &String) -> ResultE<Option<KeyPair>> {
         let _id_av = AttributeValue::S(user_id.to_string());
         let request = self
             .client_dynamo
@@ -140,8 +90,7 @@ impl KeyPairRepository for KeyPairRepo {
             .key(KEYPAIRS_USER_ID_FIELD_PK, _id_av.clone());
 
         let results = request.send().await;
-        match results {
-            Err(e) => {
+        if let Err(e) = results {
                 let mssag = format!(
                     "Error at [{}] - {} ",
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
@@ -149,66 +98,19 @@ impl KeyPairRepository for KeyPairRepo {
                 );
                 tracing::error!(mssag);
                 return Err(KeyPairDynamoDBError(e.to_string()).into());
-            }
-            Ok(_) => {}
         }
         match results.unwrap().item {
-            None => Err(KeyPairNoExistsError("id doesn't exist".to_string()).into()),
+            None => Ok(None), //Err(KeyPairNoExistsError("id doesn't exist".to_string()).into()),
             Some(aux) => {
                 let mut keypair = KeyPair::new();
 
                 mapping_from_doc_to_keypair(&aux, &mut keypair);
 
-                Ok(keypair)
+                Ok(Some(keypair))
             }
         }
     }
-
-    async fn get_or_create(&self, user_id: &String) -> ResultE<KeyPair> {
-        let get_op = self.get_by_id(user_id).await;
-        match get_op {
-            Ok(value) => {
-                return Ok(value.clone());
-            }
-            Err(e) => {
-                if let Some(_) = e.downcast_ref::<KeyPairDynamoDBError>() {
-                    return Err(e);
-                } else if let Some(_) = e.downcast_ref::<KeyPairNoExistsError>() {
-                    let secp = secp256k1::Secp256k1::new();
-
-                    //let mut rng = rand_hc::Hc128Rng::from_entropy();
-                    let mut rng = rngs::StdRng::seed_from_u64(rand::random::<u64>());
-
-                    let contract_owner_key_pair = secp.generate_keypair(&mut rng);
-                    let contract_owner_public = contract_owner_key_pair.1.serialize();
-                    let hash = keccak256(&contract_owner_public[1..32]);
-                    let user_address = format!("0x{}", hex::encode(&hash[12..32]));
-                    //let user_private = contract_owner_key_pair.0;
-                    let user_private_key =
-                        format!("{}", contract_owner_key_pair.0.display_secret());
-                    let user_public_key = format!("{}", contract_owner_key_pair.1);
-
-                    let user_private_key_cyphered = self.encrypt(user_private_key).await.unwrap();
-                    let user_public_key_cyphered = self.encrypt(user_public_key).await.unwrap();
-
-                    let mut user_key = KeyPair::new();
-                    user_key.set_user_id(user_id);
-                    user_key.set_address(&user_address);
-                    user_key.set_private_key(&user_private_key_cyphered);
-                    user_key.set_public_key(&user_public_key_cyphered);
-
-                    self.add(&user_key).await?;
-
-                    return Ok(user_key);
-                } else {
-                    return Err(KeyPairDynamoDBError(
-                        "unexpected issue creating user address".to_string(),
-                    )
-                    .into());
-                }
-            }
-        }
-    }
+    
 }
 
 fn iso8601(st: &DateTime<Utc>) -> String {

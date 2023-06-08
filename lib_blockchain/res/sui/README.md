@@ -21,7 +21,7 @@ sui client addresses
 Adding sui coins to one of your addresses:
 
 ```bash
-curl --location --request POST 'http://127.0.0.1:9123/gas' \
+curl  --location --request POST 'http://127.0.0.1:9123/gas' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "FixedAmountRequest": {

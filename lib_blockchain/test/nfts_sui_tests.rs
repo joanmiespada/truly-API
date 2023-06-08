@@ -29,7 +29,9 @@ use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::services::owners::OwnerService;
 
+use serde::{Serialize, Deserialize};
 use spectral::{assert_that, result::ResultAssertions};
+use sui_keys::keystore::{Keystore, InMemKeystore};
 use std::{env, str::FromStr};
 use testcontainers::*;
 use url::Url;
@@ -145,6 +147,63 @@ async fn create_contract_and_mint_nft_test_sync(
     //create sui node
     //faucet/airdrop user's address
 
+    //let test_mnemonic: &str = "Masked Velvet Ethical Merlin Jabbed Selfish Unready Needles Provocatively Merlin Visited Everlasting Mulder";
+
+    let keystore = Keystore::from(InMemKeystore::new_insecure_for_tests(0)); //   FileBasedKeystore::new(&keystore_path).unwrap());
+    
+    let contract_owner_address = SuiBlockChain::keystore_to_address(&keystore)?;
+    /* 
+    let pubkey = keystore.keys()[0].clone();
+ 
+    let mut hasher = Blake2b256::new();  //  DefaultHash::default();
+    hasher.update([pubkey.flag()]);
+    hasher.update(pubkey);
+    let g_arr = hasher.finalize();
+    let mut res = [0u8; SUI_ADDRESS_LENGTH];
+    res.copy_from_slice(&AsRef::<[u8]>::as_ref(&g_arr)[..SUI_ADDRESS_LENGTH]);
+    let contract_owner_address = SuiAddress::try_from(res.as_slice())?;
+    let contract_owner_address = contract_owner_address.to_string();
+*/
+    
+    #[derive(Serialize, Debug)]
+    struct FixedAmountRequest{
+        pub recipient: String
+    }
+    #[derive(Deserialize, Debug)]
+    struct Item{
+        pub amount: String,
+        pub id:String,
+        #[allow(non_snake_case)]
+        pub transferTxDigest:String
+    }
+    #[derive(Deserialize, Debug)]
+    struct ResultFixedAmountRequest{
+        #[allow(non_snake_case)]
+        pub transferredGasObjects: Vec<Item> 
+    }
+
+
+    let aux = FixedAmountRequest { recipient: contract_owner_address.to_string()};
+    //let serialized = serde_json::to_string(&aux).unwrap();
+
+
+    //add coins
+    let client = reqwest::Client::new();
+    let resp = client.post("http://127.0.0.1:9123")
+        .json(&aux)
+        .send()
+        .await?
+        .json::<ResultFixedAmountRequest>()
+        .await?;
+
+    println!("{:#?}", resp);
+
+    let coin_address = resp.transferredGasObjects[0].id.clone();
+
+    let contract_owner_keystore: Vec<u8> = bincode::serialize(&keystore).unwrap();    
+    let contract_owner_secret_cyphered= String::from_utf8(contract_owner_keystore).expect("Found invalid UTF-8");
+
+    //let addrs = keystore.import_from_mnemonic(&test_mnemonic,SignatureScheme::ED25519, None ).unwrap(); 
 
     //Addresses
 
@@ -183,7 +242,7 @@ async fn create_contract_and_mint_nft_test_sync(
 
     let contract_address = "0x1bd04fa3aaaff0c5ee1b5917517a618e583778790c561ae74fd50be85913b766".to_string();
 
-    let coin_address: String = "0x1f95b0f6692e4b9909fa3e65b45c300f0302e082e2030c624f2a65b2a24af230".to_string();
+    //let coin_address: String = "0x1f95b0f6692e4b9909fa3e65b45c300f0302e082e2030c624f2a65b2a24af230".to_string();
     //    deploy_contract_locally(url.as_str(), contract_owner_address.clone()).await?;
     //let contract_address = deploy_contract_ethers(url.as_str(), &contract_owner_wallet).await?;
 
@@ -207,8 +266,8 @@ async fn create_contract_and_mint_nft_test_sync(
         Utc::now(),
         blochain_id.to_owned(),
         Some(contract_address),
-        None, //Some(contract_owner_address),
-        None, //Some(contract_owner_secret_cyphered),
+        Some(contract_owner_address),
+        Some(contract_owner_secret_cyphered),
         Some(coin_address),
         Some("no-details".to_string()),
         ContractStatus::Enabled,
@@ -235,8 +294,8 @@ async fn create_contract_and_mint_nft_test_sync(
     );
 
 
-    as1.set_video_licensing_status(VideoLicensingStatus::AlreadyLicensed);
-    as1.set_counter(&Some(1));
+    as1.set_video_licensing_status(VideoLicensingStatus::AlreadyLicensed); // to be deleted
+    as1.set_counter(&Some(1)); // to be deleted
     let update_op = asset_service.update_full(&as1).await;
     assert_that!(&update_op).is_ok();
 

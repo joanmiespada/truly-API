@@ -6,14 +6,14 @@ use lib_config::config::Config;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::blockchains::chain::NFTsRepository;
 use crate::errors::nft::{
-    TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError, TokenNotSuccessfullyMintedPreviously,
+    TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError,
+    TokenNotSuccessfullyMintedPreviously,
 };
 use crate::models::block_tx::BlockchainTx;
-use crate::blockchains::chain::NFTsRepository;
 use crate::repositories::keypairs::{KeyPairRepo, KeyPairRepository};
-use lib_licenses::errors::video::VideoNotYetLicensed;
-use lib_licenses::models::asset::{Asset, MintingStatus, VideoLicensingStatus};
+use lib_licenses::models::asset::{Asset, MintingStatus};
 use lib_licenses::services::assets::{AssetManipulation, AssetService};
 use lib_licenses::services::owners::{OwnerManipulation, OwnerService};
 
@@ -96,9 +96,10 @@ impl NFTsManipulation for NFTsService {
             .into());
         }
 
-        if *asset.video_licensing_status() != VideoLicensingStatus::AlreadyLicensed {
-            return Err(VideoNotYetLicensed {}.into());
-        }
+        //Remove this restriction to allow minting hashes
+        //if *asset.video_licensing_status() != VideoLicensingStatus::AlreadyLicensed {
+        //    return Err(VideoNotYetLicensed {}.into());
+        //}
 
         //check ownership between user and asset
         self.owner_service
@@ -121,7 +122,21 @@ impl NFTsManipulation for NFTsService {
             .prechecks_before_minting(asset_id, user_id, price)
             .await?;
 
-        let user_wallet_address = self.keys_repo.get_or_create(user_id).await?;
+        let user_wallet_address;
+
+        let user_wallet_address_op = self.keys_repo.get_by_id(user_id).await?;
+        match user_wallet_address_op {
+            None => {
+                let aux = self.blockchain.create_keypair(user_id).await?;
+                user_wallet_address = aux.0;
+                if aux.1 { 
+                    self.keys_repo.add(&user_wallet_address).await?;
+                }
+            }
+            Some(aux) => {
+                user_wallet_address = aux;
+            }
+        };
 
         self.asset_service
             .mint_status(asset_id, &None, MintingStatus::Started)
@@ -131,7 +146,14 @@ impl NFTsManipulation for NFTsService {
         let hash_algo = asset.hash_algorithm().to_owned().unwrap();
         let transaction_op = self
             .blockchain
-            .add(asset_id, &user_wallet_address, &hash_file, &hash_algo , price, &counter)
+            .add(
+                asset_id,
+                &user_wallet_address,
+                &hash_file,
+                &hash_algo,
+                price,
+                &counter,
+            )
             .await;
 
         match transaction_op {
@@ -192,14 +214,19 @@ impl NFTsManipulation for NFTsService {
 
     #[tracing::instrument()]
     async fn get(&self, asset_id: &Uuid) -> ResultE<NTFContentInfo> {
-
         let txs = self.tx_service.get_by_asset_id(asset_id).await?;
 
-        let successfully = txs.into_iter().filter(|x| x.tx_error().as_deref() == None ).collect::<Vec<BlockchainTx>>(); 
-        let successfully =  successfully.first();
+        let successfully = txs
+            .into_iter()
+            .filter(|x| x.tx_error().as_deref() == None)
+            .collect::<Vec<BlockchainTx>>();
+        let successfully = successfully.first();
 
         if successfully == None {
-            return Err( TokenNotSuccessfullyMintedPreviously{ 0: asset_id.clone()}.into());
+            return Err(TokenNotSuccessfullyMintedPreviously {
+                0: asset_id.clone(),
+            }
+            .into());
         }
         let successfully = successfully.unwrap();
         let token = successfully.tx().clone().unwrap();
@@ -208,7 +235,7 @@ impl NFTsManipulation for NFTsService {
         let state;
         if let Some(sts) = aux.state {
             state = NTFState::from_str(&sts.to_string()).unwrap()
-        }else{
+        } else {
             state = NTFState::Active;
         }
         let res = NTFContentInfo {

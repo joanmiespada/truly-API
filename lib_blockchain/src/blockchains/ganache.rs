@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use chrono::{DateTime, NaiveDateTime, Utc};
-use lib_config::{config::Config, environment::DEV_ENV, infra::restore_secret_key};
+use lib_config::{config::Config, environment::DEV_ENV, infra::{restore_secret_key, store_secret_key}};
 use log::debug;
 use secp256k1::SecretKey;
 use std::str::FromStr;
@@ -29,7 +29,7 @@ const CONTRACT_METHOD_GET_CONTENT_BY_TOKEN: &'static str = "getContentByToken";
 
 use lib_licenses::errors::asset::AssetBlockachainError;
 
-use super::chain::{CloneBoxNFTsRepository, ContentState, ContractContentInfo, NFTsRepository};
+use super::chain::{ContentState, ContractContentInfo, NFTsRepository};
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
@@ -75,6 +75,7 @@ impl GanacheBlockChain {
             H160::from_str(contract.address().clone().unwrap().as_str()).unwrap();
         let contract_owner_address =
             H160::from_str(contract.owner_address().clone().unwrap().as_str()).unwrap();
+
         Ok(GanacheBlockChain {
             url: blockchain_url.to_owned(),
             contract_address,       //contract_address_position,
@@ -118,7 +119,7 @@ impl NFTsRepository for GanacheBlockChain {
         }
 
         let token = asset_id.to_string();
-        let price = U256::from_dec_str(( prc.unwrap()  ).to_string().as_str()).unwrap();
+        let price = U256::from_dec_str((prc.unwrap()).to_string().as_str()).unwrap();
         //let counter = U256::from_dec_str((*cntr).to_string().as_str()).unwrap();
 
         let contract_op = Contract::from_json(
@@ -186,6 +187,7 @@ impl NFTsRepository for GanacheBlockChain {
 
         let contract_owner_private_key;
         //let contract_owner_private_key_op = self.decrypt_contract_owner_secret_key().await;
+        
         let contract_owner_private_key_op = SecretKey::from_str(
             restore_secret_key(
                 self.contract_owner_secret.to_owned(),
@@ -280,15 +282,47 @@ impl NFTsRepository for GanacheBlockChain {
             None,
         );
         let call_contract_op: Result<ContractContentInfo, web3::contract::Error> = caller.await;
-        if let Err(e) =call_contract_op {
+        if let Err(e) = call_contract_op {
             return Err(AssetBlockachainError(e.to_string()).into());
         }
         let mut cnt = call_contract_op.ok().unwrap();
         cnt.token = Some(asset_id.to_string());
 
         Ok(cnt)
-
     }
+
+    async fn create_keypair(&self, user_id: &String) -> ResultE<(KeyPair,bool)> {
+
+        use secp256k1::rand::{rngs, SeedableRng};
+        use web3::signing::keccak256;
+
+        let secp = secp256k1::Secp256k1::new();
+
+        //let mut rng = rand_hc::Hc128Rng::from_entropy();
+        let mut rng = rngs::StdRng::seed_from_u64(rand::random::<u64>());
+
+        let contract_owner_key_pair = secp.generate_keypair(&mut rng);
+        let contract_owner_public = contract_owner_key_pair.1.serialize();
+        let hash = keccak256(&contract_owner_public[1..32]);
+        let user_address = format!("0x{}", hex::encode(&hash[12..32]));
+        //let user_private = contract_owner_key_pair.0;
+        let user_private_key = format!("{}", contract_owner_key_pair.0.display_secret());
+        let user_public_key = format!("{}", contract_owner_key_pair.1);
+
+        let user_private_key_cyphered = store_secret_key(&user_private_key, &self.kms_key_id, &self.config).await?;
+        let user_public_key_cyphered = store_secret_key(&user_public_key, &self.kms_key_id, &self.config).await?;
+
+        let mut user_key = KeyPair::new();
+        user_key.set_user_id(user_id);
+        user_key.set_address(&user_address);
+        user_key.set_private_key(&user_private_key_cyphered);
+        user_key.set_public_key(&user_public_key_cyphered);
+
+        Ok((user_key,true))
+    }
+
+    
+    
 }
 
 fn _wei_to_eth(wei_val: U256) -> f64 {
@@ -356,9 +390,9 @@ impl Detokenize for ContractContentInfo {
             hashFile,
             hashAlgo,
             uri: Some(uri),
-            price:Some(price),
-            state:Some(state),
-            token:None,
+            price: Some(price),
+            state: Some(state),
+            token: None,
         })
     }
 }
