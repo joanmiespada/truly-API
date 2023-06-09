@@ -1,6 +1,6 @@
 use async_trait::async_trait;
-use base64::Engine;
 use base64::engine::general_purpose;
+use base64::Engine;
 use chrono::Utc;
 use lib_config::infra::restore_secret_key;
 use lib_config::{config::Config, environment::DEV_ENV};
@@ -27,10 +27,7 @@ use super::chain::{ContractContentInfo, NFTsRepository};
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
 use shared_crypto::intent::Intent;
-use sui_json_rpc_types::{
-    SuiObjectDataOptions, SuiParsedData,
-    SuiTransactionBlockResponseOptions,
-};
+use sui_json_rpc_types::{SuiObjectDataOptions, SuiParsedData, SuiTransactionBlockResponseOptions};
 use sui_keys::keystore::{AccountKeystore, Keystore};
 use sui_sdk::{
     json::SuiJsonValue,
@@ -45,11 +42,10 @@ use sui_sdk::{
 };
 use sui_types::quorum_driver_types::ExecuteTransactionRequestType;
 
-use sui_types::base_types::{SUI_ADDRESS_LENGTH};
+use sui_types::base_types::SUI_ADDRESS_LENGTH;
 
-use fastcrypto::hash::{ HashFunction, Blake2b256 };
-
-
+use fastcrypto::hash::{Blake2b256, HashFunction};
+use zeroize::Zeroize;
 
 #[derive(Clone, Debug)]
 pub struct SuiBlockChain {
@@ -106,9 +102,9 @@ impl SuiBlockChain {
         })
     }
 
-    pub fn keystore_to_address(keystore: & mut Keystore) -> ResultE<String> {
-        let (address, _phrase, _scheme) =  keystore
-            .generate_and_add_new_key(sui_types::crypto::SignatureScheme::ED25519, None , None)
+    pub fn keystore_to_address(keystore: &mut Keystore) -> ResultE<String> {
+        let (address, _phrase, _scheme) = keystore
+            .generate_and_add_new_key(sui_types::crypto::SignatureScheme::ED25519, None, None)
             .unwrap();
         /*let pubkey = keystore.keys()[0].clone();
 
@@ -143,8 +139,8 @@ impl NFTsRepository for SuiBlockChain {
         _: &KeyPair, //unused at SUI
         hash_file: &String,
         hash_algorithm: &String,
-        _: &Option<u64>,//unused at SUI
-        _: &u64,//unused at SUI
+        _: &Option<u64>, //unused at SUI
+        _: &u64,         //unused at SUI
     ) -> ResultE<BlockchainTx> {
         let sui = SuiClientBuilder::default()
             .build(self.url.as_str())
@@ -197,25 +193,35 @@ impl NFTsRepository for SuiBlockChain {
         // Sign transaction
         //let keystore = Keystore::from(FileBasedKeystore::new(&keystore_path)?);
         let kms_key_id = self.config.env_vars().kms_key_id().clone();
+        let transaction_response_op;
+        {
+            let mut encoded_secret_cyphered = self.contract_owner_secret.clone();
+            let mut encoded_secret_base64 =
+                restore_secret_key(encoded_secret_cyphered.clone(), &kms_key_id, &self.config)
+                    .await?;
+            let mut contract_owner_secret =
+                general_purpose::STANDARD_NO_PAD.decode(&encoded_secret_base64)?;
 
-       let encoded_secret_cyphered= self.contract_owner_secret.clone();
-       let encoded_secret_base64= restore_secret_key(encoded_secret_cyphered,&kms_key_id,&self.config).await?;
-       let contract_owner_secret= general_purpose::STANDARD_NO_PAD.decode(&encoded_secret_base64)?;
+            let keystore: Keystore = bincode::deserialize(&contract_owner_secret[..]).unwrap();
 
-        let keystore: Keystore = bincode::deserialize(&contract_owner_secret[..]).unwrap();
+            let signature =
+                keystore.sign_secure(&my_address, &transfer_tx, Intent::sui_transaction())?;
 
-        let signature =
-            keystore.sign_secure(&my_address, &transfer_tx, Intent::sui_transaction())?;
-
-        let transaction_response_op = sui
-            .quorum_driver_api()
-            .execute_transaction_block(
-                Transaction::from_data(transfer_tx, Intent::sui_transaction(), vec![signature])
-                    .verify()?,
-                SuiTransactionBlockResponseOptions::full_content(),
-                Some(ExecuteTransactionRequestType::WaitForLocalExecution),
-            )
-            .await;
+            transaction_response_op = sui
+                .quorum_driver_api()
+                .execute_transaction_block(
+                    Transaction::from_data(transfer_tx, Intent::sui_transaction(), vec![signature])
+                        .verify()?,
+                    SuiTransactionBlockResponseOptions::full_content(),
+                    Some(ExecuteTransactionRequestType::WaitForLocalExecution),
+                )
+                .await;
+            //clear memory with sensible data
+            drop(keystore);
+            contract_owner_secret.zeroize();
+            encoded_secret_base64.zeroize();
+            encoded_secret_cyphered.zeroize();
+        }
         if let Err(err) = transaction_response_op {
             error!("{}", err);
             //return Err(err)?;

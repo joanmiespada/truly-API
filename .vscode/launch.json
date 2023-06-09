@@ -101,15 +101,16 @@
                     "--no-run",
                     "--lib",
                     "--package=lib_blockchain",
+                    //"create_contract_and_mint_nft_test_sync",
                     //"--",
                     //"--nocapture"
                 ],
                 "filter": {
-                    "name": "create_contract_and_mint_nft_test_sync",
-                    "kind": "test"
+                    "name": "lib_blockchain",
+                    "kind": "lib"
                 }
             },
-            "args": [ ],
+            "args": [ "create_contract_and_mint_nft_test_sync"],
             "cwd": "${workspaceFolder}"
         },
         
