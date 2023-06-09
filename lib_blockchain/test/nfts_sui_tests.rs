@@ -143,11 +143,6 @@ async fn create_contract_and_mint_nft_test_sync(
         .unwrap();
 
     //Create contract owner account
-    //create sui node
-    //faucet/airdrop user's address
-
-    //let test_mnemonic: &str = "Masked Velvet Ethical Merlin Jabbed Selfish Unready Needles Provocatively Merlin Visited Everlasting Mulder";
-
     let mut keystore = Keystore::from(InMemKeystore::new_insecure_for_tests(0)); //   FileBasedKeystore::new(&keystore_path).unwrap());
 
     let contract_owner_address = SuiBlockChain::keystore_to_address(&mut keystore)?;
@@ -157,51 +152,17 @@ async fn create_contract_and_mint_nft_test_sync(
     let contract_owner_keystore: Vec<u8> = bincode::serialize(&keystore).unwrap();
     let contract_owner_secret_base64 = general_purpose::STANDARD_NO_PAD.encode(&contract_owner_keystore);
     let contract_owner_secret_cyphered = store_secret_key( &contract_owner_secret_base64 , &new_key_id, &config ).await?;
-      //String::from_utf8(contract_owner_keystore).expect("Found invalid UTF-8");
-
-    //let addrs = keystore.import_from_mnemonic(&test_mnemonic,SignatureScheme::ED25519, None ).unwrap();
-
-    //Addresses
-
-    // let flag_ecdsa = b"0";
-    // let str_public_key= "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBISvQH+5yRb59RnEhZO39LBv08sHFEiwgussd/L5WtbM/H4BuIk95rEHGX03PmNNfYGdMa8VlEn2CcHZLoPI1xQ=";
-    // let str_private_key = "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAaAAAABNlY2RzYS1zaGEyLW5pc3RwMjU2AAAACG5pc3RwMjU2AAAAQQSEr0B/uckW+fUZxIWTt/Swb9PLBxRIsILrLHfy+VrWzPx+AbiJPeaxBxl9Nz5jTX2BnTGvFZRJ9gnB2S6DyNcUAAAAyLYREmi2ERJoAAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBISvQH+5yRb59RnEhZO39LBv08sHFEiwgussd/L5WtbM/H4BuIk95rEHGX03PmNNfYGdMa8VlEn2CcHZLoPI1xQAAAAgOgD9WqNAE7LUfOj0v9zZ/8OuHzfS8cgcLi39ptzFr0sAAAAtam9hbm1pcXVlbGVzcGFkYXNhYmF0QEpvYW5zLU1hY0Jvb2stUHJvLmxvY2FsAQID";
-
-    //let public_key: PublicKey = PublicKey::from_bytes(str_public_key.as_bytes())?;
-    //let secret_key: SecretKey = SecretKey::from_bytes(str_private_key.as_bytes())?;
-
-    // let mut address_array= flag_ecdsa.to_vec();
-    // address_array.extend( str_public_key.as_bytes().to_vec() );
-    // let mut hasher = Blake2s256::new();
-    // hasher.update( address_array );
-    // let res = hasher.finalize();
-
-    // let contract_owner_secret = str_private_key.clone();
-    // let contract_owner_address = format!("{:?}",res);
-    //let public_key = keypair.public_key();
-    //let mut rng = ChaCha20Rng::from_entropy();
-    //let keypair: Keypair = Keypair::generate(&mut rng);
-
-    //let contract_owner_secret: &str = std::str::from_utf8(&keypair.secret.to_bytes()).expect("uft8 compatible");
-    //"4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // example fake secret key
-    //let key_id = config.env_vars().kms_key_id();
-    //let contract_owner_secret_cyphered =
-    //    store_secret_key(contract_owner_secret, key_id, &config).await?;
-    //let contract_owner_address = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1".to_string(); //address based on the previous fake secret key
-
-    //create blockchain ganache object and contract
+     //create blockchain object and contract
     let block_chains_repo = BlockchainRepo::new(&config.clone());
     let contracts_repo = ContractRepo::new(&config.clone());
 
+    // we need to bootstrap sui blockchain and sui faucet manually
     //create contract and deploy to blockchain
-    let url = "http://127.0.0.1:9000".to_string(); //ganache.endpoint();
+    let url = "http://127.0.0.1:9000".to_string();
 
+    // it needs to be taken from the manual contrat deployment
     let contract_address =
-        "0x2b577ce747c26cc1995e1e7cb98eb136bc1113edf0ab8e2d7a0e2faa0ca83395".to_string();
-
-    //let coin_address: String = "0x1f95b0f6692e4b9909fa3e65b45c300f0302e082e2030c624f2a65b2a24af230".to_string();
-    //    deploy_contract_locally(url.as_str(), contract_owner_address.clone()).await?;
-    //let contract_address = deploy_contract_ethers(url.as_str(), &contract_owner_wallet).await?;
+        "0x5dd2881df4e9f44495a4d44dc6d24ec486c7f2c13b0701b68462b34f79530f57".to_string();
 
     let confirmations = 0;
     let blochain_id = "sui".to_string();
@@ -233,9 +194,6 @@ async fn create_contract_and_mint_nft_test_sync(
     );
     contracts_repo.add(&contract_entity).await?;
 
-    // new_configuration.set_blockchain_url(url.clone());
-    // new_configuration.set_contract_address(contract_address);
-    // new_configuration.set_contract_owner_address(contract_owner_address.clone());
     new_configuration.set_contract_id(contact_id);
     config.set_env_vars(&new_configuration);
 
@@ -299,9 +257,6 @@ async fn create_contract_and_mint_nft_test_sync(
 
 async fn airdrop(contract_owner_address :String ) 
 -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    //let mut keystore = Keystore::from(InMemKeystore::new_insecure_for_tests(0)); //   FileBasedKeystore::new(&keystore_path).unwrap());
-
-    //let contract_owner_address = SuiBlockChain::keystore_to_address(&mut keystore)?;
 
     #[derive(Serialize, Debug)]
     struct FixedAmountRequest {
@@ -334,14 +289,13 @@ async fn airdrop(contract_owner_address :String )
 
     let client = reqwest::Client::new();
     let aux_aux= serde_json::to_string(&aux).unwrap();
-    println!("{:#?}", aux_aux);
+    //println!("{:#?}", aux_aux);
     let req = client
         .post("http://127.0.0.1:9123/gas")
         .header("Content-Type", "application/json")
         .body(aux_aux);
-        //.build();
 
-    println!("{:?}",req);
+    //println!("{:?}",req);
     let resp_op= req
         .send()
         .await;
@@ -350,14 +304,14 @@ async fn airdrop(contract_owner_address :String )
     }
     let resp = resp_op.ok().unwrap();
 
-    println!("{:#?}", resp);
+    //println!("{:#?}", resp);
 
     let aux = resp
         .json::<ResultFixedAmountRequest>()
         //.text()
         .await?;
 
-    println!("{:#?}", aux.clone());
+    //println!("{:#?}", aux.clone());
 
     let coin_address = aux.transferredGasObjects[0].id.clone();
 

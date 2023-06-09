@@ -140,23 +140,16 @@ impl NFTsRepository for SuiBlockChain {
     async fn add(
         &self,
         asset_id: &Uuid,
-        _user_key: &KeyPair,
+        _: &KeyPair, //unused at SUI
         hash_file: &String,
         hash_algorithm: &String,
-        _prc: &Option<u64>,
-        _cntr: &u64,
+        _: &Option<u64>,//unused at SUI
+        _: &u64,//unused at SUI
     ) -> ResultE<BlockchainTx> {
         let sui = SuiClientBuilder::default()
             .build(self.url.as_str())
             .await
             .unwrap();
-
-        // let keystore_path = match dirs::home_dir() {
-        //     Some(v) => v.join(".sui").join("sui_config").join("sui.keystore"),
-        //     None => panic!("Cannot obtain home directory path"),
-        // };
-
-        //let keystore = Keystore::File(FileBasedKeystore::new(&keystore_path)?);
 
         let my_address = SuiAddress::from_str(
             //"0x042d9857b31cdec48b00332fec4a7adf8bf8e2a5a1561ef7778ce1abf7b91f30",
