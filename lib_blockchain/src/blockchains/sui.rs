@@ -34,17 +34,12 @@ use sui_sdk::{
     rpc_types::SuiTransactionBlockEffectsAPI,
     types::{
         base_types::{ObjectID, SuiAddress},
-        //id::UID,
         transaction::Transaction,
     },
-    //SuiClient,
     SuiClientBuilder,
 };
 use sui_types::quorum_driver_types::ExecuteTransactionRequestType;
 
-use sui_types::base_types::SUI_ADDRESS_LENGTH;
-
-use fastcrypto::hash::{Blake2b256, HashFunction};
 use zeroize::Zeroize;
 
 #[derive(Clone, Debug)]
@@ -54,10 +49,7 @@ pub struct SuiBlockChain {
     contract_owner_address: String,
     contract_owner_secret: String,
     contract_owner_cash: String,
-    //kms_key_id: String,
     config: Config,
-    //aws: SdkConfig,
-    //blockhain_node_confirmations: u16,
     contract_id: u16,
 }
 
@@ -88,34 +80,20 @@ impl SuiBlockChain {
 
         Ok(SuiBlockChain {
             url: blockchain_url.to_owned(),
-            //kms_key_id: conf.env_vars().kms_key_id().to_owned(),
             contract_address: contract.address().clone().unwrap().to_owned(),
             contract_owner_address: contract.owner_address().clone().unwrap().to_owned(),
             contract_owner_secret: contract.owner_secret().clone().unwrap().to_owned(),
             contract_owner_cash: contract.owner_cash().clone().unwrap().to_owned(),
-            //kms_key_id: conf.env_vars().kms_key_id().to_owned(),
             config: conf.to_owned(),
-            //aws: conf.aws_config().to_owned(),
-            //config: conf.clone(),
-            //blockhain_node_confirmations: blockchain.confirmations().to_owned(), //conf.env_vars().blockchain_confirmations().to_owned(),
-            contract_id: aux.to_owned(), //contract.to_owned(),
+            contract_id: aux.to_owned(),
         })
     }
 
-    pub fn keystore_to_address(keystore: &mut Keystore) -> ResultE<String> {
+    pub fn keystore_add_address(keystore: &mut Keystore) -> ResultE<String> {
         let (address, _phrase, _scheme) = keystore
             .generate_and_add_new_key(sui_types::crypto::SignatureScheme::ED25519, None, None)
             .unwrap();
-        /*let pubkey = keystore.keys()[0].clone();
-
-        let mut hasher = Blake2b256::new(); //  DefaultHash::default();
-        hasher.update([pubkey.flag()]);
-        hasher.update(pubkey);
-        let g_arr = hasher.finalize();
-        let mut res = [0u8; SUI_ADDRESS_LENGTH];
-        res.copy_from_slice(&AsRef::<[u8]>::as_ref(&g_arr)[..SUI_ADDRESS_LENGTH]);
-        let addr = SuiAddress::try_from(res.as_slice())?;
-        let addr = addr.to_string();*/
+        
         Ok(address.to_string())
     }
 }
@@ -148,16 +126,13 @@ impl NFTsRepository for SuiBlockChain {
             .unwrap();
 
         let my_address = SuiAddress::from_str(
-            //"0x042d9857b31cdec48b00332fec4a7adf8bf8e2a5a1561ef7778ce1abf7b91f30",
             &self.contract_owner_address.as_str(),
         )?;
         let gas_object_id = ObjectID::from_str(
-            //"0x1b06b6b809dffa47c03bcef9d4375ca835c2b2053618150b6f54789e4e2c0163",
             &self.contract_owner_cash.as_str(),
         )?;
 
         let package_object_id = ObjectID::from_str(
-            //"0xdd99302b8971ca07d516bea8b09e560ec1b72cc6c722f5f7b5a9f6c6fb1cff29",
             self.contract_address.as_str(),
         )?;
 
@@ -185,13 +160,11 @@ impl NFTsRepository for SuiBlockChain {
             .await;
         if let Err(err) = transfer_tx_op {
             error!("{}", err);
-            //return Err(err)?;
             return Err(BlockchainTxError { 0: err.to_string() }.into());
         }
         let transfer_tx = transfer_tx_op.ok().unwrap();
 
         // Sign transaction
-        //let keystore = Keystore::from(FileBasedKeystore::new(&keystore_path)?);
         let kms_key_id = self.config.env_vars().kms_key_id().clone();
         let transaction_response_op;
         {
@@ -224,7 +197,6 @@ impl NFTsRepository for SuiBlockChain {
         }
         if let Err(err) = transaction_response_op {
             error!("{}", err);
-            //return Err(err)?;
             return Err(BlockchainTxError { 0: err.to_string() }.into());
         }
         let transaction_response = transaction_response_op.ok().unwrap();
@@ -274,7 +246,6 @@ impl NFTsRepository for SuiBlockChain {
             .unwrap()
             .object_id();
 
-        //tx.transaction.data.gasData.
         let tx_paylaod = BlockchainTx::new(
             asset_id.to_owned(),
             Utc::now(),
@@ -294,7 +265,7 @@ impl NFTsRepository for SuiBlockChain {
         );
         Ok(tx_paylaod)
     }
-
+    //TODO
     async fn get(&self, token: &String) -> ResultE<ContractContentInfo> {
         let sui = SuiClientBuilder::default()
             .build(self.url.as_str())
@@ -312,7 +283,6 @@ impl NFTsRepository for SuiBlockChain {
             .await;
         if let Err(err) = transaction_response_op {
             error!("{}", err);
-            //return Err(err)?;
             return Err(BlockchainTxError { 0: err.to_string() }.into());
         }
         let objects = transaction_response_op.ok().unwrap();
@@ -320,9 +290,9 @@ impl NFTsRepository for SuiBlockChain {
         println!("{:?}", objects.data);
         #[derive(Deserialize, Debug)]
         struct Auxi {
-            pub hash: String,
-            pub algorithm: String,
-            pub truly_id: String,
+            pub _hash: String,
+            pub _algorithm: String,
+            pub _truly_id: String,
         }
         impl<'a> From<&'a SuiParsedData> for Auxi {
             fn from(data: &'a SuiParsedData) -> Self {
@@ -331,9 +301,9 @@ impl NFTsRepository for SuiBlockChain {
                 let _p: Auxi = serde_json::from_str(&_ppp).unwrap();
 
                 Auxi {
-                    hash: "".to_string(),
-                    algorithm: "".to_string(),
-                    truly_id: "".to_string(),
+                    _hash: "".to_string(),
+                    _algorithm: "".to_string(),
+                    _truly_id: "".to_string(),
                 }
             }
         }
@@ -360,32 +330,9 @@ impl NFTsRepository for SuiBlockChain {
     }
 
     //we reuse the same keypair for all users and we don't want to store it (bool = false)
-    async fn create_keypair(&self, user_id: &String) -> ResultE<(KeyPair, bool)> {
-        /*
-                use secp256k1::rand::{rngs, SeedableRng};
-                use web3::signing::keccak256;
-
-                let secp = secp256k1::Secp256k1::new();
-
-                //let mut rng = rand_hc::Hc128Rng::from_entropy();
-                let mut rng = rngs::StdRng::seed_from_u64(rand::random::<u64>());
-
-                let contract_owner_key_pair = secp.generate_keypair(&mut rng);
-                let contract_owner_public = contract_owner_key_pair.1.serialize();
-                let hash = keccak256(&contract_owner_public[1..32]);
-                let user_address = format!("0x{}", hex::encode(&hash[12..32]));
-                //let user_private = contract_owner_key_pair.0;
-                let user_private_key = format!("{}", contract_owner_key_pair.0.display_secret());
-                let user_public_key = format!("{}", contract_owner_key_pair.1);
-
-                let user_private_key_cyphered = store_secret_key(&user_private_key, &self.kms_key_id, &self.config).await?;
-                let user_public_key_cyphered = store_secret_key(&user_public_key, &self.kms_key_id, &self.config).await?;
-        */
-        let mut user_key = KeyPair::new();
-        user_key.set_user_id(user_id);
-        //user_key.set_address(&user_address);
-        //user_key.set_private_key(&user_private_key_cyphered);
-        //user_key.set_public_key(&user_public_key_cyphered);
+    async fn create_keypair(&self, _user_id: &String) -> ResultE<(KeyPair, bool)> {
+        
+        let user_key = KeyPair::new();
 
         Ok((user_key, false))
     }

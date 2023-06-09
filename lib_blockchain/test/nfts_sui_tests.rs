@@ -143,9 +143,9 @@ async fn create_contract_and_mint_nft_test_sync(
         .unwrap();
 
     //Create contract owner account
-    let mut keystore = Keystore::from(InMemKeystore::new_insecure_for_tests(0)); //   FileBasedKeystore::new(&keystore_path).unwrap());
+    let mut keystore = Keystore::from(InMemKeystore::new_insecure_for_tests(0));
 
-    let contract_owner_address = SuiBlockChain::keystore_to_address(&mut keystore)?;
+    let contract_owner_address = SuiBlockChain::keystore_add_address(&mut keystore)?;
 
     let coin_address = airdrop(contract_owner_address.clone()).await?;
 
@@ -260,8 +260,8 @@ async fn airdrop(contract_owner_address :String )
 
     #[derive(Serialize, Debug)]
     struct FixedAmountRequest {
-        #[allow(non_snake_case)]
-        pub FixedAmountRequest: FixedAmountRequestType,
+        #[serde(rename="FixedAmountRequest")]
+        pub fixed_amount_request: FixedAmountRequestType,
     }
     #[derive(Serialize, Debug)]
     struct FixedAmountRequestType {
@@ -270,19 +270,20 @@ async fn airdrop(contract_owner_address :String )
 
     #[derive(Deserialize, Debug, Clone)]
     struct Item {
-        pub amount: u128,
+        #[serde(rename="amount")]
+        pub _amount: u128,
         pub id: String,
-        #[allow(non_snake_case)]
-        pub transferTxDigest: String,
+        #[serde(rename="transferTxDigest")]
+        pub _transfer_tx_digest: String,
     }
     #[derive(Deserialize, Debug, Clone)]
     struct ResultFixedAmountRequest {
-        #[allow(non_snake_case)]
-        pub transferredGasObjects: Vec<Item>,
+        #[serde(rename="transferredGasObjects")]
+        pub transferred_gas_objects: Vec<Item>,
     }
 
     //airdrop my address
-    let aux = FixedAmountRequest {FixedAmountRequest:  FixedAmountRequestType {
+    let aux = FixedAmountRequest {fixed_amount_request:  FixedAmountRequestType {
         recipient: contract_owner_address.to_string(),
     }};
     //let serialized = serde_json::to_string(&aux).unwrap();
@@ -308,12 +309,11 @@ async fn airdrop(contract_owner_address :String )
 
     let aux = resp
         .json::<ResultFixedAmountRequest>()
-        //.text()
         .await?;
 
     //println!("{:#?}", aux.clone());
 
-    let coin_address = aux.transferredGasObjects[0].id.clone();
+    let coin_address = aux.transferred_gas_objects[0].id.clone();
 
     Ok(coin_address)
 }
