@@ -12,13 +12,11 @@ use lib_blockchain::repositories::schema_blockchain::create_schema_blockchains;
 use lib_blockchain::repositories::schema_contract::create_schema_contracts;
 use lib_blockchain::repositories::schema_keypairs::create_schema_keypairs;
 use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
-use lib_blockchain::{
-    services::nfts::{NFTsManipulation, NFTsService },
-};
+use lib_blockchain::services::nfts::{NFTsManipulation, NFTsService};
 use lib_config::config::Config;
 use lib_config::infra::{
     build_local_stack_connection, create_key, create_secret_manager_keys,
-    create_secret_manager_secret_key,
+    create_secret_manager_secret_key, store_secret_key,
 };
 use lib_licenses::models::asset::{MintingStatus, SourceType, VideoLicensingStatus};
 use lib_licenses::repositories::assets::AssetRepo;
@@ -29,12 +27,13 @@ use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::services::owners::OwnerService;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use spectral::{assert_that, result::ResultAssertions};
-use sui_keys::keystore::{Keystore, InMemKeystore};
 use std::{env, str::FromStr};
+use sui_keys::keystore::{InMemKeystore, Keystore};
 use testcontainers::*;
 use url::Url;
+use base64::{Engine as _, engine::general_purpose};
 
 
 #[tokio::test]
@@ -149,61 +148,18 @@ async fn create_contract_and_mint_nft_test_sync(
 
     //let test_mnemonic: &str = "Masked Velvet Ethical Merlin Jabbed Selfish Unready Needles Provocatively Merlin Visited Everlasting Mulder";
 
-    let keystore = Keystore::from(InMemKeystore::new_insecure_for_tests(0)); //   FileBasedKeystore::new(&keystore_path).unwrap());
-    
-    let contract_owner_address = SuiBlockChain::keystore_to_address(&keystore)?;
-    /* 
-    let pubkey = keystore.keys()[0].clone();
- 
-    let mut hasher = Blake2b256::new();  //  DefaultHash::default();
-    hasher.update([pubkey.flag()]);
-    hasher.update(pubkey);
-    let g_arr = hasher.finalize();
-    let mut res = [0u8; SUI_ADDRESS_LENGTH];
-    res.copy_from_slice(&AsRef::<[u8]>::as_ref(&g_arr)[..SUI_ADDRESS_LENGTH]);
-    let contract_owner_address = SuiAddress::try_from(res.as_slice())?;
-    let contract_owner_address = contract_owner_address.to_string();
-*/
-    
-    #[derive(Serialize, Debug)]
-    struct FixedAmountRequest{
-        pub recipient: String
-    }
-    #[derive(Deserialize, Debug)]
-    struct Item{
-        pub amount: String,
-        pub id:String,
-        #[allow(non_snake_case)]
-        pub transferTxDigest:String
-    }
-    #[derive(Deserialize, Debug)]
-    struct ResultFixedAmountRequest{
-        #[allow(non_snake_case)]
-        pub transferredGasObjects: Vec<Item> 
-    }
+    let mut keystore = Keystore::from(InMemKeystore::new_insecure_for_tests(0)); //   FileBasedKeystore::new(&keystore_path).unwrap());
 
+    let contract_owner_address = SuiBlockChain::keystore_to_address(&mut keystore)?;
 
-    let aux = FixedAmountRequest { recipient: contract_owner_address.to_string()};
-    //let serialized = serde_json::to_string(&aux).unwrap();
+    let coin_address = airdrop(contract_owner_address.clone()).await?;
 
+    let contract_owner_keystore: Vec<u8> = bincode::serialize(&keystore).unwrap();
+    let contract_owner_secret_base64 = general_purpose::STANDARD_NO_PAD.encode(&contract_owner_keystore);
+    let contract_owner_secret_cyphered = store_secret_key( &contract_owner_secret_base64 , &new_key_id, &config ).await?;
+      //String::from_utf8(contract_owner_keystore).expect("Found invalid UTF-8");
 
-    //add coins
-    let client = reqwest::Client::new();
-    let resp = client.post("http://127.0.0.1:9123")
-        .json(&aux)
-        .send()
-        .await?
-        .json::<ResultFixedAmountRequest>()
-        .await?;
-
-    println!("{:#?}", resp);
-
-    let coin_address = resp.transferredGasObjects[0].id.clone();
-
-    let contract_owner_keystore: Vec<u8> = bincode::serialize(&keystore).unwrap();    
-    let contract_owner_secret_cyphered= String::from_utf8(contract_owner_keystore).expect("Found invalid UTF-8");
-
-    //let addrs = keystore.import_from_mnemonic(&test_mnemonic,SignatureScheme::ED25519, None ).unwrap(); 
+    //let addrs = keystore.import_from_mnemonic(&test_mnemonic,SignatureScheme::ED25519, None ).unwrap();
 
     //Addresses
 
@@ -211,7 +167,7 @@ async fn create_contract_and_mint_nft_test_sync(
     // let str_public_key= "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBISvQH+5yRb59RnEhZO39LBv08sHFEiwgussd/L5WtbM/H4BuIk95rEHGX03PmNNfYGdMa8VlEn2CcHZLoPI1xQ=";
     // let str_private_key = "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAaAAAABNlY2RzYS1zaGEyLW5pc3RwMjU2AAAACG5pc3RwMjU2AAAAQQSEr0B/uckW+fUZxIWTt/Swb9PLBxRIsILrLHfy+VrWzPx+AbiJPeaxBxl9Nz5jTX2BnTGvFZRJ9gnB2S6DyNcUAAAAyLYREmi2ERJoAAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBISvQH+5yRb59RnEhZO39LBv08sHFEiwgussd/L5WtbM/H4BuIk95rEHGX03PmNNfYGdMa8VlEn2CcHZLoPI1xQAAAAgOgD9WqNAE7LUfOj0v9zZ/8OuHzfS8cgcLi39ptzFr0sAAAAtam9hbm1pcXVlbGVzcGFkYXNhYmF0QEpvYW5zLU1hY0Jvb2stUHJvLmxvY2FsAQID";
 
-    //let public_key: PublicKey = PublicKey::from_bytes(str_public_key.as_bytes())?; 
+    //let public_key: PublicKey = PublicKey::from_bytes(str_public_key.as_bytes())?;
     //let secret_key: SecretKey = SecretKey::from_bytes(str_private_key.as_bytes())?;
 
     // let mut address_array= flag_ecdsa.to_vec();
@@ -227,7 +183,7 @@ async fn create_contract_and_mint_nft_test_sync(
     //let keypair: Keypair = Keypair::generate(&mut rng);
 
     //let contract_owner_secret: &str = std::str::from_utf8(&keypair.secret.to_bytes()).expect("uft8 compatible");
-        //"4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // example fake secret key
+    //"4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // example fake secret key
     //let key_id = config.env_vars().kms_key_id();
     //let contract_owner_secret_cyphered =
     //    store_secret_key(contract_owner_secret, key_id, &config).await?;
@@ -240,7 +196,8 @@ async fn create_contract_and_mint_nft_test_sync(
     //create contract and deploy to blockchain
     let url = "http://127.0.0.1:9000".to_string(); //ganache.endpoint();
 
-    let contract_address = "0x1bd04fa3aaaff0c5ee1b5917517a618e583778790c561ae74fd50be85913b766".to_string();
+    let contract_address =
+        "0x2b577ce747c26cc1995e1e7cb98eb136bc1113edf0ab8e2d7a0e2faa0ca83395".to_string();
 
     //let coin_address: String = "0x1f95b0f6692e4b9909fa3e65b45c300f0302e082e2030c624f2a65b2a24af230".to_string();
     //    deploy_contract_locally(url.as_str(), contract_owner_address.clone()).await?;
@@ -254,7 +211,9 @@ async fn create_contract_and_mint_nft_test_sync(
         Url::parse(url.as_str()).unwrap().clone(),
         "no-api-key".to_string(),
         confirmations,
-        Url::parse("https://suiexplorer.com/?network=local").unwrap().clone(),
+        Url::parse("https://suiexplorer.com/?network=local")
+            .unwrap()
+            .clone(),
         "no-api-key-explorer".to_string(),
     );
     block_chains_repo.add(&blockchain_entity).await?;
@@ -269,7 +228,7 @@ async fn create_contract_and_mint_nft_test_sync(
         Some(contract_owner_address),
         Some(contract_owner_secret_cyphered),
         Some(coin_address),
-        Some("no-details".to_string()),
+        Some("sui blockchain".to_string()),
         ContractStatus::Enabled,
     );
     contracts_repo.add(&contract_entity).await?;
@@ -292,7 +251,6 @@ async fn create_contract_and_mint_nft_test_sync(
         tx_service.clone(),
         config.to_owned(),
     );
-
 
     as1.set_video_licensing_status(VideoLicensingStatus::AlreadyLicensed); // to be deleted
     as1.set_counter(&Some(1)); // to be deleted
@@ -337,4 +295,71 @@ async fn create_contract_and_mint_nft_test_sync(
     assert_eq!(txs.len(), 1);
 
     Ok(())
+}
+
+async fn airdrop(contract_owner_address :String ) 
+-> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    //let mut keystore = Keystore::from(InMemKeystore::new_insecure_for_tests(0)); //   FileBasedKeystore::new(&keystore_path).unwrap());
+
+    //let contract_owner_address = SuiBlockChain::keystore_to_address(&mut keystore)?;
+
+    #[derive(Serialize, Debug)]
+    struct FixedAmountRequest {
+        #[allow(non_snake_case)]
+        pub FixedAmountRequest: FixedAmountRequestType,
+    }
+    #[derive(Serialize, Debug)]
+    struct FixedAmountRequestType {
+        pub recipient: String,
+    }
+
+    #[derive(Deserialize, Debug, Clone)]
+    struct Item {
+        pub amount: u128,
+        pub id: String,
+        #[allow(non_snake_case)]
+        pub transferTxDigest: String,
+    }
+    #[derive(Deserialize, Debug, Clone)]
+    struct ResultFixedAmountRequest {
+        #[allow(non_snake_case)]
+        pub transferredGasObjects: Vec<Item>,
+    }
+
+    //airdrop my address
+    let aux = FixedAmountRequest {FixedAmountRequest:  FixedAmountRequestType {
+        recipient: contract_owner_address.to_string(),
+    }};
+    //let serialized = serde_json::to_string(&aux).unwrap();
+
+    let client = reqwest::Client::new();
+    let aux_aux= serde_json::to_string(&aux).unwrap();
+    println!("{:#?}", aux_aux);
+    let req = client
+        .post("http://127.0.0.1:9123/gas")
+        .header("Content-Type", "application/json")
+        .body(aux_aux);
+        //.build();
+
+    println!("{:?}",req);
+    let resp_op= req
+        .send()
+        .await;
+    if let Err(e) = resp_op {
+        panic!("error calling faucet {}", e);
+    }
+    let resp = resp_op.ok().unwrap();
+
+    println!("{:#?}", resp);
+
+    let aux = resp
+        .json::<ResultFixedAmountRequest>()
+        //.text()
+        .await?;
+
+    println!("{:#?}", aux.clone());
+
+    let coin_address = aux.transferredGasObjects[0].id.clone();
+
+    Ok(coin_address)
 }

@@ -91,6 +91,27 @@
             "args": [ ],
             "cwd": "${workspaceFolder}"
         },
+        {
+            "name": "NFT test", // https://gist.github.com/xanathar/c7c83e6d53b72dd4464f695607012629
+            "type": "lldb",
+            "request": "launch",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=lib_blockchain",
+                    //"--",
+                    //"--nocapture"
+                ],
+                "filter": {
+                    "name": "create_contract_and_mint_nft_test_sync",
+                    "kind": "test"
+                }
+            },
+            "args": [ ],
+            "cwd": "${workspaceFolder}"
+        },
         
     ]
 }

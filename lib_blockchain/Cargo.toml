@@ -70,6 +70,5 @@ testcontainers = { git = "https://github.com/joanmiespada/testcontainers-rs", br
 tokio = { version = "1.28.1", features = ["full"] }
 lib_config = { path = "../lib_config" }
 ethers = "2.0.4"
-base64 = "0.21.2"
 ethers-solc = "2.0.4"
 reqwest= { version = "0.11.18", features = ["json"]}

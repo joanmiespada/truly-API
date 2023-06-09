@@ -1,5 +1,8 @@
 use async_trait::async_trait;
+use base64::Engine;
+use base64::engine::general_purpose;
 use chrono::Utc;
+use lib_config::infra::restore_secret_key;
 use lib_config::{config::Config, environment::DEV_ENV};
 use log::error;
 use serde::{Deserialize, Serialize};
@@ -56,6 +59,7 @@ pub struct SuiBlockChain {
     contract_owner_secret: String,
     contract_owner_cash: String,
     //kms_key_id: String,
+    config: Config,
     //aws: SdkConfig,
     //blockhain_node_confirmations: u16,
     contract_id: u16,
@@ -94,6 +98,7 @@ impl SuiBlockChain {
             contract_owner_secret: contract.owner_secret().clone().unwrap().to_owned(),
             contract_owner_cash: contract.owner_cash().clone().unwrap().to_owned(),
             //kms_key_id: conf.env_vars().kms_key_id().to_owned(),
+            config: conf.to_owned(),
             //aws: conf.aws_config().to_owned(),
             //config: conf.clone(),
             //blockhain_node_confirmations: blockchain.confirmations().to_owned(), //conf.env_vars().blockchain_confirmations().to_owned(),
@@ -101,8 +106,11 @@ impl SuiBlockChain {
         })
     }
 
-    pub fn keystore_to_address(keystore: &Keystore) -> ResultE<String> {
-        let pubkey = keystore.keys()[0].clone();
+    pub fn keystore_to_address(keystore: & mut Keystore) -> ResultE<String> {
+        let (address, _phrase, _scheme) =  keystore
+            .generate_and_add_new_key(sui_types::crypto::SignatureScheme::ED25519, None , None)
+            .unwrap();
+        /*let pubkey = keystore.keys()[0].clone();
 
         let mut hasher = Blake2b256::new(); //  DefaultHash::default();
         hasher.update([pubkey.flag()]);
@@ -111,8 +119,8 @@ impl SuiBlockChain {
         let mut res = [0u8; SUI_ADDRESS_LENGTH];
         res.copy_from_slice(&AsRef::<[u8]>::as_ref(&g_arr)[..SUI_ADDRESS_LENGTH]);
         let addr = SuiAddress::try_from(res.as_slice())?;
-        let addr = addr.to_string();
-        Ok(addr)
+        let addr = addr.to_string();*/
+        Ok(address.to_string())
     }
 }
 
@@ -195,10 +203,13 @@ impl NFTsRepository for SuiBlockChain {
 
         // Sign transaction
         //let keystore = Keystore::from(FileBasedKeystore::new(&keystore_path)?);
+        let kms_key_id = self.config.env_vars().kms_key_id().clone();
 
-       let encoded_secret= self.contract_owner_secret.clone().into_bytes();
+       let encoded_secret_cyphered= self.contract_owner_secret.clone();
+       let encoded_secret_base64= restore_secret_key(encoded_secret_cyphered,&kms_key_id,&self.config).await?;
+       let contract_owner_secret= general_purpose::STANDARD_NO_PAD.decode(&encoded_secret_base64)?;
 
-        let keystore: Keystore = bincode::deserialize(&encoded_secret[..]).unwrap();
+        let keystore: Keystore = bincode::deserialize(&contract_owner_secret[..]).unwrap();
 
         let signature =
             keystore.sign_secure(&my_address, &transfer_tx, Intent::sui_transaction())?;
