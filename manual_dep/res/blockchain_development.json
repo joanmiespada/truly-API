@@ -3,15 +3,15 @@
         "url": "http://localhost:8545",
         "api_key": "",
         "id": "ganache",
-        "confirmations":"0",
-        "explorer": "",
+        "confirmations":0,
+        "explorer": "http://test.com",
         "explorer_api_key": ""
     },
     {
         "url": "http://127.0.0.1:9000",
         "api_key": "",
         "id": "sui",
-        "confirmations": "0",
+        "confirmations": 0,
         "explorer": "https://suiexplorer.com/?network=local",
         "explorer_api_key": ""
     }
