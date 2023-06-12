@@ -34,9 +34,11 @@ ENVIRONMENT=production cargo run -p manual_dep -- --table all --create
 
 In local dev environment (docker localstack)
 
+Deloy contracts manually using blockchain tools and copy addresses in json file
+
 ```bash
-ENVIRONMENT=development cargo run -p manual_dep -- --blockchain  --create
-ENVIRONMENT=development cargo run -p manual_dep -- --contract  --create
+ENVIRONMENT=development cargo run -p manual_dep -- --blockchain <file_json> --create
+ENVIRONMENT=development cargo run -p manual_dep -- --contract  <file_json> --create
 ```
 
 ## Create Secrets

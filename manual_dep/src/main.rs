@@ -1,20 +1,25 @@
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
 use lib_async_ops::sns::create as create_topic;
 use lib_async_ops::sqs::create as create_queue;
+use lib_blockchain::models::blockchain::Blockchain;
+use lib_blockchain::models::contract::{Contract, ContractStatus};
+use lib_blockchain::repositories::blockchain::{BlockchainRepo, BlockchainRepository};
+use lib_blockchain::repositories::contract::{ContractRepo, ContractRepository};
 use lib_blockchain::repositories::{
     schema_block_tx, schema_blockchain, schema_contract, schema_keypairs,
 };
-use lib_blockchain::services::contract::deploy_contract_locally;
 use lib_config::config::Config;
 use lib_config::infra::{
     create_key, create_secret_manager_keys, create_secret_manager_secret_key, store_secret_key,
 };
-use lib_licenses::repositories::{schema_asset, schema_owners, schema_licenses};
+use lib_licenses::repositories::{schema_asset, schema_licenses, schema_owners};
 use lib_users::models::user::User;
 use lib_users::repositories::schema_user;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::{PromoteUser, UserManipulation, UsersService};
 use serde::{Deserialize, Serialize};
+use std::fs::File;
+use std::io::Read;
 use std::{env, process};
 use structopt::StructOpt;
 
@@ -38,6 +43,7 @@ async fn command(
         user_id,
         password,
         contract,
+        blockchain,
         all,
         async_jobs,
     }: Opt,
@@ -148,7 +154,6 @@ async fn command(
                     } else {
                         return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
                     }
-
                 }
                 _ => {
                     return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
@@ -261,12 +266,40 @@ async fn command(
             }
         }
     }
-    match contract {
-        None => {}
-        Some(url) => {
-            let contract_owner_address = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1".to_string(); //account[0] from ganache --deterministic
-            let address = deploy_contract_locally(&url, contract_owner_address).await?;
-            println!("contract address deployed at: {}", address);
+    if let Some(contract_path) = contract {
+
+        #[derive(Deserialize, Debug)]
+        struct ContractImporter {
+            contracts: Vec<Contract>,
+        }
+        let mut file = File::open(contract_path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        let list: ContractImporter = serde_json::from_str(&contents)?;
+
+        let contracts_repo = ContractRepo::new(&config.clone());
+        
+        for mut item in list.contracts{
+            item.set_status(&ContractStatus::Enabled );
+            contracts_repo.add(&item).await?;
+        }
+    }
+
+    if let Some(blockchain_path) = blockchain {
+        
+        #[derive(Deserialize, Debug)]
+        struct BlockchainImporter {
+            blockchains: Vec<Blockchain>,
+        }
+        let mut file = File::open(blockchain_path)?;
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        let list: BlockchainImporter = serde_json::from_str(&contents)?;
+    
+        let block_chains_repo = BlockchainRepo::new(&config.clone());
+
+        for item in list.blockchains {
+            block_chains_repo.add(&item).await?;
         }
     }
 
@@ -333,6 +366,9 @@ pub struct Opt {
 
     #[structopt(long = "contract")]
     pub contract: Option<String>,
+
+    #[structopt(long = "blockchain")]
+    pub blockchain: Option<String>,
 
     #[structopt(long = "all")]
     pub all: Option<bool>,

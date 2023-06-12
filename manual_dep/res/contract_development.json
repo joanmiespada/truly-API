@@ -1,0 +1,19 @@
+[
+    {
+        "id": "1",
+        "blockchain": "ganache",
+        "address": "",
+        "owner_address":"",
+        "owner_secret": "",
+        "details": "ganache test environment"
+    },
+    {
+        "id": "2",
+        "blockchain": "sui",
+        "address": "",
+        "owner_address":"",
+        "owner_secret": "",
+        "owner_cash": "",
+        "details": "sui blockchain"
+    }
+]

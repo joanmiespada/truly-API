@@ -1,5 +1,18 @@
-{
-    "blockchain_url": "http://localhost:8545",
-    "contract_owner": "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
-    "contract_address": ""
-}
+[
+    {
+        "url": "http://localhost:8545",
+        "api_key": "",
+        "id": "ganache",
+        "confirmations":"0",
+        "explorer": "",
+        "explorer_api_key": ""
+    },
+    {
+        "url": "http://127.0.0.1:9000",
+        "api_key": "",
+        "id": "sui",
+        "confirmations": "0",
+        "explorer": "https://suiexplorer.com/?network=local",
+        "explorer_api_key": ""
+    }
+]

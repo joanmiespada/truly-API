@@ -145,7 +145,7 @@ async fn create_contract_and_mint_nft_test_sync(
     //Create contract owner account
     let mut keystore = Keystore::from(InMemKeystore::new_insecure_for_tests(0));
 
-    let contract_owner_address = SuiBlockChain::keystore_add_address(&mut keystore)?;
+    let contract_owner_address = SuiBlockChain::keystore_add_new_random_address(&mut keystore)?;
 
     let coin_address = airdrop(contract_owner_address.clone()).await?;
 

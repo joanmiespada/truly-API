@@ -14,7 +14,7 @@ use lib_blockchain::repositories::schema_blockchain::create_schema_blockchains;
 use lib_blockchain::repositories::schema_contract::create_schema_contracts;
 use lib_blockchain::repositories::schema_keypairs::create_schema_keypairs;
 use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
-use lib_blockchain::services::contract::deploy_contract_locally;
+use lib_blockchain::services::contract::deploy_evm_contract_locally;
 use lib_blockchain::{
     services::nfts::{NFTsManipulation, NFTsService, NTFState},
 };
@@ -172,7 +172,7 @@ async fn create_contract_and_mint_nft_test_sync(
     let url = ganache.endpoint();
 
     let contract_address =
-        deploy_contract_locally(url.as_str(), contract_owner_address.clone()).await?;
+        deploy_evm_contract_locally(url.as_str(), contract_owner_address.clone()).await?;
     //let contract_address = deploy_contract_ethers(url.as_str(), &contract_owner_wallet).await?;
 
     let confirmations = 0;

@@ -89,7 +89,7 @@ impl SuiBlockChain {
         })
     }
 
-    pub fn keystore_add_address(keystore: &mut Keystore) -> ResultE<String> {
+    pub fn keystore_add_new_random_address(keystore: &mut Keystore) -> ResultE<String> {
         let (address, _phrase, _scheme) = keystore
             .generate_and_add_new_key(sui_types::crypto::SignatureScheme::ED25519, None, None)
             .unwrap();

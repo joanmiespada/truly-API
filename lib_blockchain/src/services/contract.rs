@@ -7,7 +7,7 @@ use web3::{
 
 /// run it after local ganache bootstrapped.
 
-pub async fn deploy_contract_locally(
+pub async fn deploy_evm_contract_locally(
     url: &str,
     contract_owner_address: String,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
