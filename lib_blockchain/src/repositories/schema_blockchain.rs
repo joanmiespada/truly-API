@@ -23,9 +23,7 @@ pub async fn create_schema_blockchains(client: &aws_sdk_dynamodb::Client) -> Res
         .key_schema(ks1)
         .attribute_definitions(id_ad)
         .billing_mode(BillingMode::PayPerRequest);
-    let op = op
-        .send()
-        .await;
+    let op = op.send().await;
     match op {
         Err(e) => return Err(e.into()),
         Ok(_) => Ok(()),

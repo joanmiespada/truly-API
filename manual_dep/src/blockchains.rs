@@ -3,7 +3,7 @@ use std::{fs::File, io::Read};
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
 use lib_blockchain::{
     models::blockchain::Blockchain,
-    repositories::{blockchain::{BlockchainRepo, BlockchainRepository} },
+    repositories::blockchain::{BlockchainRepo, BlockchainRepository},
 };
 
 use lib_config::config::Config;
@@ -25,7 +25,7 @@ pub async fn manage_blockchains(
 
         match list_op {
             Err(e) => {
-                panic!("{}",e);
+                panic!("{}", e);
             }
             Ok(list) => {
                 let block_chains_repo = BlockchainRepo::new(&config.clone());
@@ -46,12 +46,12 @@ pub async fn manage_blockchains(
 
 #[tokio::test]
 async fn manage_blockchain_test() {
+    use lib_blockchain::repositories::schema_blockchain::create_schema_blockchains;
     use lib_config::{environment::DEV_ENV, infra::build_local_stack_connection};
     use spectral::{assert_that, result::ResultAssertions};
     use std::env;
-    use testcontainers::{clients, images};
     use std::path::PathBuf;
-    use lib_blockchain::repositories::schema_blockchain::create_schema_blockchains;
+    use testcontainers::{clients, images};
 
     env::set_var("RUST_LOG", "debug");
     env::set_var("ENVIRONMENT", "development");
@@ -75,8 +75,7 @@ async fn manage_blockchain_test() {
     let mut config = Config::new();
     config.setup().await;
     config.set_aws_config(&shared_config); //rewrite configuration to use our current testcontainer instead
-    //config.load_secrets().await;
-    
+                                           //config.load_secrets().await;
 
     let filename = "manual_dep/res/blockchain_development.json";
     let current_dir = env::current_dir().unwrap();

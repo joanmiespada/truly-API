@@ -3,7 +3,7 @@ use std::{fs::File, io::Read};
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
 use lib_blockchain::{
     models::contract::{Contract, ContractStatus},
-    repositories::{contract::{ContractRepo, ContractRepository}},
+    repositories::contract::{ContractRepo, ContractRepository},
 };
 use lib_config::config::Config;
 
@@ -38,13 +38,12 @@ pub async fn manage_contracts(
 
 #[tokio::test]
 async fn manage_contracts_test() {
+    use lib_blockchain::repositories::schema_contract::create_schema_contracts;
     use lib_config::{environment::DEV_ENV, infra::build_local_stack_connection};
     use spectral::{assert_that, result::ResultAssertions};
     use std::env;
-    use testcontainers::{clients, images};
     use std::path::PathBuf;
-    use lib_blockchain::repositories::schema_contract::create_schema_contracts;
-
+    use testcontainers::{clients, images};
 
     env::set_var("RUST_LOG", "debug");
     env::set_var("ENVIRONMENT", "development");
@@ -69,7 +68,7 @@ async fn manage_contracts_test() {
     let mut config = Config::new();
     config.setup().await;
     config.set_aws_config(&shared_config); //rewrite configuration to use our current testcontainer instead
-                                         
+
     let filename = "manual_dep/res/contract_development.json";
     let current_dir = env::current_dir().unwrap();
     let mut file_path = PathBuf::from(current_dir);
@@ -90,5 +89,4 @@ async fn manage_contracts_test() {
 
     let obj = contracts_repo.get_by_id(&1).await;
     assert_that(&obj).is_ok();
-
 }
