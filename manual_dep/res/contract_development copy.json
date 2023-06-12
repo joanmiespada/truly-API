@@ -1,0 +1,20 @@
+[
+    {
+        "id": "1",
+        "blockchain_id": "ganache",
+        "contract_address": "",
+        "contract_owner_address":"",
+        "contract_owner_secret": "",
+        "contract_owner_coin_address": "",
+        "details": ""
+    },
+    {
+        "id": "2",
+        "blockchain_id": "sui",
+        "contract_address": "",
+        "contract_owner_address":"",
+        "contract_owner_secret": "",
+        "contract_owner_coin_address": "",
+        "details": ""
+    }
+]

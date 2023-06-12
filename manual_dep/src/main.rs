@@ -1,27 +1,28 @@
+use admin_user::create_admin_user;
+use async_jobs::manage_async_jobs;
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
-use lib_async_ops::sns::create as create_topic;
-use lib_async_ops::sqs::create as create_queue;
-use lib_blockchain::models::blockchain::Blockchain;
-use lib_blockchain::models::contract::{Contract, ContractStatus};
-use lib_blockchain::repositories::blockchain::{BlockchainRepo, BlockchainRepository};
-use lib_blockchain::repositories::contract::{ContractRepo, ContractRepository};
-use lib_blockchain::repositories::{
-    schema_block_tx, schema_blockchain, schema_contract, schema_keypairs,
-};
+use blockchains::manage_blockchains;
+use contracts::manage_contracts;
 use lib_config::config::Config;
-use lib_config::infra::{
-    create_key, create_secret_manager_keys, create_secret_manager_secret_key, store_secret_key,
-};
-use lib_licenses::repositories::{schema_asset, schema_licenses, schema_owners};
-use lib_users::models::user::User;
-use lib_users::repositories::schema_user;
-use lib_users::repositories::users::UsersRepo;
-use lib_users::services::users::{PromoteUser, UserManipulation, UsersService};
+use lib_config::infra::create_key;
+
+use schemas::create_schemas;
+use secretes::create_secrets;
 use serde::{Deserialize, Serialize};
-use std::fs::File;
-use std::io::Read;
+use users::manage_user;
 use std::{env, process};
+use store_key::create_store_key;
 use structopt::StructOpt;
+
+mod schemas;
+mod secretes;
+mod store_key;
+mod admin_user;
+mod users;
+mod blockchains;
+mod contracts;
+mod async_jobs;
+
 
 #[derive(Debug, Serialize, Deserialize)]
 struct NewUser {
@@ -55,276 +56,51 @@ async fn command(
 
     let er = ResourceNotFoundException::builder().build();
 
-    match table {
-        None => {}
-        Some(table_name) => {
-            let client = aws_sdk_dynamodb::Client::new(config.aws_config());
-            match table_name.as_str() {
-                "owners" => {
-                    if create {
-                        schema_owners::create_schema_owners(&client).await?
-                    } else if delete {
-                        schema_owners::delete_schema_owners(&client).await?
-                    } else {
-                        return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-                    }
-                }
-                "assets" => {
-                    if create {
-                        schema_asset::create_schema_assets_all(&client).await?;
-                    } else if delete {
-                        schema_asset::delete_schema_assets_all(&client).await?;
-                    } else {
-                        return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-                    }
-                }
-                "keypairs" => {
-                    if create {
-                        schema_keypairs::create_schema_keypairs(&client).await?
-                    } else if delete {
-                        schema_keypairs::delete_schema_keypairs(&client).await?
-                    } else {
-                        return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-                    }
-                }
-                "transactions" => {
-                    if create {
-                        schema_block_tx::create_schema_transactions(&client).await?
-                    } else if delete {
-                        schema_block_tx::delete_schema_transactions(&client).await?
-                    } else {
-                        return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-                    }
-                }
-                "users" => {
-                    if create {
-                        schema_user::create_schema_users(&client).await?
-                    } else if delete {
-                        schema_user::delete_schema_users(&client).await?
-                    } else {
-                        return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-                    }
-                }
-                "blockchains" => {
-                    if create {
-                        schema_blockchain::create_schema_blockchains(&client).await?;
-                    } else if delete {
-                        schema_blockchain::delete_schema_blockchains(&client).await?;
-                    } else {
-                        return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-                    }
-                }
-                "contracts" => {
-                    if create {
-                        schema_contract::create_schema_contracts(&client).await?;
-                    } else if delete {
-                        schema_contract::delete_schema_contracts(&client).await?;
-                    } else {
-                        return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-                    }
-                }
-                "licenses" => {
-                    if create {
-                        schema_licenses::create_schema_licenses(&client).await?;
-                    } else if delete {
-                        schema_licenses::delete_schema_licenses(&client).await?;
-                    } else {
-                        return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-                    }
-                }
-                "all" => {
-                    if create {
-                        schema_blockchain::create_schema_blockchains(&client).await?;
-                        schema_contract::create_schema_contracts(&client).await?;
-                        schema_owners::create_schema_owners(&client).await?;
-                        schema_asset::create_schema_assets_all(&client).await?;
-                        schema_keypairs::create_schema_keypairs(&client).await?;
-                        schema_block_tx::create_schema_transactions(&client).await?;
-                        schema_user::create_schema_users(&client).await?;
-                        schema_licenses::create_schema_licenses(&client).await?;
-                    } else if delete {
-                        schema_blockchain::delete_schema_blockchains(&client).await?;
-                        schema_contract::delete_schema_contracts(&client).await?;
-                        schema_owners::delete_schema_owners(&client).await?;
-                        schema_asset::delete_schema_assets_all(&client).await?;
-                        schema_keypairs::delete_schema_keypairs(&client).await?;
-                        schema_block_tx::delete_schema_transactions(&client).await?;
-                        schema_user::delete_schema_users(&client).await?;
-                        schema_licenses::delete_schema_licenses(&client).await?;
-                    } else {
-                        return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-                    }
-                }
-                _ => {
-                    return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-                }
-            }
-        }
+    if let Some(table_name) = table {
+        create_schemas(table_name, create, delete, &config).await?;
     }
-    match store_secret {
-        None => {}
-        Some(scretes_ok) => {
-            if create {
-                let client_sec = aws_sdk_secretsmanager::client::Client::new(config.aws_config());
-                let secrets_json;
-                if environment == "development" {
-                    secrets_json = include_str!("../res/secrets_development.json");
-                } else {
-                    secrets_json = include_str!("../res/secrets_prod_stage.json");
-                }
-                create_secret_manager_keys(secrets_json, &client_sec).await?;
-            } else if delete {
-                panic!("not allowed, do it with AWS console UI")
-            } else {
-                return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-            }
-        }
-    }
-    match store_key {
-        None => {}
-        Some(key_id) => {
-            if create {
-                let client_sec = aws_sdk_secretsmanager::client::Client::new(config.aws_config());
-                let secret_key_raw;
-                if environment == "development" {
-                    secret_key_raw = include_str!("../res/key_development.txt");
-                } else {
-                    secret_key_raw = include_str!("../res/key_prod_stage.txt");
-                }
 
-                let res_op = create_secret_manager_secret_key(&client_sec).await;
-                match res_op {
-                    Err(e) => {
-                        panic!("{}", e.to_string())
-                    }
-                    Ok(_) => match store_secret_key(&secret_key_raw, &key_id, &config).await {
-                        Err(e) => panic!("{}", e.to_string()),
-                        Ok(_) => {}
-                    },
-                }
-            } else if delete {
-                panic!("not allowed, do it with AWS console UI")
-            } else {
-                return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-            }
-        }
+    if let Some(_) = store_secret {
+        create_secrets(create, delete, environment.clone(), &config).await?;
     }
-    match key {
-        None => {}
-        Some(keys_ok) => {
-            if create {
-                let client_key = aws_sdk_kms::client::Client::new(config.aws_config());
-                let keyid = create_key(&client_key).await?;
-                println!("new keyid : {}", keyid)
-            } else if delete {
-                panic!("not allowed, do it with AWS console UI")
-            } else {
-                return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-            }
-        }
-    }
-    match adminuser {
-        None => {}
-        Some(email) => {
-            config.load_secrets().await;
-            let user_repo = UsersRepo::new(&config);
-            let user_service = UsersService::new(user_repo);
-            if create {
-                let mut user = User::new();
-                user.set_email(&email);
-                let device = uuid::Uuid::new_v4().to_string();
-                user.set_device(&device);
 
-                let user_id = user_service.add(&mut user, &password).await?;
-                user_service
-                    .promote_user_to(&user_id, &PromoteUser::Upgrade)
-                    .await?;
-                println!("admin user id:{} with device: {} created.", user_id, device);
-            } else {
-                println!("Not implemented yet")
-            }
+    if let Some(key_id) = store_key {
+        create_store_key(key_id, create, delete, environment.clone(), &config).await?;
+    }
+
+    if let Some(_) = key {
+        if create {
+            let client_key = aws_sdk_kms::client::Client::new(config.aws_config());
+            let keyid = create_key(&client_key).await?;
+            println!("new keyid : {}", keyid)
+        } else if delete {
+            panic!("not allowed, do it with AWS console UI")
+        } else {
+            return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
         }
     }
-    match user_id {
-        None => {}
-        Some(id) => {
-            config.load_secrets().await;
-            let user_repo = UsersRepo::new(&config);
-            let user_service = UsersService::new(user_repo);
-            if delete {
-                let op = user_service.remove_by_id(&id).await;
-                match op {
-                    Err(e) => {
-                        println!("{}", e);
-                    }
-                    Ok(_) => {
-                        println!("user {} deleted!", id)
-                    }
-                }
-            } else {
-                println!("Not implemented yet")
-            }
-        }
+
+    if let Some(email) = adminuser {
+        create_admin_user(email,password, create,delete,environment.clone(), &mut config).await?;
     }
+    
+    if let Some(id) = user_id {
+        manage_user(id,create,delete,environment.clone(), &mut config).await?;
+    }
+    
     if let Some(contract_path) = contract {
-
-        #[derive(Deserialize, Debug)]
-        struct ContractImporter {
-            contracts: Vec<Contract>,
-        }
-        let mut file = File::open(contract_path)?;
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
-        let list: ContractImporter = serde_json::from_str(&contents)?;
-
-        let contracts_repo = ContractRepo::new(&config.clone());
-        
-        for mut item in list.contracts{
-            item.set_status(&ContractStatus::Enabled );
-            contracts_repo.add(&item).await?;
-        }
+        manage_contracts(contract_path, create,delete,environment.clone(), &config).await?;
     }
+    
 
     if let Some(blockchain_path) = blockchain {
-        
-        #[derive(Deserialize, Debug)]
-        struct BlockchainImporter {
-            blockchains: Vec<Blockchain>,
-        }
-        let mut file = File::open(blockchain_path)?;
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
-        let list: BlockchainImporter = serde_json::from_str(&contents)?;
+       manage_blockchains(blockchain_path, create, delete, environment.clone(), &config).await?;
+    }
+
+    if let Some(_) = async_jobs {
+        manage_async_jobs(create, delete, environment.clone(), &config).await?;
+    }
     
-        let block_chains_repo = BlockchainRepo::new(&config.clone());
-
-        for item in list.blockchains {
-            block_chains_repo.add(&item).await?;
-        }
-    }
-
-    match async_jobs {
-        None => {}
-        Some(keys_ok) => {
-            if create {
-                let name1 = "queue_minting_async".to_string();
-                let url1 = create_queue(&config, name1.to_owned()).await?;
-                println!("queue {} created at url: {}", name1, url1);
-
-                let name2 = "queue_minting_deathletter".to_string();
-                let url2 = create_queue(&config, name2.to_owned()).await?;
-                println!("queue {} created at url: {}", name2, url2);
-
-                let name3 = "topic_minting_async".to_string();
-                let arn = create_topic(&config, name3.to_owned()).await?;
-                println!("topic {} created at arn: {}", name2, arn);
-            } else if delete {
-                panic!("not implemented yet")
-            } else {
-                return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-            }
-        }
-    }
     Ok(())
 }
 
