@@ -94,19 +94,21 @@ pub async fn get_my_licenses_all(
                     StatusCode::INTERNAL_SERVER_ERROR,
                 );
             }
-        },
+        }
         Ok(assets) => {
             let mut res: Vec<License> = vec![];
-            for ass in assets.iter(){
+            for ass in assets.iter() {
                 let lic_op = lic_service.get_by_asset(ass.id()).await;
                 match lic_op {
-                    Err(e)=>{ error!("{}", e)},
-                    Ok(mut lics)=>{
-                            res.append(&mut lics);
+                    Err(e) => {
+                        error!("{}", e)
+                    }
+                    Ok(mut lics) => {
+                        res.append(&mut lics);
                     }
                 }
             }
             build_resp(json!(res).to_string(), StatusCode::OK)
-        },
+        }
     }
 }

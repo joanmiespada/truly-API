@@ -93,7 +93,7 @@ impl SuiBlockChain {
         let (address, _phrase, _scheme) = keystore
             .generate_and_add_new_key(sui_types::crypto::SignatureScheme::ED25519, None, None)
             .unwrap();
-        
+
         Ok(address.to_string())
     }
 }
@@ -125,16 +125,10 @@ impl NFTsRepository for SuiBlockChain {
             .await
             .unwrap();
 
-        let my_address = SuiAddress::from_str(
-            &self.contract_owner_address.as_str(),
-        )?;
-        let gas_object_id = ObjectID::from_str(
-            &self.contract_owner_cash.as_str(),
-        )?;
+        let my_address = SuiAddress::from_str(&self.contract_owner_address.as_str())?;
+        let gas_object_id = ObjectID::from_str(&self.contract_owner_cash.as_str())?;
 
-        let package_object_id = ObjectID::from_str(
-            self.contract_address.as_str(),
-        )?;
+        let package_object_id = ObjectID::from_str(self.contract_address.as_str())?;
 
         let module = "hasher";
 
@@ -331,7 +325,6 @@ impl NFTsRepository for SuiBlockChain {
 
     //we reuse the same keypair for all users and we don't want to store it (bool = false)
     async fn create_keypair(&self, _user_id: &String) -> ResultE<(KeyPair, bool)> {
-        
         let user_key = KeyPair::new();
 
         Ok((user_key, false))

@@ -129,29 +129,29 @@ impl AssetRepo {
             .item(HASH_ALGORITHM_FIELD_NAME, hash_algo_av);
 
         if let Some(value) = asset.longitude() {
-                let longitude_av = AttributeValue::S(value.to_string());
-                items = items.item(LONGITUDE_FIELD_NAME, longitude_av);
+            let longitude_av = AttributeValue::S(value.to_string());
+            items = items.item(LONGITUDE_FIELD_NAME, longitude_av);
         }
-        if let Some(value)= asset.latitude() {
-                let latitude_av = AttributeValue::S(value.to_string());
-                items = items.item(LATITUDE_FIELD_NAME, latitude_av);
+        if let Some(value) = asset.latitude() {
+            let latitude_av = AttributeValue::S(value.to_string());
+            items = items.item(LATITUDE_FIELD_NAME, latitude_av);
         }
-        
+
         if let Some(value) = asset.shorter() {
-                let shorter_av = AttributeValue::S(value.to_string());
-                items = items.item(SHORTER_FIELD_NAME, shorter_av);
+            let shorter_av = AttributeValue::S(value.to_string());
+            items = items.item(SHORTER_FIELD_NAME, shorter_av);
         }
-        if let Some(value) =  asset.counter() {
-                let counter_av = AttributeValue::N(value.to_string());
-                items = items.item(COUNTER_FIELD_NAME, counter_av);
+        if let Some(value) = asset.counter() {
+            let counter_av = AttributeValue::N(value.to_string());
+            items = items.item(COUNTER_FIELD_NAME, counter_av);
         }
-        if let Some(value) =  asset.video_licensing_error() {
-                let video_licensing_error_av = AttributeValue::S(value.to_string());
-                items = items.item(VIDEO_LICENSING_FIELD_NAME, video_licensing_error_av);
+        if let Some(value) = asset.video_licensing_error() {
+            let video_licensing_error_av = AttributeValue::S(value.to_string());
+            items = items.item(VIDEO_LICENSING_FIELD_NAME, video_licensing_error_av);
         }
-        if let Some(value) =  asset.minted_tx() {
-                let minted_tx_av = AttributeValue::S(value.clone());
-                items = items.item(MINTED_FIELD_NAME, minted_tx_av);
+        if let Some(value) = asset.minted_tx() {
+            let minted_tx_av = AttributeValue::S(value.clone());
+            items = items.item(MINTED_FIELD_NAME, minted_tx_av);
         }
         items = items.item(
             VIDEO_LICENSING_STATUS_FIELD_NAME,
@@ -164,16 +164,16 @@ impl AssetRepo {
         );
 
         if let Some(value) = asset.video_process_status() {
-                let video_process_status_av = AttributeValue::S(value.to_string());
-                items = items.item(VIDEO_PROCESS_STATUS_FIELD_NAME, video_process_status_av);
+            let video_process_status_av = AttributeValue::S(value.to_string());
+            items = items.item(VIDEO_PROCESS_STATUS_FIELD_NAME, video_process_status_av);
         }
-        if let Some(value) =  asset.source() {
-                let source_av = AttributeValue::S(value.to_string());
-                items = items.item(SOURCE_FIELD_NAME, source_av);
+        if let Some(value) = asset.source() {
+            let source_av = AttributeValue::S(value.to_string());
+            items = items.item(SOURCE_FIELD_NAME, source_av);
         }
         if let Some(value) = asset.source_details() {
-                let source_det_av = AttributeValue::S(value.to_string());
-                items = items.item(SOURCE_DETAILS_FIELD_NAME, source_det_av);
+            let source_det_av = AttributeValue::S(value.to_string());
+            items = items.item(SOURCE_DETAILS_FIELD_NAME, source_det_av);
         }
         Ok(items)
     }
@@ -618,7 +618,6 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
     let _hash_algo = doc.get(HASH_ALGORITHM_FIELD_NAME).unwrap();
     let asset_hash_algo = _hash_algo.as_s().unwrap();
     asset.set_hash_algorithm(&Some(asset_hash_algo.to_string()));
-
 
     let creation_time_t = doc.get(CREATIONTIME_FIELD_NAME);
     match creation_time_t {

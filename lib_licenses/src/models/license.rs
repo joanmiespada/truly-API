@@ -270,8 +270,8 @@ impl CreatableFildsLicense {
 
         license.set_version(1);
 
-        license.set_right_to_free_distribute(self.right_to_free_distribute );
-        license.set_if_you_distribute_mention_me( self.if_you_distribute_mention_me);
+        license.set_right_to_free_distribute(self.right_to_free_distribute);
+        license.set_if_you_distribute_mention_me(self.if_you_distribute_mention_me);
         license.set_right_to_modify(self.right_to_modify);
         license.set_if_you_modify_mention_me(self.if_you_modify_mention_me);
         license.set_right_to_use_broadcast_media(self.right_to_use_broadcast_media);

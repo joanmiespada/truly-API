@@ -146,7 +146,7 @@ impl AssetManipulation for AssetService {
         let aux = creation_asset.url.clone();
         asset.set_url(&Some(url::Url::parse(aux.as_str())?));
         asset.set_hash(&Some(creation_asset.hash.clone()));
-        asset.set_hash_algorithm( &Some(creation_asset.hash_algorithm.clone()));
+        asset.set_hash_algorithm(&Some(creation_asset.hash_algorithm.clone()));
 
         asset.set_longitude(&creation_asset.longitude);
         asset.set_latitude(&creation_asset.latitude);

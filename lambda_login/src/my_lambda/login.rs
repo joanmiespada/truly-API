@@ -60,18 +60,14 @@ pub async fn login(
                             }
                         }
                         Ok(log_inf) => {
-                            
                             let roles: Vec<String> = log_inf.roles.into_iter().map(|ur| ur.to_string()).collect();
                             let token_secret = config.env_vars().jwt_token_base();
                             let exp_hours =  config.env_vars().jwt_token_time_exp_hours().parse::<i64>().unwrap();
                             let token_creation_ops = create_jwt(&log_inf.user_id, roles, token_secret, exp_hours );
-            
                             match token_creation_ops {
                                 Err(_) => build_resp("".to_string(), StatusCode::INTERNAL_SERVER_ERROR),
                                 Ok(token) => build_resp (  json!({ "token": token }).to_string()  ,StatusCode::OK)
-                                
                             }
-                            
                         }
                     }
                  }

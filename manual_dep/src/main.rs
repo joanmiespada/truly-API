@@ -9,20 +9,19 @@ use lib_config::infra::create_key;
 use schemas::create_schemas;
 use secretes::create_secrets;
 use serde::{Deserialize, Serialize};
-use users::manage_user;
 use std::{env, process};
 use store_key::create_store_key;
 use structopt::StructOpt;
+use users::manage_user;
 
+mod admin_user;
+mod async_jobs;
+mod blockchains;
+mod contracts;
 mod schemas;
 mod secretes;
 mod store_key;
-mod admin_user;
 mod users;
-mod blockchains;
-mod contracts;
-mod async_jobs;
-
 
 #[derive(Debug, Serialize, Deserialize)]
 struct NewUser {
@@ -81,26 +80,40 @@ async fn command(
     }
 
     if let Some(email) = adminuser {
-        create_admin_user(email,password, create,delete,environment.clone(), &mut config).await?;
+        create_admin_user(
+            email,
+            password,
+            create,
+            delete,
+            environment.clone(),
+            &mut config,
+        )
+        .await?;
     }
-    
+
     if let Some(id) = user_id {
-        manage_user(id,create,delete,environment.clone(), &mut config).await?;
+        manage_user(id, create, delete, environment.clone(), &mut config).await?;
     }
-    
+
     if let Some(contract_path) = contract {
-        manage_contracts(contract_path, create,delete,environment.clone(), &config).await?;
+        manage_contracts(contract_path, create, delete, environment.clone(), &config).await?;
     }
-    
 
     if let Some(blockchain_path) = blockchain {
-       manage_blockchains(blockchain_path, create, delete, environment.clone(), &config).await?;
+        manage_blockchains(
+            blockchain_path,
+            create,
+            delete,
+            environment.clone(),
+            &config,
+        )
+        .await?;
     }
 
     if let Some(_) = async_jobs {
         manage_async_jobs(create, delete, environment.clone(), &config).await?;
     }
-    
+
     Ok(())
 }
 

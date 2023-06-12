@@ -3,11 +3,12 @@
 use lambda_runtime::{run, service_fn, Error};
 
 use lib_blockchain::{
+    blockchains::{chain::CloneBoxNFTsRepository, ganache::GanacheBlockChain},
     repositories::{
         block_tx::BlockchainTxRepo, blockchain::BlockchainRepo, contract::ContractRepo,
-         keypairs::KeyPairRepo,
+        keypairs::KeyPairRepo,
     },
-    services::{block_tx::BlockchainTxService, nfts::NFTsService}, blockchains::{ganache::GanacheBlockChain, chain::CloneBoxNFTsRepository},
+    services::{block_tx::BlockchainTxService, nfts::NFTsService},
 };
 use lib_config::config::Config;
 use lib_licenses::{

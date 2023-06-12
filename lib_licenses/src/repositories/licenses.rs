@@ -14,7 +14,8 @@ use chrono::{
 use lib_config::config::Config;
 
 use super::schema_licenses::{
-    LICENSES_ASSET_ID_INDEX, LICENSES_TABLE_NAME, LICENSE_ASSET_ID_FIELD_PK, LICENSE_ID_FIELD_PK,LICENSES_LICENSE_ID_INDEX
+    LICENSES_ASSET_ID_INDEX, LICENSES_LICENSE_ID_INDEX, LICENSES_TABLE_NAME,
+    LICENSE_ASSET_ID_FIELD_PK, LICENSE_ID_FIELD_PK,
 };
 pub const CREATION_TIME_FIELD_NAME: &str = "creationTime";
 pub const LAST_UPDATE_TIME_FIELD_NAME: &str = "lastUpdateTime";
@@ -215,14 +216,14 @@ impl LicenseRepository for LicenseRepo {
         let license_id_av = AttributeValue::S(license_id.to_string());
 
         let mut filter = "".to_string();
-        filter.push_str( LICENSE_ID_FIELD_PK);
+        filter.push_str(LICENSE_ID_FIELD_PK);
         filter.push_str(" = :value");
 
         let res = self
             .get_by_filter(
                 &filter,
                 &":value".to_string(),
-               LICENSES_LICENSE_ID_INDEX,
+                LICENSES_LICENSE_ID_INDEX,
                 license_id_av,
             )
             .await;
@@ -325,8 +326,8 @@ impl LicenseRepository for LicenseRepo {
     }
 
     async fn delete(&self, license: &License) -> ResultE<()> {
-        let id_av = AttributeValue::S( license.id().to_string());
-        let ass_av = AttributeValue::S( license.asset_id().to_string());
+        let id_av = AttributeValue::S(license.id().to_string());
+        let ass_av = AttributeValue::S(license.asset_id().to_string());
 
         let request = self
             .client

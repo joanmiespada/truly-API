@@ -32,7 +32,9 @@ pub async fn create_my_license(
     }
 
     info!("calling license service: add");
-    let op_res = lic_service.create(&lic_fields, &Some(user_id.to_string())).await;
+    let op_res = lic_service
+        .create(&lic_fields, &Some(user_id.to_string()))
+        .await;
     match op_res {
         Err(e) => {
             if let Some(m) = e.downcast_ref::<LicenseDynamoDBError>() {

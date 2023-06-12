@@ -129,7 +129,7 @@ impl NFTsManipulation for NFTsService {
             None => {
                 let aux = self.blockchain.create_keypair(user_id).await?;
                 user_wallet_address = aux.0;
-                if aux.1 { 
+                if aux.1 {
                     self.keys_repo.add(&user_wallet_address).await?;
                 }
             }

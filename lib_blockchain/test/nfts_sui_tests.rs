@@ -27,14 +27,13 @@ use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::services::owners::OwnerService;
 
+use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
 use spectral::{assert_that, result::ResultAssertions};
 use std::{env, str::FromStr};
 use sui_keys::keystore::{InMemKeystore, Keystore};
 use testcontainers::*;
 use url::Url;
-use base64::{Engine as _, engine::general_purpose};
-
 
 #[tokio::test]
 async fn create_contract_and_mint_nft_test_sync(
@@ -150,9 +149,11 @@ async fn create_contract_and_mint_nft_test_sync(
     let coin_address = airdrop(contract_owner_address.clone()).await?;
 
     let contract_owner_keystore: Vec<u8> = bincode::serialize(&keystore).unwrap();
-    let contract_owner_secret_base64 = general_purpose::STANDARD_NO_PAD.encode(&contract_owner_keystore);
-    let contract_owner_secret_cyphered = store_secret_key( &contract_owner_secret_base64 , &new_key_id, &config ).await?;
-     //create blockchain object and contract
+    let contract_owner_secret_base64 =
+        general_purpose::STANDARD_NO_PAD.encode(&contract_owner_keystore);
+    let contract_owner_secret_cyphered =
+        store_secret_key(&contract_owner_secret_base64, &new_key_id, &config).await?;
+    //create blockchain object and contract
     let block_chains_repo = BlockchainRepo::new(&config.clone());
     let contracts_repo = ContractRepo::new(&config.clone());
 
@@ -255,12 +256,12 @@ async fn create_contract_and_mint_nft_test_sync(
     Ok(())
 }
 
-async fn airdrop(contract_owner_address :String ) 
--> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-
+async fn airdrop(
+    contract_owner_address: String,
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     #[derive(Serialize, Debug)]
     struct FixedAmountRequest {
-        #[serde(rename="FixedAmountRequest")]
+        #[serde(rename = "FixedAmountRequest")]
         pub fixed_amount_request: FixedAmountRequestType,
     }
     #[derive(Serialize, Debug)]
@@ -270,26 +271,28 @@ async fn airdrop(contract_owner_address :String )
 
     #[derive(Deserialize, Debug, Clone)]
     struct Item {
-        #[serde(rename="amount")]
+        #[serde(rename = "amount")]
         pub _amount: u128,
         pub id: String,
-        #[serde(rename="transferTxDigest")]
+        #[serde(rename = "transferTxDigest")]
         pub _transfer_tx_digest: String,
     }
     #[derive(Deserialize, Debug, Clone)]
     struct ResultFixedAmountRequest {
-        #[serde(rename="transferredGasObjects")]
+        #[serde(rename = "transferredGasObjects")]
         pub transferred_gas_objects: Vec<Item>,
     }
 
     //airdrop my address
-    let aux = FixedAmountRequest {fixed_amount_request:  FixedAmountRequestType {
-        recipient: contract_owner_address.to_string(),
-    }};
+    let aux = FixedAmountRequest {
+        fixed_amount_request: FixedAmountRequestType {
+            recipient: contract_owner_address.to_string(),
+        },
+    };
     //let serialized = serde_json::to_string(&aux).unwrap();
 
     let client = reqwest::Client::new();
-    let aux_aux= serde_json::to_string(&aux).unwrap();
+    let aux_aux = serde_json::to_string(&aux).unwrap();
     //println!("{:#?}", aux_aux);
     let req = client
         .post("http://127.0.0.1:9123/gas")
@@ -297,9 +300,7 @@ async fn airdrop(contract_owner_address :String )
         .body(aux_aux);
 
     //println!("{:?}",req);
-    let resp_op= req
-        .send()
-        .await;
+    let resp_op = req.send().await;
     if let Err(e) = resp_op {
         panic!("error calling faucet {}", e);
     }
@@ -307,9 +308,7 @@ async fn airdrop(contract_owner_address :String )
 
     //println!("{:#?}", resp);
 
-    let aux = resp
-        .json::<ResultFixedAmountRequest>()
-        .await?;
+    let aux = resp.json::<ResultFixedAmountRequest>().await?;
 
     //println!("{:#?}", aux.clone());
 

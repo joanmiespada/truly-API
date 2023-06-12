@@ -1,5 +1,5 @@
-use lib_config::{config::Config, environment::DEV_ENV, infra::create_secret_manager_keys};
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
+use lib_config::{config::Config, environment::DEV_ENV, infra::create_secret_manager_keys};
 
 pub async fn create_secrets(
     create: bool,

@@ -42,8 +42,6 @@ impl KeyPairRepo {
             //kms_key_id: conf.env_vars().kms_key_id().to_owned(),
         }
     }
-    
-    
 }
 
 #[async_trait]
@@ -91,13 +89,13 @@ impl KeyPairRepository for KeyPairRepo {
 
         let results = request.send().await;
         if let Err(e) = results {
-                let mssag = format!(
-                    "Error at [{}] - {} ",
-                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
-                    e
-                );
-                tracing::error!(mssag);
-                return Err(KeyPairDynamoDBError(e.to_string()).into());
+            let mssag = format!(
+                "Error at [{}] - {} ",
+                Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                e
+            );
+            tracing::error!(mssag);
+            return Err(KeyPairDynamoDBError(e.to_string()).into());
         }
         match results.unwrap().item {
             None => Ok(None), //Err(KeyPairNoExistsError("id doesn't exist".to_string()).into()),
@@ -110,7 +108,6 @@ impl KeyPairRepository for KeyPairRepo {
             }
         }
     }
-    
 }
 
 fn iso8601(st: &DateTime<Utc>) -> String {

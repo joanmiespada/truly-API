@@ -24,10 +24,8 @@ pub trait NFTsRepository: Send + Sync + CloneBoxNFTsRepository {
     //async fn get(&self, asset_id: &Uuid) -> ResultE<ContractContentInfo>;
     async fn get(&self, token: &String) -> ResultE<ContractContentInfo>;
     fn contract_id(&self) -> u16;
-    async fn create_keypair(&self, user_id: &String) -> ResultE<(KeyPair,bool)>;
+    async fn create_keypair(&self, user_id: &String) -> ResultE<(KeyPair, bool)>;
 }
-
-
 
 impl fmt::Debug for dyn NFTsRepository + Sync + Send {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

@@ -1,4 +1,3 @@
-
 use crate::models::block_tx::BlockchainTx;
 use crate::repositories::block_tx::{BlockchainTxRepo, BlockchainTxRepository};
 use async_trait::async_trait;
@@ -34,7 +33,7 @@ impl BlockchainTxManipulation for BlockchainTxService {
     async fn get_by_id(&self, hash: &String) -> ResultE<BlockchainTx> {
         self.repository.get_by_tx(hash).await
     }
-    
+
     #[tracing::instrument()]
     async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<BlockchainTx>> {
         self.repository.get_by_asset_id(asset_id).await

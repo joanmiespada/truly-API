@@ -117,18 +117,19 @@ async fn create_simple_contract_test() -> web3::Result<()> {
 
     let bytecode = include_str!("../res/evm/SimpleTest.bin").trim_end();
 
-    let contract_deploy_op = Contract::deploy(web3.eth(), include_bytes!("../res/evm//SimpleTest.abi"))
-        .unwrap()
-        .confirmations(0)
-        .poll_interval(Duration::from_secs(10))
-        //.options(Options::default())
-        .options(Options::with(|opt| {
-            //    opt.value       = Some(U256::from_str("1").unwrap()); //Some(0.into());
-            //opt.gas_price   = Some(U256::from_str("2000000000").unwrap());
-            opt.gas = Some(U256::from_str("500000").unwrap());
-        }))
-        .execute(bytecode, (), contract_owner)
-        .await;
+    let contract_deploy_op =
+        Contract::deploy(web3.eth(), include_bytes!("../res/evm//SimpleTest.abi"))
+            .unwrap()
+            .confirmations(0)
+            .poll_interval(Duration::from_secs(10))
+            //.options(Options::default())
+            .options(Options::with(|opt| {
+                //    opt.value       = Some(U256::from_str("1").unwrap()); //Some(0.into());
+                //opt.gas_price   = Some(U256::from_str("2000000000").unwrap());
+                opt.gas = Some(U256::from_str("500000").unwrap());
+            }))
+            .execute(bytecode, (), contract_owner)
+            .await;
 
     assert_that!(&contract_deploy_op).is_ok();
 

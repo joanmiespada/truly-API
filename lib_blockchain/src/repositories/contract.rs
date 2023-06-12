@@ -49,7 +49,6 @@ impl ContractRepo {
         }
     }
     fn new_or_update(&self, contract: &Contract) -> ResultE<PutBuilder> {
-
         let id_av = AttributeValue::N(contract.id().to_string());
         let blockchain_av = AttributeValue::S(contract.blockchain().to_string());
         let status_av = AttributeValue::S(contract.status().to_string());
@@ -65,28 +64,23 @@ impl ContractRepo {
 
         if let Some(val) = contract.address() {
             let av = AttributeValue::S(val.clone());
-            items = items
-            .item(CONTRACT_ADDRESS_FIELD_NAME, av)
+            items = items.item(CONTRACT_ADDRESS_FIELD_NAME, av)
         }
         if let Some(val) = contract.owner_address() {
             let av = AttributeValue::S(val.clone());
-            items = items
-            .item(CONTRACT_OWNER_ADDRESS_FIELD_NAME, av)
+            items = items.item(CONTRACT_OWNER_ADDRESS_FIELD_NAME, av)
         }
         if let Some(val) = contract.owner_secret() {
             let av = AttributeValue::S(val.clone());
-            items = items
-            .item(CONTRACT_OWNER_SECRET_FIELD_NAME, av)
+            items = items.item(CONTRACT_OWNER_SECRET_FIELD_NAME, av)
         }
         if let Some(val) = contract.owner_cash() {
             let av = AttributeValue::S(val.clone());
-            items = items
-            .item(CONTRACT_OWNER_CASH_FIELD_NAME, av)
+            items = items.item(CONTRACT_OWNER_CASH_FIELD_NAME, av)
         }
         if let Some(val) = contract.details() {
             let av = AttributeValue::S(val.clone());
-            items = items
-            .item(CONTRACT_DETAILS_FIELD_NAME, av)
+            items = items.item(CONTRACT_DETAILS_FIELD_NAME, av)
         }
 
         Ok(items)
@@ -246,28 +240,28 @@ pub fn mapping_from_doc_to_contract(
     contract.set_blockchain(blockchain1);
 
     if let Some(value) = doc.get(CONTRACT_ADDRESS_FIELD_NAME) {
-            let value1 = value.as_s().unwrap();
-            contract.set_address(&value1);
+        let value1 = value.as_s().unwrap();
+        contract.set_address(&value1);
     }
 
     if let Some(value) = doc.get(CONTRACT_OWNER_ADDRESS_FIELD_NAME) {
-            let value1 = value.as_s().unwrap();
-            contract.set_owner_address(&value1);
+        let value1 = value.as_s().unwrap();
+        contract.set_owner_address(&value1);
     }
-    
+
     if let Some(value) = doc.get(CONTRACT_OWNER_SECRET_FIELD_NAME) {
-            let value1 = value.as_s().unwrap();
-            contract.set_owner_secret(&value1);
+        let value1 = value.as_s().unwrap();
+        contract.set_owner_secret(&value1);
     }
-    
+
     if let Some(value) = doc.get(CONTRACT_OWNER_CASH_FIELD_NAME) {
-            let value1 = value.as_s().unwrap();
-            contract.set_owner_cash(&value1);
+        let value1 = value.as_s().unwrap();
+        contract.set_owner_cash(&value1);
     }
 
     if let Some(value) = doc.get(CONTRACT_DETAILS_FIELD_NAME) {
-            let value1 = value.as_s().unwrap();
-            contract.set_details(&value1);
+        let value1 = value.as_s().unwrap();
+        contract.set_details(&value1);
     }
 
     let status = doc.get(CONTRACT_STATUS_FIELD_NAME).unwrap();
@@ -276,7 +270,6 @@ pub fn mapping_from_doc_to_contract(
     contract.set_status(&sts);
 
     if let Some(creation_time) = doc.get(CREATIONTIME_FIELD_NAME) {
-            contract.set_creation_time(&from_iso8601(creation_time.as_s().unwrap()));
+        contract.set_creation_time(&from_iso8601(creation_time.as_s().unwrap()));
     }
-    
 }

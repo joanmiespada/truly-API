@@ -1,7 +1,7 @@
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
 use lib_licenses::errors::license::LicenseDynamoDBError;
-use lib_licenses::services::licenses::{LicenseService, LicenseManipulation};
+use lib_licenses::services::licenses::{LicenseManipulation, LicenseService};
 use lib_licenses::{
     errors::asset::{AssetDynamoDBError, AssetNoExistsError},
     services::assets::{AssetManipulation, AssetService},

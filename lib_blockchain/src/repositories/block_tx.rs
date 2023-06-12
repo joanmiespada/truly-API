@@ -161,45 +161,45 @@ impl BlockchainTxRepository for BlockchainTxRepo {
             .item(TX_TIMESTAMP_PK, creation_time_av)
             .item(TX_CONTRACT_ID, contract_id_av);
 
-        if  let Some(hash) = tx.tx() {
-                let tx_id_av = AttributeValue::S(hash.clone());
-                items = items.item(TX_FIELD, tx_id_av);
+        if let Some(hash) = tx.tx() {
+            let tx_id_av = AttributeValue::S(hash.clone());
+            items = items.item(TX_FIELD, tx_id_av);
         }
 
         if let Some(data) = tx.block_number() {
-                let data_av = AttributeValue::N(data.clone().to_string());
-                items = items.item(TX_BLOCK_NUMER, data_av);
+            let data_av = AttributeValue::N(data.clone().to_string());
+            items = items.item(TX_BLOCK_NUMER, data_av);
         }
 
-        if let Some(data) =  tx.gas_used() {
-                let data_av = AttributeValue::N(data.clone().to_string());
-                items = items.item(TX_GAS_USED, data_av);
+        if let Some(data) = tx.gas_used() {
+            let data_av = AttributeValue::N(data.clone().to_string());
+            items = items.item(TX_GAS_USED, data_av);
         }
 
         if let Some(data) = tx.effective_gas_price() {
-                let data_av = AttributeValue::N(data.clone().to_string());
-                items = items.item(TX_EFECTIVE_GAS_PRICE, data_av);
+            let data_av = AttributeValue::N(data.clone().to_string());
+            items = items.item(TX_EFECTIVE_GAS_PRICE, data_av);
         }
 
         if let Some(data) = tx.cost() {
-                let data_av = AttributeValue::N(data.clone().to_string());
-                items = items.item(TX_COST, data_av);
+            let data_av = AttributeValue::N(data.clone().to_string());
+            items = items.item(TX_COST, data_av);
         }
         if let Some(data) = tx.currency() {
-                let data_av = AttributeValue::S(data.clone().to_string());
-                items = items.item(TX_CURRENCY, data_av);
+            let data_av = AttributeValue::S(data.clone().to_string());
+            items = items.item(TX_CURRENCY, data_av);
         }
         if let Some(data) = tx.from() {
-                let data_av = AttributeValue::S(data.clone());
-                items = items.item(TX_FROM, data_av);
+            let data_av = AttributeValue::S(data.clone());
+            items = items.item(TX_FROM, data_av);
         }
         if let Some(data) = tx.to() {
-                let data_av = AttributeValue::S(data.clone());
-                items = items.item(TX_TO, data_av);
+            let data_av = AttributeValue::S(data.clone());
+            items = items.item(TX_TO, data_av);
         }
         if let Some(data) = tx.tx_error() {
-                let data_av = AttributeValue::S(data.to_string());
-                items = items.item(TX_ERROR, data_av);
+            let data_av = AttributeValue::S(data.to_string());
+            items = items.item(TX_ERROR, data_av);
         }
 
         let request = self.client.transact_write_items().transact_items(

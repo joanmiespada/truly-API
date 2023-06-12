@@ -74,10 +74,14 @@ impl Display for TokenMintingProcessHasBeenInitiatedError {
 #[derive(Debug)]
 pub struct TokenNotSuccessfullyMintedPreviously(pub Uuid);
 
-impl std::error::Error for TokenNotSuccessfullyMintedPreviously{}
+impl std::error::Error for TokenNotSuccessfullyMintedPreviously {}
 
-impl Display for TokenNotSuccessfullyMintedPreviously{
+impl Display for TokenNotSuccessfullyMintedPreviously {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "this token: {} never has been minted successfully on the blockchain.", self.0.to_string())
+        write!(
+            f,
+            "this token: {} never has been minted successfully on the blockchain.",
+            self.0.to_string()
+        )
     }
 }

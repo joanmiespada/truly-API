@@ -1,6 +1,10 @@
 use async_trait::async_trait;
 use chrono::{DateTime, NaiveDateTime, Utc};
-use lib_config::{config::Config, environment::DEV_ENV, infra::{restore_secret_key, store_secret_key}};
+use lib_config::{
+    config::Config,
+    environment::DEV_ENV,
+    infra::{restore_secret_key, store_secret_key},
+};
 use log::debug;
 use secp256k1::SecretKey;
 use std::str::FromStr;
@@ -187,7 +191,7 @@ impl NFTsRepository for GanacheBlockChain {
 
         let contract_owner_private_key;
         //let contract_owner_private_key_op = self.decrypt_contract_owner_secret_key().await;
-        
+
         let contract_owner_private_key_op = SecretKey::from_str(
             restore_secret_key(
                 self.contract_owner_secret.to_owned(),
@@ -291,8 +295,7 @@ impl NFTsRepository for GanacheBlockChain {
         Ok(cnt)
     }
 
-    async fn create_keypair(&self, user_id: &String) -> ResultE<(KeyPair,bool)> {
-
+    async fn create_keypair(&self, user_id: &String) -> ResultE<(KeyPair, bool)> {
         use secp256k1::rand::{rngs, SeedableRng};
         use web3::signing::keccak256;
 
@@ -309,8 +312,10 @@ impl NFTsRepository for GanacheBlockChain {
         let user_private_key = format!("{}", contract_owner_key_pair.0.display_secret());
         let user_public_key = format!("{}", contract_owner_key_pair.1);
 
-        let user_private_key_cyphered = store_secret_key(&user_private_key, &self.kms_key_id, &self.config).await?;
-        let user_public_key_cyphered = store_secret_key(&user_public_key, &self.kms_key_id, &self.config).await?;
+        let user_private_key_cyphered =
+            store_secret_key(&user_private_key, &self.kms_key_id, &self.config).await?;
+        let user_public_key_cyphered =
+            store_secret_key(&user_public_key, &self.kms_key_id, &self.config).await?;
 
         let mut user_key = KeyPair::new();
         user_key.set_user_id(user_id);
@@ -318,11 +323,8 @@ impl NFTsRepository for GanacheBlockChain {
         user_key.set_private_key(&user_private_key_cyphered);
         user_key.set_public_key(&user_public_key_cyphered);
 
-        Ok((user_key,true))
+        Ok((user_key, true))
     }
-
-    
-    
 }
 
 fn _wei_to_eth(wei_val: U256) -> f64 {

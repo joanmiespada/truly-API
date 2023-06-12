@@ -152,7 +152,7 @@ impl Asset {
     pub fn set_latitude(&mut self, val: &Option<f64>) {
         self.latitude = val.clone()
     }
-    
+
     pub fn minted_tx(&self) -> &Option<String> {
         &self.last_minted_tx
     }

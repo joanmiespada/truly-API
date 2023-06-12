@@ -141,12 +141,12 @@ fn generate_random_license(asset_id: Uuid) -> CreatableFildsLicense {
     let license = CreatableFildsLicense {
         asset_id,
         right_to_free_distribute: rng.gen::<bool>(),
-        if_you_distribute_mention_me:rng.gen::<bool>(),
-        right_to_modify:rng.gen::<bool>(),
-        if_you_modify_mention_me:rng.gen::<bool>(),
-        right_to_use_broadcast_media:rng.gen::<bool>(),
-        right_to_use_press_media:rng.gen::<bool>(),
-        rights
+        if_you_distribute_mention_me: rng.gen::<bool>(),
+        right_to_modify: rng.gen::<bool>(),
+        if_you_modify_mention_me: rng.gen::<bool>(),
+        right_to_use_broadcast_media: rng.gen::<bool>(),
+        right_to_use_press_media: rng.gen::<bool>(),
+        rights,
     };
 
     license

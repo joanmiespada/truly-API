@@ -1,14 +1,12 @@
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
-use lib_config::config::Config;
 use lib_async_ops::sns::create as create_topic;
 use lib_async_ops::sqs::create as create_queue;
-
-
+use lib_config::config::Config;
 
 pub async fn manage_async_jobs(
     create: bool,
     delete: bool,
-    environment: String,
+    _environment: String,
     config: &Config,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let er = ResourceNotFoundException::builder().build();

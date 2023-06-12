@@ -1,8 +1,8 @@
 mod assets;
 pub mod error;
+mod licenses;
 mod nft;
 mod video;
-mod licenses;
 
 use std::str::FromStr;
 
@@ -208,7 +208,7 @@ pub async fn function_handler(
                     )
                     .await
                 }
-                
+
                 "3" => {
                     //let id = matched.params.get("id").unwrap().to_string();
                     //let asset_id = Uuid::from_str(id.as_str())?;
@@ -239,18 +239,10 @@ pub async fn function_handler(
                         }
                         Ok(user) => user_id = user,
                     };
-                    create_my_license(
-                        &req,
-                        &context,
-                        config,
-                        license_service,
-                        &user_id,
-                    )
-                    .await
+                    create_my_license(&req, &context, config, license_service, &user_id).await
                 }
 
                 "55" => {
-
                     match jwt_mandatory(&req, config) {
                         Err(e) => {
                             return Ok(e);

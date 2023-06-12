@@ -1,6 +1,10 @@
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
 
-use lib_config::{config::Config, environment::DEV_ENV, infra::{create_secret_manager_secret_key, store_secret_key}};
+use lib_config::{
+    config::Config,
+    environment::DEV_ENV,
+    infra::{create_secret_manager_secret_key, store_secret_key},
+};
 
 pub async fn create_store_key(
     key_id: String,

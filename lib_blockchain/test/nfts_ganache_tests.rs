@@ -15,9 +15,7 @@ use lib_blockchain::repositories::schema_contract::create_schema_contracts;
 use lib_blockchain::repositories::schema_keypairs::create_schema_keypairs;
 use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
 use lib_blockchain::services::contract::deploy_evm_contract_locally;
-use lib_blockchain::{
-    services::nfts::{NFTsManipulation, NFTsService, NTFState},
-};
+use lib_blockchain::services::nfts::{NFTsManipulation, NFTsService, NTFState};
 use lib_config::config::Config;
 use lib_config::infra::{
     build_local_stack_connection, create_key, create_secret_manager_keys,
@@ -229,7 +227,9 @@ async fn create_contract_and_mint_nft_test_sync(
     let update_op = asset_service.update_full(&as1).await;
     assert_that!(&update_op).is_ok();
 
-    let mint_op = nft_service.try_mint(as1.id(), &user_id, & Some(asset_price)).await;
+    let mint_op = nft_service
+        .try_mint(as1.id(), &user_id, &Some(asset_price))
+        .await;
     assert_that!(&mint_op).is_ok();
     let tx_in_chain = mint_op.unwrap();
 

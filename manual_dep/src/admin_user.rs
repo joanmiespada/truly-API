@@ -1,13 +1,17 @@
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
 use lib_config::config::Config;
-use lib_users::{repositories::users::UsersRepo, services::users::{UsersService, UserManipulation, PromoteUser}, models::user::User};
+use lib_users::{
+    models::user::User,
+    repositories::users::UsersRepo,
+    services::users::{PromoteUser, UserManipulation, UsersService},
+};
 
 pub async fn create_admin_user(
     email: String,
-    password:Option<String>,
+    password: Option<String>,
     create: bool,
     delete: bool,
-    environment: String,
+    _environment: String,
     config: &mut Config,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let er = ResourceNotFoundException::builder().build();
@@ -25,8 +29,10 @@ pub async fn create_admin_user(
             .promote_user_to(&user_id, &PromoteUser::Upgrade)
             .await?;
         println!("admin user id:{} with device: {} created.", user_id, device);
+    } else if delete {
+        panic!("not implemented yet")
     } else {
-        println!("Not implemented yet")
+        return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
     }
 
     Ok(())

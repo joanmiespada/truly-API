@@ -289,7 +289,7 @@ async fn check_asset_tree_father_son() {
                 license: String::from_str("gnu").unwrap(),
                 longitude: None,
                 latitude: None,
-                father: user.1.1,
+                father: user.1 .1,
                 source: SourceType::Others,
                 source_details: None,
             };
