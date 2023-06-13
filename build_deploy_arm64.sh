@@ -1,4 +1,9 @@
 #!/bin/bash
+architecture='aarch64-linux-gnu'
+path_base='/Users/joanmiquelespadasabat/Projects/tron/API/cross-compile/openssl/'${architecture}
+
+export OPENSSL_LIB_DIR=${path_base}/lib
+export OPENSSL_INCLUDE_DIR=${path_base}/include
 
 cargo lambda build --release --arm64 --output-format zip --workspace  --exclude server_* --exclude manual_dep --lambda-dir target/lambda_arm64
 

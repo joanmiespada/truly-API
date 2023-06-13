@@ -25,7 +25,7 @@ digest = { version = "0.10", features = ["mac", "oid", "std"] }
 ecdsa = { version = "0.16", default-features = false, features = ["pkcs8", "signing", "std", "verifying"] }
 either = { version = "1" }
 elliptic-curve = { version = "0.13", default-features = false, features = ["arithmetic", "digest", "hazmat", "pkcs8", "std"] }
-ethers-contract-abigen = { version = "2", default-features = false, features = ["rustls"] }
+#ethers-contract-abigen = { version = "2", default-features = false, features = ["rustls"] }
 futures-channel = { version = "0.3", features = ["sink"] }
 futures-executor = { version = "0.3" }
 futures-task = { version = "0.3" }
@@ -77,7 +77,7 @@ digest = { version = "0.10", features = ["mac", "oid", "std"] }
 ecdsa = { version = "0.16", default-features = false, features = ["pkcs8", "signing", "std", "verifying"] }
 either = { version = "1" }
 elliptic-curve = { version = "0.13", default-features = false, features = ["arithmetic", "digest", "hazmat", "pkcs8", "std"] }
-ethers-contract-abigen = { version = "2", default-features = false, features = ["rustls"] }
+#ethers-contract-abigen = { version = "2", default-features = false, features = ["rustls"] }
 generic-array = { version = "0.14", default-features = false, features = ["more_lengths", "zeroize"] }
 hmac = { version = "0.12", default-features = false, features = ["reset"] }
 itertools = { version = "0.10" }
@@ -108,12 +108,12 @@ zeroize = { version = "1" }
 
 [target.aarch64-apple-darwin.dependencies]
 crunchy = { version = "0.2", features = ["limit_256", "std"] }
-ethers-etherscan = { version = "2", default-features = false, features = ["ethers-solc", "rustls"] }
+ethers-etherscan = { version = "2", default-features = false, features = ["ethers-solc"] }
 ethers-solc = { version = "2" }
 io-lifetimes = { version = "1" }
 libc = { version = "0.2", features = ["extra_traits"] }
 rand_core = { version = "0.6", default-features = false, features = ["std"] }
-reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "json"] }
 rustls = { version = "0.20" }
 tokio-rustls = { version = "0.23" }
 unicode-xid = { version = "0.2" }
@@ -121,7 +121,7 @@ webpki = { version = "0.22", default-features = false, features = ["std"] }
 
 [target.aarch64-apple-darwin.build-dependencies]
 crunchy = { version = "0.2", features = ["limit_256", "std"] }
-ethers-etherscan = { version = "2", default-features = false, features = ["ethers-solc", "rustls"] }
+ethers-etherscan = { version = "2", default-features = false, features = ["ethers-solc"] }
 ethers-solc = { version = "2" }
 futures-channel = { version = "0.3", features = ["sink"] }
 futures-task = { version = "0.3" }
@@ -130,7 +130,7 @@ hyper = { version = "0.14", features = ["client", "http1", "http2", "runtime", "
 io-lifetimes = { version = "1" }
 libc = { version = "0.2", features = ["extra_traits"] }
 rand_core = { version = "0.6", default-features = false, features = ["std"] }
-reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "json"] }
 ring = { version = "0.16", features = ["std"] }
 tokio = { version = "1", features = ["full"] }
 tokio-util = { version = "0.7", features = ["codec", "io"] }
@@ -140,8 +140,8 @@ webpki = { version = "0.22", default-features = false, features = ["std"] }
 
 [target.aarch64-unknown-linux-gnu.dependencies]
 crunchy = { version = "0.2", features = ["limit_256", "std"] }
-ethers-etherscan = { version = "2", default-features = false, features = ["ethers-solc", "rustls"] }
-ethers-solc = { version = "2" }
+#ethers-etherscan = { version = "2", default-features = false, features = ["ethers-solc", "rustls"] }
+#ethers-solc = { version = "2" }
 io-lifetimes = { version = "1" }
 libc = { version = "0.2", features = ["extra_traits"] }
 once_cell = { version = "1" }
@@ -154,8 +154,8 @@ webpki = { version = "0.22", default-features = false, features = ["std"] }
 
 [target.aarch64-unknown-linux-gnu.build-dependencies]
 crunchy = { version = "0.2", features = ["limit_256", "std"] }
-ethers-etherscan = { version = "2", default-features = false, features = ["ethers-solc", "rustls"] }
-ethers-solc = { version = "2" }
+#ethers-etherscan = { version = "2", default-features = false, features = ["ethers-solc", "rustls"] }
+#ethers-solc = { version = "2" }
 futures-channel = { version = "0.3", features = ["sink"] }
 futures-task = { version = "0.3" }
 futures-util = { version = "0.3", features = ["channel", "io", "sink"] }

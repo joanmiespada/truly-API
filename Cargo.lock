@@ -14542,7 +14542,6 @@ dependencies = [
  "ecdsa 0.16.7",
  "either",
  "elliptic-curve 0.13.5",
- "ethers-contract-abigen",
  "ethers-etherscan",
  "ethers-solc",
  "futures-channel",
