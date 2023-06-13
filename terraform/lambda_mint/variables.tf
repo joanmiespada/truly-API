@@ -32,31 +32,9 @@ variable "trace_log" {}
 
 variable "lambda_deploy_folder" {}
 
-variable "blockchain_url" {
-  type        = string
-  description = "endpoint from our blockchain gateway"
-
-}
-variable "contract_address" {
-  type        = string
-  description = "hex direction where is our contract in the blockchain"
-}
-
-variable "contract_owner_address" {
-  type        = string
-  #default     = ""
-  description = "hex direction from account user who deployed the contract in the blockchain"
-
-}
 variable "kms_cypher_owner" {
   type      = string
   description = "kms cypher for secret keys"
-}
-
-variable "blockchain_confirmations" {
-  type      = number
-  description = "number of confirmations from blockchain to commit a transaction"
-  default = 3
 }
 
 variable "dead_letter_queue_mint" {

@@ -28,11 +28,7 @@ resource "aws_lambda_function" "truly_lambda_mint" {
     variables = {
       ENVIRONMENT      = "${var.environment_flag}"
       RUST_LOG         = "${var.trace_log}"
-      BLOCKCHAIN_URL   = "${var.blockchain_url}"
-      CONTRACT_ADDRESS = "${var.contract_address}"
-      CONTRACT_OWNER_ADDRESS   = "${var.contract_owner_address}"
       KMS_KEY_ID       = "${var.kms_cypher_owner}"
-      BLOCKCHAIN_CONFIRMATIONS = "${var.blockchain_confirmations}"
       DEAD_LETTER_QUEUE_MINT= "${var.dead_letter_queue_mint}"
       RUST_BACKTRACE = "${var.rust_backtrace}"
       TOPIC_ARN_MINT_ASYNC = "${var.minting_async_topic_arn}"

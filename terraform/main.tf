@@ -19,6 +19,18 @@ provider "aws" {
   profile = "personal"
 }
 
+provider "aws" {
+  alias = "default"
+  region = var.aws_region
+  profile = "personal"
+}
+
+provider "aws" { #only for certificates used by dns
+  alias  = "useast"
+  region = "us-east-1"
+  profile = "personal"
+}
+
 
 data "aws_secretsmanager_secret_version" "secrets_app" {
   secret_id = var.secrets_manager_app_keys_name
@@ -106,9 +118,6 @@ module "lambda_licenses" {
   trace_log = var.trace_log
   lambda_deploy_folder = var.lambda_deploy_folder
 
-  blockchain_url = var.blockchain_url
-  contract_address = var.contract_address
-  contract_owner_address = var.contract_owner_address
   dead_letter_queue_mint = aws_sqs_queue.minting_queue_deadletter.url
   minting_async_topic_arn = aws_sns_topic.minting_topic.arn 
   minting_fails_topic_arn = aws_sns_topic.minting_fails_after_max_retries_topic.arn
@@ -136,9 +145,6 @@ module "lambda_mint" {
   trace_log = var.trace_log
   lambda_deploy_folder = var.lambda_deploy_folder
 
-  blockchain_url = var.blockchain_url
-  contract_address = var.contract_address
-  contract_owner_address = var.contract_owner_address
   dead_letter_queue_mint = aws_sqs_queue.minting_queue_deadletter.url
   kms_cypher_owner = var.kms_id_cypher_all_secret_keys
   queue_mint_arn = aws_sqs_queue.minting_queue.arn

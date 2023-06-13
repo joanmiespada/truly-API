@@ -45,20 +45,8 @@ variable "lambda_deploy_folder" {
   default = "../target/lambda_arm64/"
 }
 
-variable "contract_owner_address" {
-  description = "contract owner address"
-  type    = string
-}
-variable "contract_address" {
-  description = "address where the contract has been deployed at blockchain network"
-  type    = string
-}
 variable "kms_id_cypher_all_secret_keys"  {
   description = "kms id key where the api uses to encrypt all private keys"
-  type    = string
-}
-variable "blockchain_url" {
-  description = "address where the contract has been deployed at blockchain network"
   type    = string
 }
 
@@ -70,4 +58,9 @@ variable "rust_backtrace" {
 variable "jwt_token_time_exp_hours" {
   type = number
   description = "jwt token expiration time, it forces to relogin"
+}
+
+variable "dns" {
+  type = string
+  description = "dns for the api, staging.truly.video or api.truly.video"
 } 
