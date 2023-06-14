@@ -45,6 +45,7 @@ locals {
   common_tags = {
     project = var.truly_tag
     service = var.service_tag
+    environment = var.environment_flag
   }
 
 }
