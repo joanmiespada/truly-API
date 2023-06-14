@@ -12,5 +12,7 @@ pub struct CreateShorter {
     pub user_id: String,
     #[validate(length(max = 2000))]
     pub hash: String,
+    #[validate(length(max = 20))]
+    pub hash_algorithm: String,
     pub keep_original: bool,
 }

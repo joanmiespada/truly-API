@@ -75,6 +75,7 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     let shorter = CreateShorter {
         url_file: Url::from_str(creation_asset.url.as_str()).unwrap(),
         hash: creation_asset.hash.to_owned(),
+        hash_algorithm: creation_asset.hash_algorithm.to_owned(),
         user_id: user_id.to_owned(),
         asset_id: asset_original,
         keep_original: true,

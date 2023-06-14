@@ -86,6 +86,7 @@ impl VideoManipulation for VideoService {
             keep_original: true,
             url_file: asset.url().clone().unwrap(),
             hash: asset.hash().clone().unwrap(),
+            hash_algorithm: asset.hash_algorithm().clone().unwrap(),
             asset_id: asset_id.clone(),
             user_id: user_id.clone(),
         };
