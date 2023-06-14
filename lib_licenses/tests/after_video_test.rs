@@ -3,6 +3,7 @@ use std::str::FromStr;
 
 use lib_async_ops::sns::create;
 use lib_config::config::Config;
+use lib_config::environment::{ENV_VAR_ENVIRONMENT, DEV_ENV};
 use lib_config::infra::build_local_stack_connection;
 use lib_config::schema::Schema;
 use lib_licenses::models::asset::{SourceType, VideoLicensingStatus};
@@ -22,7 +23,7 @@ use uuid::Uuid;
 #[tokio::test]
 async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env::set_var("RUST_LOG", "debug");
-    env::set_var("ENVIRONMENT", "development");
+    env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
 
     env_logger::builder().is_test(true).init();
 
@@ -84,10 +85,11 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
         .await;
     assert_that!(&post_request_op).is_ok();
 
-    //simalate response after posting the request:
+    //simulate response after posting the request:
     let mut video_res = VideoResult {
         url_file: Url::from_str(creation_asset.url.as_str()).unwrap(),
         hash: creation_asset.hash.to_owned(),
+        hash_algorithm: creation_asset.hash_algorithm.to_owned(),
         user_id: user_id.to_owned(),
         asset_id: asset_original,
         keep_original: shorter.keep_original,
@@ -97,9 +99,11 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
         video_error: None,
         video_original: None, // Some(Url::from_str("http://w222.test.com/f1.mov").unwrap()),
         video_original_hash: None, //  Some("hash_f1".to_string()),
+        video_original_hash_algorithm: None,
         video_licensed_asset_id: None, //Some(Uuid::new_v4()),
         video_licensed: None, //Some(Url::from_str("http://w222.test.com/f2.mov").unwrap()),
         video_licensed_hash: None, // Some("hash_f2".to_string()),
+        video_licensed_hash_algorithm: None,
         video_process_status: Some(VideoProcessStatus::Started),
     };
 
@@ -117,6 +121,7 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     video_res = VideoResult {
         url_file: Url::from_str(creation_asset.url.as_str()).unwrap(),
         hash: creation_asset.hash.to_owned(),
+        hash_algorithm: creation_asset.hash_algorithm.to_owned(),
         user_id: user_id.to_owned(),
         asset_id: asset_original,
         keep_original: shorter.keep_original,
@@ -126,9 +131,11 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
         video_error: None,
         video_original: None, // Some(Url::from_str("http://w222.test.com/f1.mov").unwrap()),
         video_original_hash: None, //  Some("hash_f1".to_string()),
+        video_original_hash_algorithm: None,
         video_licensed_asset_id: None, //Some(Uuid::new_v4()),
         video_licensed: None, //Some(Url::from_str("http://w222.test.com/f2.mov").unwrap()),
         video_licensed_hash: None, // Some("hash_f2".to_string()),
+        video_licensed_hash_algorithm: None,
         video_process_status: Some(VideoProcessStatus::Downloaded),
     };
 
@@ -146,6 +153,7 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     video_res = VideoResult {
         url_file: Url::from_str(creation_asset.url.as_str()).unwrap(),
         hash: creation_asset.hash,
+        hash_algorithm: creation_asset.hash_algorithm.to_owned(),
         user_id,
         asset_id: asset_original,
         keep_original: shorter.keep_original,
@@ -155,9 +163,11 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
         video_error: None,
         video_original: Some(Url::from_str("http://w222.test.com/f1.mov").unwrap()),
         video_original_hash: Some("hash_f1".to_string()),
+        video_original_hash_algorithm: Some("MD5".to_string()),
         video_licensed_asset_id: Some(Uuid::new_v4()),
         video_licensed: Some(Url::from_str("http://w222.test.com/f2.mov").unwrap()),
         video_licensed_hash: Some("hash_f2".to_string()),
+        video_licensed_hash_algorithm: Some("SHA256".to_string()),
         video_process_status: Some(VideoProcessStatus::CompletedSuccessfully),
     };
 

@@ -12,6 +12,7 @@ pub struct VideoResult {
     pub asset_id: Uuid,
     pub user_id: String,
     pub hash: String,
+    pub hash_algorithm: String,
     pub counter: u64,
     pub shorter: String,
     pub video_op: Option<bool>,
@@ -19,9 +20,11 @@ pub struct VideoResult {
     pub video_licensed_asset_id: Option<Uuid>,
     pub video_licensed: Option<Url>, //final and permanent bucket
     pub video_licensed_hash: Option<String>,
+    pub video_licensed_hash_algorithm: Option<String>,
     pub keep_original: bool,
     pub video_original: Option<Url>, //final and permanent bucket
     pub video_original_hash: Option<String>,
+    pub video_original_hash_algorithm: Option<String>,
     pub video_process_status: Option<VideoProcessStatus>,
 }
 

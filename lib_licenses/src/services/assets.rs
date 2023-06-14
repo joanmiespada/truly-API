@@ -238,46 +238,42 @@ impl AssetManipulation for AssetService {
     async fn store_video_process(&self, video_res: &VideoResult) -> ResultE<()> {
         let mut original_asset = self.repository.get_by_id(&video_res.asset_id).await?;
 
-        match video_res.video_op {
-            None => {}
-            Some(op) => {
-                if op
-                // && video_res.to_owned().video_process_status.unwrap() == VideoProcessStatus::CompletedSuccessfully
-                {
-                    let mut new_licensed_asset = Asset::new();
+        if let Some(op) = video_res.video_op {
+            if op {
+                let mut new_licensed_asset = Asset::new();
 
-                    new_licensed_asset.set_id(&video_res.video_licensed_asset_id.unwrap());
-                    new_licensed_asset.set_state(original_asset.state());
-                    new_licensed_asset.set_longitude(original_asset.longitude());
-                    new_licensed_asset.set_latitude(original_asset.latitude());
-                    new_licensed_asset.set_hash(&video_res.video_licensed_hash);
-                    new_licensed_asset.set_url(&video_res.video_licensed);
-                    new_licensed_asset.set_last_update_time(&Utc::now());
-                    new_licensed_asset.set_creation_time(&Utc::now());
-                    new_licensed_asset.set_minted_status(MintingStatus::NeverMinted);
-                    new_licensed_asset.set_minted_tx(&None);
-                    new_licensed_asset
-                        .set_video_licensing_status(VideoLicensingStatus::AlreadyLicensed);
-                    new_licensed_asset.set_counter(&Some(video_res.counter));
-                    new_licensed_asset.set_shorter(&Some(video_res.clone().shorter));
-                    new_licensed_asset.set_father(&Some(video_res.asset_id));
+                new_licensed_asset.set_id(&video_res.video_licensed_asset_id.unwrap());
+                new_licensed_asset.set_state(original_asset.state());
+                new_licensed_asset.set_longitude(original_asset.longitude());
+                new_licensed_asset.set_latitude(original_asset.latitude());
+                new_licensed_asset.set_hash(&video_res.video_licensed_hash);
+                new_licensed_asset.set_hash_algorithm(&video_res.video_licensed_hash_algorithm);
+                new_licensed_asset.set_url(&video_res.video_licensed);
+                new_licensed_asset.set_last_update_time(&Utc::now());
+                new_licensed_asset.set_creation_time(&Utc::now());
+                new_licensed_asset.set_minted_status(MintingStatus::NeverMinted);
+                new_licensed_asset.set_minted_tx(&None);
+                new_licensed_asset
+                    .set_video_licensing_status(VideoLicensingStatus::AlreadyLicensed);
+                new_licensed_asset.set_counter(&Some(video_res.counter));
+                new_licensed_asset.set_shorter(&Some(video_res.clone().shorter));
+                new_licensed_asset.set_father(&Some(video_res.asset_id));
 
-                    self.repository
-                        .add(&new_licensed_asset, &video_res.user_id)
-                        .await?;
+                self.repository
+                    .add(&new_licensed_asset, &video_res.user_id)
+                    .await?;
 
-                    self.short_repository
-                        .add(
-                            &video_res.video_licensed_asset_id.unwrap(),
-                            &video_res.clone().shorter,
-                        )
-                        .await?;
+                self.short_repository
+                    .add(
+                        &video_res.video_licensed_asset_id.unwrap(),
+                        &video_res.clone().shorter,
+                    )
+                    .await?;
 
-                    if video_res.keep_original {
-                        //we need to update the original asset with new documents placed in the final location
-                        original_asset.set_url(&video_res.video_original);
-                        original_asset.set_hash(&video_res.video_original_hash);
-                    }
+                if video_res.keep_original {
+                    //we need to update the original asset with new documents placed in the final location
+                    original_asset.set_url(&video_res.video_original);
+                    original_asset.set_hash(&video_res.video_original_hash);
                 }
             }
         }

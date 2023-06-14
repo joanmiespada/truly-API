@@ -5,6 +5,7 @@ use ethers::utils::Ganache;
 use ethers_solc::Solc;
 use lib_blockchain::blockchains::ganache::block_status;
 use lib_config::config::Config;
+use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use spectral::{assert_that, result::ResultAssertions};
 use std::time::Duration;
 use std::{env, str::FromStr};
@@ -19,7 +20,7 @@ pub const MNEMONIC_TEST: &str =
 
 #[tokio::test]
 async fn ganache_bootstrap_get_balance_test() {
-    env::set_var("ENVIRONMENT", "development");
+    env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
     let mut config = Config::new();
     config.setup().await;
 

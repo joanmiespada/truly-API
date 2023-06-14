@@ -13,6 +13,7 @@ use lib_blockchain::repositories::schema_keypairs::KeyPairSchema;
 use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
 use lib_blockchain::services::nfts::{NFTsManipulation, NFTsService};
 use lib_config::config::Config;
+use lib_config::environment::{ENV_VAR_ENVIRONMENT, DEV_ENV};
 use lib_config::infra::{
     build_local_stack_connection, create_key, create_secret_manager_keys,
     create_secret_manager_secret_key, store_secret_key,
@@ -41,7 +42,7 @@ use url::Url;
 async fn create_contract_and_mint_nft_test_sync(
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env::set_var("RUST_LOG", "debug");
-    env::set_var("ENVIRONMENT", "development");
+    env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
 
     env_logger::builder().is_test(true).init();
 

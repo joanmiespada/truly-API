@@ -4,6 +4,7 @@ use std::str::FromStr;
 
 use aws_sdk_dynamodb::Client;
 use lib_config::config::Config;
+use lib_config::environment::{ENV_VAR_ENVIRONMENT, DEV_ENV};
 use lib_config::schema::Schema;
 use lib_licenses::models::asset::{AssetStatus, SourceType};
 use lib_licenses::repositories::assets::AssetRepo;
@@ -22,20 +23,18 @@ use uuid::Uuid;
 
 #[tokio::test]
 async fn creation_table() {
-    //let _ = pretty_env_logger::try_init();
+    env::set_var("RUST_LOG", "debug");
+    env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
+    env_logger::builder().is_test(true).init();
+    
     let docker = clients::Cli::default();
     let node = docker.run(images::dynamodb_local::DynamoDb::default());
     let host_port = node.get_host_port_ipv4(8000);
 
     let shared_config = build_local_stack_connection(host_port).await;
 
-
-    // let mut creation = create_schema_assets_all(&client).await;
-    // assert_that(&creation).is_ok();
-    // creation = create_schema_owners(&client).await;
-    // assert_that(&creation).is_ok();
-
     let mut conf = Config::new();
+    conf.setup().await;
     conf.set_aws_config(&shared_config);
 
     let creation = AssetAllSchema::create_schema(&conf).await;
@@ -54,19 +53,18 @@ async fn creation_table() {
 
 #[tokio::test]
 async fn add_assets() {
-    //let _ = pretty_env_logger::try_init();
+    env::set_var("RUST_LOG", "debug");
+    env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
+    env_logger::builder().is_test(true).init();
+
     let docker = clients::Cli::default();
     let node = docker.run(images::dynamodb_local::DynamoDb::default());
     let host_port = node.get_host_port_ipv4(8000);
 
     let shared_config = build_local_stack_connection(host_port).await;
 
-    // let mut creation = create_schema_assets_all(&client).await;
-    // assert_that(&creation).is_ok();
-    // creation = create_schema_owners(&client).await;
-    // assert_that(&creation).is_ok();
-
     let mut conf = Config::new();
+    conf.setup().await;
     conf.set_aws_config(&shared_config);
 
     let creation = AssetAllSchema::create_schema(&conf).await;

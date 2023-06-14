@@ -1,6 +1,7 @@
 use std::env;
 
 use aws_sdk_dynamodb::Client;
+use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::infra::build_local_stack_connection;
 use lib_config::schema::Schema;
 use lib_licenses::models::owner::Owner;
@@ -13,6 +14,8 @@ use uuid::Uuid;
 
 #[tokio::test]
 async fn creation_table() {
+    env::set_var("RUST_LOG", "debug");
+    env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
     env_logger::builder().is_test(true).init();
     //let _ = pretty_env_logger::try_init();
     let docker = clients::Cli::default();
@@ -22,6 +25,7 @@ async fn creation_table() {
     let shared_config = build_local_stack_connection(host_port).await;
 
     let mut conf = lib_config::config::Config::new();
+    conf.setup().await;
     conf.set_aws_config(&shared_config);
 
     let creation = OwnerSchema::create_schema(&conf).await;
@@ -37,7 +41,7 @@ async fn creation_table() {
 #[tokio::test]
 async fn add_owners() {
     env::set_var("RUST_LOG", "debug");
-    env::set_var("ENVIRONMENT", "development");
+    env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
 
     env_logger::builder().is_test(true).init();
 
@@ -49,6 +53,7 @@ async fn add_owners() {
     //let client = Client::new(&shared_config);
 
     let mut conf = lib_config::config::Config::new();
+    conf.setup().await;
     conf.set_aws_config(&shared_config);
 
     let creation = OwnerSchema::create_schema(&conf).await;

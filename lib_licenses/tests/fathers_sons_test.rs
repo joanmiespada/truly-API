@@ -1,6 +1,6 @@
 use std::{env, str::FromStr};
 
-use lib_config::{infra::build_local_stack_connection, config::Config, schema::Schema};
+use lib_config::{infra::build_local_stack_connection, config::Config, schema::Schema, environment::{ENV_VAR_ENVIRONMENT, DEV_ENV}};
 use lib_licenses::{
     models::asset::{Asset, SourceType},
     repositories::{
@@ -61,7 +61,7 @@ fn list_of_assets_father_sons() -> Vec<(String, (Url, Option<Url>))> {
 #[tokio::test]
 async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env::set_var("RUST_LOG", "debug");
-    env::set_var("ENVIRONMENT", "development");
+    env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
 
     env_logger::builder().is_test(true).init();
 
@@ -70,14 +70,9 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
     let host_port = node.get_host_port_ipv4(8000);
 
     let shared_config = build_local_stack_connection(host_port).await;
-    //let client = Client::new(&shared_config);
-
-    // let mut creation = create_schema_assets_all(&client).await;
-    // assert_that(&creation).is_ok();
-    // creation = create_schema_owners(&client).await;
-    // assert_that(&creation).is_ok();
 
     let mut conf = Config::new();
+    conf.setup().await;
     conf.set_aws_config(&shared_config);
 
     let creation = AssetAllSchema::create_schema(&conf).await;
