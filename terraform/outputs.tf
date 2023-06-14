@@ -8,3 +8,7 @@ output "video_in_topic" {
 output "video_out_topic" {
   value = aws_sns_topic.video_out_topic.arn
 }
+
+output "api" {
+  value = aws_apigatewayv2_domain_name.truly_api_domain_name.domain_name
+}
