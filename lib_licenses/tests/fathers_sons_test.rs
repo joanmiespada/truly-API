@@ -1,12 +1,11 @@
 use std::{env, str::FromStr};
 
-use aws_sdk_dynamodb::Client;
-use lib_config::infra::build_local_stack_connection;
+use lib_config::{infra::build_local_stack_connection, config::Config, schema::Schema};
 use lib_licenses::{
     models::asset::{Asset, SourceType},
     repositories::{
-        assets::AssetRepo, schema_asset::create_schema_assets_all,
-        schema_owners::create_schema_owners, shorter::ShorterRepo,
+        assets::AssetRepo, 
+        shorter::ShorterRepo, schema_asset::AssetAllSchema, schema_owners::OwnerSchema,
     },
     services::assets::{AssetManipulation, AssetService, CreatableFildsAsset},
 };
@@ -71,15 +70,20 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
     let host_port = node.get_host_port_ipv4(8000);
 
     let shared_config = build_local_stack_connection(host_port).await;
-    let client = Client::new(&shared_config);
+    //let client = Client::new(&shared_config);
 
-    let mut creation = create_schema_assets_all(&client).await;
-    assert_that(&creation).is_ok();
-    creation = create_schema_owners(&client).await;
-    assert_that(&creation).is_ok();
+    // let mut creation = create_schema_assets_all(&client).await;
+    // assert_that(&creation).is_ok();
+    // creation = create_schema_owners(&client).await;
+    // assert_that(&creation).is_ok();
 
-    let mut conf = lib_config::config::Config::new();
+    let mut conf = Config::new();
     conf.set_aws_config(&shared_config);
+
+    let creation = AssetAllSchema::create_schema(&conf).await;
+    assert_that(&creation).is_ok();
+    let creation = OwnerSchema::create_schema(&conf).await;
+    assert_that(&creation).is_ok();
 
     let repo_assets = AssetRepo::new(&conf);
     let repo_shorters = ShorterRepo::new(&conf);

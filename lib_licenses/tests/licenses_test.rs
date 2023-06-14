@@ -1,12 +1,14 @@
 use aws_sdk_dynamodb::Client;
+use lib_config::config::Config;
 use lib_config::infra::build_local_stack_connection;
+use lib_config::schema::Schema;
 use lib_licenses::models::asset::Asset;
 use lib_licenses::models::license::{CreatableFildsLicense, Royalty};
 use lib_licenses::repositories::assets::{AssetRepo, AssetRepository};
 use lib_licenses::repositories::licenses::LicenseRepo;
-use lib_licenses::repositories::schema_asset::create_schema_assets_all;
-use lib_licenses::repositories::schema_licenses::create_schema_licenses;
-use lib_licenses::repositories::schema_owners::create_schema_owners;
+use lib_licenses::repositories::schema_asset::AssetAllSchema;
+use lib_licenses::repositories::schema_licenses::LicenseSchema;
+use lib_licenses::repositories::schema_owners::OwnerSchema;
 use lib_licenses::services::licenses::{LicenseManipulation, LicenseService};
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -28,12 +30,13 @@ async fn creation_table() {
 
     let shared_config = build_local_stack_connection(host_port).await;
 
-    let client = Client::new(&shared_config);
-
-    let creation = create_schema_licenses(&client).await;
-
+    let mut conf = Config::new();
+    conf.set_aws_config(&shared_config);
+    //let creation = create_schema_licenses(&client).await;
+    let creation = LicenseSchema::create_schema(&conf).await;
     assert_that(&creation).is_ok();
 
+    let client = Client::new(&shared_config);
     let req = client.list_tables().limit(10);
     let list_tables_result = req.send().await.unwrap();
 
@@ -52,16 +55,17 @@ async fn run_licenses() -> ResultE<()> {
     let host_port = node.get_host_port_ipv4(8000);
 
     let shared_config = build_local_stack_connection(host_port).await;
-    let client = Client::new(&shared_config);
+    //let client = Client::new(&shared_config);
 
-    create_schema_owners(&client).await?;
-    create_schema_assets_all(&client).await?;
-    let creation = create_schema_licenses(&client).await;
-
-    assert_that(&creation).is_ok();
-
-    let mut conf = lib_config::config::Config::new();
+    let mut conf = Config::new();
     conf.set_aws_config(&shared_config);
+
+    let creation = OwnerSchema::create_schema(&conf).await;
+    assert_that(&creation).is_ok();
+    let creation = AssetAllSchema::create_schema(&conf).await; 
+    assert_that(&creation).is_ok();
+    let creation = LicenseSchema::create_schema(&conf).await;
+    assert_that(&creation).is_ok();
 
     let repo = LicenseRepo::new(&conf);
     let ass_repo = AssetRepo::new(&conf);

@@ -9,10 +9,9 @@ use lib_blockchain::repositories::block_tx::BlockchainTxRepo;
 use lib_blockchain::repositories::blockchain::{BlockchainRepo, BlockchainRepository};
 use lib_blockchain::repositories::contract::{ContractRepo, ContractRepository};
 use lib_blockchain::repositories::keypairs::KeyPairRepo;
-use lib_blockchain::repositories::schema_block_tx::create_schema_transactions;
-use lib_blockchain::repositories::schema_blockchain::create_schema_blockchains;
-use lib_blockchain::repositories::schema_contract::create_schema_contracts;
-use lib_blockchain::repositories::schema_keypairs::create_schema_keypairs;
+use lib_blockchain::repositories::schema_block_tx::BlockTxSchema;
+use lib_blockchain::repositories::schema_contract::ContractSchema;
+use lib_blockchain::repositories::schema_keypairs::KeyPairSchema;
 use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
 use lib_blockchain::services::contract::deploy_evm_contract_locally;
 use lib_blockchain::services::nfts::{NFTsManipulation, NFTsService, NTFState};
@@ -24,11 +23,14 @@ use lib_config::infra::{
 use lib_licenses::models::asset::{MintingStatus, SourceType, VideoLicensingStatus};
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
-use lib_licenses::repositories::schema_asset::create_schema_assets_all;
-use lib_licenses::repositories::schema_owners::create_schema_owners;
+use lib_licenses::repositories::schema_asset::AssetAllSchema;
+use lib_licenses::repositories::schema_owners::OwnerSchema;
 use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::services::owners::OwnerService;
+
+use lib_blockchain::repositories::schema_blockchain::BlockchainSchema;
+use lib_config::schema::Schema;
 
 use spectral::{assert_that, result::ResultAssertions};
 use std::{env, str::FromStr};
@@ -54,27 +56,7 @@ async fn create_contract_and_mint_nft_test_sync(
 
     let shared_config = build_local_stack_connection(host_port).await;
 
-    let dynamo_client = aws_sdk_dynamodb::Client::new(&shared_config);
-
-    let creation1 = create_schema_blockchains(&dynamo_client).await;
-    assert_that(&creation1).is_ok();
-
-    let creation2 = create_schema_contracts(&dynamo_client).await;
-    assert_that(&creation2).is_ok();
-
-    let creation3 = create_schema_assets_all(&dynamo_client).await;
-    assert_that(&creation3).is_ok();
-
-    let creation4 = create_schema_owners(&dynamo_client).await;
-    assert_that(&creation4).is_ok();
-
-    let creation5 = create_schema_keypairs(&dynamo_client).await;
-    assert_that(&creation5).is_ok();
-
-    let creation6 = create_schema_transactions(&dynamo_client).await;
-    assert_that(&creation6).is_ok();
-
-    //create secrets and keys
+        //create secrets and keys
 
     let keys_client = aws_sdk_kms::client::Client::new(&shared_config);
     let new_key_id = create_key(&keys_client).await?;
@@ -95,6 +77,29 @@ async fn create_contract_and_mint_nft_test_sync(
     config.setup().await;
     config.set_aws_config(&shared_config); //rewrite configuration to use our current testcontainer instead
     config.load_secrets().await;
+
+    //tables
+
+    //let creation = create_schema_blockchains(&dynamo_client).await;
+    let creation = BlockchainSchema::create_schema(&config).await;
+    assert_that(&creation).is_ok();
+
+    let creation = ContractSchema::create_schema(&config).await;
+    assert_that(&creation).is_ok();
+
+    let creation3 = AssetAllSchema::create_schema(&config).await;//  create_schema_assets_all(&dynamo_client).await;
+    assert_that(&creation3).is_ok();
+
+    let creation4 = OwnerSchema::create_schema(&config).await;// create_schema_owners(&dynamo_client).await;
+    assert_that(&creation4).is_ok();
+
+    let creation = KeyPairSchema::create_schema(&config).await;
+    assert_that(&creation).is_ok();
+
+    let creation = BlockTxSchema::create_schema(&config).await;
+    assert_that(&creation).is_ok();
+
+
 
     // bootstrap dependencies
     let repo_tx = BlockchainTxRepo::new(&config.clone());

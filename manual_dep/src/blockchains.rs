@@ -3,7 +3,7 @@ use std::{fs::File, io::Read};
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
 use lib_blockchain::{
     models::blockchain::Blockchain,
-    repositories::blockchain::{BlockchainRepo, BlockchainRepository},
+    repositories::{blockchain::{BlockchainRepo, BlockchainRepository}, },
 };
 
 use lib_config::config::Config;
@@ -46,15 +46,18 @@ pub async fn manage_blockchains(
 
 #[tokio::test]
 async fn manage_blockchain_test() {
-    use lib_blockchain::repositories::schema_blockchain::create_schema_blockchains;
     use lib_config::{environment::DEV_ENV, infra::build_local_stack_connection};
     use spectral::{assert_that, result::ResultAssertions};
     use std::env;
     use std::path::PathBuf;
     use testcontainers::{clients, images};
+    use lib_config::environment::ENV_VAR_ENVIRONMENT;
+    use lib_blockchain::repositories::schema_blockchain::BlockchainSchema;
+    use lib_config::schema::Schema;
 
     env::set_var("RUST_LOG", "debug");
-    env::set_var("ENVIRONMENT", "development");
+    //env::set_var("ENVIRONMENT", "development");
+    env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
 
     env_logger::builder().is_test(true).init();
 
@@ -67,15 +70,16 @@ async fn manage_blockchain_test() {
 
     let shared_config = build_local_stack_connection(host_port).await;
 
-    let client = aws_sdk_dynamodb::Client::new(&shared_config);
-    let creation = create_schema_blockchains(&client).await;
-    assert_that(&creation).is_ok();
-
-    // set up config for truly app
+        // set up config for truly app
     let mut config = Config::new();
     config.setup().await;
     config.set_aws_config(&shared_config); //rewrite configuration to use our current testcontainer instead
                                            //config.load_secrets().await;
+
+    //let client = aws_sdk_dynamodb::Client::new(&shared_config);
+    let creation = BlockchainSchema::create_schema(&config).await;
+    assert_that(&creation).is_ok();
+
 
     let filename = "manual_dep/res/blockchain_development.json";
     let current_dir = env::current_dir().unwrap();

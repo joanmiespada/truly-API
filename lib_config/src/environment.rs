@@ -3,6 +3,9 @@ use std::fmt::Display;
 use serde::Deserialize;
 
 pub static ENV_VAR_ENVIRONMENT: &str = "ENVIRONMENT";
+pub static ENV_VAR_PROJECT_LABEL: &str = "PROJECT";
+pub static ENV_VAR_SERVICE_LABEL: &str = "SERVICE";
+pub static ENV_VAR_PROJECT: &str = "truly";
 pub static DEV_ENV: &str = "development";
 pub static PROD_ENV: &str = "production";
 pub static STAGE_ENV: &str = "stage";

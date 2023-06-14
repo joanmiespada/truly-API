@@ -27,6 +27,7 @@ log = "0.4.17"
 aws-types = "0.55.3"
 aws-sdk-kms = "0.28.0"
 base64 = "0.21.2"
+async-trait = "0.1.68"
 workspace-hack = { version = "0.1", path = "../workspace-hack" }
 
 [dev-dependencies]

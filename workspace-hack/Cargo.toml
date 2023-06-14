@@ -63,6 +63,7 @@ tracing-core = { version = "0.1", default-features = false, features = ["std"] }
 uint = { version = "0.9" }
 url = { version = "2", features = ["serde"] }
 zeroize = { version = "1" }
+async-trait = "0.1.68"
 
 [build-dependencies]
 arrayvec = { version = "0.7" }
@@ -105,6 +106,7 @@ tracing = { version = "0.1", features = ["log"] }
 tracing-core = { version = "0.1", default-features = false, features = ["std"] }
 uint = { version = "0.9" }
 zeroize = { version = "1" }
+async-trait = "0.1.68"
 
 [target.aarch64-apple-darwin.dependencies]
 crunchy = { version = "0.2", features = ["limit_256", "std"] }

@@ -1,16 +1,16 @@
 use std::env;
 use std::str::FromStr;
 
-use aws_sdk_dynamodb::Client;
 use lib_async_ops::sns::create;
 use lib_config::config::Config;
 use lib_config::infra::build_local_stack_connection;
+use lib_config::schema::Schema;
 use lib_licenses::models::asset::{SourceType, VideoLicensingStatus};
 use lib_licenses::models::shorter::CreateShorter;
 use lib_licenses::models::video::{VideoProcessStatus, VideoResult};
 use lib_licenses::repositories::assets::AssetRepo;
-use lib_licenses::repositories::schema_asset::create_schema_assets_all;
-use lib_licenses::repositories::schema_owners::create_schema_owners;
+use lib_licenses::repositories::schema_asset::AssetAllSchema;
+use lib_licenses::repositories::schema_owners::OwnerSchema;
 use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::services::video::{VideoManipulation, VideoService};
@@ -33,12 +33,6 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     let host_port = node.get_host_port_ipv4(4566);
 
     let shared_config = build_local_stack_connection(host_port).await;
-    let client = Client::new(&shared_config);
-
-    let creation = create_schema_assets_all(&client).await;
-    assert_that(&creation).is_ok();
-    let creation3 = create_schema_owners(&client).await;
-    assert_that(&creation3).is_ok();
 
     let mut conf = Config::new();
     conf.setup().await;
@@ -46,6 +40,11 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     let topic_arn = create(&conf, "video_in_topic".to_string()).await?;
     env::set_var("SHORTER_VIDEO_IN_TOPIC", topic_arn);
     conf.refresh_env_vars();
+
+    let creation = AssetAllSchema::create_schema(&conf).await;
+    assert_that(&creation).is_ok();
+    let creation = OwnerSchema::create_schema(&conf).await;
+    assert_that(&creation).is_ok();
 
     let repo_assets = AssetRepo::new(&conf);
     let repo_shorters = ShorterRepo::new(&conf);

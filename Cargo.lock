@@ -6549,6 +6549,7 @@ name = "lib_config"
 version = "0.0.1"
 dependencies = [
  "actix-web",
+ "async-trait",
  "aws-config 0.55.3",
  "aws-sdk-dynamodb",
  "aws-sdk-kms",
@@ -14530,6 +14531,7 @@ version = "0.1.0"
 dependencies = [
  "actix-rt",
  "arrayvec 0.7.2",
+ "async-trait",
  "bit-set",
  "bit-vec",
  "byteorder",

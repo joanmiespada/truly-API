@@ -7,6 +7,10 @@ pub mod services;
 
 use validator::ValidationError;
 use zxcvbn::zxcvbn;
+
+
+pub static SERVICE: &str = "users";
+
 pub fn validate_password(password: &str) -> Result<(), ValidationError> {
     let op_estimate = zxcvbn(password, &[]);
     match op_estimate {

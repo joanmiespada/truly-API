@@ -2,9 +2,10 @@ use std::env;
 
 use aws_sdk_dynamodb::Client;
 use lib_config::infra::build_local_stack_connection;
+use lib_config::schema::Schema;
 use lib_licenses::models::owner::Owner;
 use lib_licenses::repositories::owners::OwnerRepo;
-use lib_licenses::repositories::schema_owners::create_schema_owners;
+use lib_licenses::repositories::schema_owners::OwnerSchema;
 use lib_licenses::services::owners::{OwnerManipulation, OwnerService};
 use spectral::prelude::*;
 use testcontainers::*;
@@ -20,12 +21,13 @@ async fn creation_table() {
 
     let shared_config = build_local_stack_connection(host_port).await;
 
-    let client = Client::new(&shared_config);
+    let mut conf = lib_config::config::Config::new();
+    conf.set_aws_config(&shared_config);
 
-    let creation = create_schema_owners(&client).await;
-
+    let creation = OwnerSchema::create_schema(&conf).await;
     assert_that(&creation).is_ok();
 
+    let client = Client::new(&shared_config);
     let req = client.list_tables().limit(10);
     let list_tables_result = req.send().await.unwrap();
 
@@ -44,14 +46,13 @@ async fn add_owners() {
     let host_port = node.get_host_port_ipv4(8000);
 
     let shared_config = build_local_stack_connection(host_port).await;
-    let client = Client::new(&shared_config);
-
-    let creation = create_schema_owners(&client).await;
-
-    assert_that(&creation).is_ok();
+    //let client = Client::new(&shared_config);
 
     let mut conf = lib_config::config::Config::new();
     conf.set_aws_config(&shared_config);
+
+    let creation = OwnerSchema::create_schema(&conf).await;
+    assert_that(&creation).is_ok();
 
     let repo = OwnerRepo::new(&conf);
     let service = OwnerService::new(repo);

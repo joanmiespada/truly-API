@@ -3,10 +3,12 @@ use std::env;
 use std::str::FromStr;
 
 use aws_sdk_dynamodb::Client;
+use lib_config::config::Config;
+use lib_config::schema::Schema;
 use lib_licenses::models::asset::{AssetStatus, SourceType};
 use lib_licenses::repositories::assets::AssetRepo;
-use lib_licenses::repositories::schema_asset::create_schema_assets_all;
-use lib_licenses::repositories::schema_owners::create_schema_owners;
+use lib_licenses::repositories::schema_asset::AssetAllSchema;
+use lib_licenses::repositories::schema_owners::OwnerSchema;
 use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::{
     AssetManipulation, AssetService, CreatableFildsAsset, UpdatableFildsAsset,
@@ -27,12 +29,22 @@ async fn creation_table() {
 
     let shared_config = build_local_stack_connection(host_port).await;
 
-    let client = Client::new(&shared_config);
 
-    let mut creation = create_schema_assets_all(&client).await;
+    // let mut creation = create_schema_assets_all(&client).await;
+    // assert_that(&creation).is_ok();
+    // creation = create_schema_owners(&client).await;
+    // assert_that(&creation).is_ok();
+
+    let mut conf = Config::new();
+    conf.set_aws_config(&shared_config);
+
+    let creation = AssetAllSchema::create_schema(&conf).await;
     assert_that(&creation).is_ok();
-    creation = create_schema_owners(&client).await;
+    let creation = OwnerSchema::create_schema(&conf).await;
     assert_that(&creation).is_ok();
+
+
+    let client = Client::new(&shared_config);
 
     let req = client.list_tables().limit(10);
     let list_tables_result = req.send().await.unwrap();
@@ -48,15 +60,19 @@ async fn add_assets() {
     let host_port = node.get_host_port_ipv4(8000);
 
     let shared_config = build_local_stack_connection(host_port).await;
-    let client = Client::new(&shared_config);
 
-    let mut creation = create_schema_assets_all(&client).await;
-    assert_that(&creation).is_ok();
-    creation = create_schema_owners(&client).await;
-    assert_that(&creation).is_ok();
+    // let mut creation = create_schema_assets_all(&client).await;
+    // assert_that(&creation).is_ok();
+    // creation = create_schema_owners(&client).await;
+    // assert_that(&creation).is_ok();
 
-    let mut conf = lib_config::config::Config::new();
+    let mut conf = Config::new();
     conf.set_aws_config(&shared_config);
+
+    let creation = AssetAllSchema::create_schema(&conf).await;
+    assert_that(&creation).is_ok();
+    let creation = OwnerSchema::create_schema(&conf).await;
+    assert_that(&creation).is_ok();
 
     let repo_assets = AssetRepo::new(&conf);
     let repo_shorters = ShorterRepo::new(&conf);
@@ -187,15 +203,19 @@ async fn check_ownership() {
     let host_port = node.get_host_port_ipv4(8000);
 
     let shared_config = build_local_stack_connection(host_port).await;
-    let client = Client::new(&shared_config);
 
-    let mut creation = create_schema_assets_all(&client).await;
-    assert_that(&creation).is_ok();
-    creation = create_schema_owners(&client).await;
-    assert_that(&creation).is_ok();
+    // let mut creation = create_schema_assets_all(&client).await;
+    // assert_that(&creation).is_ok();
+    // creation = create_schema_owners(&client).await;
+    // assert_that(&creation).is_ok();
 
     let mut conf = lib_config::config::Config::new();
     conf.set_aws_config(&shared_config);
+ 
+    let creation = AssetAllSchema::create_schema(&conf).await;
+    assert_that(&creation).is_ok();
+    let creation = OwnerSchema::create_schema(&conf).await;
+    assert_that(&creation).is_ok();
 
     let repo_assets = AssetRepo::new(&conf);
     let repo_shorters = ShorterRepo::new(&conf);
@@ -262,15 +282,19 @@ async fn check_asset_tree_father_son() {
     let host_port = node.get_host_port_ipv4(8000);
 
     let shared_config = build_local_stack_connection(host_port).await;
-    let client = Client::new(&shared_config);
 
-    let mut creation = create_schema_assets_all(&client).await;
-    assert_that(&creation).is_ok();
-    creation = create_schema_owners(&client).await;
-    assert_that(&creation).is_ok();
+    // let mut creation = create_schema_assets_all(&client).await;
+    // assert_that(&creation).is_ok();
+    // creation = create_schema_owners(&client).await;
+    // assert_that(&creation).is_ok();
 
     let mut conf = lib_config::config::Config::new();
     conf.set_aws_config(&shared_config);
+
+    let creation = AssetAllSchema::create_schema(&conf).await;
+    assert_that(&creation).is_ok();
+    let creation = OwnerSchema::create_schema(&conf).await;
+    assert_that(&creation).is_ok();
 
     let repo_assets = AssetRepo::new(&conf);
     let repo_shorters = ShorterRepo::new(&conf);
