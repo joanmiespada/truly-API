@@ -71,29 +71,6 @@ impl Asset {
             source_details: None,
         }
     }
-    pub fn new2(id: Uuid, url: Url, hash: String, hash_algorithm: String) -> Asset {
-        Asset {
-            id,
-            creation_time: Utc::now(),
-            last_update_time: Utc::now(),
-            url: Some(url),
-            status: AssetStatus::Enabled,
-            hash: Some(hash),
-            hash_algorithm: Some(hash_algorithm),
-            latitude: None,
-            longitude: None,
-            last_minted_tx: None,
-            mint_status: MintingStatus::NeverMinted,
-            shorter: None,
-            counter: None,
-            father: None,
-            video_licensing_error: None,
-            video_licensing_status: VideoLicensingStatus::NeverStarted,
-            video_process_status: None,
-            source: None,
-            source_details: None,
-        }
-    }
 
     pub fn id(&self) -> &Uuid {
         &self.id
@@ -223,6 +200,74 @@ impl Asset {
             self. = val.clone()
         }
     */
+}
+
+impl Default for Asset {
+    fn default() -> Asset {
+        Asset::new()
+    }
+}
+
+pub struct AssetBuilder {
+    id: Uuid,
+    url: Option<Url>,
+    hash: Option<String>,
+    hash_algorithm: Option<String>
+}
+
+impl AssetBuilder{
+    pub fn new() -> AssetBuilder{
+        AssetBuilder { 
+            id: Uuid::nil(),
+            url: None,
+            hash: None,
+            hash_algorithm: None,
+        }
+    }
+    pub fn id(&mut self, id: Uuid) -> &mut AssetBuilder {
+        self.id = id.clone();
+        self
+    }
+    pub fn url(&mut self, url: Url) -> &mut AssetBuilder {
+        self.url = Some(url.clone());
+        self
+    }
+    pub fn hash(&mut self, hash: &str) -> &mut AssetBuilder {
+        self.hash = Some(hash.to_string());
+        self
+    }pub fn hash_algorithm(&mut self, hash_algorithm: &str) -> &mut AssetBuilder {
+        self.hash_algorithm = Some(hash_algorithm.to_string());
+        self
+    }
+
+    pub fn build(&self) -> Asset {
+        Asset {
+            id: self.id,
+            creation_time: Utc::now(),
+            last_update_time: Utc::now(),
+            url: self.url.clone(),
+            status: AssetStatus::Enabled,
+            hash: self.hash.clone(),
+            hash_algorithm: self.hash_algorithm.clone(),
+            latitude: None,
+            longitude: None,
+            last_minted_tx: None,
+            mint_status: MintingStatus::NeverMinted,
+            shorter: None,
+            counter: None,
+            father: None,
+            video_licensing_error: None,
+            video_licensing_status: VideoLicensingStatus::NeverStarted,
+            video_process_status: None,
+            source: None,
+            source_details: None,
+        }
+    }
+}
+impl Default for AssetBuilder {
+    fn default() -> AssetBuilder {
+        AssetBuilder::new()
+    }
 }
 
 #[derive(Clone, Serialize, Validate, Deserialize, Debug)]

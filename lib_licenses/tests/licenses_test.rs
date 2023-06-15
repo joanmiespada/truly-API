@@ -3,7 +3,7 @@ use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::infra::build_local_stack_connection;
 use lib_config::schema::Schema;
-use lib_licenses::models::asset::Asset;
+use lib_licenses::models::asset::{Asset, AssetBuilder};
 use lib_licenses::models::license::{CreatableFildsLicense, Royalty};
 use lib_licenses::repositories::assets::{AssetRepo, AssetRepository};
 use lib_licenses::repositories::licenses::LicenseRepo;
@@ -79,20 +79,22 @@ async fn run_licenses() -> ResultE<()> {
     let asset_id1;
     let asset_id2;
 
-    let mut asset = Asset::new2(
-        Uuid::new_v4(),
-        Url::parse("http://a.xyz")?,
-        "hash1234".to_string(),
-        "MD5".to_string(),
-    );
+    let asset = AssetBuilder::default()
+        .id(Uuid::new_v4())
+        .url(Url::parse("http://a.xyz")?)
+        .hash("hash1234")
+        .hash_algorithm("MD5")
+        .build();
+
     asset_id1 = ass_repo.add(&asset, &user_id).await?;
 
-    asset = Asset::new2(
-        Uuid::new_v4(),
-        Url::parse("http://b.xyz")?,
-        "hash5678".to_string(),
-        "MD5".to_string(),
-    );
+    let asset = AssetBuilder::default()
+        .id(Uuid::new_v4())
+        .url(Url::parse("http://b.xyz")?)
+        .hash("hash5678")
+        .hash_algorithm("MD5")
+        .build();
+    
     asset_id2 = ass_repo.add(&asset, &user_id).await?;
 
     let service = LicenseService::new(repo, ass_repo);
