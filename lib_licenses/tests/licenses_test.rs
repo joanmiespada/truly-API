@@ -3,7 +3,7 @@ use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::infra::build_local_stack_connection;
 use lib_config::schema::Schema;
-use lib_licenses::models::asset::{Asset, AssetBuilder};
+use lib_licenses::models::asset::AssetBuilder;
 use lib_licenses::models::license::{CreatableFildsLicense, Royalty};
 use lib_licenses::repositories::assets::{AssetRepo, AssetRepository};
 use lib_licenses::repositories::licenses::LicenseRepo;

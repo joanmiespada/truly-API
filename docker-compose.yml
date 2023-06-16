@@ -22,9 +22,9 @@ services:
       - DATA_DIR=/tmp/localstack/data
       - HOST_TMP_FOLDER=./.localstack
     volumes:
-      - './.localstack:/tmp/localstack'
+      - "./.localstack:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - ./create-docker-resources.sh:/docker-entrypoint-initaws.d/create-docker-resources.sh
+      - "./create-docker-resources.sh:/docker-entrypoint-initaws.d/create-docker-resources.sh"
 
   blockchain:
     build: 

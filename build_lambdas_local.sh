@@ -1,24 +1,44 @@
 #!/bin/bash
-cargo build --release --workspace --exclude server_* --exclude command_*
-
 rm -rf target/lambda_local
+
+cargo build --workspace --exclude server_* --exclude command_*
+
 mkdir target/lambda_local
-mkdir target/lambda_local/lambda_login
-cp target/release/lambda_login target/lambda_local/lambda_login/bootstrap
-cd target/lambda_local/lambda_login
-zip -j bootstrap.zip bootstrap 
-cd ../../..
 
-mkdir target/lambda_local/lambda_user
-cp target/release/lambda_user target/lambda_local/lambda_user/bootstrap
-cd target/lambda_local/lambda_user
-zip -j bootstrap.zip bootstrap 
-cd ../../..
+lambdas=("lambda_login" "lambda_admin" "lambda_after_video" "lambda_license" "lambda_mint" "lambda_user")
 
-mkdir target/lambda_local/lambda_admin
-cp target/release/lambda_admin target/lambda_local/lambda_admin/bootstrap
-cd target/lambda_local/lambda_admin
-zip -j bootstrap.zip bootstrap 
-cd ../../..
+#lambda_name="lambda_login"
+
+for lambda_name in "${lambdas[@]}"
+do
+    mkdir target/lambda_local/${lambda_name}
+    cp target/release/${lambda_name} target/lambda_local/${lambda_name}/bootstrap
+    cd target/lambda_local/${lambda_name}
+    zip -j -q bootstrap.zip bootstrap
+    
+    output=$(aws lambda create-function \
+        --endpoint-url http://localhost:4566 \
+        --function-name ${lambda_name} \
+        --runtime provided \
+        --zip-file fileb://bootstrap.zip \
+        --handler function_handler \
+        --role arn:aws:iam::000000000000:role/lambda-role \
+        --profile localstack \
+        --region eu-central-1 \
+    --output json)
+    
+    output=$(aws lambda create-function-url-config \
+        --endpoint-url http://localhost:4566 \
+        --function-name ${lambda_name} \
+        --auth-type NONE \
+        --profile localstack \
+        --region eu-central-1 \
+    --output json)
+    url_lambda=$(echo $output | jq -r '.FunctionUrl')
+    
+    echo ${lambda_name}: ${url_lambda}
+    cd ../../..
+done
+
 
 
