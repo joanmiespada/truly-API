@@ -67,7 +67,7 @@ pub async fn async_create_my_nft_sns(
         body: json_text.to_owned(),
     };
 
-    let topic_arn = config.env_vars().topic_arn_mint_async().to_owned();
+    let topic_arn = config.env_vars().topic_arn_mint_async().unwrap();
 
     let enqueded_op = send_sns(config, &message, topic_arn).await;
 

@@ -74,7 +74,7 @@ impl Schema for AssetSchema {
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
-                    .set_value(Some(config.env_vars().environment().clone()))
+                    .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(
@@ -152,7 +152,7 @@ impl Schema for AssetTreeSchema {
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
-                    .set_value(Some(config.env_vars().environment().clone()))
+                    .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(
@@ -228,7 +228,7 @@ impl Schema for ShorterSchema {
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
-                    .set_value(Some(config.env_vars().environment().clone()))
+                    .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(

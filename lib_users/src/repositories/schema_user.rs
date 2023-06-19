@@ -56,7 +56,7 @@ impl Schema for UserSchema {
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
-                    .set_value(Some(config.env_vars().environment().clone()))
+                    .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(
@@ -133,7 +133,7 @@ impl Schema for LoginDeviceSchema {
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
-                    .set_value(Some(config.env_vars().environment().clone()))
+                    .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(
@@ -215,7 +215,7 @@ impl Schema for LoginEmailSchema {
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
-                    .set_value(Some(config.env_vars().environment().clone()))
+                    .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(
@@ -293,7 +293,7 @@ impl Schema for LoginWalletSchema {
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
-                    .set_value(Some(config.env_vars().environment().clone()))
+                    .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(

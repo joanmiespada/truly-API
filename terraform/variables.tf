@@ -69,3 +69,13 @@ variable "dns_base" {
   description = "domain base truly.video"
   default = "truly.video"
 } 
+
+variable "telemetry" {
+  type=bool
+  description = "enable or disable telemetry"
+}
+
+variable "telemetry_endpoint" {
+  type=string
+  description = "endpoint to forward observability metrics"
+}

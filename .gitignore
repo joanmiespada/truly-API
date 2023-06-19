@@ -11,4 +11,6 @@
 /terraform/variables-prod.*
 /terraform/variables-stage.*
 sui.log.*
+qwdata
+grafana-storage
 

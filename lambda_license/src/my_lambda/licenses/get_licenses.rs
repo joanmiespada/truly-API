@@ -33,7 +33,7 @@ pub async fn get_licenses(
                 return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
             } else {
                 return build_resp_env(
-                    config.env_vars().environment(),
+                    &config.env_vars().environment().unwrap(),
                     e,
                     StatusCode::INTERNAL_SERVER_ERROR,
                 );
@@ -47,7 +47,7 @@ pub async fn get_licenses(
                         return build_resp(e.to_string(), StatusCode::SERVICE_UNAVAILABLE);
                     } else {
                         return build_resp_env(
-                            config.env_vars().environment(),
+                            &config.env_vars().environment().unwrap(),
                             e,
                             StatusCode::INTERNAL_SERVER_ERROR,
                         );

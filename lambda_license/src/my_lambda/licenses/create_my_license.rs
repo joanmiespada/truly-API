@@ -47,7 +47,7 @@ pub async fn create_my_license(
                 return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
             } else {
                 return build_resp_env(
-                    config.env_vars().environment(),
+                    &config.env_vars().environment().unwrap(),
                     e,
                     StatusCode::INTERNAL_SERVER_ERROR,
                 );

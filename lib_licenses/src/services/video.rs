@@ -101,7 +101,7 @@ impl VideoManipulation for VideoService {
             .config
             .env_vars()
             .topic_arn_shorter_video_start()
-            .to_owned();
+            .unwrap();
 
         let enqueded_op = send(&self.config, &message, topic_arn).await;
 

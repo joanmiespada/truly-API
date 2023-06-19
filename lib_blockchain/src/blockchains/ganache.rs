@@ -56,12 +56,12 @@ impl GanacheBlockChain {
         contracts_repo: &ContractRepo,
         blockchains_repo: &BlockchainRepo,
     ) -> ResultE<GanacheBlockChain> {
-        let aux = conf.env_vars().contract_id();
+        let aux = conf.env_vars().contract_id().unwrap();
         let contract = contracts_repo.get_by_id(&aux).await?;
         let blockchain = blockchains_repo.get_by_id(contract.blockchain()).await?;
 
         let blockchain_url;
-        if conf.env_vars().environment() == DEV_ENV {
+        if conf.env_vars().environment().unwrap() == DEV_ENV {
             blockchain_url = blockchain.url().to_owned()
         } else {
             blockchain_url = Url::from_str(
@@ -85,7 +85,7 @@ impl GanacheBlockChain {
             contract_address,       //contract_address_position,
             contract_owner_address, //contract_owner_position,
             contract_owner_secret: contract.owner_secret().clone().unwrap().to_owned(), //contract_owner_position,
-            kms_key_id: conf.env_vars().kms_key_id().to_owned(),
+            kms_key_id: conf.env_vars().kms_key_id().unwrap(),
             //aws: conf.aws_config().to_owned(),
             config: conf.clone(),
             blockhain_node_confirmations: blockchain.confirmations().to_owned(), //conf.env_vars().blockchain_confirmations().to_owned(),

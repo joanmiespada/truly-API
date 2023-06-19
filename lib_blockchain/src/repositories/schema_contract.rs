@@ -79,7 +79,7 @@ impl Schema for ContractSchema {
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
-                    .set_value(Some(config.env_vars().environment().clone()))
+                    .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(

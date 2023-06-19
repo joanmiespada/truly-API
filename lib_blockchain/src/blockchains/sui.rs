@@ -59,12 +59,12 @@ impl SuiBlockChain {
         contracts_repo: &ContractRepo,
         blockchains_repo: &BlockchainRepo,
     ) -> ResultE<SuiBlockChain> {
-        let aux = conf.env_vars().contract_id();
+        let aux = conf.env_vars().contract_id().unwrap();
         let contract = contracts_repo.get_by_id(&aux).await?;
         let blockchain = blockchains_repo.get_by_id(contract.blockchain()).await?;
 
         let blockchain_url;
-        if conf.env_vars().environment() == DEV_ENV {
+        if conf.env_vars().environment().unwrap() == DEV_ENV {
             blockchain_url = blockchain.url().to_owned()
         } else {
             blockchain_url = Url::from_str(
@@ -159,7 +159,7 @@ impl NFTsRepository for SuiBlockChain {
         let transfer_tx = transfer_tx_op.ok().unwrap();
 
         // Sign transaction
-        let kms_key_id = self.config.env_vars().kms_key_id().clone();
+        let kms_key_id = self.config.env_vars().kms_key_id().unwrap();
         let transaction_response_op;
         {
             let mut encoded_secret_cyphered = self.contract_owner_secret.clone();

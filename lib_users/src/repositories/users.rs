@@ -15,6 +15,7 @@ use aws_sdk_dynamodb::{
     types::{AttributeValue, Select},
     Client,
 };
+
 use chrono::{
     prelude::{DateTime, Utc},
     Local,
@@ -404,7 +405,7 @@ impl UsersRepo {
 
                 match password {
                     Some(password) => {
-                        let hash = cypher_text(password, &self.environment_vars.hmac_secret())?;
+                        let hash = cypher_text(password, &self.environment_vars.hmac_secret().unwrap() )?;
                         let password_av: AttributeValue = AttributeValue::S(hash);
                         email_fields = email_fields.item(PASSWORD_FIELD_NAME, password_av);
                     }
@@ -643,7 +644,7 @@ impl UserRepository for UsersRepo {
                 let password_ok = cypher_check(
                     &password,
                     &password_stored_hashed,
-                    self.environment_vars.hmac_secret(),
+                    &self.environment_vars.hmac_secret().unwrap(),
                 )?;
                 if password_ok {
                     let user_op = self
