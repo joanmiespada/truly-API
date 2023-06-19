@@ -6,8 +6,8 @@ use crate::my_lambda::after_video::store_after_video_process;
 use aws_lambda_events::sqs::SqsEventObj;
 use lambda_runtime::LambdaEvent;
 use lib_config::config::Config;
-use lib_licenses::models::video::VideoResult;
 use lib_licenses::services::assets::AssetService;
+use lib_video_objs::video::VideoResult;
 use serde_json::{Error, Value};
 use tracing::{error, info, instrument};
 

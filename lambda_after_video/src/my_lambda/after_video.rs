@@ -1,6 +1,6 @@
 use lib_config::config::Config;
-use lib_licenses::models::video::VideoResult;
 use lib_licenses::services::assets::{AssetManipulation, AssetService};
+use lib_video_objs::video::VideoResult;
 use tracing::{error, info, instrument};
 
 #[instrument]

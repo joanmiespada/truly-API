@@ -1,10 +1,10 @@
 use crate::models::asset::{Asset, AssetStatus, MintingStatus, SourceType};
 use crate::models::asset::{AssetEnhanced, VideoLicensingStatus};
-use crate::models::video::VideoResult;
 use crate::repositories::assets::{AssetRepo, AssetRepository};
 use crate::repositories::shorter::{ShorterRepo, ShorterRepository};
 use async_trait::async_trait;
 use chrono::Utc;
+use lib_video_objs::video::VideoResult;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use tracing::{error, info};

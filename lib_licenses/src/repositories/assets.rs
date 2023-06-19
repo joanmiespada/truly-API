@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
+use lib_video_objs::video::VideoProcessStatus;
 use tracing::{error, info};
 use url::Url;
 use uuid::Uuid;
@@ -9,7 +10,6 @@ use crate::errors::asset::{AssetDynamoDBError, AssetNoExistsError, AssetTreeErro
 use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
 use crate::models::asset::{Asset, AssetStatus, MintingStatus, SourceType, VideoLicensingStatus};
 use crate::models::owner::Owner;
-use crate::models::video::VideoProcessStatus;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{AttributeValue, Put, Select, TransactWriteItem};
 use aws_sdk_dynamodb::Client;

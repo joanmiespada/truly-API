@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use lib_video_objs::video::VideoProcessStatus;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{fmt, str::FromStr};
@@ -6,7 +7,6 @@ use url::Url;
 use uuid::Uuid;
 use validator::Validate;
 
-use super::video::VideoProcessStatus;
 
 #[derive(Clone, Serialize, Validate, Deserialize, Debug)]
 pub struct Asset {

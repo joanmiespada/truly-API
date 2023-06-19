@@ -16,6 +16,7 @@ path="tests/lib.rs"
 [dependencies]
 #lib_config = { path = "../lib_config" }
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
+lib_video_objs = { git="https://github.com/joanmiespada/truly-shared" }
 #lib_async_ops = {path = "../lib_async_ops"}
 lib_async_ops = { git="https://github.com/joanmiespada/truly-shared" }
 log = "0.4.17"

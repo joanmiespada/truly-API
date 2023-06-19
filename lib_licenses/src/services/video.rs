@@ -4,13 +4,13 @@ use lib_async_ops::{
     sns::{send, SNSMessage},
 };
 use lib_config::config::Config;
+use lib_video_objs::shorter::CreateShorter;
 use uuid::Uuid;
 
 use crate::{
     errors::video::VideoError,
     models::{
         asset::{Asset, VideoLicensingStatus},
-        shorter::CreateShorter,
     },
 };
 
