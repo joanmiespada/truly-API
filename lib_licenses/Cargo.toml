@@ -14,8 +14,10 @@ path="tests/lib.rs"
 
 
 [dependencies]
-lib_config = { path = "../lib_config" }
-lib_async_ops = {path = "../lib_async_ops"}
+#lib_config = { path = "../lib_config" }
+lib_config = { git="https://github.com/joanmiespada/truly-shared" }
+#lib_async_ops = {path = "../lib_async_ops"}
+lib_async_ops = { git="https://github.com/joanmiespada/truly-shared" }
 log = "0.4.17"
 chrono = {version="0.4.24", features = ["serde"] }
 serde = { version = "1.0.163", features = ["derive"] }
@@ -49,7 +51,6 @@ spectral = "0.6.0"
 #testcontainers = "0.14.0"
 testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack2"  }
 tokio = { version="1.28.1", features=["full"]}
-lib_config = { path = "../lib_config" }
 #ethers = "2.0.4"
 base64 = "0.21.2"
 #ethers-solc = "2.0.4"

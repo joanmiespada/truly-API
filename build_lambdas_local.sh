@@ -7,12 +7,10 @@ mkdir target/lambda_local
 
 lambdas=("lambda_login" "lambda_admin" "lambda_after_video" "lambda_license" "lambda_mint" "lambda_user")
 
-#lambda_name="lambda_login"
-
 for lambda_name in "${lambdas[@]}"
 do
     mkdir target/lambda_local/${lambda_name}
-    cp target/release/${lambda_name} target/lambda_local/${lambda_name}/bootstrap
+    cp target/debug/${lambda_name} target/lambda_local/${lambda_name}/bootstrap
     cd target/lambda_local/${lambda_name}
     zip -j -q bootstrap.zip bootstrap
     

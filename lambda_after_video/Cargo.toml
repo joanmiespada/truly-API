@@ -10,7 +10,8 @@ path="src/main.rs"
 
 
 [dependencies]
-lib_config = { path = "../lib_config" }
+lib_config = { git="https://github.com/joanmiespada/truly-shared" }
+#lib_config = { path = "../lib_config" }
 lib_licenses = { path = "../lib_licenses" }
 tower-http = { version="0.4.0", features=["full"]  }
 lambda_http = { version = "0.8", features = ["apigw_rest"]}

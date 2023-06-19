@@ -9,7 +9,8 @@ path="src/main.rs"
 
 [dependencies]
 lib_users = { path = "../lib_users" }
-lib_config = { path = "../lib_config" }
+#lib_config = { path = "../lib_config" }
+lib_config = { git="https://github.com/joanmiespada/truly-shared" }
 lib_util_jwt = { path = "../lib_util_jwt" }
 lib_licenses = {path = "../lib_licenses"}
 lib_blockchain = { path = "../lib_blockchain"}

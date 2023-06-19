@@ -3,9 +3,26 @@
 export RUST_LOG=info
 export AWS_REGION='eu-central-1'
 export TF_VAR_aws_region=$AWS_REGION
+folder='target/lambda_localstack'
 
-echo 'compiling...'
-cargo build --workspace --exclude server_* --exclude command_*
+echo 'compiling lambdas...'
+cargo build --workspace --exclude server_* 
+
+rm -rf $folder
+mkdir $folder
+
+lambdas=("lambda_login" "lambda_admin" "lambda_after_video" "lambda_license" "lambda_mint" "lambda_user")
+
+echo 'zipping lambdas...'
+for lambda_name in "${lambdas[@]}"
+do
+    mkdir ${folder}/${lambda_name}
+    cp target/debug/${lambda_name} ${folder}/${lambda_name}/bootstrap
+    cd ${folder}/${lambda_name}
+    zip -j -q bootstrap.zip bootstrap
+    cd ../../..
+done 
+export TF_VAR_lambda_deploy_folder=../${folder}/
 
 echo 'running hard pre-requisits...'
 key_id=$(awslocal kms create-key --output json | jq -r '.KeyMetadata.KeyId')

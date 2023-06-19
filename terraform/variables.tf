@@ -42,7 +42,7 @@ variable "trace_log" {
 variable "lambda_deploy_folder" {
   description = "it helps to identify the correct folder lambda with infra arm64 or linux"
   type = string
-  default = "../target/lambda_arm64/"
+ // default = "../target/lambda_arm64/"
 }
 
 variable "kms_id_cypher_all_secret_keys"  {
