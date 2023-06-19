@@ -5,7 +5,7 @@ path_base='/Users/joanmiquelespadasabat/Projects/tron/API/cross-compile/openssl/
 export OPENSSL_LIB_DIR=${path_base}/lib
 export OPENSSL_INCLUDE_DIR=${path_base}/include
 
-cargo lambda build --release --arm64 --output-format zip --workspace  --exclude server_* --exclude manual_dep --lambda-dir target/lambda_arm64
+cargo lambda build --release --arm64 --output-format zip --workspace  --exclude server_* --exclude truly_cli --lambda-dir target/lambda_arm64
 
 cd terraform
 

@@ -7,7 +7,7 @@ Create files ending with_prod_stage.json to adjust values for those envs.
 ## Compile
 
 ```bash
-cargo build -p manual_dep
+cargo build -p truly_cli
 ```
 
 ## Create tables
@@ -15,19 +15,19 @@ cargo build -p manual_dep
 In local dev environment (docker localstack)
 
 ```bash
-ENVIRONMENT=development cargo run -p manual_dep -- --table all --create
+ENVIRONMENT=development cargo run -p truly_cli -- --table all --create
 ```
 
 In stage environment (eu-west-1)
 
 ```bash
-ENVIRONMENT=stage cargo run -p manual_dep -- --table all --create
+ENVIRONMENT=stage cargo run -p truly_cli -- --table all --create
 ```
 
 In stage *production* (eu-central-1)
 
 ```bash
-ENVIRONMENT=production cargo run -p manual_dep -- --table all --create
+ENVIRONMENT=production cargo run -p truly_cli -- --table all --create
 ```
 
 ## Create Blockchain and Contract datasets
@@ -37,8 +37,8 @@ In local dev environment (docker localstack)
 Deloy contracts manually using blockchain tools and copy addresses in json file
 
 ```bash
-ENVIRONMENT=development cargo run -p manual_dep -- --blockchain <file_json> --create
-ENVIRONMENT=development cargo run -p manual_dep -- --contract  <file_json> --create
+ENVIRONMENT=development cargo run -p truly_cli -- --blockchain <file_json> --create
+ENVIRONMENT=development cargo run -p truly_cli -- --contract  <file_json> --create
 ```
 
 ## Create Secrets
@@ -46,19 +46,19 @@ ENVIRONMENT=development cargo run -p manual_dep -- --contract  <file_json> --cre
 In local dev environment (docker localstack)
 
 ```bash
-ENVIRONMENT=development cargo run -p manual_dep -- --store_secret true --create
+ENVIRONMENT=development cargo run -p truly_cli -- --store_secret true --create
 ```
 
 In stage environment (eu-west-1)
 
 ```bash
-ENVIRONMENT=stage cargo run -p manual_dep -- --store_secret true --create
+ENVIRONMENT=stage cargo run -p truly_cli -- --store_secret true --create
 ```
 
 In stage *production* (eu-central-1)
 
 ```bash
-ENVIRONMENT=production cargo run -p manual_dep -- --store_secret true --create
+ENVIRONMENT=production cargo run -p truly_cli -- --store_secret true --create
 ```
 
 ## Create Key
@@ -66,19 +66,19 @@ ENVIRONMENT=production cargo run -p manual_dep -- --store_secret true --create
 In local dev environment (docker localstack)
 
 ```bash
-ENVIRONMENT=development cargo run -p manual_dep -- --key true --create
+ENVIRONMENT=development cargo run -p truly_cli -- --key true --create
 ```
 
 In stage environment (eu-west-1)
 
 ```bash
-ENVIRONMENT=stage cargo run -p manual_dep -- --key true --create
+ENVIRONMENT=stage cargo run -p truly_cli -- --key true --create
 ```
 
 In stage *production* (eu-central-1)
 
 ```bash
-ENVIRONMENT=production cargo run -p manual_dep -- --key true --create
+ENVIRONMENT=production cargo run -p truly_cli -- --key true --create
 ```
 
 Save the id for next step.
@@ -90,19 +90,19 @@ With the id creted with the previous step, use it here to upload owner's secret 
 In local dev environment (docker localstack)
 
 ```bash
-ENVIRONMENT=development cargo run -p manual_dep -- --store_key <key_id> --create
+ENVIRONMENT=development cargo run -p truly_cli -- --store_key <key_id> --create
 ```
 
 In stage environment (eu-west-1)
 
 ```bash
-ENVIRONMENT=stage cargo run -p manual_dep -- --store_key <key_id> --create
+ENVIRONMENT=stage cargo run -p truly_cli -- --store_key <key_id> --create
 ```
 
 In stage *production* (eu-central-1)
 
 ```bash
-ENVIRONMENT=production cargo run -p manual_dep -- --store_key <key_id> --create
+ENVIRONMENT=production cargo run -p truly_cli -- --store_key <key_id> --create
 ```
 
 ## Create async infra
@@ -110,7 +110,7 @@ ENVIRONMENT=production cargo run -p manual_dep -- --store_key <key_id> --create
 Only in development env, at stage and prod envs it is terraformed. It creates minting queue, deadletter queue and minting topic.
 
 ```bash
-ENVIRONMENT=development cargo run -p manual_dep -- --async true --create
+ENVIRONMENT=development cargo run -p truly_cli -- --async true --create
 ```
 
 ## Create admin user
@@ -118,7 +118,7 @@ ENVIRONMENT=development cargo run -p manual_dep -- --async true --create
 To signup as admin user we need a user with admin privilegies.
 
 ```bash
-ENVIRONMENT=development cargo run -p manual_dep -- --adminuser <email> --password <pass> --create
-ENVIRONMENT=stage cargo run -p manual_dep -- --adminuser <email> --password <pass> --create
-ENVIRONMENT=production cargo run -p manual_dep -- --adminuser <email> --password <pass> --create
+ENVIRONMENT=development cargo run -p truly_cli -- --adminuser <email> --password <pass> --create
+ENVIRONMENT=stage cargo run -p truly_cli -- --adminuser <email> --password <pass> --create
+ENVIRONMENT=production cargo run -p truly_cli -- --adminuser <email> --password <pass> --create
 ```

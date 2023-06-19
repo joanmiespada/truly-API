@@ -32,12 +32,12 @@ provider "aws" { #only for certificates used by dns
 }
 
 
-data "aws_secretsmanager_secret_version" "secrets_app" {
-  secret_id = var.secrets_manager_app_keys_name
-}
-data "aws_secretsmanager_secret_version" "secret_key" {
-  secret_id = var.secrets_manager_contract_owner_secret_key_name 
-}
+# data "aws_secretsmanager_secret_version" "secrets_app" {
+#   secret_id = var.secrets_manager_app_keys_name
+# }
+# data "aws_secretsmanager_secret_version" "secret_key" {
+#   secret_id = var.secrets_manager_contract_owner_secret_key_name 
+# }
 
 
 locals {

@@ -1,11 +1,11 @@
 
 data "aws_route53_zone" "selected" {
-  name         = "truly.video"
+  name         = var.dns_base  // "truly.video"
   private_zone = false
 }
 
 resource "aws_acm_certificate" "cert" {
-  domain_name       = "*.truly.video"
+  domain_name       = format("*.%s",var.dns_base)   //"*.truly.video"
   validation_method = "DNS"
 }
 

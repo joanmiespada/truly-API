@@ -1,7 +1,7 @@
 #!/bin/bash
 rm -rf target/lambda_local
 
-cargo build --workspace --exclude server_* --exclude command_*
+cargo build --workspace --exclude server_* --exclude command_* --exclude truly_cli
 
 mkdir target/lambda_local
 

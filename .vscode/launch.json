@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "manual_dep",
+            "name": "truly_cli",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceRoot}/target/debug/manual_dep",
+            "program": "${workspaceRoot}/target/debug/truly_cli",
             //"args": [ "--table", "owners", "--create" ],
             //"args": ["--adminuser","...@....","--password",".....", "--create"],
             "cwd": "${workspaceRoot}/target/debug",

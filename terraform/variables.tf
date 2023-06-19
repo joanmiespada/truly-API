@@ -60,7 +60,12 @@ variable "jwt_token_time_exp_hours" {
   description = "jwt token expiration time, it forces to relogin"
 }
 
-variable "dns" {
+variable "dns_prefix" {
   type = string
-  description = "dns for the api, staging.truly.video or api.truly.video"
+  description = "dns for the api, staging, etc... to be concatenated with dns_base"
+}
+variable "dns_base" {
+  type = string
+  description = "domain base truly.video"
+  default = "truly.video"
 } 

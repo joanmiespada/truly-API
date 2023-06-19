@@ -5,9 +5,9 @@
 /node_modules
 .terraform*
 .localstack*
-/manual_dep/res/*_prod_stage.*
-/manual_dep/res/*_stage.*
-/manual_dep/res/*_prod.*
+/truly_cli/res/*_prod_stage.*
+/truly_cli/res/*_stage.*
+/truly_cli/res/*_prod.*
 /terraform/variables-prod.*
 /terraform/variables-stage.*
 sui.log.*

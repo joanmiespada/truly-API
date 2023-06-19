@@ -26,12 +26,12 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "./create-docker-resources.sh:/docker-entrypoint-initaws.d/create-docker-resources.sh"
 
-  blockchain:
-    build: 
-      context: .
-      dockerfile: ./ganache/Dockerfile
-    ports:
-      - "8545:8545"
+  # blockchain:
+  #   build: 
+  #     context: .
+  #     dockerfile: ./lib_blockchain/res/ganache/Dockerfile
+  #   ports:
+  #     - "8545:8545"
 
 
   
