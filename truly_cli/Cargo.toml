@@ -6,13 +6,9 @@ edition = "2021"
 
 [dependencies]
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
-#lib_config= { path = "../../Shared/"}
-#lib_config = { git="ssh://git@github.com:joanmiespada/repo.git" }
 lib_async_ops = { git="https://github.com/joanmiespada/truly-shared" }
-#lib_config = { path = "../lib_config" }
 lib_licenses = { path = "../lib_licenses" }
 lib_users = { path = "../lib_users" }
-#lib_async_ops = { path = "../lib_async_ops"}
 lib_blockchain = { path = "../lib_blockchain"}
 env_logger = "0.10.0"
 chrono = {version="0.4.24", features = ["serde"] }
@@ -31,7 +27,6 @@ url = {version="2.3.1", features=["serde"] }
 workspace-hack = { version = "0.1", path = "../workspace-hack" }
 
 [target.aarch64-apple-darwin.dev-dependencies]
-#[dev-dependencies]
 env_logger = "0.10.0"
 aws-types = "0.55.3"
 spectral = "0.6.0"

@@ -14,10 +14,8 @@ path="tests/lib.rs"
 
 
 [dependencies]
-#lib_config = { path = "../lib_config" }
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
 lib_video_objs = { git="https://github.com/joanmiespada/truly-shared" }
-#lib_async_ops = {path = "../lib_async_ops"}
 lib_async_ops = { git="https://github.com/joanmiespada/truly-shared" }
 log = "0.4.17"
 chrono = {version="0.4.24", features = ["serde"] }
@@ -33,10 +31,6 @@ http = "0.2.9"
 http-serde = "1.1.2"
 url = {version="2.3.1", features=["serde"] }
 hex = "0.4.3"
-#web3 = {version="0.18.0", default-features = false, features=["http-rustls-tls","signing" ]}
-#rs-snowflake = "0.6.0"
-#mac_address = "1.1.5"
-#secp256k1 = { version = "0.27", features = ["rand"] }
 rand = "0.8.5"
 aws-sdk-kms = "0.28.0"
 aws-sdk-secretsmanager = "0.28.0"
@@ -52,7 +46,5 @@ spectral = "0.6.0"
 #testcontainers = "0.14.0"
 testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack2"  }
 tokio = { version="1.28.1", features=["full"]}
-#ethers = "2.0.4"
 base64 = "0.21.2"
-#ethers-solc = "2.0.4"
 

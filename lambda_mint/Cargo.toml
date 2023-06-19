@@ -10,16 +10,14 @@ path="src/main.rs"
 
 
 [dependencies]
-#lib_config = { path = "../lib_config" }
 lib_licenses = { path = "../lib_licenses" }
-#lib_async_ops = { path = "../lib_async_ops" }
 lib_blockchain = { path = "../lib_blockchain"}
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
 lib_async_ops = { git="https://github.com/joanmiespada/truly-shared" }
 tower-http = { version="0.4.0", features=["full"]  }
 lambda_http = { version = "0.8", features = ["apigw_rest"]}
 lambda_runtime = "0.8"
-aws_lambda_events = { version = "0.9.0", features = ["apigw", "alb"] }
+aws_lambda_events = { version = "0.10.0", features = ["apigw", "alb"] }
 serde = { version = "1.0.163", features = ["derive"] }
 serde_json = "1.0.96"
 tracing = { version = "0.1", features = ["log"] }

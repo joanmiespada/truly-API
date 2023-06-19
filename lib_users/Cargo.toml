@@ -12,7 +12,6 @@ name="integration"
 path="tests/lib.rs"
 
 [dependencies]
-#lib_config = { path = "../lib_config" }
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
 chrono = {version="0.4.24", features = ["serde"] }
 serde = { version = "1.0.163", features = ["derive"] }

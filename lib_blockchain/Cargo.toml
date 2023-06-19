@@ -14,9 +14,7 @@ path = "test/lib.rs"
 
 
 [dependencies]
-#lib_config = { path = "../lib_config" }
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
-#lib_async_ops = {path = "../lib_async_ops"}
 lib_async_ops = { git="https://github.com/joanmiespada/truly-shared" }
 lib_licenses = { path = "../lib_licenses" }
 log = "0.4.17"

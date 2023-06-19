@@ -1655,27 +1655,6 @@ dependencies = [
 
 [[package]]
 name = "aws_lambda_events"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d13f801d4f819391ec4bcfcaa05f697e54992e90fb96d7bdaec87cbce3abce9"
-dependencies = [
- "base64 0.21.2",
- "bytes",
- "chrono",
- "flate2",
- "http",
- "http-body",
- "http-serde",
- "query_map",
- "serde 1.0.163",
- "serde_derive",
- "serde_dynamo",
- "serde_json",
- "serde_with 3.0.0",
-]
-
-[[package]]
-name = "aws_lambda_events"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "65991dbc3bfb586939ba1527eefdc99bc21157b6ec891f180fb1e16e2dddc7a9"
@@ -6379,7 +6358,7 @@ name = "lambda_mint"
 version = "0.0.1"
 dependencies = [
  "aws-sdk-sqs",
- "aws_lambda_events 0.9.0",
+ "aws_lambda_events 0.10.0",
  "lambda_http",
  "lambda_runtime",
  "lib_async_ops",
