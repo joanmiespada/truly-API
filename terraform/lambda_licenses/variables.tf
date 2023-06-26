@@ -34,29 +34,39 @@ variable "kms_cypher_owner" {
 }
 
 variable "dead_letter_queue_mint" {
-  type      = string
+  //type      = string
+  type = map(any)
   description = "queue url to send errors when minting"
 }
 variable "minting_async_topic_arn" {
-  type      = string
+  //type      = string
+  type = map(any)
   description = "topic arn to mint async"
 }
 
+variable "regions" {}
 variable "rust_backtrace" {
   type= string
 }
 
 variable "video_in_topic" {
-  type = string
+  //type = string
+  type = map(any)
   description = "topic to be connectec with other dependencies, video processing triggers"
 }
 
 variable "video_out_topic" {
-  type = string
+  //type = string
+  type = map(any)
   description = "topic to be connected with other dependencies, video processing results" 
 }
 
 variable minting_fails_topic_arn {
-  type = string
+  //type = string
+  type = map(any)
   description = "topic to register when miting fails after several retries"
 }
+
+variable "function_handler" {}
+variable "runtime" {}
+variable "architecture" {}
