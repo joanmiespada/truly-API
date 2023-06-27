@@ -85,10 +85,10 @@ variable "email" {
   description = "support email from infra"
 }
 
-variable "regions" {
-  description = "List of AWS regions to deploy our infra"
-  type        = list(string)
-}
+# variable "regions" {
+#   description = "List of AWS regions to deploy our infra"
+#   type        = list(string)
+# }
 
 variable "lambda_architecture" {
   description = "lambda hardware architecture"

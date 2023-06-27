@@ -8,7 +8,7 @@ data "aws_route53_zone" "truly_zone" {
 
 resource "aws_apigatewayv2_domain_name" "truly_api_domain_name" {
   for_each = toset(var.regions)
-  provider = aws[each.key]
+  provider = aws.eu_west_1   #aws[each.key]
 
   domain_name = format("%s-%s.%s", var.dns_prefix, each.key, var.dns_base)
   domain_name_configuration {

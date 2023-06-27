@@ -52,6 +52,7 @@ resource "aws_lambda_function" "truly_lambda_login" {
   ]
 
   tags = merge(var.common_tags, { service : "${var.service_name}" })
+  provider = { aws = "aws.${ replace(each.key,"-","_")}" }
 
 }
 

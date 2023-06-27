@@ -34,13 +34,13 @@ resource "aws_lambda_function" "truly_lambda_mint" {
 
   environment {
     variables = {
-      ENVIRONMENT      = "${var.environment_flag}"
-      RUST_LOG         = "${var.trace_log}"
-      KMS_KEY_ID       = "${var.kms_cypher_owner}"
-      DEAD_LETTER_QUEUE_MINT= var.dead_letter_queue_mint[each.key]
-      RUST_BACKTRACE = "${var.rust_backtrace}"
-      TOPIC_ARN_MINT_ASYNC = var.minting_async_topic_arn[each.key].arn
-      MINTING_FAILS_TOPIC =  var.minting_fails_topic_arn[each.key].arn 
+      ENVIRONMENT            = "${var.environment_flag}"
+      RUST_LOG               = "${var.trace_log}"
+      KMS_KEY_ID             = "${var.kms_cypher_owner}"
+      DEAD_LETTER_QUEUE_MINT = var.dead_letter_queue_mint[each.key]
+      RUST_BACKTRACE         = "${var.rust_backtrace}"
+      TOPIC_ARN_MINT_ASYNC   = var.minting_async_topic_arn[each.key].arn
+      MINTING_FAILS_TOPIC    = var.minting_fails_topic_arn[each.key].arn
     }
   }
 
@@ -68,10 +68,10 @@ resource "aws_lambda_event_source_mapping" "truly_minting" {
 
   for_each = toset(var.regions)
   region   = each.key
-  
+
   event_source_arn = var.queue_mint_arn[each.key].arn
-  enabled = true
+  enabled          = true
   function_name    = aws_lambda_function.truly_lambda_mint[each.key].arn
-  batch_size = 1 //only 1 message per lambda
+  batch_size       = 1 //only 1 message per lambda
 }
 

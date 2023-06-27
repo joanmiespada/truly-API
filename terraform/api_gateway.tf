@@ -1,6 +1,9 @@
 resource "aws_apigatewayv2_api" "truly_api" {
   for_each = toset(var.regions)
-  region   = each.key
+  #region   = each.key
+  #provider =  aws[eack.key]
+  #provider = { aws = "aws.${ replace(each.key,"-","_")}" }
+  provider = "aws.${ replace(each.key,"-","_")}" 
 
   name          = "Truly API"
   description   = "Truly API"
