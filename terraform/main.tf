@@ -2,7 +2,8 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.55.0"
+      #version = "~> 4.55.0"
+      version = "~> 5.5.0"
     }
     archive = {
       source  = "hashicorp/archive"
@@ -33,6 +34,7 @@ provider "aws" { #only for certificates used by dns
 
 locals {
 
+  region_prefix = element(split("-", var.aws_region), 0)
   common_tags = {
     project = var.truly_tag
     service = var.service_tag
@@ -55,6 +57,7 @@ module "lambda_login" {
   trace_log = var.trace_log
   lambda_deploy_folder = var.lambda_deploy_folder
   rust_backtrace = var.rust_backtrace
+  aws_region = var.aws_region
 
 }
 
@@ -73,6 +76,7 @@ module "lambda_user" {
   lambda_deploy_folder = var.lambda_deploy_folder
 
   rust_backtrace = var.rust_backtrace
+  aws_region = var.aws_region
 }
 
 module "lambda_admin" {
@@ -90,6 +94,7 @@ module "lambda_admin" {
   lambda_deploy_folder = var.lambda_deploy_folder
   
   rust_backtrace = var.rust_backtrace
+  aws_region = var.aws_region
 
 }
 
@@ -119,6 +124,7 @@ module "lambda_licenses" {
 
   video_in_topic = aws_sns_topic.video_in_topic.arn
   video_out_topic = aws_sns_topic.video_out_topic.arn
+  aws_region = var.aws_region
 
 }
 module "lambda_mint" {
@@ -145,6 +151,7 @@ module "lambda_mint" {
 
   
   rust_backtrace = var.rust_backtrace
+  aws_region = var.aws_region
 
 }
 module "lambda_after_video" {
@@ -167,5 +174,6 @@ module "lambda_after_video" {
   sqs_after_video_process_arn = aws_sqs_queue.after_video_queue.arn
   
   rust_backtrace = var.rust_backtrace
+  aws_region = var.aws_region
 
 }

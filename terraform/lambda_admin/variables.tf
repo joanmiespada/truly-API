@@ -33,3 +33,7 @@ variable "lambda_deploy_folder" {}
 variable "rust_backtrace" {
   type= string
 }
+
+variable "aws_region" {
+  type    = string
+}

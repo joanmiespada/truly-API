@@ -110,3 +110,17 @@ wget https://github.com/quickwit-oss/quickwit-datasource/releases/download/v0.2.
 && mkdir -p grafana-storage/plugins \
 && unzip quickwit-quickwit-datasource-0.2.0.zip -d grafana-storage/plugins
 ```
+
+## Dependencies to use localstack
+
+```bash
+brew install python
+pip install awscli-local
+pip install terraform-local
+```
+
+Then we can deploy all infrastructure running:
+
+```bash
+./build_deploy_localstack.sh
+```

@@ -1,10 +1,11 @@
 locals {
   lambda_file = "${var.lambda_deploy_folder}/${var.lambda_login_file}"
+  region_prefix = element(split("-", var.aws_region), 0)
 }
 
 resource "aws_cloudwatch_log_group" "truly_lambda_login_cloudwatch" {
-  name              = "/aws/lambda/${var.truly_lambda_login_function_name}"
-  retention_in_days = 5
+  name              = "/aws/lambda/${var.truly_lambda_login_function_name}-${local.region_prefix}"
+  retention_in_days = 1
   
   tags = merge(var.common_tags,{ service:"${var.service_name}"})
 }

@@ -60,3 +60,7 @@ variable minting_fails_topic_arn {
   type = string
   description = "topic to register when miting fails after several retries"
 }
+
+variable "aws_region" {
+  type    = string
+}

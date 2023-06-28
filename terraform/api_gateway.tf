@@ -14,7 +14,7 @@ resource "aws_apigatewayv2_api" "truly_api" {
 
 resource "aws_apigatewayv2_stage" "truly_stage" {
   api_id      = aws_apigatewayv2_api.truly_api.id
-  name        = "$default"
+  name        = var.environment_flag  #"$default"
   auto_deploy = true
   tags        = merge(local.common_tags, {})
 }

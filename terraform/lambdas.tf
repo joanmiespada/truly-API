@@ -1,5 +1,6 @@
 
 resource "aws_iam_role" "truly_lambda_execution_role" {
+  name = "truly_lambda_exec_role-${local.region_prefix}"
   assume_role_policy = file("./role_policies/assume.json")
   
   tags = merge(local.common_tags,{})
@@ -7,7 +8,7 @@ resource "aws_iam_role" "truly_lambda_execution_role" {
 
 // -------------- Logs -------------------
 resource "aws_iam_policy" "truly_lambda_logging_policy" {
-  name        = "truly_lambda_logging_policy"
+  name        = "truly_lambda_logging_policy-${local.region_prefix}"
   path        = "/"
   description = "IAM policy for logging from a lambda running within truly api"
 
@@ -22,7 +23,7 @@ resource "aws_iam_role_policy_attachment" "truly_lambda_logs" {
 }
 // -------------- Dynamodb -------------------
 resource "aws_iam_policy" "truly_lambda_dynamodb_policy" {
-  name        = "truly_lambda_dynamodb_policy"
+  name        = "truly_lambda_dynamodb_policy-${local.region_prefix}"
   path        = "/"
   description = "IAM policy for Dynamodb from a lambda within truly api"
 
@@ -36,7 +37,7 @@ resource "aws_iam_role_policy_attachment" "truly_lambda_dynamodb" {
 }
 // -------------- S3 -------------------
 resource "aws_iam_policy" "truly_lambda_S3_policy" {
-  name        = "truly_lambda_S3_policy"
+  name        = "truly_lambda_S3_policy-${local.region_prefix}"
   path        = "/"
   description = "IAM policy for S3 from a lambda within truly api"
 
@@ -49,7 +50,7 @@ resource "aws_iam_role_policy_attachment" "truly_lambda_S3" {
 }
 // -------------- SNS -------------------
 resource "aws_iam_policy" "truly_lambda_SNS_policy" {
-  name        = "truly_lambda_SNS_policy"
+  name        = "truly_lambda_SNS_policy-${local.region_prefix}"
   path        = "/"
   description = "IAM policy for SNS from a lambda within truly api"
 
@@ -62,7 +63,7 @@ resource "aws_iam_role_policy_attachment" "truly_lambda_SNS" {
 
 // -------------- X-RAY -------------------
 resource "aws_iam_policy" "truly_lambda_XRAY_policy" {
-  name        = "truly_lambda_XRAY_policy"
+  name        = "truly_lambda_XRAY_policy-${local.region_prefix}"
   path        = "/"
   description = "IAM policy for XRAY from a lambda within truly api"
 
@@ -75,7 +76,7 @@ resource "aws_iam_role_policy_attachment" "truly_lambda_XRAY" {
 
 // -------------- Secrets Manager -------------------
 resource "aws_iam_policy" "truly_lambda_SECRETSMAN_policy" {
-  name        = "truly_lambda_SECRETSMAN_policy"
+  name        = "truly_lambda_SECRETSMAN_policy-${local.region_prefix}"
   path        = "/"
   description = "IAM policy for Secrets Manager from a lambda within truly api"
 
@@ -87,7 +88,7 @@ resource "aws_iam_role_policy_attachment" "truly_lambda_SECRETSMAN" {
 }
 // -------------- KMS -------------------
 resource "aws_iam_policy" "truly_lambda_KMS_policy" {
-  name        = "truly_lambda_KMS_policy"
+  name        = "truly_lambda_KMS_policy-${local.region_prefix}"
   path        = "/"
   description = "IAM policy for KMS from a lambda within truly api"
 
@@ -99,7 +100,7 @@ resource "aws_iam_role_policy_attachment" "truly_lambda_KMS" {
 }
 // -------------- SQS -------------------
 resource "aws_iam_policy" "truly_lambda_SQS_policy" {
-  name        = "truly_lambda_SQS_policy"
+  name        = "truly_lambda_SQS_policy-${local.region_prefix}"
   path        = "/"
   description = "IAM policy for SQS from a lambda within truly api"
 

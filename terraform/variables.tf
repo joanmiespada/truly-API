@@ -79,3 +79,8 @@ variable "telemetry_endpoint" {
   type=string
   description = "endpoint to forward observability metrics"
 }
+
+variable "email" {
+  description = "AWS SES email notifications"
+  type    = string
+}

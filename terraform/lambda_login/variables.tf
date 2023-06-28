@@ -37,3 +37,6 @@ variable "jwt_token_time_exp_hours" {
 variable "rust_backtrace" {
   type= string
 }
+variable "aws_region" {
+  type    = string
+}

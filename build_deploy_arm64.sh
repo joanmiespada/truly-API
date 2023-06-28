@@ -5,15 +5,30 @@ path_base='/Users/joanmiquelespadasabat/Projects/tron/API/cross-compile/openssl/
 export OPENSSL_LIB_DIR=${path_base}/lib
 export OPENSSL_INCLUDE_DIR=${path_base}/include
 
-folder = "target/lambda_${architecture}"
+folder="target/lambda_${architecture}"
 
 cargo lambda build --release --arm64 --output-format zip --workspace  --exclude server_* --exclude truly_cli --lambda-dir $folder
 
 cd terraform
 
-export TF_VAR_lambda_deploy_folder="../${folder}/"
-terraform plan -var-file="variables-stage.tfvars"
-terraform apply -var-file="variables-stage.tfvars" --auto-approve
+export TF_VAR_lambda_deploy_folder="../${folder}"
+
+multi_region=("eu-central-1") # "eu-west-1")
+
+for region in "${multi_region[@]}"
+do 
+    region_label="stage-${region}"
+    export TF_VAR_aws_region=$region
+    terraform workspace new $region_label
+    terraform workspace select $region_label
+    echo "Planning infrastructure for ${region}..."
+    terraform plan -var-file="variables-stage.tfvars"
+    echo "Applying infrastructure for ${region}..."
+    terraform apply -var-file="variables-stage.tfvars" --auto-approve
+done
+
+
+#terraform apply -var-file="variables-stage.tfvars" --auto-approve
 
 # terraform plan -var-file="variables-prod.tfvars"
 #terraform apply -var-file="variables-prod.tfvars" --auto-approve

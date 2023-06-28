@@ -42,3 +42,7 @@ variable "rust_backtrace" {
 variable "sqs_after_video_process_arn" {
   type= string
 }
+
+variable "aws_region" {
+  type    = string
+}
