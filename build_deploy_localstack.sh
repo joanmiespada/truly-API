@@ -8,15 +8,14 @@ tflocal --version || exit 1
 zip_skip='false'
 for arg in "$@"
 do
-    if [ "$arg" = "--zip" ] ; then
+    if [ "$arg" = "--zip_skip" ] ; then
         zip_skip='true'
         break
     fi
 done
 
+export ENVIRONMENT=development
 export RUST_LOG=info
-export AWS_REGION='eu-central-1'
-export TF_VAR_aws_region=$AWS_REGION
 folder='target/lambda_localstack'
 
 if [zip_skip='false']; then
@@ -55,10 +54,27 @@ fi
 export TF_VAR_lambda_deploy_folder=../${folder}
 echo "lambdas will be seek at: ${TF_VAR_lambda_deploy_folder}"
 
+#multi_region=("eu-central-1" "us-west-1")
+multi_region=("eu-central-1")
+
 echo 'running hard pre-requisits...'
-key_id=$(awslocal kms create-key --output json | jq -r '.KeyMetadata.KeyId')
-echo "key id created: ${key_id}"
-export TF_VAR_kms_id_cypher_all_secret_keys=$key_id
+
+key=$(awslocal kms create-key --multi-region --region us-east-1 --description 'cypher master key, dont use it directly. Use region replicas.' --output json --tags "TagKey=Project,TagValue=Truly" "TagKey=environment,TagValue=${ENVIRONMENT}") # | jq -r '.KeyMetadata.KeyId')
+key_id=$(echo $key | jq -r '.KeyMetadata.KeyId')
+key_arn=$(echo $key | jq -r '.KeyMetadata.Arn')
+echo "primary key id created: ${key_arn}"
+#declare -A mapKeys
+mapKeys_string="{ "
+for region in "${multi_region[@]}"
+do
+    key_rpe=$(awslocal kms replicate-key --key-id $key_arn --replica-region $region  --description 'replica key, to be used only in this region assets' --output json  --tags "TagKey=Project,TagValue=Truly" "TagKey=environment,TagValue=${ENVIRONMENT}" | jq -r '.ReplicaKeyMetadata.KeyId')
+    #echo "replica key id created: ${key_rpe}"
+    #mapKeys[$region]=$key_rpe
+    mapKeys_string+="'${region}': '${key_rpe}', "
+done
+mapKeys_string+=" }"
+export TF_VAR_kms_id_cypher_all_secret_keys=$mapKeys_string
+echo "${mapKeys_string}"
 
 dns_domain="truly.test"
 export TF_VAR_dns_base=$dns_domain
@@ -69,7 +85,7 @@ echo "dns: ${dns_full}"
 
 zones=$(awslocal route53 list-hosted-zones-by-name   --dns-name $dns_domain --output json | jq '[.HostedZones[]] | length')
 
-if (( zones <1 )); then
+if (( $zones <1 )); then
     echo 'creating domain zone...'
     zone_id=$(awslocal route53 create-hosted-zone --name $dns_domain --caller-reference r1 | jq -r '.HostedZone.Id')
     #echo $zone_id
@@ -78,29 +94,52 @@ if (( zones <1 )); then
 else
     echo 'domain has been already created'
 fi
-tables=$(awslocal dynamodb list-tables --region eu-central-1 --output json | jq '[.TableNames[]] | length' )
-if (( tables <1 )); then
-    echo 'creating tables...'
-    RUST_LOG="info" ENVIRONMENT=development cargo run -p truly_cli -- --table all --create
-else
-    echo 'tables were already created'
-fi
 
-echo 'running terraform...'
-cd terraform
 
-multi_region=("eu-central-1" "us-west-1")
+#joined_regions=$(join_by_comma "${multi_region[@]}")
+#key_id=$(cargo run -p truly_cli -- --key true --create --regions $multi_region  | jq '.key_id')
+#echo "aws key created at ${joined_regions} by unique id: ${key_id}"
 
 for region in "${multi_region[@]}"
-do 
-    region_label="localstack-${region}"
-    export TF_VAR_aws_region=$region
-    terraform workspace new $region_label
-    terraform workspace select $region_label
-    echo "Planning infrastructure for ${region}..."
-    tflocal plan -var-file="variables-localstack.tfvars"
-    echo "Applying infrastructure for ${region}..."
-    tflocal apply -var-file="variables-localstack.tfvars" --auto-approve
+do
+    echo "deployment at ${region}"
+    echo "tables..."
+    tables=$(awslocal dynamodb list-tables --region $region --output json | jq '[.TableNames[]] | length' )
+    if (( tables <1 )); then
+        echo "creating tables..."
+        cargo run -p truly_cli -- --table all --create --region $region
+    else
+        echo "tables were already created at ${region}"
+    fi
+
+    echo "creating main data at ${region}..."
+    #cargo run -p truly_cli -- --blockchain ./truly_cli/res/blockchain_development.json --upsert --region $region
+    #cargo run -p truly_cli -- --contract  ./truly_cli/res/contract_development.json --upsert --region $region
+    #cargo run -p truly_cli -- --store_secret ./truly_cli/res/secrets_development.json --create --region $region
+    #cargo run -p truly_cli -- --store_key $key_id --path ./truly_cli/res/secrets_development.json --create --region $region
+
 done
 
+# echo 'running terraform...'
+# cd terraform
+
+# for region in "${multi_region[@]}"
+# do 
+#     region_label="localstack-${region}"
+#     export TF_VAR_aws_region=$region
+#     terraform workspace new $region_label
+#     terraform workspace select $region_label
+#     echo "Planning infrastructure for ${region}..."
+#     tflocal plan -var-file="variables-localstack.tfvars"
+#     echo "Applying infrastructure for ${region}..."
+#     tflocal apply -var-file="variables-localstack.tfvars" --auto-approve
+# done
+
 cd ..
+
+echo 'completed!'
+
+function join_by_comma() {
+    local IFS=","
+    echo "$*"
+}

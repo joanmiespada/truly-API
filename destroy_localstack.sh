@@ -78,15 +78,8 @@ echo "dns: ${dns_full}"
 # else
 #     echo 'domain has been already created'
 # fi
-# tables=$(awslocal dynamodb list-tables --region eu-central-1 --output json | jq '[.TableNames[]] | length' )
-# if (( tables <1 )); then
-#     echo 'creating tables...'
-#     RUST_LOG="info" ENVIRONMENT=development cargo run -p truly_cli -- --table all --create
-# else
-#     echo 'tables were already created'
-# fi
 
-echo 'running terraform...'
+echo 'destroying terraform...'
 cd terraform
 
 multi_region=("eu-central-1") # "eu-west-1")
@@ -100,5 +93,16 @@ do
     echo "Destroying infrastructure for ${region}..."
     tflocal destroy -var-file="variables-localstack.tfvars" --auto-approve
 done
-
 cd ..
+
+
+
+
+
+tables=$(awslocal dynamodb list-tables --region eu-central-1 --output json | jq '[.TableNames[]] | length' )
+if (( tables >0 )); then
+    echo 'deleting tables...'
+    RUST_LOG="info" ENVIRONMENT=development cargo run -p truly_cli -- --table all --delete
+else
+    echo "tables were already deleted or don't exist"
+fi
