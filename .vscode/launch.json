@@ -10,11 +10,12 @@
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/truly_cli",
             //"args": [ "--table", "owners", "--create" ],
+            "args": [ "--store_secret", "../../truly_cli/res/secrets_development.json", "--create", "--region", "eu-central-1" ],
             //"args": ["--adminuser","...@....","--password",".....", "--create"],
             "cwd": "${workspaceRoot}/target/debug",
             "preLaunchTask": "build",
             "env": {
-                "ENVIRONMENT":"stage",
+                "ENVIRONMENT":"development",
             }
         },
         {
@@ -101,7 +102,7 @@
                     "--no-run",
                     "--lib",
                     "--package=lib_blockchain",
-                    //"create_contract_and_mint_nft_test_sync",
+                    "create_contract_and_mint_nft_test_sync",
                     //"--",
                     //"--nocapture"
                 ],

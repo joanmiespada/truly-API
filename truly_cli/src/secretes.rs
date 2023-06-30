@@ -13,11 +13,12 @@ pub async fn create_secrets(
     if create {
         let client_sec = aws_sdk_secretsmanager::client::Client::new(config.aws_config());
         
-        let file = File::open(secrets_json_path)?;
-        let mut buf_reader = BufReader::new(file);
-        let mut contents = String::new();
+        // let file = File::open(secrets_json_path)?;
+        // let mut buf_reader = BufReader::new(file);
+        // let mut contents = String::new();
 
-        buf_reader.read_to_string(&mut contents)?;
+        // buf_reader.read_to_string(&mut contents)?;
+        let contents = "test".to_string();
 
         create_secret_manager_keys(&contents, &client_sec).await?;
 

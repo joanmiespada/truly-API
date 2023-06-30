@@ -24,8 +24,20 @@ pub async fn manage_contracts(
         let contracts_repo = ContractRepo::new(&config.clone());
 
         for mut item in list {
-            item.set_status(&ContractStatus::Enabled);
-            contracts_repo.add(&item).await?;
+
+            let id = item.id().clone();
+
+            let check = contracts_repo.get_by_id(&id).await;
+
+            match check {
+                Err(_)=>{
+                    item.set_status(&ContractStatus::Enabled);
+                    contracts_repo.add(&item).await?;
+                },
+                Ok(_)=>{
+                    contracts_repo.update(&item).await?;
+                }
+            }
         }
     } else if delete {
         panic!("not implemented yet")

@@ -1,10 +1,8 @@
 use admin_user::create_admin_user;
-//use async_jobs::manage_async_jobs;
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
 use blockchains::manage_blockchains;
 use contracts::manage_contracts;
 use lib_config::config::Config;
-use lib_config::infra::create_key;
 
 use schemas::create_schemas;
 use secretes::create_secrets;
@@ -50,16 +48,20 @@ async fn command(
         region,
     }: Opt,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+
+    if let Some(reg) =region {
+        env::set_var("AWS_REGION", reg);
+    }
     let mut config = Config::new();
     config.setup().await;
 
     let er = ResourceNotFoundException::builder().build();
 
     if let Some(table_name) = table {
-        env::set_var("AWS_REGION", region.unwrap());
-        let mut config_multi_region = Config::new();
-        config_multi_region.setup().await;
-        create_schemas(table_name.clone(), create, delete, &config_multi_region).await?;
+        //env::set_var("AWS_REGION", region.unwrap());
+        //let mut config_multi_region = Config::new();
+        //config_multi_region.setup().await;
+        create_schemas(table_name.clone(), create, delete, &config).await?;
     }
 
     if let Some(path) = store_secret {
@@ -82,18 +84,19 @@ async fn command(
         }
     }
 
-    if let Some(_) = key {
-        if create {
-            let client_key = aws_sdk_kms::client::Client::new(config.aws_config());
-            let keyid = create_key(&client_key).await?;
+    // use aws command line
+    // if let Some(_) = key {
+    //     if create {
+    //         let client_key = aws_sdk_kms::client::Client::new(config.aws_config());
+    //         let keyid = create_key(&client_key).await?;
 
-            println!("{{'key_id':'{}'}}", keyid)
-        } else if delete {
-            panic!("not allowed, do it with AWS console UI")
-        } else {
-            return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-        }
-    }
+    //         println!("{{'key_id':'{}'}}", keyid)
+    //     } else if delete {
+    //         panic!("not allowed, do it with AWS console UI")
+    //     } else {
+    //         return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
+    //     }
+    // }
 
     if let Some(email) = adminuser {
         create_admin_user(

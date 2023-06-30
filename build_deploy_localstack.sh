@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 #check if awslocal is in $PATH
 awslocal --version || exit 1
@@ -18,22 +18,22 @@ export ENVIRONMENT=development
 export RUST_LOG=info
 folder='target/lambda_localstack'
 
-if [zip_skip='false']; then
-
+if [[ "$zip_skip" == 'false' ]]; then
+    
     echo 'compiling lambdas...'
-    cargo build --workspace --exclude server_* 
-
+    cargo build --workspace --exclude server_*
+    
     if [ $? -ne 0 ]; then
         echo 'compiling error, please check cargo build.'
         exit 1
     fi
-
-
+    
+    
     rm -rf $folder
     mkdir $folder
-
+    
     lambdas=("lambda_login" "lambda_admin" "lambda_after_video" "lambda_license" "lambda_mint" "lambda_user")
-
+    
     echo 'zipping lambdas...'
     for lambda_name in "${lambdas[@]}"
     do
@@ -47,30 +47,32 @@ if [zip_skip='false']; then
             exit 1
         fi
         cd ../../..
-    done 
+    done
 else
     echo 'skipping lambdas compilation and zip, reusing current folders and zip files.'
 fi
 export TF_VAR_lambda_deploy_folder=../${folder}
 echo "lambdas will be seek at: ${TF_VAR_lambda_deploy_folder}"
 
-#multi_region=("eu-central-1" "us-west-1")
-multi_region=("eu-central-1")
+multi_region=("eu-central-1" "us-west-1")
+#multi_region=("eu-central-1")
 
 echo 'running hard pre-requisits...'
 
-key=$(awslocal kms create-key --multi-region --region us-east-1 --description 'cypher master key, dont use it directly. Use region replicas.' --output json --tags "TagKey=Project,TagValue=Truly" "TagKey=environment,TagValue=${ENVIRONMENT}") # | jq -r '.KeyMetadata.KeyId')
+key=$(awslocal kms create-key --multi-region --region us-east-1 --description 'cypher master key, dont use it directly. Use region replicas.' --output json --tags "TagKey=Project,TagValue=Truly" "TagKey=environment,TagValue=${ENVIRONMENT}" || exit 1)
 key_id=$(echo $key | jq -r '.KeyMetadata.KeyId')
 key_arn=$(echo $key | jq -r '.KeyMetadata.Arn')
 echo "primary key id created: ${key_arn}"
-#declare -A mapKeys
+declare -A mapKeys
 mapKeys_string="{ "
 for region in "${multi_region[@]}"
 do
-    key_rpe=$(awslocal kms replicate-key --key-id $key_arn --replica-region $region  --description 'replica key, to be used only in this region assets' --output json  --tags "TagKey=Project,TagValue=Truly" "TagKey=environment,TagValue=${ENVIRONMENT}" | jq -r '.ReplicaKeyMetadata.KeyId')
-    #echo "replica key id created: ${key_rpe}"
-    #mapKeys[$region]=$key_rpe
-    mapKeys_string+="'${region}': '${key_rpe}', "
+    region_key=$(awslocal kms replicate-key --key-id $key_arn --replica-region $region  --description 'replica key, to be used only in this region assets' --output json  --tags "TagKey=Project,TagValue=Truly" "TagKey=environment,TagValue=${ENVIRONMENT}" || exit 1)
+    replica_key_rpe=$(echo $region_key | jq -r '.ReplicaKeyMetadata.KeyId')
+    replica_key_arn=$(echo $region_key | jq -r '.ReplicaKeyMetadata.Arn')
+    echo "replica key arn created: ${replica_key_arn}"
+    mapKeys[$region]=$replica_key_rpe
+    mapKeys_string+="'${region}': '${replica_key_rpe}', "
 done
 mapKeys_string+=" }"
 export TF_VAR_kms_id_cypher_all_secret_keys=$mapKeys_string
@@ -95,11 +97,6 @@ else
     echo 'domain has been already created'
 fi
 
-
-#joined_regions=$(join_by_comma "${multi_region[@]}")
-#key_id=$(cargo run -p truly_cli -- --key true --create --regions $multi_region  | jq '.key_id')
-#echo "aws key created at ${joined_regions} by unique id: ${key_id}"
-
 for region in "${multi_region[@]}"
 do
     echo "deployment at ${region}"
@@ -111,20 +108,26 @@ do
     else
         echo "tables were already created at ${region}"
     fi
+    
+    echo "secrets manager values..."
+    cargo run -p truly_cli -- --store_secret ./truly_cli/res/secrets_development.json --create --region $region
+    #echo "storing secret key values..."
+    #cargo run -p truly_cli -- --store_key $mapKeys[$region] --path ./truly_cli/res/key_development.txt --create --region $region
+    
+done
 
-    echo "creating main data at ${region}..."
-    #cargo run -p truly_cli -- --blockchain ./truly_cli/res/blockchain_development.json --upsert --region $region
-    #cargo run -p truly_cli -- --contract  ./truly_cli/res/contract_development.json --upsert --region $region
-    #cargo run -p truly_cli -- --store_secret ./truly_cli/res/secrets_development.json --create --region $region
-    #cargo run -p truly_cli -- --store_key $key_id --path ./truly_cli/res/secrets_development.json --create --region $region
-
+for region in "${multi_region[@]}"
+do
+    #echo "filling master data. Note: if global tables are enabled, we can only insert only one time and it will be replicated to other tables."
+    cargo run -p truly_cli -- --blockchain ./truly_cli/res/blockchain_development.json --create --region $region || exit 1
+    cargo run -p truly_cli -- --contract  ./truly_cli/res/contract_development.json --create --region $region || exit 1
 done
 
 # echo 'running terraform...'
 # cd terraform
 
 # for region in "${multi_region[@]}"
-# do 
+# do
 #     region_label="localstack-${region}"
 #     export TF_VAR_aws_region=$region
 #     terraform workspace new $region_label
@@ -139,7 +142,7 @@ cd ..
 
 echo 'completed!'
 
-function join_by_comma() {
-    local IFS=","
-    echo "$*"
-}
+# function join_by_comma() {
+#     local IFS=","
+#     echo "$*"
+# }
