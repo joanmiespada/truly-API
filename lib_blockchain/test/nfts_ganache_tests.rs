@@ -38,7 +38,7 @@ use testcontainers::*;
 use url::Url;
 
 #[tokio::test]
-async fn create_contract_and_mint_nft_test_sync(
+async fn create_contract_and_mint_nft_test_sync_ganache(
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env::set_var("RUST_LOG", "debug");
     env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);

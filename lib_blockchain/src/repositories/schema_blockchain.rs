@@ -1,7 +1,7 @@
 use crate::SERVICE;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{
-    AttributeDefinition, BillingMode, KeySchemaElement, KeyType, ScalarAttributeType, Tag,
+    AttributeDefinition, BillingMode, KeySchemaElement, KeyType, ScalarAttributeType, Tag, builders::StreamSpecificationBuilder, StreamViewType,
 };
 use lib_config::{
     config::Config,
@@ -37,6 +37,12 @@ impl Schema for BlockchainSchema {
             .key_schema(ks1)
             .attribute_definitions(id_ad)
             .billing_mode(BillingMode::PayPerRequest)
+            .stream_specification(
+                StreamSpecificationBuilder::default()
+                    .stream_enabled(true)
+                    .stream_view_type(StreamViewType::NewAndOldImages)
+                    .build(),
+            )
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))

@@ -37,10 +37,14 @@ use sui_keys::keystore::{InMemKeystore, Keystore};
 use testcontainers::*;
 use url::Url;
 
+const ENV_VAR_AWS_REGION: &str= "AWS_REGION";
+const TEST_AWS_REGION: &str = "eu-central-1";
+
 #[tokio::test]
-async fn create_contract_and_mint_nft_test_sync(
+async fn create_contract_and_mint_nft_test_sync_sui(
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env::set_var("RUST_LOG", "debug");
+    env::set_var(ENV_VAR_AWS_REGION, TEST_AWS_REGION);
     env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
 
     env_logger::builder().is_test(true).init();

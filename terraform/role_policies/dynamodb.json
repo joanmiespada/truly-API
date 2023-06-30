@@ -9,7 +9,11 @@
      "dynamodb:Scan",
      "dynamodb:BatchWriteItem",
      "dynamodb:PutItem",
-     "dynamodb:UpdateItem"
+     "dynamodb:UpdateItem",
+     "dynamodb:CreateTable", 
+     "dynamodb:DescribeTable", 
+     "dynamodb:CreateGlobalTable",
+     "dynamodb:UpdateGlobalTable"
     ],
     "Resource": "arn:aws:dynamodb:*:*:*"
    }

@@ -54,7 +54,7 @@ fi
 export TF_VAR_lambda_deploy_folder=../${folder}
 echo "lambdas will be seek at: ${TF_VAR_lambda_deploy_folder}"
 
-multi_region=("eu-central-1" "us-west-1")
+multi_region=("eu-central-1" "us-west-1" "ap-northeast-1")
 #multi_region=("eu-central-1")
 
 echo 'running hard pre-requisits...'
@@ -99,27 +99,51 @@ fi
 
 for region in "${multi_region[@]}"
 do
-    echo "deployment at ${region}"
-    echo "tables..."
+    echo "secrets added at ${region}"
+    cargo run -p truly_cli -- --store_secret ./truly_cli/res/secrets_development.json --create --region $region
+done
+
+
+tables=$(awslocal dynamodb list-tables --region $multi_region[1] --output json | jq '[.TableNames[]]' )
+#tables=$(awslocal dynamodb list-tables --region $multi_region[1] --output json | jq '[.TableNames[]] | length' )
+if (( $tables[@] <= 0 )); then
+    echo "creating master tables at ${multi_region[1]}"
+    cargo run -p truly_cli -- --table all --create --region $multi_region[1] || exit 1
+else
+    echo "skipping master tables at ${multi_region[1]} because they already exist"
+fi
+
+for region in "${multi_region[@]:1}"
+do
+    echo "deployment table replica at ${region}"
     tables=$(awslocal dynamodb list-tables --region $region --output json | jq '[.TableNames[]] | length' )
-    if (( tables <1 )); then
-        echo "creating tables..."
-        cargo run -p truly_cli -- --table all --create --region $region
+    if (( $tables <1 )); then
+        echo "creating replica tables..."
+        for t in ${tables[@]} 
+        do
+            echo "table name: ${t} source: ${multi_region[1]} replica at: ${region} "
+            awslocal dynamodb update-table --table-name $table_name --cli-input-json \
+            "{
+                'ReplicaUpdates':
+                [
+                    {
+                        'Create': {
+                            'RegionName': '${region}'
+                        }
+                    }
+                ]
+            }" \
+            --region=$multi_region[1]
+        done
     else
-        echo "tables were already created at ${region}"
+        echo "tables were already replicated at ${region}"
     fi
     
-    echo "secrets manager values..."
-    cargo run -p truly_cli -- --store_secret ./truly_cli/res/secrets_development.json --create --region $region
-
 done
 
-for region in "${multi_region[@]}"
-do
-    echo "filling master data at ${region}. Note: if global tables are enabled, we can only insert only one time and it will be replicated to other tables."
-    #cargo run -p truly_cli -- --blockchain ./truly_cli/res/blockchain_development.json --create --region $region || exit 1
-    #cargo run -p truly_cli -- --contract  ./truly_cli/res/contract_development.json --create --region $region || exit 1
-done
+echo "filling master data at ${region}. Note: if global tables are enabled, we can only insert only one time and it will be replicated to other tables."
+#cargo run -p truly_cli -- --blockchain ./truly_cli/res/blockchain_development.json --create --region $multi_region[1] || exit 1
+#cargo run -p truly_cli -- --contract  ./truly_cli/res/contract_development.json --create --region $multi_region[1] || exit 1
 
 # echo 'running terraform...'
 # cd terraform
@@ -128,7 +152,7 @@ done
 # do
 #     region_label="localstack-${region}"
 #     export TF_VAR_aws_region=$region
-#     export TF_VAR_aws_region=$region
+#     export TF_VAR_kms_id_cypher_all_secret_keys=mapKeys[$region]
 #     terraform workspace new $region_label
 #     terraform workspace select $region_label
 #     echo "Planning infrastructure for ${region}..."
