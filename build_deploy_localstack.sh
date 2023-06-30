@@ -128,6 +128,7 @@ done
 # do
 #     region_label="localstack-${region}"
 #     export TF_VAR_aws_region=$region
+#     export TF_VAR_aws_region=$region
 #     terraform workspace new $region_label
 #     terraform workspace select $region_label
 #     echo "Planning infrastructure for ${region}..."
