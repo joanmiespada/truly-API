@@ -13,7 +13,7 @@ use lib_blockchain::repositories::schema_keypairs::KeyPairSchema;
 use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
 use lib_blockchain::services::nfts::{NFTsManipulation, NFTsService};
 use lib_config::config::Config;
-use lib_config::environment::{ENV_VAR_ENVIRONMENT, DEV_ENV};
+use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::infra::{
     build_local_stack_connection, create_key, create_secret_manager_keys,
     create_secret_manager_secret_key, store_secret_key,
@@ -89,7 +89,7 @@ async fn create_contract_and_mint_nft_test_sync(
     let creation = ContractSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();
 
-    let creation = AssetAllSchema::create_schema(&config).await; 
+    let creation = AssetAllSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();
 
     let creation = OwnerSchema::create_schema(&config).await;
@@ -98,7 +98,7 @@ async fn create_contract_and_mint_nft_test_sync(
     let creation = KeyPairSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();
 
-    let creation =  BlockTxSchema::create_schema(&config).await;
+    let creation = BlockTxSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();
 
     // bootstrap dependencies

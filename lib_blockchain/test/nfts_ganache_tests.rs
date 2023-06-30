@@ -16,7 +16,7 @@ use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxS
 use lib_blockchain::services::contract::deploy_evm_contract_locally;
 use lib_blockchain::services::nfts::{NFTsManipulation, NFTsService, NTFState};
 use lib_config::config::Config;
-use lib_config::environment::{ENV_VAR_ENVIRONMENT, DEV_ENV};
+use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::infra::{
     build_local_stack_connection, create_key, create_secret_manager_keys,
     create_secret_manager_secret_key, store_secret_key,
@@ -57,7 +57,7 @@ async fn create_contract_and_mint_nft_test_sync(
 
     let shared_config = build_local_stack_connection(host_port).await;
 
-        //create secrets and keys
+    //create secrets and keys
 
     let keys_client = aws_sdk_kms::client::Client::new(&shared_config);
     let new_key_id = create_key(&keys_client).await?;
@@ -88,10 +88,10 @@ async fn create_contract_and_mint_nft_test_sync(
     let creation = ContractSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();
 
-    let creation3 = AssetAllSchema::create_schema(&config).await;//  create_schema_assets_all(&dynamo_client).await;
+    let creation3 = AssetAllSchema::create_schema(&config).await; //  create_schema_assets_all(&dynamo_client).await;
     assert_that(&creation3).is_ok();
 
-    let creation4 = OwnerSchema::create_schema(&config).await;// create_schema_owners(&dynamo_client).await;
+    let creation4 = OwnerSchema::create_schema(&config).await; // create_schema_owners(&dynamo_client).await;
     assert_that(&creation4).is_ok();
 
     let creation = KeyPairSchema::create_schema(&config).await;
@@ -99,8 +99,6 @@ async fn create_contract_and_mint_nft_test_sync(
 
     let creation = BlockTxSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();
-
-
 
     // bootstrap dependencies
     let repo_tx = BlockchainTxRepo::new(&config.clone());

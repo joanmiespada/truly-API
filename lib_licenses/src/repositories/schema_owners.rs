@@ -2,9 +2,16 @@ use crate::SERVICE;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{
     //builders::StreamSpecificationBuilder, StreamViewType,
-    AttributeDefinition, BillingMode, GlobalSecondaryIndex,
-    KeySchemaElement, KeyType, Projection, ProjectionType, ScalarAttributeType, 
-    Tag, TableStatus,
+    AttributeDefinition,
+    BillingMode,
+    GlobalSecondaryIndex,
+    KeySchemaElement,
+    KeyType,
+    Projection,
+    ProjectionType,
+    ScalarAttributeType,
+    TableStatus,
+    Tag,
 };
 use lib_config::{
     config::Config,
@@ -110,8 +117,7 @@ impl Schema for OwnerSchema {
             .send()
             .await?;
 
-            wait_until_table_is_active(&client, OWNERS_TABLE_NAME).await?;
-
+        wait_until_table_is_active(&client, OWNERS_TABLE_NAME).await?;
 
         Ok(())
     }
@@ -128,7 +134,10 @@ impl Schema for OwnerSchema {
     }
 }
 
-async fn wait_until_table_is_active(client: &aws_sdk_dynamodb::Client, table_name: &str) -> ResultE<()> {
+async fn wait_until_table_is_active(
+    client: &aws_sdk_dynamodb::Client,
+    table_name: &str,
+) -> ResultE<()> {
     loop {
         let resp = client
             .describe_table()
@@ -137,11 +146,9 @@ async fn wait_until_table_is_active(client: &aws_sdk_dynamodb::Client, table_nam
             .await?;
 
         match resp.table {
-            Some(table) => {
-                match table.table_status {
-                    Some(status) if status == TableStatus::Active => break,
-                    _ => (),
-                }
+            Some(table) => match table.table_status {
+                Some(status) if status == TableStatus::Active => break,
+                _ => (),
             },
             None => (),
         };

@@ -26,11 +26,10 @@ pub async fn manage_blockchains(
         let block_chains_repo = BlockchainRepo::new(&config.clone());
 
         for item in list {
-
-            let check = block_chains_repo.get_by_id( item.id() ).await;
-            match check{
-                Err(_)=> block_chains_repo.add(&item).await?,
-                Ok(_)=> block_chains_repo.update(&item).await?
+            let check = block_chains_repo.get_by_id(item.id()).await;
+            match check {
+                Err(_) => block_chains_repo.add(&item).await?,
+                Ok(_) => block_chains_repo.update(&item).await?,
             }
         }
     } else if delete {

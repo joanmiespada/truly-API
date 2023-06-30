@@ -37,10 +37,7 @@ pub async fn async_minting(
             body: json_text.to_owned(),
         };
         let topic_arn = config.env_vars().topic_arn_mint_fails().unwrap();
-        info!(
-            "sending message to discarded mint at topic: {}",
-            topic_arn
-        );
+        info!("sending message to discarded mint at topic: {}", topic_arn);
         let op_sent = send_sns(config, &message, topic_arn.to_owned()).await;
         match op_sent {
             Ok(_) => {

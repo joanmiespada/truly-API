@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="CPP_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/lambda_admin/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lambda_after_video/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lambda_license/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lambda_login/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lambda_mint/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lambda_user/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lib_blockchain/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lib_licenses/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lib_licenses/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/lib_users/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lib_users/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/lib_util_jwt/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/server_http/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/truly_cli/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/workspace-hack/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

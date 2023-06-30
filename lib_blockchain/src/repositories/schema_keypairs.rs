@@ -1,10 +1,8 @@
 use crate::SERVICE;
 use async_trait::async_trait;
-use aws_sdk_dynamodb::{
-    types::{
-        AttributeDefinition, BillingMode, GlobalSecondaryIndex, KeySchemaElement, KeyType,
-        Projection, ProjectionType, ScalarAttributeType, Tag,
-    },
+use aws_sdk_dynamodb::types::{
+    AttributeDefinition, BillingMode, GlobalSecondaryIndex, KeySchemaElement, KeyType, Projection,
+    ProjectionType, ScalarAttributeType, Tag,
 };
 use lib_config::{
     config::Config,

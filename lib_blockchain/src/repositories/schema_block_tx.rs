@@ -24,7 +24,6 @@ pub struct BlockTxSchema;
 #[async_trait]
 impl Schema for BlockTxSchema {
     async fn create_schema(config: &Config) -> ResultE<()> {
-        
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
 
         let asset_ad = AttributeDefinition::builder()

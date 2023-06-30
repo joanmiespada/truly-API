@@ -1,12 +1,14 @@
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
+use lib_blockchain::repositories::schema_blockchain::BlockchainSchema;
 use lib_blockchain::repositories::{
     schema_block_tx::BlockTxSchema, schema_contract::ContractSchema, schema_keypairs::KeyPairSchema,
 };
 use lib_config::config::Config;
-use lib_licenses::repositories::{schema_asset::AssetAllSchema, schema_licenses::LicenseSchema, schema_owners::OwnerSchema};
-use lib_users::repositories::schema_user::UserAllSchema;
-use lib_blockchain::repositories::schema_blockchain::BlockchainSchema;
 use lib_config::schema::Schema;
+use lib_licenses::repositories::{
+    schema_asset::AssetAllSchema, schema_licenses::LicenseSchema, schema_owners::OwnerSchema,
+};
+use lib_users::repositories::schema_user::UserAllSchema;
 
 pub async fn create_schemas(
     table_name: String,
@@ -113,10 +115,10 @@ pub async fn create_schemas(
                 BlockchainSchema::delete_schema(config).await?;
                 //schema_contract::delete_schema_contracts(&client).await?;
                 ContractSchema::delete_schema(config).await?;
-                OwnerSchema::delete_schema(config).await?; 
+                OwnerSchema::delete_schema(config).await?;
                 // schema_owners::delete_schema_owners(&client).await?;
                 AssetAllSchema::delete_schema(config).await?;
-                 //schema_asset::delete_schema_assets_all(&client).await?;
+                //schema_asset::delete_schema_assets_all(&client).await?;
                 //schema_keypairs::delete_schema_keypairs(&client).await?;
                 KeyPairSchema::delete_schema(&config).await?;
                 //schema_block_tx::delete_schema_transactions(&client).await?;

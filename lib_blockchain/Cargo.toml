@@ -50,16 +50,16 @@ uuid = { version = "1.3.3", features = [
 ] }
 tokio = { version = "1.20", features = ["macros"] }
 workspace-hack = { version = "0.1", path = "../workspace-hack" }
-sui-sdk = { git = "https://github.com/MystenLabs/sui/" }
-sui-keys = { git = "https://github.com/MystenLabs/sui/" }
-sui-types = { git = "https://github.com/MystenLabs/sui/" }
-sui-json-rpc-types = { git = "https://github.com/MystenLabs/sui/" }
-sui-json-rpc = { git = "https://github.com/MystenLabs/sui/" }
-shared-crypto = { git = "https://github.com/MystenLabs/sui/" }
-dirs = "5.0"
-bincode = "1.3.3"
+sui-sdk = { git = "https://github.com/MystenLabs/sui/", tag= "mainnet-v1.3.2" }
+sui-keys = { git = "https://github.com/MystenLabs/sui/", tag= "mainnet-v1.3.2" }
+sui-types = { git = "https://github.com/MystenLabs/sui/", tag= "mainnet-v1.3.2" }
+sui-json-rpc-types = { git = "https://github.com/MystenLabs/sui/", tag= "mainnet-v1.3.2" }
+sui-json-rpc = { git = "https://github.com/MystenLabs/sui/", tag= "mainnet-v1.3.2" }
+shared-crypto = { git = "https://github.com/MystenLabs/sui/", tag= "mainnet-v1.3.2" }
 fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto" }
 zeroize = "1.6.0"
+dirs = "5.0"
+bincode = "1.3.3"
 
 
 [target.aarch64-apple-darwin.dev-dependencies]

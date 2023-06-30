@@ -9,13 +9,9 @@ crate-type=["lib"]
 
 
 [dependencies]
-#env_logger = "0.10.0"
-#dotenv = "0.15.0"
-#envy = "0.4.2"
 serde = { version = "1.0.163", features = ["derive"] }
 serde_json = "1.0.96"
 chrono = "0.4.24"
-#actix-web = "4.2.1"
 jsonwebtoken = "8.3.0"
 http = "0.2.9"
 workspace-hack = { version = "0.1", path = "../workspace-hack" }

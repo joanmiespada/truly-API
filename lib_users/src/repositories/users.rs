@@ -405,7 +405,8 @@ impl UsersRepo {
 
                 match password {
                     Some(password) => {
-                        let hash = cypher_text(password, &self.environment_vars.hmac_secret().unwrap() )?;
+                        let hash =
+                            cypher_text(password, &self.environment_vars.hmac_secret().unwrap())?;
                         let password_av: AttributeValue = AttributeValue::S(hash);
                         email_fields = email_fields.item(PASSWORD_FIELD_NAME, password_av);
                     }

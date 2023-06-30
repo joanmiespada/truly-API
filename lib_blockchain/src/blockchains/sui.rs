@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use base64::engine::general_purpose;
 use base64::Engine;
 use chrono::Utc;
-use lib_config::infra::restore_secret_key;
+use lib_config::infra::uncypher_with_secret_key;
 use lib_config::{config::Config, environment::DEV_ENV};
 use log::error;
 use serde::{Deserialize, Serialize};
@@ -163,9 +163,12 @@ impl NFTsRepository for SuiBlockChain {
         let transaction_response_op;
         {
             let mut encoded_secret_cyphered = self.contract_owner_secret.clone();
-            let mut encoded_secret_base64 =
-                restore_secret_key(encoded_secret_cyphered.clone(), &kms_key_id, &self.config)
-                    .await?;
+            let mut encoded_secret_base64 = uncypher_with_secret_key(
+                encoded_secret_cyphered.clone(),
+                &kms_key_id,
+                &self.config,
+            )
+            .await?;
             let mut contract_owner_secret =
                 general_purpose::STANDARD_NO_PAD.decode(&encoded_secret_base64)?;
 

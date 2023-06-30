@@ -67,7 +67,7 @@ async fn run_licenses() -> ResultE<()> {
 
     let creation = OwnerSchema::create_schema(&conf).await;
     assert_that(&creation).is_ok();
-    let creation = AssetAllSchema::create_schema(&conf).await; 
+    let creation = AssetAllSchema::create_schema(&conf).await;
     assert_that(&creation).is_ok();
     let creation = LicenseSchema::create_schema(&conf).await;
     assert_that(&creation).is_ok();
@@ -94,7 +94,7 @@ async fn run_licenses() -> ResultE<()> {
         .hash("hash5678")
         .hash_algorithm("MD5")
         .build();
-    
+
     asset_id2 = ass_repo.add(&asset, &user_id).await?;
 
     let service = LicenseService::new(repo, ass_repo);

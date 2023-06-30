@@ -139,7 +139,7 @@ fn check_jwt_token_as_admin(req: &Request, config: &Config) -> Result<bool, JWTS
     let auth_flag;
     let req_headers = req.headers();
 
-    let jwt_secret = config.env_vars().jwt_token_base().unwrap() ;
+    let jwt_secret = config.env_vars().jwt_token_base().unwrap();
     let claim_ops = get_header_jwt(req_headers, &jwt_secret);
     match claim_ops {
         Ok(clm) => {

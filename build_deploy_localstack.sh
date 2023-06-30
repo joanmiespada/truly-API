@@ -111,16 +111,14 @@ do
     
     echo "secrets manager values..."
     cargo run -p truly_cli -- --store_secret ./truly_cli/res/secrets_development.json --create --region $region
-    #echo "storing secret key values..."
-    #cargo run -p truly_cli -- --store_key $mapKeys[$region] --path ./truly_cli/res/key_development.txt --create --region $region
-    
+
 done
 
 for region in "${multi_region[@]}"
 do
-    #echo "filling master data. Note: if global tables are enabled, we can only insert only one time and it will be replicated to other tables."
-    cargo run -p truly_cli -- --blockchain ./truly_cli/res/blockchain_development.json --create --region $region || exit 1
-    cargo run -p truly_cli -- --contract  ./truly_cli/res/contract_development.json --create --region $region || exit 1
+    echo "filling master data at ${region}. Note: if global tables are enabled, we can only insert only one time and it will be replicated to other tables."
+    #cargo run -p truly_cli -- --blockchain ./truly_cli/res/blockchain_development.json --create --region $region || exit 1
+    #cargo run -p truly_cli -- --contract  ./truly_cli/res/contract_development.json --create --region $region || exit 1
 done
 
 # echo 'running terraform...'

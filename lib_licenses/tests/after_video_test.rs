@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use lib_async_ops::sns::create;
 use lib_config::config::Config;
-use lib_config::environment::{ENV_VAR_ENVIRONMENT, DEV_ENV};
+use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::infra::build_local_stack_connection;
 use lib_config::schema::Schema;
 use lib_licenses::models::asset::{SourceType, VideoLicensingStatus};
@@ -14,7 +14,7 @@ use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::services::video::{VideoManipulation, VideoService};
 use lib_video_objs::shorter::CreateShorter;
-use lib_video_objs::video::{VideoResult, VideoProcessStatus};
+use lib_video_objs::video::{VideoProcessStatus, VideoResult};
 use spectral::prelude::*;
 use testcontainers::*;
 use url::Url;

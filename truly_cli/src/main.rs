@@ -5,10 +5,10 @@ use contracts::manage_contracts;
 use lib_config::config::Config;
 
 use schemas::create_schemas;
-use secretes::create_secrets;
+use secrets::create_secrets;
 use serde::{Deserialize, Serialize};
 use std::{env, process};
-use store_key::create_store_key;
+//use store_key::create_store_key;
 use structopt::StructOpt;
 use users::manage_user;
 
@@ -17,7 +17,7 @@ mod async_jobs;
 mod blockchains;
 mod contracts;
 mod schemas;
-mod secretes;
+mod secrets;
 mod store_key;
 mod users;
 
@@ -35,21 +35,20 @@ async fn command(
         delete,
         environment,
         store_secret,
-        store_key,
+        //store_key,
         key,
         adminuser,
         user_id,
         password,
         contract,
         blockchain,
-        path,
+        //path,
         //all,
         //async_jobs,
         region,
     }: Opt,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-
-    if let Some(reg) =region {
+    if let Some(reg) = region {
         env::set_var("AWS_REGION", reg);
     }
     let mut config = Config::new();
@@ -68,21 +67,21 @@ async fn command(
         create_secrets(create, delete, path, &config).await?;
     }
 
-    if let Some(key_id) = store_key {
-        if let Some(key_file_path) = path {
-            create_store_key(
-                key_id,
-                create,
-                delete,
-                //environment.clone(),
-                key_file_path,
-                &config,
-            )
-            .await?;
-        } else {
-            panic!("key store needs the path of the file!")
-        }
-    }
+    // if let Some(key_id) = store_key {
+    //     if let Some(key_file_path) = path {
+    //         create_store_key(
+    //             key_id,
+    //             create,
+    //             delete,
+    //             //environment.clone(),
+    //             key_file_path,
+    //             &config,
+    //         )
+    //         .await?;
+    //     } else {
+    //         panic!("key store needs the path of the file!")
+    //     }
+    // }
 
     // use aws command line
     // if let Some(_) = key {
@@ -157,9 +156,8 @@ pub struct Opt {
     #[structopt(long = "store_secret")]
     pub store_secret: Option<String>,
 
-    #[structopt(long = "store_key")]
-    pub store_key: Option<String>,
-
+    //#[structopt(long = "store_key")]
+    //pub store_key: Option<String>,
     #[structopt(long = "key")]
     pub key: Option<bool>,
 
@@ -178,8 +176,8 @@ pub struct Opt {
     #[structopt(long = "blockchain")]
     pub blockchain: Option<String>,
 
-    #[structopt(long = "path")]
-    pub path: Option<String>,
+    //#[structopt(long = "path")]
+    //pub path: Option<String>,
     //#[structopt(long = "all")]
     //pub all: Option<bool>,
 

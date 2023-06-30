@@ -1,13 +1,16 @@
-use aws_sdk_dynamodb::{
-    types::{
-        AttributeDefinition, BillingMode, KeySchemaElement, KeyType, ScalarAttributeType, Tag,
-    },
+use crate::SERVICE;
+use async_trait::async_trait;
+use aws_sdk_dynamodb::types::{
+    AttributeDefinition, BillingMode, KeySchemaElement, KeyType, ScalarAttributeType, Tag,
 };
 use lib_config::{
-    config::Config, environment::{ENV_VAR_ENVIRONMENT, ENV_VAR_PROJECT_LABEL, ENV_VAR_PROJECT, ENV_VAR_SERVICE_LABEL}, result::ResultE, schema::Schema,
+    config::Config,
+    environment::{
+        ENV_VAR_ENVIRONMENT, ENV_VAR_PROJECT, ENV_VAR_PROJECT_LABEL, ENV_VAR_SERVICE_LABEL,
+    },
+    result::ResultE,
+    schema::Schema,
 };
-use async_trait::async_trait;
-use crate::SERVICE;
 
 pub const BLOCKCHAIN_TABLE_NAME: &str = "truly_blockchain";
 pub const BLOCKCHAIN_ID_FIELD_PK: &str = "blockchain_id";
@@ -37,19 +40,19 @@ impl Schema for BlockchainSchema {
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
-                    .set_value(Some( config.env_vars().environment().unwrap() ))
+                    .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_PROJECT_LABEL.to_string()))
-                    .set_value(Some( ENV_VAR_PROJECT.to_string() ))
+                    .set_value(Some(ENV_VAR_PROJECT.to_string()))
                     .build(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_SERVICE_LABEL.to_string()))
-                    .set_value(Some( SERVICE.to_string() ))
+                    .set_value(Some(SERVICE.to_string()))
                     .build(),
             );
         let op = op.send().await;
@@ -59,7 +62,6 @@ impl Schema for BlockchainSchema {
         }
     }
     async fn delete_schema(config: &Config) -> ResultE<()> {
-
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
         client
             .delete_table()

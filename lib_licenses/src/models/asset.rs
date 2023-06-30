@@ -7,7 +7,6 @@ use url::Url;
 use uuid::Uuid;
 use validator::Validate;
 
-
 #[derive(Clone, Serialize, Validate, Deserialize, Debug)]
 pub struct Asset {
     id: Uuid,
@@ -212,12 +211,12 @@ pub struct AssetBuilder {
     id: Uuid,
     url: Option<Url>,
     hash: Option<String>,
-    hash_algorithm: Option<String>
+    hash_algorithm: Option<String>,
 }
 
-impl AssetBuilder{
-    pub fn new() -> AssetBuilder{
-        AssetBuilder { 
+impl AssetBuilder {
+    pub fn new() -> AssetBuilder {
+        AssetBuilder {
             id: Uuid::nil(),
             url: None,
             hash: None,
@@ -235,7 +234,8 @@ impl AssetBuilder{
     pub fn hash(&mut self, hash: &str) -> &mut AssetBuilder {
         self.hash = Some(hash.to_string());
         self
-    }pub fn hash_algorithm(&mut self, hash_algorithm: &str) -> &mut AssetBuilder {
+    }
+    pub fn hash_algorithm(&mut self, hash_algorithm: &str) -> &mut AssetBuilder {
         self.hash_algorithm = Some(hash_algorithm.to_string());
         self
     }
