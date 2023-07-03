@@ -104,8 +104,9 @@ do
 done
 
 
-tables=$(awslocal dynamodb list-tables --region $multi_region[1] --output json | jq '[.TableNames[]]' )
-#tables=$(awslocal dynamodb list-tables --region $multi_region[1] --output json | jq '[.TableNames[]] | length' )
+#tables=$(awslocal dynamodb list-tables --region $multi_region[1] --output json | jq '[.TableNames[]]' )
+#echo $tables
+tables=$(awslocal dynamodb list-tables --region $multi_region[1] --output json | jq '[.TableNames[]] | length' )
 if (( $tables[@] <= 0 )); then
     echo "creating master tables at ${multi_region[1]}"
     cargo run -p truly_cli -- --table all --create --region $multi_region[1] || exit 1
@@ -113,27 +114,30 @@ else
     echo "skipping master tables at ${multi_region[1]} because they already exist"
 fi
 
+table_names=($(awslocal dynamodb list-tables --region $multi_region[1] --output json | jq -r '.TableNames[]' ))
+echo "tables to replicate:"
+echo $table_names
 for region in "${multi_region[@]:1}"
 do
     echo "deployment table replica at ${region}"
     tables=$(awslocal dynamodb list-tables --region $region --output json | jq '[.TableNames[]] | length' )
-    if (( $tables <1 )); then
+    if (( $tables <= 0 )); then
         echo "creating replica tables..."
-        for t in ${tables[@]} 
+        for t in "${table_names[@]}"
         do
-            echo "table name: ${t} source: ${multi_region[1]} replica at: ${region} "
-            awslocal dynamodb update-table --table-name $table_name --cli-input-json \
+            res=$(echo "table name: ${t} source: ${multi_region[1]} replica at: ${region} "
+            awslocal dynamodb update-table --table-name "${t}" --cli-input-json \
             "{
-                'ReplicaUpdates':
+                \"ReplicaUpdates\":
                 [
                     {
-                        'Create': {
-                            'RegionName': '${region}'
+                        \"Create\": {
+                            \"RegionName\": \"${region}\"
                         }
                     }
                 ]
             }" \
-            --region=$multi_region[1]
+            --region=$multi_region[1] || exit 1)
         done
     else
         echo "tables were already replicated at ${region}"
@@ -141,12 +145,12 @@ do
     
 done
 
-echo "filling master data at ${region}. Note: if global tables are enabled, we can only insert only one time and it will be replicated to other tables."
-#cargo run -p truly_cli -- --blockchain ./truly_cli/res/blockchain_development.json --create --region $multi_region[1] || exit 1
-#cargo run -p truly_cli -- --contract  ./truly_cli/res/contract_development.json --create --region $multi_region[1] || exit 1
+echo "filling master data at ${multi_region[1]}. Note: if global tables are enabled, we can only insert only one time and it will be replicated to other tables."
+cargo run -p truly_cli -- --blockchain ./truly_cli/res/blockchain_development.json --create --region $multi_region[1] || exit 1
+cargo run -p truly_cli -- --contract  ./truly_cli/res/contract_development.json --create --region $multi_region[1] || exit 1
 
-# echo 'running terraform...'
-# cd terraform
+echo 'running terraform...'
+cd terraform
 
 # for region in "${multi_region[@]}"
 # do
@@ -165,7 +169,3 @@ cd ..
 
 echo 'completed!'
 
-# function join_by_comma() {
-#     local IFS=","
-#     echo "$*"
-# }
