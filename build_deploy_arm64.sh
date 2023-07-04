@@ -6,9 +6,9 @@
 # example: running only terraform
 # $ ./build_deploy_arm64.sh --zip_skip  --secrets_skip --tables_skip --dns_skip
 
-#check if awslocal and tflocal are in $PATH
+#check if aws and tf are in $PATH
 aws --version || exit 1
-tf --version || exit 1
+terraform --version || exit 1
 
 #check paramaters. They allow to skip some sections
 zip_skip='false'
@@ -43,10 +43,12 @@ export TF_VAR_telemetry=false
 export TF_VAR_telemetry_endpoint="http://127.0.0.1:8080"
 export TF_VAR_email="joanmi@espada.cat"
 dns_domain="truly.video"
+profile="truly"
 export TF_VAR_dns_base=$dns_domain
 dns_prefix="stage"
-architecture='aarch64-linux-gnu'
-path_base='/Users/joanmiquelespadasabat/Projects/tron/API/cross-compile/openssl/'${architecture}
+architecture="aarch64-linux-gnu"
+#path_base='/Users/joanmiquelespadasabat/Projects/tron/API/cross-compile/openssl/'${architecture}
+path_base=$(pwd)'/cross-compile/openssl/'${architecture}
 folder="target/lambda_${architecture}"
 multi_region=("eu-west-1")
 
@@ -73,42 +75,54 @@ echo 'running hard pre-requisits: keys and secrets'
 declare -A mapKeys
 mapKeys_string="{ "
 echo 'searching keys already created...'
-for region in "${multi_region[@]}"
-do
-    keys=$(aws kms list-keys --region $region --output json | jq -r '.Keys[] | .KeyId')
+for region in "${multi_region[@]}"; do
+    keys=($(aws kms list-keys --profile $profile --region $region --output json | jq -r '.Keys[] | .KeyId'))
     for key in "${keys[@]}"; do
-        tags=$(aws kms list-resource-tags --key-id $key --region $region --output json)
-        project=$(echo $tags | jq -r '.Tags[] | select(.TagKey=="Project" and .TagValue=="Truly") | select(.TagKey=="Environment" and .TagValue=="${ENVIRONMENT}")')
-        if [ ! -z "$project" ]; then
-            mapKeys[$region]=$key
-            mapKeys_string+="'${region}': '${key}', "
-            break
+        project=$(aws kms list-resource-tags --profile $profile --key-id $key --region $region --output json | jq -r --arg env "$ENVIRONMENT" 'select(.Tags[] | select(.TagKey=="Project" and .TagValue=="Truly")) | select(.Tags[] | select(.TagKey=="Environment" and .TagValue==$env))')
+        if [[ ! -z "$project" ]]; then
+            length=$(echo $project | jq 'length')
+            if [[ $length -gt 0 ]]; then
+                mapKeys[$region]=$key
+                mapKeys_string+="'${region}': '${key}', "
+                break
+            fi
         fi
+        
     done 
 done
 mapKeys_string+=" }"
 #echo "${mapKeys_string}"
+if [[ ${#mapKeys[@]} -eq 0 ]]; then
+    echo "no keys were found! check if keys exist and/or tags are corrected annotated"
+    exit 1
+else
+    echo "Key Ids found"
+fi
 
 
-zones=$(aws route53 list-hosted-zones-by-name   --dns-name $dns_domain --output json | jq '[.HostedZones[]] | length' || exit 1 )
+echo "checking dns zone..."
+zones=$(aws route53 list-hosted-zones-by-name --profile $profile  --dns-name $dns_domain --output json | jq '[.HostedZones[]] | length' || exit 1 )
 
 if (( $zones == 0 )); then
     echo "please create the zone first."
     exit 1
+else
+    echo "DNS exists"
 fi
 
 if [[ "$secrets_skip" == 'false' ]]; then
     for region in "${multi_region[@]}"
     do
+        cargo run -p truly_cli -- --store_secret ./truly_cli/res/secrets_prod_stage.json --create --region $region || exit 1
+
         echo "secrets added at ${region}"
-        cargo run -p truly_cli -- --store_secret ./truly_cli/res/secrets_development.json --create --region $region
     done
 else
     echo "secrets skip"
 fi
 
 if [[ "$tables_skip" == 'false' ]]; then
-    tables=$(aws dynamodb list-tables --region $multi_region[1] --output json | jq '[.TableNames[]] | length' )
+    tables=$(aws dynamodb list-tables --profile $profile --region $multi_region[1] --output json | jq '[.TableNames[]] | length' )
     if (( $tables[@] <= 0 )); then
         echo "creating master tables at ${multi_region[1]}"
         cargo run -p truly_cli -- --table all --create --region $multi_region[1] || exit 1
@@ -116,17 +130,17 @@ if [[ "$tables_skip" == 'false' ]]; then
         echo "skipping master tables at ${multi_region[1]} because they already exist"
     fi
 
-    table_names=($(aws dynamodb list-tables --region $multi_region[1] --output json | jq -r '.TableNames[]' ))
+    table_names=($(aws dynamodb list-tables  --profile $profile --region $multi_region[1] --output json | jq -r '.TableNames[]' ))
     for region in "${multi_region[@]:1}"
     do
         echo "deployment table replicas at ${region}"
-        tables=$(aws dynamodb list-tables --region $region --output json | jq '[.TableNames[]] | length' )
+        tables=$(aws dynamodb list-tables  --profile $profile --region $region --output json | jq '[.TableNames[]] | length' )
         if (( $tables[@] <= 0 )); then
             #echo "creating replica tables..."
             for t in "${table_names[@]}"
             do
                 res=$(echo "table name: ${t} source: ${multi_region[1]} replica at: ${region} "
-                aws dynamodb update-table --table-name "${t}" --cli-input-json \
+                aws dynamodb update-table  --profile $profile --table-name "${t}" --cli-input-json \
                 "{
                     \"ReplicaUpdates\":
                     [
@@ -165,9 +179,9 @@ do
     terraform workspace new $region_label
     terraform workspace select $region_label
     echo "Planning infrastructure for ${region}..."
-    tf plan
+    terraform plan
     echo "Applying infrastructure for ${region}..."
-    tf apply --auto-approve
+    terraform apply --auto-approve
 done
 
 cd ..
