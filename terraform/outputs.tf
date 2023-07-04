@@ -1,4 +1,4 @@
-output "invoke_url" {
+output "invoke_url_aws" {
   value = aws_apigatewayv2_stage.truly_stage.invoke_url
 }
 output "video_in_topic" {
@@ -11,11 +11,6 @@ output "video_out_topic" {
 
 output "api_domain_name" {
   value = aws_apigatewayv2_domain_name.truly_api_domain_name.domain_name
-}
-
-output "api_gateway_url_aws" {
-  description = "The URL of the deployed API Gateway in production at AWS"
-  value       = "https://${aws_apigatewayv2_api.truly_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_flag}"
 }
 
 output "api_gateway_url_localstack_1" {
