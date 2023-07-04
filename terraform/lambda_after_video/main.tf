@@ -1,23 +1,18 @@
 locals {
   lambda_file = "${var.lambda_deploy_folder}/${var.lambda_after_video_file}"
+  region_prefix = element(split("-", var.aws_region), 0)
 }
 resource "aws_cloudwatch_log_group" "truly_lambda_after_video_cloudwatch" {
-  for_each = toset(var.regions)
-  region   = each.key
-
-  name              = "/aws/lambda/${var.truly_lambda_after_video_function_name}"
-  retention_in_days = 2
+  name              = "/aws/lambda/${var.truly_lambda_after_video_function_name}-${local.region_prefix}"
+  retention_in_days = 1
 
   tags = merge(var.common_tags, { service : "${var.service_name}" })
 }
 
 
 resource "aws_lambda_function" "truly_lambda_after_video" {
-  for_each = toset(var.regions)
-  region   = each.key
-
   function_name    = var.truly_lambda_after_video_function_name
-  architectures    = var.architecture
+  architectures    = ["arm64"]
   memory_size      = 512
   source_code_hash = filebase64sha256(local.lambda_file)
   filename         = local.lambda_file
@@ -25,8 +20,8 @@ resource "aws_lambda_function" "truly_lambda_after_video" {
   tracing_config {
     mode = "Active"
   }
-  handler = var.function_handler
-  runtime = var.runtime
+  handler = "function_handler"
+  runtime = "provided.al2"
 
   role = var.role
 
@@ -58,12 +53,9 @@ resource "aws_lambda_function" "truly_lambda_after_video" {
 //--------------- plug queue with lambda after video ----------------
 
 resource "aws_lambda_event_source_mapping" "truly_after_video" {
-  for_each = toset(var.regions)
-  region   = each.key
-
-  event_source_arn = var.sqs_after_video_process_arn[each.key].arn
+  event_source_arn = var.sqs_after_video_process_arn
   enabled = true
-  function_name    = aws_lambda_function.truly_lambda_after_video[each.key].arn
-  batch_size = 1 // only 1 message per lambda
+  function_name    = aws_lambda_function.truly_lambda_after_video.arn
+  batch_size = 1
 }
 

@@ -1,22 +1,29 @@
+use std::{
+    fs::File,
+    io::{BufReader, Read},
+};
+
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
-use lib_config::{config::Config, environment::DEV_ENV, infra::create_secret_manager_keys};
+use lib_config::config::Config;
+use lib_config::infra::create_secret_manager_with_values;
 
 pub async fn create_secrets(
     create: bool,
     delete: bool,
-    environment: String,
+    secrets_json_path: String,
     config: &Config,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let er = ResourceNotFoundException::builder().build();
     if create {
         let client_sec = aws_sdk_secretsmanager::client::Client::new(config.aws_config());
-        let secrets_json;
-        if environment == DEV_ENV {
-            secrets_json = include_str!("../res/secrets_development.json");
-        } else {
-            secrets_json = include_str!("../res/secrets_prod_stage.json");
-        }
-        create_secret_manager_keys(secrets_json, &client_sec).await?;
+
+        let file = File::open(secrets_json_path)?;
+        let mut buf_reader = BufReader::new(file);
+        let mut contents = String::new();
+
+        buf_reader.read_to_string(&mut contents)?;
+
+        create_secret_manager_with_values(&contents, &client_sec).await?;
     } else if delete {
         panic!("not allowed, do it with AWS console UI")
     } else {

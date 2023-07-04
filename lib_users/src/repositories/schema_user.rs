@@ -2,7 +2,7 @@ use crate::SERVICE;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{
     AttributeDefinition, BillingMode, GlobalSecondaryIndex, KeySchemaElement, KeyType, Projection,
-    ProjectionType, ScalarAttributeType, Tag,
+    ProjectionType, ScalarAttributeType, Tag, builders::StreamSpecificationBuilder, StreamViewType,
 };
 use lib_config::{
     config::Config,
@@ -53,6 +53,12 @@ impl Schema for UserSchema {
             .key_schema(pk)
             .attribute_definitions(user_id_ad)
             .billing_mode(BillingMode::PayPerRequest)
+            .stream_specification(
+                StreamSpecificationBuilder::default()
+                    .stream_enabled(true)
+                    .stream_view_type(StreamViewType::NewAndOldImages)
+                    .build(),
+            )
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
@@ -73,7 +79,7 @@ impl Schema for UserSchema {
             )
             .send()
             .await?;
-        
+
         Ok(())
     }
 
@@ -151,13 +157,12 @@ impl Schema for LoginDeviceSchema {
             .send()
             .await?;
 
-        
         Ok(())
     }
 
     async fn delete_schema(config: &Config) -> ResultE<()> {
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
-        
+
         client
             .delete_table()
             .table_name(LOGIN_DEVICE_TABLE_NAME)
@@ -167,7 +172,6 @@ impl Schema for LoginDeviceSchema {
         Ok(())
     }
 }
-
 
 pub struct LoginEmailSchema;
 #[async_trait]
@@ -232,13 +236,13 @@ impl Schema for LoginEmailSchema {
             )
             .send()
             .await?;
-        
+
         Ok(())
     }
 
     async fn delete_schema(config: &Config) -> ResultE<()> {
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
-        
+
         client
             .delete_table()
             .table_name(LOGIN_EMAIL_TABLE_NAME)
@@ -344,4 +348,3 @@ impl Schema for UserAllSchema {
         Ok(())
     }
 }
-

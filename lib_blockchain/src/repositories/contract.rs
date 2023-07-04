@@ -142,17 +142,14 @@ impl ContractRepository for ContractRepo {
             .key(CONTRACT_ID_FIELD_PK, id_av.clone());
 
         let results = request.send().await;
-        match results {
-            Err(e) => {
-                let mssag = format!(
-                    "Error at [{}] - {} ",
-                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
-                    e
-                );
-                tracing::error!(mssag);
-                return Err(ContractDynamoDBError(e.to_string()).into());
-            }
-            Ok(_) => {}
+        if let Err(e) = results {
+            let mssag = format!(
+                "Error at [{}] - {} ",
+                Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                e
+            );
+            tracing::error!(mssag);
+            return Err(ContractDynamoDBError(e.to_string()).into());
         }
         match results.unwrap().item {
             None => Err(ContractNoExistsError("id doesn't exist".to_string()).into()),

@@ -1,10 +1,7 @@
 use async_trait::async_trait;
 use chrono::{DateTime, NaiveDateTime, Utc};
-use lib_config::{
-    config::Config,
-    environment::DEV_ENV,
-    infra::{restore_secret_key, store_secret_key},
-};
+use lib_config::infra::{cypher_with_secret_key, uncypher_with_secret_key};
+use lib_config::{config::Config, environment::DEV_ENV};
 use log::debug;
 use secp256k1::SecretKey;
 use std::str::FromStr;
@@ -193,7 +190,7 @@ impl NFTsRepository for GanacheBlockChain {
         //let contract_owner_private_key_op = self.decrypt_contract_owner_secret_key().await;
 
         let contract_owner_private_key_op = SecretKey::from_str(
-            restore_secret_key(
+            uncypher_with_secret_key(
                 self.contract_owner_secret.to_owned(),
                 &self.kms_key_id,
                 &self.config,
@@ -313,9 +310,9 @@ impl NFTsRepository for GanacheBlockChain {
         let user_public_key = format!("{}", contract_owner_key_pair.1);
 
         let user_private_key_cyphered =
-            store_secret_key(&user_private_key, &self.kms_key_id, &self.config).await?;
+            cypher_with_secret_key(&user_private_key, &self.kms_key_id, &self.config).await?;
         let user_public_key_cyphered =
-            store_secret_key(&user_public_key, &self.kms_key_id, &self.config).await?;
+            cypher_with_secret_key(&user_public_key, &self.kms_key_id, &self.config).await?;
 
         let mut user_key = KeyPair::new();
         user_key.set_user_id(user_id);

@@ -9,9 +9,7 @@ use uuid::Uuid;
 
 use crate::{
     errors::video::VideoError,
-    models::{
-        asset::{Asset, VideoLicensingStatus},
-    },
+    models::asset::{Asset, VideoLicensingStatus},
 };
 
 use super::assets::{AssetManipulation, AssetService};

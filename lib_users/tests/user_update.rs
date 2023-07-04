@@ -11,8 +11,6 @@ use spectral::{assert_that, result::ResultAssertions};
 use std::env;
 use testcontainers::*;
 
-
-
 #[tokio::test]
 async fn update_user_test() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env::set_var("RUST_LOG", "debug");
@@ -145,7 +143,7 @@ async fn update_password_user_test() -> Result<(), Box<dyn std::error::Error + S
     config.setup().await;
     config.set_aws_config(&shared_config); //rewrite configuration to use our current testcontainer instead
     config.load_secret(SECRETS_MANAGER_APP_KEYS).await;
-    
+
     let creation = UserAllSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();
 
@@ -184,8 +182,6 @@ async fn update_password_user_test() -> Result<(), Box<dyn std::error::Error + S
 pub async fn create_secrets(
     client: &aws_sdk_secretsmanager::Client,
 ) -> Result<(), Box<dyn std::error::Error>> {
-
-
     let secrets_json = r#"
     {
         "HMAC_SECRET" : "localtest_hmac_fgsdfg3rterfr2345weg@#$%WFRsdf",

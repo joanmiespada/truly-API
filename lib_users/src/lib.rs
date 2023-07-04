@@ -8,7 +8,6 @@ pub mod services;
 use validator::ValidationError;
 use zxcvbn::zxcvbn;
 
-
 pub static SERVICE: &str = "users";
 
 pub fn validate_password(password: &str) -> Result<(), ValidationError> {

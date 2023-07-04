@@ -17,10 +17,13 @@ use web3::{
 
 pub const MNEMONIC_TEST: &str =
     "myth like bonus scare over problem client lizard pioneer submit female collect"; //from $ganache --deterministic command
+const ENV_VAR_AWS_REGION: &str= "AWS_REGION";
+const TEST_AWS_REGION: &str = "eu-central-1";
 
 #[tokio::test]
 async fn ganache_bootstrap_get_balance_test() {
     env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
+    env::set_var(ENV_VAR_AWS_REGION, TEST_AWS_REGION);
     let mut config = Config::new();
     config.setup().await;
 

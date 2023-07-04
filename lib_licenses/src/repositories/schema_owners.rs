@@ -1,8 +1,17 @@
 use crate::SERVICE;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{
-    AttributeDefinition, BillingMode, GlobalSecondaryIndex, KeySchemaElement, KeyType, Projection,
-    ProjectionType, ScalarAttributeType, Tag,
+    //builders::StreamSpecificationBuilder, StreamViewType,
+    AttributeDefinition,
+    BillingMode,
+    GlobalSecondaryIndex,
+    KeySchemaElement,
+    KeyType,
+    Projection,
+    ProjectionType,
+    ScalarAttributeType,
+    TableStatus,
+    Tag, builders::StreamSpecificationBuilder, StreamViewType,
 };
 use lib_config::{
     config::Config,
@@ -71,7 +80,6 @@ impl Schema for OwnerSchema {
             )
             .build();
 
-
         client
             .create_table()
             .table_name(OWNERS_TABLE_NAME)
@@ -82,6 +90,12 @@ impl Schema for OwnerSchema {
             .attribute_definitions(ad1)
             .attribute_definitions(ad2)
             .billing_mode(BillingMode::PayPerRequest)
+            .stream_specification(
+                StreamSpecificationBuilder::default()
+                    .stream_enabled(true)
+                    .stream_view_type(StreamViewType::NewAndOldImages)
+                    .build(),
+            )
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
@@ -102,6 +116,9 @@ impl Schema for OwnerSchema {
             )
             .send()
             .await?;
+
+        wait_until_table_is_active(&client, OWNERS_TABLE_NAME).await?;
+
         Ok(())
     }
 
@@ -115,4 +132,29 @@ impl Schema for OwnerSchema {
 
         Ok(())
     }
+}
+
+async fn wait_until_table_is_active(
+    client: &aws_sdk_dynamodb::Client,
+    table_name: &str,
+) -> ResultE<()> {
+    loop {
+        let resp = client
+            .describe_table()
+            .table_name(table_name)
+            .send()
+            .await?;
+
+        match resp.table {
+            Some(table) => match table.table_status {
+                Some(status) if status == TableStatus::Active => break,
+                _ => (),
+            },
+            None => (),
+        };
+
+        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+    }
+
+    Ok(())
 }

@@ -25,7 +25,6 @@ variable "resource_sqs" {}
 
 variable "role" {}
 
-variable "regions" {}
 
 variable "environment_flag" {}
 
@@ -39,14 +38,12 @@ variable "kms_cypher_owner" {
 }
 
 variable "dead_letter_queue_mint" {
-  //type      = string
-  type = map(any)
+  type      = string
   description = "queue url to send errors when minting"
 }
 
 variable "queue_mint_arn"{
-  //type = string
-  type = map(any)
+  type = string
   description = "when this queue recieves a message this lamdbda will get up and process it"
 }
 
@@ -55,17 +52,15 @@ variable "rust_backtrace" {
 }
 
 variable "minting_async_topic_arn" {
-  //type      = string
-  type = map(any)
+  type      = string
   description = "topic arn to mint async"
 }
 
 variable minting_fails_topic_arn {
-  //type = string
-  type = map(any)
+  type = string
   description = "topic to register when miting fails after several retries"
 }
 
-variable "function_handler" {}
-variable "runtime" {}
-variable "architecture" {}
+variable "aws_region" {
+  type    = string
+}

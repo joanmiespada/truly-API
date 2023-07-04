@@ -4,8 +4,29 @@ services:
   #  image: amazon/dynamodb-local:latest
   #  ports:
   #    - "8000:8000"
-  
-  localstack: #https://www.bitovi.com/blog/running-aws-resources-on-localstack
+
+  localstack-pro:
+    #container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
+    image: localstack/localstack-pro  # required for Pro
+    ports:
+      - "127.0.0.1:4566:4566"            # LocalStack Gateway
+      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+      - "127.0.0.1:53:53"                # DNS config (required for Pro)
+      - "127.0.0.1:53:53/udp"            # DNS config (required for Pro)
+      - "127.0.0.1:443:443"              # LocalStack HTTPS Gateway (required for Pro)
+    environment:
+      - DEBUG=${DEBUG-}
+      - PERSISTENCE=${PERSISTENCE-}
+      - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY-}  # required for Pro
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      #- "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+      - "./.localstack-pro:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"  
+
+
+
+  localstack-community: #https://www.bitovi.com/blog/running-aws-resources-on-localstack
     image: localstack/localstack:latest
     ports:
       - "4566:4566"            # LocalStack Gateway
@@ -22,7 +43,7 @@ services:
       - DATA_DIR=/tmp/localstack/data
       - HOST_TMP_FOLDER=./.localstack
     volumes:
-      - "./.localstack:/tmp/localstack"
+      - "./.localstack-community:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "./create-docker-resources.sh:/docker-entrypoint-initaws.d/create-docker-resources.sh"
 

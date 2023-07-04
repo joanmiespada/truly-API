@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{
     AttributeDefinition, BillingMode, GlobalSecondaryIndex, KeySchemaElement, KeyType, Projection,
-    ProjectionType, ScalarAttributeType, Tag,
+    ProjectionType, ScalarAttributeType, Tag, builders::StreamSpecificationBuilder, StreamViewType,
 };
 use lib_config::{
     config::Config,
@@ -24,7 +24,6 @@ pub struct BlockTxSchema;
 #[async_trait]
 impl Schema for BlockTxSchema {
     async fn create_schema(config: &Config) -> ResultE<()> {
-        
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
 
         let asset_ad = AttributeDefinition::builder()
@@ -74,6 +73,12 @@ impl Schema for BlockTxSchema {
             .attribute_definitions(time_ad)
             .attribute_definitions(tx_ad)
             .billing_mode(BillingMode::PayPerRequest)
+            .stream_specification(
+                StreamSpecificationBuilder::default()
+                    .stream_enabled(true)
+                    .stream_view_type(StreamViewType::NewAndOldImages)
+                    .build(),
+            )
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))

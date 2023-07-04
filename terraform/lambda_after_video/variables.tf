@@ -25,7 +25,6 @@ variable "resource_sqs" {}
 
 variable "role" {}
 
-variable "regions" {}
 
 variable "environment_flag" {}
 
@@ -41,9 +40,9 @@ variable "rust_backtrace" {
   type= string
 }
 variable "sqs_after_video_process_arn" {
-  type= map(any)
+  type= string
 }
 
-variable "function_handler" {}
-variable "runtime" {}
-variable "architecture" {}
+variable "aws_region" {
+  type    = string
+}

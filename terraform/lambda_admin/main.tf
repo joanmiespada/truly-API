@@ -1,25 +1,19 @@
 locals {
   lambda_file = "${var.lambda_deploy_folder}/${var.lambda_admin_file}"
+  region_prefix = element(split("-", var.aws_region), 0)
 }
 
 resource "aws_cloudwatch_log_group" "truly_lambda_admin_cloudwatch" {
-  for_each = toset(var.regions)
-  region   = each.key
-
-  name              = "/aws/lambda/${var.truly_lambda_admin_function_name}"
-  retention_in_days = 2
+  name              = "/aws/lambda/${var.truly_lambda_admin_function_name}-${local.region_prefix}"
+  retention_in_days = 1
   
   tags = merge(var.common_tags,{ service:"${var.service_name}"})
 }
 
 
 resource "aws_lambda_function" "truly_lambda_admin" {
-
-  for_each = toset(var.regions)
-  region   = each.key
-
   function_name = var.truly_lambda_admin_function_name
-  architectures = var.architecture
+  architectures = [ "arm64" ]
   memory_size = 512
   source_code_hash = filebase64sha256(local.lambda_file)
   filename         =  local.lambda_file 
@@ -27,8 +21,8 @@ resource "aws_lambda_function" "truly_lambda_admin" {
   tracing_config {
     mode="Active"
   }
-  handler = var.function_handler
-  runtime = var.runtime
+  handler = "function_handler"
+  runtime = "provided.al2"
 
   role = var.role
 

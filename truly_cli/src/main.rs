@@ -1,16 +1,14 @@
 use admin_user::create_admin_user;
-use async_jobs::manage_async_jobs;
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
 use blockchains::manage_blockchains;
 use contracts::manage_contracts;
 use lib_config::config::Config;
-use lib_config::infra::create_key;
 
 use schemas::create_schemas;
-use secretes::create_secrets;
+use secrets::create_secrets;
 use serde::{Deserialize, Serialize};
 use std::{env, process};
-use store_key::create_store_key;
+//use store_key::create_store_key;
 use structopt::StructOpt;
 use users::manage_user;
 
@@ -19,7 +17,7 @@ mod async_jobs;
 mod blockchains;
 mod contracts;
 mod schemas;
-mod secretes;
+mod secrets;
 mod store_key;
 mod users;
 
@@ -37,47 +35,67 @@ async fn command(
         delete,
         environment,
         store_secret,
-        store_key,
+        //store_key,
         key,
         adminuser,
         user_id,
         password,
         contract,
         blockchain,
-        all,
-        async_jobs,
+        //path,
+        //all,
+        //async_jobs,
+        region,
     }: Opt,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    env::set_var("RUST_LOG", "debug");
-
+    if let Some(reg) = region {
+        env::set_var("AWS_REGION", reg);
+    }
     let mut config = Config::new();
     config.setup().await;
 
     let er = ResourceNotFoundException::builder().build();
 
     if let Some(table_name) = table {
-        create_schemas(table_name, create, delete, &config).await?;
+        //env::set_var("AWS_REGION", region.unwrap());
+        //let mut config_multi_region = Config::new();
+        //config_multi_region.setup().await;
+        create_schemas(table_name.clone(), create, delete, &config).await?;
     }
 
-    if let Some(_) = store_secret {
-        create_secrets(create, delete, environment.clone(), &config).await?;
+    if let Some(path) = store_secret {
+        create_secrets(create, delete, path, &config).await?;
     }
 
-    if let Some(key_id) = store_key {
-        create_store_key(key_id, create, delete, environment.clone(), &config).await?;
-    }
+    // if let Some(key_id) = store_key {
+    //     if let Some(key_file_path) = path {
+    //         create_store_key(
+    //             key_id,
+    //             create,
+    //             delete,
+    //             //environment.clone(),
+    //             key_file_path,
+    //             &config,
+    //         )
+    //         .await?;
+    //     } else {
+    //         panic!("key store needs the path of the file!")
+    //     }
+    // }
 
-    if let Some(_) = key {
-        if create {
-            let client_key = aws_sdk_kms::client::Client::new(config.aws_config());
-            let keyid = create_key(&client_key).await?;
-            println!("new keyid : {}", keyid)
-        } else if delete {
-            panic!("not allowed, do it with AWS console UI")
-        } else {
-            return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-        }
-    }
+    // use aws command line
+    // if let Some(_) = key {
+    //     if create {
+    //         let client_key = aws_sdk_kms::client::Client::new(config.aws_config());
+    //         let keyid = create_key(&client_key).await?;
+
+    //         println!("{{'key_id':'{}'}}", keyid)
+    //     } else if delete {
+    //         panic!("not allowed, do it with AWS console UI")
+    //     } else {
+    //         return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
+    //     }
+    // }
 
     if let Some(email) = adminuser {
         create_admin_user(
@@ -110,9 +128,9 @@ async fn command(
         .await?;
     }
 
-    if let Some(_) = async_jobs {
-        manage_async_jobs(create, delete, environment.clone(), &config).await?;
-    }
+    // if let Some(_) = async_jobs {
+    //     manage_async_jobs(create, delete, environment.clone(), &config).await?;
+    // }
 
     Ok(())
 }
@@ -136,11 +154,10 @@ pub struct Opt {
     pub environment: String,
 
     #[structopt(long = "store_secret")]
-    pub store_secret: Option<bool>,
+    pub store_secret: Option<String>,
 
-    #[structopt(long = "store_key")]
-    pub store_key: Option<String>,
-
+    //#[structopt(long = "store_key")]
+    //pub store_key: Option<String>,
     #[structopt(long = "key")]
     pub key: Option<bool>,
 
@@ -159,18 +176,19 @@ pub struct Opt {
     #[structopt(long = "blockchain")]
     pub blockchain: Option<String>,
 
-    #[structopt(long = "all")]
-    pub all: Option<bool>,
+    //#[structopt(long = "path")]
+    //pub path: Option<String>,
+    //#[structopt(long = "all")]
+    //pub all: Option<bool>,
 
-    #[structopt(long = "async")]
-    pub async_jobs: Option<bool>,
+    //#[structopt(long = "async")]
+    //pub async_jobs: Option<bool>,
+    #[structopt(long = "region")]
+    pub region: Option<String>,
 }
 
 #[tokio::main]
 async fn main() {
-    env::set_var("RUST_LOG", "debug");
-    env_logger::builder().is_test(true).init();
-
     let op_cmd = command(Opt::from_args()).await;
     match op_cmd {
         Err(err) => {

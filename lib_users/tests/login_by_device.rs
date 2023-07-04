@@ -30,7 +30,7 @@ async fn login_user_device_test() -> Result<(), Box<dyn std::error::Error + Send
     let mut config = Config::new();
     config.setup().await;
     config.set_aws_config(&shared_config); //rewrite configuration to use our current testcontainer instead
-    
+
     let creation = UserAllSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();
 
@@ -44,7 +44,9 @@ async fn login_user_device_test() -> Result<(), Box<dyn std::error::Error + Send
 
     let new_id = user_service.add(&mut new_user, &None).await?;
 
-    let res = user_service.login(&Some(device), &None, &None, &None).await?;
+    let res = user_service
+        .login(&Some(device), &None, &None, &None)
+        .await?;
 
     assert_eq!(new_id, res.user_id);
 

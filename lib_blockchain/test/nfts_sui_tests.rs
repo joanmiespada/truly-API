@@ -13,10 +13,9 @@ use lib_blockchain::repositories::schema_keypairs::KeyPairSchema;
 use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
 use lib_blockchain::services::nfts::{NFTsManipulation, NFTsService};
 use lib_config::config::Config;
-use lib_config::environment::{ENV_VAR_ENVIRONMENT, DEV_ENV};
+use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::infra::{
-    build_local_stack_connection, create_key, create_secret_manager_keys,
-    create_secret_manager_secret_key, store_secret_key,
+    build_local_stack_connection, create_key, create_secret_manager_with_values, cypher_with_secret_key
 };
 use lib_licenses::models::asset::{MintingStatus, SourceType, VideoLicensingStatus};
 use lib_licenses::repositories::assets::AssetRepo;
@@ -38,10 +37,14 @@ use sui_keys::keystore::{InMemKeystore, Keystore};
 use testcontainers::*;
 use url::Url;
 
+const ENV_VAR_AWS_REGION: &str= "AWS_REGION";
+const TEST_AWS_REGION: &str = "eu-central-1";
+
 #[tokio::test]
-async fn create_contract_and_mint_nft_test_sync(
+async fn create_contract_and_mint_nft_test_sync_sui(
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env::set_var("RUST_LOG", "debug");
+    env::set_var(ENV_VAR_AWS_REGION, TEST_AWS_REGION);
     env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
 
     env_logger::builder().is_test(true).init();
@@ -70,8 +73,7 @@ async fn create_contract_and_mint_nft_test_sync(
         "JWT_TOKEN_BASE": "localtest_jwt_sd543ERGds235$%^"
     }
     "#;
-    create_secret_manager_keys(secrets_json, &secrets_client).await?;
-    create_secret_manager_secret_key(&secrets_client).await?;
+    create_secret_manager_with_values(secrets_json, &secrets_client).await?;
 
     // set up config for truly app
     let mut config = Config::new();
@@ -89,7 +91,7 @@ async fn create_contract_and_mint_nft_test_sync(
     let creation = ContractSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();
 
-    let creation = AssetAllSchema::create_schema(&config).await; 
+    let creation = AssetAllSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();
 
     let creation = OwnerSchema::create_schema(&config).await;
@@ -98,7 +100,7 @@ async fn create_contract_and_mint_nft_test_sync(
     let creation = KeyPairSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();
 
-    let creation =  BlockTxSchema::create_schema(&config).await;
+    let creation = BlockTxSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();
 
     // bootstrap dependencies
@@ -157,7 +159,7 @@ async fn create_contract_and_mint_nft_test_sync(
     let contract_owner_secret_base64 =
         general_purpose::STANDARD_NO_PAD.encode(&contract_owner_keystore);
     let contract_owner_secret_cyphered =
-        store_secret_key(&contract_owner_secret_base64, &new_key_id, &config).await?;
+        cypher_with_secret_key(&contract_owner_secret_base64, &new_key_id, &config).await?;
     //create blockchain object and contract
     let block_chains_repo = BlockchainRepo::new(&config.clone());
     let contracts_repo = ContractRepo::new(&config.clone());

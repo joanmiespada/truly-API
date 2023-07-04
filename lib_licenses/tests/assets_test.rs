@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 use aws_sdk_dynamodb::Client;
 use lib_config::config::Config;
-use lib_config::environment::{ENV_VAR_ENVIRONMENT, DEV_ENV};
+use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::schema::Schema;
 use lib_licenses::models::asset::{AssetStatus, SourceType};
 use lib_licenses::repositories::assets::AssetRepo;
@@ -26,7 +26,7 @@ async fn creation_table() {
     env::set_var("RUST_LOG", "debug");
     env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
     env_logger::builder().is_test(true).init();
-    
+
     let docker = clients::Cli::default();
     let node = docker.run(images::dynamodb_local::DynamoDb::default());
     let host_port = node.get_host_port_ipv4(8000);
@@ -41,7 +41,6 @@ async fn creation_table() {
     assert_that(&creation).is_ok();
     let creation = OwnerSchema::create_schema(&conf).await;
     assert_that(&creation).is_ok();
-
 
     let client = Client::new(&shared_config);
 
@@ -209,7 +208,7 @@ async fn check_ownership() {
 
     let mut conf = lib_config::config::Config::new();
     conf.set_aws_config(&shared_config);
- 
+
     let creation = AssetAllSchema::create_schema(&conf).await;
     assert_that(&creation).is_ok();
     let creation = OwnerSchema::create_schema(&conf).await;

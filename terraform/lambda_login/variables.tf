@@ -22,7 +22,6 @@ variable "resource_xray" {}
 variable "resource_secretsman" {}
 
 variable "role" {}
-variable "regions" {}
 
 
 variable "environment_flag" {}
@@ -38,7 +37,6 @@ variable "jwt_token_time_exp_hours" {
 variable "rust_backtrace" {
   type= string
 }
-
-variable "function_handler" {}
-variable "runtime" {}
-variable "architecture" {}
+variable "aws_region" {
+  type    = string
+}

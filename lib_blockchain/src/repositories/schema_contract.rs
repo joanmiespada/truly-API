@@ -1,10 +1,8 @@
 use crate::SERVICE;
 use async_trait::async_trait;
-use aws_sdk_dynamodb::{
-    types::{
-        AttributeDefinition, BillingMode, GlobalSecondaryIndex, KeySchemaElement, KeyType,
-        Projection, ProjectionType, ScalarAttributeType, Tag,
-    },
+use aws_sdk_dynamodb::types::{
+    AttributeDefinition, BillingMode, GlobalSecondaryIndex, KeySchemaElement, KeyType, Projection,
+    ProjectionType, ScalarAttributeType, Tag, builders::StreamSpecificationBuilder, StreamViewType,
 };
 use lib_config::{
     config::Config,
@@ -76,6 +74,12 @@ impl Schema for ContractSchema {
             .attribute_definitions(blockchain_ad)
             .attribute_definitions(status_ad)
             .billing_mode(BillingMode::PayPerRequest)
+            .stream_specification(
+                StreamSpecificationBuilder::default()
+                    .stream_enabled(true)
+                    .stream_view_type(StreamViewType::NewAndOldImages)
+                    .build(),
+            )
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))

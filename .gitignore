@@ -4,7 +4,7 @@
 **/*.rs.bk
 /node_modules
 .terraform*
-.localstack*
+.localstack-*
 /truly_cli/res/*_prod_stage.*
 /truly_cli/res/*_stage.*
 /truly_cli/res/*_prod.*

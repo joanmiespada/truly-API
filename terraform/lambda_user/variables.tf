@@ -23,7 +23,6 @@ variable "resource_secretsman" {}
 
 variable "role" {}
 
-variable "regions" {}
 
 variable "environment_flag" {}
 
@@ -34,7 +33,6 @@ variable "lambda_deploy_folder" {}
 variable "rust_backtrace" {
   type= string
 }
-
-variable "function_handler" {}
-variable "runtime" {}
-variable "architecture" {}
+variable "aws_region" {
+  type    = string
+}
