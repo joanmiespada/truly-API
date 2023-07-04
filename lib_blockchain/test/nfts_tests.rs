@@ -17,7 +17,7 @@ use web3::{
 
 pub const MNEMONIC_TEST: &str =
     "myth like bonus scare over problem client lizard pioneer submit female collect"; //from $ganache --deterministic command
-const ENV_VAR_AWS_REGION: &str= "AWS_REGION";
+const ENV_VAR_AWS_REGION: &str = "AWS_REGION";
 const TEST_AWS_REGION: &str = "eu-central-1";
 
 #[tokio::test]

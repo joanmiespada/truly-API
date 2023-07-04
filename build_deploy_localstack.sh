@@ -95,14 +95,14 @@ declare -A mapKeys
 mapKeys_string="{ "
 if [[ "$keys_skip" == 'false' ]]; then
 
-    key=$(awslocal kms create-key --multi-region --region us-east-1 --description 'cypher master key, dont use it directly. Use region replicas.' --output json --tags "TagKey=Project,TagValue=Truly" "TagKey=environment,TagValue=${ENVIRONMENT}" || exit 1)
+    key=$(awslocal kms create-key --multi-region --region us-east-1 --description 'cypher master key, dont use it directly. Use region replicas.' --output json --tags "TagKey=Project,TagValue=Truly" "TagKey=Environment,TagValue=${ENVIRONMENT}" || exit 1)
     key_id=$(echo $key | jq -r '.KeyMetadata.KeyId')
     key_arn=$(echo $key | jq -r '.KeyMetadata.Arn')
     echo "primary key id created: ${key_arn}"
     
     for region in "${multi_region[@]}"
     do
-        region_key=$(awslocal kms replicate-key --key-id $key_arn --replica-region $region  --description 'replica key, to be used only in this region assets' --output json  --tags "TagKey=Project,TagValue=Truly" "TagKey=environment,TagValue=${ENVIRONMENT}" || exit 1)
+        region_key=$(awslocal kms replicate-key --key-id $key_arn --replica-region $region  --description 'replica key, to be used only in this region assets' --output json  --tags "TagKey=Project,TagValue=Truly" "TagKey=Environment,TagValue=${ENVIRONMENT}" || exit 1)
         replica_key_rpe=$(echo $region_key | jq -r '.ReplicaKeyMetadata.KeyId')
         replica_key_arn=$(echo $region_key | jq -r '.ReplicaKeyMetadata.Arn')
         echo "replica key arn created: ${replica_key_arn}"
@@ -116,7 +116,7 @@ else
         keys=$(awslocal kms list-keys --region $region --output json | jq -r '.Keys[] | .KeyId')
         for key in "${keys[@]}"; do
             tags=$(awslocal kms list-resource-tags --key-id $key --region $region --output json)
-            project=$(echo $tags | jq -r '.Tags[] | select(.TagKey=="Project" and .TagValue=="Truly")')
+            project=$(echo $tags | jq -r '.Tags[] | select(.TagKey=="Project" and .TagValue=="Truly") | select(.TagKey=="Environment" and .TagValue=="${ENVIRONMENT}")')
             if [ ! -z "$project" ]; then
                 mapKeys[$region]=$key
                 mapKeys_string+="'${region}': '${key}', "
@@ -221,9 +221,9 @@ do
     terraform workspace new $region_label
     terraform workspace select $region_label
     echo "Planning infrastructure for ${region}..."
-    tflocal plan  #-var-file="variables-localstack.tfvars"
+    tflocal plan
     echo "Applying infrastructure for ${region}..."
-    tflocal apply --auto-approve #-var-file="variables-localstack.tfvars" 
+    tflocal apply --auto-approve
 done
 
 cd ..

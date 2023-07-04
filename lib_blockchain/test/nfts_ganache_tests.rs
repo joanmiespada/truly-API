@@ -18,7 +18,8 @@ use lib_blockchain::services::nfts::{NFTsManipulation, NFTsService, NTFState};
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::infra::{
-    build_local_stack_connection, create_key, create_secret_manager_with_values, cypher_with_secret_key
+    build_local_stack_connection, create_key, create_secret_manager_with_values,
+    cypher_with_secret_key,
 };
 use lib_licenses::models::asset::{MintingStatus, SourceType, VideoLicensingStatus};
 use lib_licenses::repositories::assets::AssetRepo;
@@ -161,7 +162,7 @@ async fn create_contract_and_mint_nft_test_sync_ganache(
         "4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"; // example fake secret key
     let key_id = config.env_vars().kms_key_id().unwrap();
     let contract_owner_secret_cyphered =
-        cypher_with_secret_key (contract_owner_secret, key_id.as_str(), &config).await?;
+        cypher_with_secret_key(contract_owner_secret, key_id.as_str(), &config).await?;
     let contract_owner_address = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1".to_string(); //address based on the previous fake secret key
 
     //create blockchain ganache object and contract

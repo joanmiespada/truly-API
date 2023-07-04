@@ -1,6 +1,7 @@
 use crate::SERVICE;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{
+    builders::StreamSpecificationBuilder,
     //builders::StreamSpecificationBuilder, StreamViewType,
     AttributeDefinition,
     BillingMode,
@@ -10,8 +11,9 @@ use aws_sdk_dynamodb::types::{
     Projection,
     ProjectionType,
     ScalarAttributeType,
+    StreamViewType,
     TableStatus,
-    Tag, builders::StreamSpecificationBuilder, StreamViewType,
+    Tag,
 };
 use lib_config::{
     config::Config,

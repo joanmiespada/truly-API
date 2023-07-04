@@ -15,7 +15,8 @@ use lib_blockchain::services::nfts::{NFTsManipulation, NFTsService};
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::infra::{
-    build_local_stack_connection, create_key, create_secret_manager_with_values, cypher_with_secret_key
+    build_local_stack_connection, create_key, create_secret_manager_with_values,
+    cypher_with_secret_key,
 };
 use lib_licenses::models::asset::{MintingStatus, SourceType, VideoLicensingStatus};
 use lib_licenses::repositories::assets::AssetRepo;
@@ -37,7 +38,7 @@ use sui_keys::keystore::{InMemKeystore, Keystore};
 use testcontainers::*;
 use url::Url;
 
-const ENV_VAR_AWS_REGION: &str= "AWS_REGION";
+const ENV_VAR_AWS_REGION: &str = "AWS_REGION";
 const TEST_AWS_REGION: &str = "eu-central-1";
 
 #[tokio::test]
