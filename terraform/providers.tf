@@ -1,36 +1,36 @@
+# # provider "aws" {
+# #   //region = var.aws_region
+# #   profile = "personal"
+# # }
+
+# # provider "aws" {
+# #   alias = "default"
+# #   //region = var.aws_region
+# #   profile = "personal"
+# #}
+
 # provider "aws" {
-#   //region = var.aws_region
-#   profile = "personal"
+#   region = var.aws_region
+#   profile = "truly"
 # }
 
 # provider "aws" {
 #   alias = "default"
-#   //region = var.aws_region
+#   region = var.aws_region
+#   profile = "truly"
+# }
+
+# provider "aws" { #only for certificates used by dns
+#   alias  = "useast"
+#   region = "us-east-1"
 #   profile = "personal"
-#}
+# }
 
-provider "aws" {
-  region = var.aws_region
-  profile = "truly"
-}
-
-provider "aws" {
-  alias = "default"
-  region = var.aws_region
-  profile = "truly"
-}
-
-provider "aws" { #only for certificates used by dns
-  alias  = "useast"
-  region = "us-east-1"
-  profile = "personal"
-}
-
-provider "aws" { #only for certificates used by dns
-  alias   = "us_east_1"
-  region  = "us-east-1"
-  profile = "truly"
-}
+# provider "aws" { #only for certificates used by dns
+#   alias   = "us_east_1"
+#   region  = "us-east-1"
+#   profile = "truly"
+# }
 
 # provider "aws" { #only for certificates used by dns
 #   alias   = "eu_central_1"
