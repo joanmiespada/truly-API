@@ -67,7 +67,7 @@ variable "dns_prefix" {
 variable "dns_base" {
   type = string
   description = "domain base truly.video"
-  default = "truly.video"
+  #default = "truly.video"
 } 
 
 variable "telemetry" {

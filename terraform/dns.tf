@@ -9,7 +9,7 @@ data "aws_route53_zone" "truly_zone" {
 
 resource "aws_route53_record" "truly_zone_record_A" {
   zone_id = data.aws_route53_zone.truly_zone.zone_id
-  name    = format("%s-%s.%s",var.dns_prefix, local.region_prefix ,var.dns_base)
+  name    = format("%s.%s",var.dns_prefix,var.dns_base)
   type    = "A"
 
   alias {
@@ -19,7 +19,7 @@ resource "aws_route53_record" "truly_zone_record_A" {
   }
 }
 resource "aws_apigatewayv2_domain_name" "truly_api_domain_name" {
-  domain_name = format("%s-%s.%s",var.dns_prefix, local.region_prefix ,var.dns_base)
+  domain_name = format("%s.%s",var.dns_prefix ,var.dns_base)
   domain_name_configuration {
     certificate_arn = aws_acm_certificate_validation.cert.certificate_arn
     endpoint_type   = "REGIONAL"

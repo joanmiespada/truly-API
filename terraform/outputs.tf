@@ -9,6 +9,21 @@ output "video_out_topic" {
   value = aws_sns_topic.video_out_topic.arn
 }
 
-output "api" {
+output "api_domain_name" {
   value = aws_apigatewayv2_domain_name.truly_api_domain_name.domain_name
 }
+
+output "api_gateway_url_aws" {
+  description = "The URL of the deployed API Gateway in production at AWS"
+  value       = "https://${aws_apigatewayv2_api.truly_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_flag}"
+}
+
+output "api_gateway_url_localstack_1" {
+  description = "The URL of the deployed API Gateway on LocalStack option1"
+  value       = "http://localhost:4566/restapis/${aws_apigatewayv2_api.truly_api.id}/v1/_user_request_/<path>"
+}
+output "api_gateway_url_localstack_2" {
+  description = "The URL of the deployed API Gateway on LocalStack option2"
+  value       = "http://${aws_apigatewayv2_api.truly_api.id}.execute-api.localhost.localstack.cloud:4566/${var.environment_flag}/<path>"
+}
+
