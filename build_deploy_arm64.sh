@@ -118,7 +118,7 @@ if [[ "$secrets_skip" == 'false' ]]; then
         echo "secrets added at ${region}"
     done
 else
-    echo "secrets skip"
+    echo "secrets skip, they need to be already created"
 fi
 
 if [[ "$tables_skip" == 'false' ]]; then
@@ -179,9 +179,9 @@ do
     terraform workspace new $region_label
     terraform workspace select $region_label
     echo "Planning infrastructure for ${region}..."
-    terraform plan
-    echo "Applying infrastructure for ${region}..."
-    terraform apply --auto-approve
+    #terraform plan
+    #echo "Applying infrastructure for ${region}..."
+    #terraform apply --auto-approve
 done
 
 cd ..

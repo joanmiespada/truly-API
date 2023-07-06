@@ -10,12 +10,13 @@
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/truly_cli",
             //"args": [ "--table", "owners", "--create" ],
-            "args": [ "--store_secret", "../../truly_cli/res/secrets_development.json", "--create", "--region", "eu-central-1" ],
+            //"args": [ "--store_secret", "../../truly_cli/res/secrets_development.json", "--create", "--region", "eu-central-1" ],
+            "args": [ "--store_secret", "../../truly_cli/res/secrets_prod_stage.json", "--create", "--region", "eu-west-1", "--profile", "truly" ],
             //"args": ["--adminuser","...@....","--password",".....", "--create"],
             "cwd": "${workspaceRoot}/target/debug",
             "preLaunchTask": "build",
             "env": {
-                "ENVIRONMENT":"development",
+                "ENVIRONMENT":"stage",
             }
         },
         {

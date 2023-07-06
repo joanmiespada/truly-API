@@ -60,26 +60,26 @@ async fn create_contract_and_mint_nft_test_sync_sui(
     //create dynamodb tables against testcontainers.
 
     let shared_config = build_local_stack_connection(host_port).await;
-
+    // set up config for truly app
+    let mut config = Config::new();
+    config.setup().await;
+    config.set_aws_config(&shared_config); //rewrite configuration to use our current testcontainer instead
     //create secrets and keys
 
-    let keys_client = aws_sdk_kms::client::Client::new(&shared_config);
-    let new_key_id = create_key(&keys_client).await?;
+    //let keys_client = aws_sdk_kms::client::Client::new(&shared_config);
+    let new_key_id = create_key(&config).await?;
     env::set_var("KMS_KEY_ID", new_key_id.clone());
 
-    let secrets_client = aws_sdk_secretsmanager::client::Client::new(&shared_config);
+    //let secrets_client = aws_sdk_secretsmanager::client::Client::new(&shared_config);
     let secrets_json = r#"
     {
         "HMAC_SECRET" : "localtest_hmac_1234RGsdfg#$%",
         "JWT_TOKEN_BASE": "localtest_jwt_sd543ERGds235$%^"
     }
     "#;
-    create_secret_manager_with_values(secrets_json, &secrets_client).await?;
+    create_secret_manager_with_values(secrets_json, &config).await?;
 
-    // set up config for truly app
-    let mut config = Config::new();
-    config.setup().await;
-    config.set_aws_config(&shared_config); //rewrite configuration to use our current testcontainer instead
+    
     config.load_secrets().await;
 
     //tables

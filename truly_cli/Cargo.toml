@@ -5,7 +5,7 @@ edition = "2021"
 
 
 [dependencies]
-lib_config = { git="https://github.com/joanmiespada/truly-shared" }
+lib_config = { git="https://github.com/joanmiespada/truly-shared", version = "0.0.9"}
 lib_async_ops = { git="https://github.com/joanmiespada/truly-shared" }
 lib_licenses = { path = "../lib_licenses" }
 lib_users = { path = "../lib_users" }
@@ -25,6 +25,7 @@ structopt = "0.3.26"
 uuid = { version = "1.3.3", features=["v4","fast-rng","macro-diagnostics","serde"]}
 url = {version="2.3.1", features=["serde"] }
 workspace-hack = { version = "0.1", path = "../workspace-hack" }
+log = "0.4.19"
 
 [target.aarch64-apple-darwin.dev-dependencies]
 env_logger = "0.10.0"
