@@ -15,7 +15,6 @@ zip_skip='false'
 keys_skip='false'
 secrets_skip='false'
 tables_skip='false'
-dns_skip='false'
 for arg in "$@"
 do
     case $arg in
@@ -188,8 +187,9 @@ do
     terraform plan
     terraform apply --auto-approve
 done
-
 cd ..
+
+echo "At stage no dns geolocation is needed."
 
 echo 'completed!'
 
