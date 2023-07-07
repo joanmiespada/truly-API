@@ -3,7 +3,7 @@ resource "aws_sqs_queue" "minting_queue" {
   delay_seconds              = 0
   max_message_size           = 4096
   message_retention_seconds  = 3600 //1h
-  visibility_timeout_seconds = 300  // 5 minutes, it needs to be aligned with lambda_mint timeout
+  visibility_timeout_seconds = 900  // 15 minutes, it needs to be aligned with lambda_mint timeout
   receive_wait_time_seconds  = 10
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.minting_queue_deadletter.arn,
