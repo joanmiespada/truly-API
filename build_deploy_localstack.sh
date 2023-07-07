@@ -16,6 +16,7 @@ keys_skip='false'
 secrets_skip='false'
 tables_skip='false'
 dns_skip='false'
+terraform_skip='false'
 for arg in "$@"
 do
     case $arg in
@@ -33,6 +34,9 @@ do
             ;;
         "--dns_skip")
             dns_skip='true'
+            ;;
+        "--terraform_skip")
+            terraform_skip='true'
             ;;
     esac
 done
@@ -52,6 +56,7 @@ dns_domain="truly.test"
 export TF_VAR_dns_base=$dns_domain
 dns_prefix="local"
 folder='target/lambda_localstack'
+
 multi_region=("eu-central-1" "us-west-1" "ap-northeast-1")
 
 if [[ "$zip_skip" == 'false' ]]; then
@@ -208,25 +213,206 @@ else
     echo "tables and master data skip"
 fi
 
-echo 'running terraform...'
-cd terraform
+if [[ "$terraform_skip" == 'false' ]]; then
+    echo 'running terraform...'
+    cd terraform
 
-for region in "${multi_region[@]}"
-do
-    letters=${region%%-*}
-    region_label="localstack-${region}"
-    export TF_VAR_aws_region=$region
-    export TF_VAR_dns_prefix="${letters}-${dns_prefix}"
-    export TF_VAR_kms_id_cypher_all_secret_keys=mapKeys[$region]
-    terraform workspace new $region_label
-    terraform workspace select $region_label
-    echo "Planning infrastructure for ${region}..."
-    tflocal plan
-    echo "Applying infrastructure for ${region}..."
-    tflocal apply --auto-approve
+    for region in "${multi_region[@]}"
+    do
+        letters=${region%%-*}
+        region_label="localstack-${region}"
+        export TF_VAR_aws_region=$region
+        export TF_VAR_dns_prefix="${letters}-${dns_prefix}"
+        export TF_VAR_kms_id_cypher_all_secret_keys=mapKeys[$region]
+        terraform workspace new $region_label
+        terraform workspace select $region_label
+        echo "Planning infrastructure for ${region}..."
+        tflocal plan
+        echo "Applying infrastructure for ${region}..."
+        tflocal apply --auto-approve
+    done
+    cd ..
+    echo 'Terraform done!'
+else
+    echo 'Terraform skip!'
+fi
+
+# adding route53 geolocal balancer among regions
+
+declare -A mapGeoLocations
+mapGeoLocations=(
+  [us]="NA SA"
+  [eu]="EU AF"
+  [ap]="AS OC AU NZ"
+) 
+#zone_id=$(awslocal route53 list-hosted-zones-by-name --dns-name $dns_domain --query 'HostedZones[0].Id')
+#zone_id=$(awslocal route53 list-hosted-zones-by-name --dns-name $dns_domain --output json | jq -r .HostedZones[0].Id | cut -d "/" -f 3)
+
+output=$(awslocal route53 list-hosted-zones-by-name --dns-name $dns_domain --output json)
+zone_id=$(echo $output | jq -r '.HostedZones[0].Id' | cut -d '/' -f 3)
+
+declare -A mapGeoLocations
+mapGeoLocations=(
+  [us]="NA SA"
+  [eu]="EU AF"
+  [ap]="AS OC AU NZ"
+) 
+
+output=$(awslocal route53 list-hosted-zones-by-name --dns-name $dns_domain --output json)
+zone_id=$(echo $output | jq -r '.HostedZones[0].Id' | cut -d '/' -f 3)
+
+echo "Enabling georouting to ${zone_id}..."
+for key in ${(k)mapGeoLocations[@]}; do
+  locations=("${(@s/ /)mapGeoLocations[$key]}")
+  for loc in "${locations[@]}"; do
+    recordSetName="$dns_prefix.$dns_domain"
+    existingRecords=$(awslocal route53 list-resource-record-sets --hosted-zone-id $zone_id)
+    
+    if echo "$existingRecords" | jq -e --arg recordSetName "$recordSetName." --arg loc "$loc" '.ResourceRecordSets[] | select(.Name==$recordSetName and .GeoLocation.ContinentCode==$loc)' > /dev/null; then
+      echo "Skipping existing record: $key / $recordSetName, Geolocation: $loc"
+    else
+      echo "Adding a new GeoLocation to $key / $recordSetName at $loc"
+      awslocal route53 change-resource-record-sets --hosted-zone-id $zone_id --change-batch "{ \
+      \"Changes\": [ \
+          { \
+              \"Action\": \"CREATE\", \
+              \"ResourceRecordSet\": { \
+              \"Name\": \"$dns_prefix.$dns_domain\", \
+              \"Type\": \"CNAME\", \
+              \"TTL\": 300, \
+              \"ResourceRecords\": [ \
+                  { \
+                  \"Value\": \"$key-$dns_prefix.$dns_domain\" \
+                  } \
+              ], \
+              \"GeoLocation\": { \
+                  \"ContinentCode\": \"$loc\" \
+              } \
+              } \
+          } \
+      ] \
+      }"
+    fi
+  done
 done
 
-cd ..
 
-echo 'completed!'
+
+# echo "Enabling georouting to ${zone_id}..."
+# for key in "${(k)mapGeoLocations[@]}"; do
+#   locations=(${mapGeoLocations[$key]})
+#   for loc in "${locations[@]}"; do
+#     recordSetName="$dns_prefix.$dns_domain"
+#     existingRecords=$(awslocal route53 list-resource-record-sets --hosted-zone-id $zone_id)
+    
+#     if echo "$existingRecords" | jq -e --arg recordSetName "$recordSetName." --arg loc "$loc" '.ResourceRecordSets[] | select(.Name==$recordSetName and .GeoLocation.ContinentCode==$loc)' > /dev/null; then
+#       echo "Skipping existing record: $key / $recordSetName, Geolocation: $loc"
+#     else
+#       echo "Adding a new GeoLocation to $key / $recordSetName at $loc"
+#       awslocal route53 change-resource-record-sets --hosted-zone-id $zone_id --change-batch "{ \
+#       \"Changes\": [ \
+#           { \
+#               \"Action\": \"CREATE\", \
+#               \"ResourceRecordSet\": { \
+#               \"Name\": \"$dns_prefix.$dns_domain\", \
+#               \"Type\": \"CNAME\", \
+#               \"TTL\": 300, \
+#               \"ResourceRecords\": [ \
+#                   { \
+#                   \"Value\": \"$key-$dns_prefix.$dns_domain\" \
+#                   } \
+#               ], \
+#               \"GeoLocation\": { \
+#                   \"ContinentCode\": \"$loc\" \
+#               } \
+#               } \
+#           }, \
+#       ] \
+#       }"
+#     fi
+#   done
+# done
+
+
+# echo "Enabling georouting to ${zone_id}..."
+# for key in "${!mapGeoLocations[@]}"; do
+#   locations=(${mapGeoLocations[$key]})
+#   for loc in "${locations[@]}"; do
+#     recordSetName="$dns_prefix.$dns_domain"
+#     existingRecords=$(awslocal route53 list-resource-record-sets --hosted-zone-id $zone_id)
+    
+#     if echo "$existingRecords" | jq -e --arg recordSetName "$recordSetName." --arg loc "$loc" '.ResourceRecordSets[] | select(.Name==$recordSetName and .GeoLocation.ContinentCode==$loc)' > /dev/null; then
+#       echo "Skipping existing record: $key / $recordSetName, Geolocation: $loc"
+#     else
+#       echo "Adding a new GeoLocation to $key / $recordSetName at $loc"
+#       awslocal route53 change-resource-record-sets --hosted-zone-id $zone_id --change-batch "{ \
+#       \"Changes\": [ \
+#           { \
+#               \"Action\": \"CREATE\", \
+#               \"ResourceRecordSet\": { \
+#               \"Name\": \"$dns_prefix.$dns_domain\", \
+#               \"Type\": \"CNAME\", \
+#               \"TTL\": 300, \
+#               \"ResourceRecords\": [ \
+#                   { \
+#                   \"Value\": \"$key-$dns_prefix.$dns_domain\" \
+#                   } \
+#               ], \
+#               \"GeoLocation\": { \
+#                   \"ContinentCode\": \"$loc\" \
+#               } \
+#               } \
+#           }, \
+#       ] \
+#       }"
+#     fi
+#   done
+# done
+
+# echo "enabling georouting to ${zone_id}..."
+# for key in "${(k)mapGeoLocations[@]}"; do
+#   locations="${(s/ /)mapGeoLocations[$key]}"
+#   for loc in $locations; do
+
+#     recordSetName="$dns_prefix.$dns_domain"
+#     # Get existing records
+#     existingRecords=$(awslocal route53 list-resource-record-sets --hosted-zone-id $zone_id)
+#     # Check if the record already exists with the same name and geolocation
+#     if echo "$existingRecords" | jq -r '.ResourceRecordSets[] | select(.Name=="'$recordSetName'." and .GeoLocation.ContinentCode=="'$loc'")' | grep -q "$recordSetName"; then
+#       echo "Skipping existing record: $key / $recordSetName, Geolocation: $loc"
+#     else
+
+#         echo "adding a new GeoLocation to $key / $recordSetName at $loc"
+#         awslocal route53 change-resource-record-sets --hosted-zone-id $zone_id --change-batch "{ \
+#         \"Changes\": [ \
+#             { \
+#                 \"Action\": \"CREATE\", \
+#                 \"ResourceRecordSet\": { \
+#                 \"Name\": \"$dns_prefix.$dns_domain\", \
+#                 \"Type\": \"CNAME\", \
+#                 \"TTL\": 300, \
+#                 \"ResourceRecords\": [ \
+#                     { \
+#                     \"Value\": \"$key-$dns_prefix.$dns_domain\" \
+#                     } \
+#                 ], \
+#                 \"GeoLocation\": { \
+#                     \"ContinentCode\": \"$loc\" \
+#                 } \
+#                 } \
+#             }, \
+#         ] \
+#         }"
+#     fi
+#   done
+# done
+
+
+
+
+
+
+
+
+echo 'all completed!'
 
