@@ -15,8 +15,9 @@ services:
       - "127.0.0.1:53:53/udp"            # DNS config (required for Pro)
       - "127.0.0.1:443:443"              # LocalStack HTTPS Gateway (required for Pro)
     environment:
-      - DEBUG=${DEBUG-}
-      - PERSISTENCE=${PERSISTENCE-}
+      - DEBUG=1
+      - LS_LOG=trace #error,debug,info,trace, trace-internal
+      - PERSISTENCE=0 #set to 1 if you want to keep changes between restarts
       - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY-}  # required for Pro
       - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:

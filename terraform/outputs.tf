@@ -15,7 +15,7 @@ output "api_domain_name" {
 
 output "api_gateway_url_localstack_1" {
   description = "The URL of the deployed API Gateway on LocalStack option1"
-  value       = "http://localhost:4566/restapis/${aws_apigatewayv2_api.truly_api.id}/v1/_user_request_/<path>"
+  value       = "http://localhost:4566/restapis/${aws_apigatewayv2_api.truly_api.id}/${var.environment_flag}/_user_request_/<path>"
 }
 output "api_gateway_url_localstack_2" {
   description = "The URL of the deployed API Gateway on LocalStack option2"
