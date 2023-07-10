@@ -84,3 +84,24 @@ variable "email" {
   description = "AWS SES email notifications"
   type    = string
 }
+
+variable "api_stage_version" {
+  description = "allow to deploy multiple version: v1, v2, v3"
+  type    = string
+  default = "v1"
+}
+
+variable "architectures" {
+  type    = list(string)
+  default = [ "arm64" ]
+}
+
+variable "handler" {
+  type    = string
+  default = "function_handler"
+}
+variable "runtime" {
+  type    = string
+  default = "provided.al2"
+}
+

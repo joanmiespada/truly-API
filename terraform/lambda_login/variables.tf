@@ -1,8 +1,8 @@
 
 variable "lambda_login_file" {
   description = "The binary zip file for the login lambda."
-  type    = string
-  default = "lambda_login/bootstrap.zip"
+  type        = string
+  default     = "lambda_login/bootstrap.zip"
 }
 
 variable "truly_lambda_login_function_name" {
@@ -15,7 +15,7 @@ variable "service_name" {
   type    = string
 }
 
-variable "common_tags" { }
+variable "common_tags" {}
 variable "resource_logs" {}
 variable "resource_dynamodb" {}
 variable "resource_xray" {}
@@ -31,12 +31,26 @@ variable "trace_log" {}
 variable "lambda_deploy_folder" {}
 variable "jwt_token_time_exp_hours" {
   description = "time expiration jwt in production based on hours"
-  type    = number
+  type        = number
 }
 
 variable "rust_backtrace" {
-  type= string
+  type = string
 }
 variable "aws_region" {
+  type = string
+}
+variable "api_stage_version" {
+  type = string
+}
+variable "architectures" {
+  type    = list(string)
+}
+variable "handler" {
   type    = string
 }
+variable "runtime" {
+  type    = string
+}
+
+

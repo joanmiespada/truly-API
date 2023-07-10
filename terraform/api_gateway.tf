@@ -14,7 +14,7 @@ resource "aws_apigatewayv2_api" "truly_api" {
 
 resource "aws_apigatewayv2_stage" "truly_stage" {
   api_id      = aws_apigatewayv2_api.truly_api.id
-  name        = var.environment_flag  #"$default"
+  name        = var.api_stage_version # var.environment_flag  #"$default" "v1"  #
   auto_deploy = true
   tags        = merge(local.common_tags, {})
 }
@@ -27,7 +27,7 @@ resource "aws_apigatewayv2_integration" "truly_login_integration" {
   connection_type    = "INTERNET"
   description        = "Login methods"
   integration_method = "POST"
-  integration_uri    = module.lambda_login.lambda.invoke_arn #lambda_login.aws_lambda_function.truly_lambda_login.invoke_arn
+  integration_uri    = module.lambda_login.lambda.invoke_arn 
 
   payload_format_version = "2.0"
 
@@ -45,7 +45,6 @@ resource "aws_lambda_permission" "truly_login_permission" {
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_login_route.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_login_route.route_key)[1]}"
-  //source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/POST/auth/login"
 
 }
 
@@ -55,7 +54,7 @@ resource "aws_apigatewayv2_integration" "truly_admin_integration" {
   integration_type = "AWS_PROXY"
 
   connection_type    = "INTERNET"
-  description        = "Login methods"
+  description        = "Administrative methods, they need authentication and authorization."
   integration_method = "POST"
   integration_uri    = module.lambda_admin.lambda.invoke_arn
 
@@ -75,7 +74,6 @@ resource "aws_lambda_permission" "truly_admin_permission" {
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_admin_route.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_admin_route.route_key)[1]}"
-  //source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/POST/auth/login"
 
 }
 
@@ -141,7 +139,6 @@ resource "aws_lambda_permission" "truly_licenses_permission_asset" {
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset.route_key)[1]}"
-  //source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/POST/auth/login"
 
 }
 

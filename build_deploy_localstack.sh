@@ -61,12 +61,12 @@ export TF_VAR_dns_base=$dns_domain
 dns_prefix="local"
 folder='target/lambda_localstack'
 
-multi_region=("eu-central-1" "us-west-1" "ap-northeast-1") #in which regions we want to deploy or infra. First one in this list is the master.
+multi_region=("eu-central-1" "us-west-1") # "ap-northeast-1") #in which regions we want to deploy or infra. First one in this list is the master.
 declare -A mapGeoLocations
 mapGeoLocations=(
   [us]="NA SA"
   [eu]="EU AF"
-  [ap]="AS OC AU NZ"
+  #[ap]="AS OC AU NZ"
 ) 
 
 if [[ "$zip_skip" == 'false' ]]; then

@@ -19,6 +19,7 @@ services:
       - LS_LOG=info #error,debug,info,trace, trace-internal
       - PERSISTENCE=1 #set to 1 if you want to keep changes between restarts
       - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY-}  # required for Pro
+      - LAMBDA_DOCKER_FLAGS=-p 127.0.0.1:5050:5050 # debug port
       - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
       #- "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"

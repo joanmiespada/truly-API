@@ -63,3 +63,16 @@ variable minting_fails_topic_arn {
 variable "aws_region" {
   type    = string
 }
+variable "api_stage_version" {
+  type = string
+}
+variable "architectures" {
+  type    = list(string)
+}
+variable "handler" {
+  type    = string
+}
+variable "runtime" {
+  type    = string
+}
+
