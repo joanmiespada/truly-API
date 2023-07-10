@@ -1,10 +1,10 @@
 #!/bin/zsh
 
 # example: running the command first time to create everything from scratch at localstack:
-# $ ./build_deploy_arm64.sh
+# $ ./build_deploy_stage.sh
 
 # example: running only terraform
-# $ ./build_deploy_arm64.sh --zip_skip  --secrets_skip --tables_skip --dns_skip
+# $ ./build_deploy_stage.sh --zip_skip  --secrets_skip --tables_skip 
 
 #check if aws and tf are in $PATH
 aws --version || exit 1
@@ -12,7 +12,6 @@ terraform --version || exit 1
 
 #check paramaters. They allow to skip some sections
 zip_skip='false'
-keys_skip='false'
 secrets_skip='false'
 tables_skip='false'
 for arg in "$@"

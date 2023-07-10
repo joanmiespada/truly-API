@@ -6308,6 +6308,7 @@ dependencies = [
  "lib_config",
  "lib_users",
  "lib_util_jwt",
+ "log",
  "serde 1.0.167",
  "serde_json",
  "tokio",

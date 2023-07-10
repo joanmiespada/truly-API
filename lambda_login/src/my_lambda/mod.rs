@@ -11,6 +11,7 @@ use lib_users::services::users::UsersService;
 use login::login;
 use serde_json::json;
 use tracing::instrument;
+use log::{debug,info};
 
 #[derive(Debug)]
 pub struct ApiLambdaError(pub String);
@@ -36,15 +37,17 @@ pub async fn function_handler(
     let context = req.lambda_context();
     //let query_string = req.query_string_parameters().to_owned();
     //request.uri().path()
-
+    debug!("debug - uri {}", req.uri().path());
+    info!("info - uri {}", req.uri().path());
     match req.method() {
         &Method::POST => match req.uri().path() {
             "/auth/login" => login(&req, &context, config, user_service).await,
             "/auth/signup" => create_basic_user(&req, &context, config, user_service).await,
-            &_ => build_resp(
+            &_ => /*build_resp(
                 "method not allowed".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
-            ),
+            )*/
+            not_allowed(&req, &context),
         },
         _ => not_allowed(&req, &context),
     }
