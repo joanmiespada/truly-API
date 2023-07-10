@@ -54,6 +54,7 @@ module "lambda_login" {
   jwt_token_time_exp_hours = var.jwt_token_time_exp_hours
   environment_flag         = var.environment_flag
   trace_log                = var.trace_log
+  rust_log                 = var.rust_log
   lambda_deploy_folder     = var.lambda_deploy_folder
   rust_backtrace           = var.rust_backtrace
   aws_region               = var.aws_region
@@ -76,6 +77,7 @@ module "lambda_user" {
 
   environment_flag     = var.environment_flag
   trace_log            = var.trace_log
+  rust_log             = var.rust_log
   lambda_deploy_folder = var.lambda_deploy_folder
 
   rust_backtrace    = var.rust_backtrace
@@ -98,6 +100,7 @@ module "lambda_admin" {
 
   environment_flag     = var.environment_flag
   trace_log            = var.trace_log
+  rust_log             = var.rust_log
   lambda_deploy_folder = var.lambda_deploy_folder
 
   rust_backtrace    = var.rust_backtrace
@@ -124,6 +127,7 @@ module "lambda_licenses" {
 
   environment_flag     = var.environment_flag
   trace_log            = var.trace_log
+  rust_log             = var.rust_log
   lambda_deploy_folder = var.lambda_deploy_folder
 
   dead_letter_queue_mint  = aws_sqs_queue.minting_queue_deadletter.url
@@ -156,6 +160,7 @@ module "lambda_mint" {
 
   environment_flag     = var.environment_flag
   trace_log            = var.trace_log
+  rust_log             = var.rust_log
   lambda_deploy_folder = var.lambda_deploy_folder
 
   dead_letter_queue_mint  = aws_sqs_queue.minting_queue_deadletter.url
@@ -187,6 +192,7 @@ module "lambda_after_video" {
 
   environment_flag     = var.environment_flag
   trace_log            = var.trace_log
+  rust_log             = var.rust_log
   lambda_deploy_folder = var.lambda_deploy_folder
 
   kms_cypher_owner            = var.kms_id_cypher_all_secret_keys

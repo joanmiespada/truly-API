@@ -25,10 +25,16 @@ resource "aws_apigatewayv2_domain_name" "truly_api_domain_name" {
     endpoint_type   = "REGIONAL"
     security_policy = "TLS_1_2"
   }
+  tags = merge(local.common_tags, {})
 }
 resource "aws_apigatewayv2_api_mapping" "map_dns_agigateway" {
   api_id      = aws_apigatewayv2_api.truly_api.id
   domain_name = aws_apigatewayv2_domain_name.truly_api_domain_name.domain_name
-  stage       = aws_apigatewayv2_stage.truly_stage.name
-  depends_on  = [aws_apigatewayv2_domain_name.truly_api_domain_name, aws_apigatewayv2_api.truly_api]
+  stage       = aws_apigatewayv2_stage.default_stage.name
+  depends_on  = [
+    aws_apigatewayv2_domain_name.truly_api_domain_name, 
+    aws_apigatewayv2_api.truly_api,
+    aws_apigatewayv2_deployment.truly_api_deployment
+  ]
+
 }

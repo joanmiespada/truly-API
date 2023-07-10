@@ -39,15 +39,19 @@ pub async fn function_handler(
     //request.uri().path()
     debug!("debug - uri {}", req.uri().path());
     info!("info - uri {}", req.uri().path());
+    info!("{:#?}", req);
+
+    let path = remove_api_prefix( 
+        req.uri().path().to_string(), 
+        config.env_vars().api_stage().unwrap() );
+
+    info!("info - path {}", path);
+
     match req.method() {
-        &Method::POST => match req.uri().path() {
+        &Method::POST => match path.as_str()  {
             "/auth/login" => login(&req, &context, config, user_service).await,
             "/auth/signup" => create_basic_user(&req, &context, config, user_service).await,
-            &_ => /*build_resp(
-                "method not allowed".to_string(),
-                StatusCode::METHOD_NOT_ALLOWED,
-            )*/
-            not_allowed(&req, &context),
+            _ => not_allowed(&req, &context),
         },
         _ => not_allowed(&req, &context),
     }
@@ -78,7 +82,7 @@ fn not_allowed(
     let res = Response::builder()
         .status(StatusCode::METHOD_NOT_ALLOWED)
         .header("content-type", "text/json")
-        .body(json!({"message":"not allowed"}).to_string());
+        .body(json!({"message":"not allowed."}).to_string());
     //.expect("err creating response");
     //.map_err( |e| ApiLambdaError { 0: e.to_string() }.into()   )?;
     match res {
@@ -86,4 +90,31 @@ fn not_allowed(
         Ok(resp) => Ok(resp),
     }
     //Ok(res);
+}
+
+fn remove_api_prefix(input:String, pattern: String) -> String {
+
+    let last_v1_index = input.rfind(pattern);
+    let result = match last_v1_index {
+        Some(index) => input[(index + pattern.len())..].to_string(),
+        None => input.to_string(),
+    };
+
+    result
+
+}
+
+#[tokio::test]
+async fn test_remove_api_prefix() {
+
+    let pattern = "/v1".to_string();
+
+    let value= "/v1/v1/abc/cvf".to_string();
+    let aux = remove_api_prefix(value, pattern);
+    assert_eq!(aux,"/abc/cvf");
+
+    let value= "/abc/cvf".to_string();
+    let aux = remove_api_prefix(value, pattern);
+    assert_eq!(aux,"/abc/cvf");
+
 }

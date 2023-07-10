@@ -29,14 +29,15 @@ resource "aws_lambda_function" "truly_lambda_licenses" {
   environment {
     variables = {
       ENVIRONMENT             = "${var.environment_flag}"
-      RUST_LOG                = "${var.trace_log}"
+      RUST_LOG                = "${var.rust_log}"
       KMS_KEY_ID              = "${var.kms_cypher_owner}"
       DEAD_LETTER_QUEUE_MINT  = "${var.dead_letter_queue_mint}"
       TOPIC_ARN_MINT_ASYNC    = "${var.minting_async_topic_arn}"
       RUST_BACKTRACE          = "${var.rust_backtrace}"
-      SHORTER_VIDEO_IN_TOPIC  = var.video_in_topic
-      SHORTER_VIDEO_OUT_TOPIC = var.video_out_topic
-      MINTING_FAILS_TOPIC     = var.minting_fails_topic_arn
+      SHORTER_VIDEO_IN_TOPIC  = "${var.video_in_topic}"
+      SHORTER_VIDEO_OUT_TOPIC = "${var.video_out_topic}"
+      MINTING_FAILS_TOPIC     = "${var.minting_fails_topic_arn}"
+      API_STAGE               = "${var.api_stage_version}"
     }
   }
 

@@ -38,6 +38,11 @@ variable "trace_log" {
   type = string
   //default = "cargo_lambda=info" //"cargo_lambda=trace"
 }
+variable "rust_log" {
+  description = "rust log: error, info, debug, ..."
+  type = string
+  //default = "cargo_lambda=info" //"cargo_lambda=trace"
+}
 
 variable "lambda_deploy_folder" {
   description = "it helps to identify the correct folder lambda with infra arm64 or linux"
@@ -86,9 +91,15 @@ variable "email" {
 }
 
 variable "api_stage_version" {
-  description = "allow to deploy multiple version: v1, v2, v3"
+  description = "allow to deploy multiple version: v1, v2, v3. It's the new deployment id"
   type    = string
-  default = "v1"
+  default = "v1" #change this name to paralelize multiple stages in production
+}
+
+variable "active_api_stage" {
+  description = "select the id of the default target"
+  type = string
+  default = "" #check at AWS console API GATEWAY what is the api stage id that you want to choose and being associated to $default
 }
 
 variable "architectures" {

@@ -27,6 +27,7 @@ variable "role" {}
 variable "environment_flag" {}
 
 variable "trace_log" {}
+variable "rust_log" {}
 
 variable "lambda_deploy_folder" {}
 variable "jwt_token_time_exp_hours" {

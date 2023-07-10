@@ -15,8 +15,17 @@ resource "aws_apigatewayv2_api" "truly_api" {
 resource "aws_apigatewayv2_stage" "truly_stage" {
   api_id      = aws_apigatewayv2_api.truly_api.id
   name        = var.api_stage_version # var.environment_flag  #"$default" "v1"  #
-  auto_deploy = true
+  auto_deploy = false
   tags        = merge(local.common_tags, {})
+  deployment_id = aws_apigatewayv2_deployment.truly_api_deployment.id
+}
+
+resource "aws_apigatewayv2_stage" "default_stage" { # targe the current one by default
+  api_id      = aws_apigatewayv2_api.truly_api.id
+  name        = "$default"
+  auto_deploy = false
+  tags        = merge(local.common_tags, {})
+  deployment_id = length(var.active_api_stage) > 0 ? var.active_api_stage : aws_apigatewayv2_deployment.truly_api_deployment.id
 }
 
 //---------------- lambda login ----------------------------

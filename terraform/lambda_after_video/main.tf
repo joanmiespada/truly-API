@@ -29,9 +29,10 @@ resource "aws_lambda_function" "truly_lambda_after_video" {
   environment {
     variables = {
       ENVIRONMENT    = "${var.environment_flag}"
-      RUST_LOG       = "${var.trace_log}"
+      RUST_LOG       = "${var.rust_log}"
       KMS_KEY_ID     = "${var.kms_cypher_owner}"
       RUST_BACKTRACE = "${var.rust_backtrace}"
+      API_STAGE      = "${var.api_stage_version}"
     }
   }
 

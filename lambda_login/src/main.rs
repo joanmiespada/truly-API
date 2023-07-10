@@ -16,6 +16,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_target(false)
         // disabling time is handy because CloudWatch will add the ingestion time.
         .without_time()
+        .with_ansi(false)
         .init();
 
     let mut config = Config::new();
