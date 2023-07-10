@@ -33,6 +33,8 @@ done
 export ENVIRONMENT=stage
 export TF_VAR_environment_flag=$ENVIRONMENT
 export RUST_LOG=info
+export TF_VAR_telemtry=false
+export TF_VAR_telemetry_endpoint=""
 export TF_VAR_rust_log=$RUST_LOG
 export TF_VAR_rust_backtrace="full"
 export TF_VAR_trace_log="cargo_lambda=info"
@@ -45,6 +47,7 @@ profile="truly"
 export AWS_PROFILE=$profile
 export TF_VAR_dns_base=$dns_domain
 dns_prefix="staging"
+export TF_VAR_dns_prefix=$dns_prefix
 architecture="aarch64-linux-gnu"
 #path_base='/Users/joanmiquelespadasabat/Projects/tron/API/cross-compile/openssl/'${architecture}
 path_base=$(pwd)'/cross-compile/openssl/'${architecture}

@@ -12,7 +12,7 @@ resource "aws_cloudwatch_log_group" "truly_lambda_mint_cloudwatch" {
 
 
 resource "aws_lambda_function" "truly_lambda_mint" {
-  function_name    = var.truly_lambda_mint_function_name
+  function_name    = local.lambda_name_descriptor
   architectures    = var.architectures
   memory_size      = 512
   source_code_hash = filebase64sha256(local.lambda_file)
