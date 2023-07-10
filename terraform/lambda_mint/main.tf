@@ -1,7 +1,7 @@
 locals {
   lambda_file            = "${var.lambda_deploy_folder}/${var.lambda_mint_file}"
   region_prefix          = element(split("-", var.aws_region), 0)
-  lambda_name_descriptor = "${var.truly_lambda_login_function_name}-${local.region_prefix}-${var.api_stage_version}"
+  lambda_name_descriptor = "${var.truly_lambda_mint_function_name}-${local.region_prefix}-${var.api_stage_version}"
 }
 resource "aws_cloudwatch_log_group" "truly_lambda_mint_cloudwatch" {
   name              = "/aws/lambda/${local.lambda_name_descriptor}" #${var.truly_lambda_mint_function_name}-${local.region_prefix}"
