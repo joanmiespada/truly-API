@@ -27,7 +27,7 @@ resource "aws_apigatewayv2_integration" "truly_login_integration" {
   connection_type    = "INTERNET"
   description        = "Login methods"
   integration_method = "POST"
-  integration_uri    = module.lambda_login.lambda.invoke_arn 
+  integration_uri    = module.lambda_login.lambda.invoke_arn
 
   payload_format_version = "2.0"
 
@@ -245,10 +245,27 @@ resource "aws_lambda_permission" "truly_licenses_permission_txs" {
 //---------------- register all lambdas below ----------------------------
 resource "aws_apigatewayv2_deployment" "truly_api_deployment" {
   api_id      = aws_apigatewayv2_api.truly_api.id
-  description = "truly API deployment"
+  description = "truly API deployment version: ${var.api_stage_version}"
 
   # lifecycle {
   #   create_before_destroy = true
   # }
+
+  depends_on = [
+    aws_apigatewayv2_route.truly_admin_route,
+    aws_apigatewayv2_route.truly_licenses_route_asset,
+    aws_apigatewayv2_route.truly_licenses_route_asset_by_id,
+    aws_apigatewayv2_route.truly_licenses_route_asset_by_shorter,
+    aws_apigatewayv2_route.truly_licenses_route_asset_by_shorter_id,
+    aws_apigatewayv2_route.truly_licenses_route_license,
+    aws_apigatewayv2_route.truly_licenses_route_license_id,
+    aws_apigatewayv2_route.truly_licenses_route_nft,
+    aws_apigatewayv2_route.truly_licenses_route_tx,
+    aws_apigatewayv2_route.truly_licenses_route_txs,
+    aws_apigatewayv2_route.truly_login_route,
+    aws_apigatewayv2_route.truly_user_route,
+    aws_apigatewayv2_route.truly_user_route_by_id
+  ]
+
 }
 
