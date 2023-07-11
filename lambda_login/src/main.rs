@@ -11,7 +11,7 @@ mod my_lambda;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
+        .with_max_level(tracing::Level::DEBUG)
         // disable printing the name of the module in every log line.
         .with_target(false)
         // disabling time is handy because CloudWatch will add the ingestion time.
@@ -24,8 +24,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);
-
-    // my_lambda::lambda_main(&config, &user_service).await
 
     let resp = lambda_http::run(service_fn(|event| {
         function_handler(&config, &user_service, event)

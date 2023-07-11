@@ -9,9 +9,9 @@ crate-type=["lib"]
 
 
 [dependencies]
-serde = { version = "1.0.163", features = ["derive"] }
-serde_json = "1.0.96"
-chrono = "0.4.24"
+serde = { version = "1.0.171", features = ["derive"] }
+serde_json = "1.0.100"
+chrono = "0.4.26"
 jsonwebtoken = "8.3.0"
 http = "0.2.9"
 workspace-hack = { version = "0.1", path = "../workspace-hack" }

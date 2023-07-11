@@ -6,7 +6,7 @@ use lambda_http::{
     http::Method, http::StatusCode, lambda_runtime::Context, IntoResponse, Request, RequestExt,
     Response,
 };
-use lib_config::config::Config;
+use lib_config::{config::Config, stage::remove_stage_prefix};
 use lib_users::services::users::UsersService;
 use login::login;
 use serde_json::json;
@@ -37,15 +37,16 @@ pub async fn function_handler(
     let context = req.lambda_context();
     //let query_string = req.query_string_parameters().to_owned();
     //request.uri().path()
-    debug!("debug - uri {}", req.uri().path());
-    info!("info - uri {}", req.uri().path());
-    info!("{:#?}", req);
+    //debug!("debug - uri {}", req.uri().path());
+    //info!("info - uri {}", req.uri().path());
+    //info!("{:#?}", req);
 
-    let path = remove_api_prefix( 
+    let path = remove_stage_prefix( 
         req.uri().path().to_string(), 
-        config.env_vars().api_stage().unwrap() );
+        config.env_vars().api_stage().clone().unwrap());
 
     info!("info - path {}", path);
+    debug!("debug - path {}", path);
 
     match req.method() {
         &Method::POST => match path.as_str()  {
@@ -92,29 +93,3 @@ fn not_allowed(
     //Ok(res);
 }
 
-fn remove_api_prefix(input:String, pattern: String) -> String {
-
-    let last_v1_index = input.rfind(pattern);
-    let result = match last_v1_index {
-        Some(index) => input[(index + pattern.len())..].to_string(),
-        None => input.to_string(),
-    };
-
-    result
-
-}
-
-#[tokio::test]
-async fn test_remove_api_prefix() {
-
-    let pattern = "/v1".to_string();
-
-    let value= "/v1/v1/abc/cvf".to_string();
-    let aux = remove_api_prefix(value, pattern);
-    assert_eq!(aux,"/abc/cvf");
-
-    let value= "/abc/cvf".to_string();
-    let aux = remove_api_prefix(value, pattern);
-    assert_eq!(aux,"/abc/cvf");
-
-}

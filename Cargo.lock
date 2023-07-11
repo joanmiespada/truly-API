@@ -366,7 +366,7 @@ dependencies = [
  "rand 0.8.5",
  "rcgen",
  "ring",
- "rustls 0.21.4",
+ "rustls 0.21.5",
  "serde 1.0.171",
  "serde_json",
  "socket2 0.5.3",
@@ -2841,9 +2841,9 @@ dependencies = [
 
 [[package]]
 name = "const-oid"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6340df57935414636969091153f35f68d9f00bbc8fb4a9c6054706c213e6c6bc"
+checksum = "795bc6e66a8e340f075fcf6227e417a2dc976b92b91f3cdc778bb858778b6747"
 
 [[package]]
 name = "const-str"
@@ -3336,12 +3336,12 @@ dependencies = [
 
 [[package]]
 name = "dashmap"
-version = "5.4.0"
+version = "5.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "907076dfda823b0b36d2a1bb5f90c96660a5bbcd7729e10727f07858f22c4edc"
+checksum = "6943ae99c34386c84a470c499d3414f66502a41340aa895406e0d2e4a207b91d"
 dependencies = [
  "cfg-if",
- "hashbrown 0.12.3",
+ "hashbrown 0.14.0",
  "lock_api",
  "once_cell",
  "parking_lot_core 0.9.8",
@@ -4006,9 +4006,9 @@ dependencies = [
 
 [[package]]
 name = "equivalent"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88bffebc5d80432c9b140ee17875ff173a8ab62faad5b257da912bd2f6c1c0a1"
+checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 
 [[package]]
 name = "erasable"
@@ -5525,7 +5525,7 @@ dependencies = [
  "futures-util",
  "http",
  "hyper",
- "rustls 0.21.4",
+ "rustls 0.21.5",
  "tokio",
  "tokio-rustls 0.24.1",
 ]
@@ -6444,7 +6444,7 @@ dependencies = [
 [[package]]
 name = "lib_async_ops"
 version = "0.0.1"
-source = "git+https://github.com/joanmiespada/truly-shared#d46af11ce213d7f96ff6a90de7ce7e8ff149722c"
+source = "git+https://github.com/joanmiespada/truly-shared#ca679e1b6ba63ce80724a1c3a1ed255640939beb"
 dependencies = [
  "aws-sdk-sns",
  "aws-sdk-sqs",
@@ -6510,8 +6510,8 @@ dependencies = [
 
 [[package]]
 name = "lib_config"
-version = "0.0.12"
-source = "git+https://github.com/joanmiespada/truly-shared#d46af11ce213d7f96ff6a90de7ce7e8ff149722c"
+version = "0.0.13"
+source = "git+https://github.com/joanmiespada/truly-shared#ca679e1b6ba63ce80724a1c3a1ed255640939beb"
 dependencies = [
  "async-trait",
  "aws-config 0.55.3",
@@ -6611,7 +6611,7 @@ dependencies = [
 [[package]]
 name = "lib_video_objs"
 version = "0.0.1"
-source = "git+https://github.com/joanmiespada/truly-shared#d46af11ce213d7f96ff6a90de7ce7e8ff149722c"
+source = "git+https://github.com/joanmiespada/truly-shared#ca679e1b6ba63ce80724a1c3a1ed255640939beb"
 dependencies = [
  "async-trait",
  "base64 0.21.2",
@@ -9961,7 +9961,7 @@ dependencies = [
  "quinn-proto",
  "quinn-udp",
  "rustc-hash",
- "rustls 0.21.4",
+ "rustls 0.21.5",
  "thiserror",
  "tokio",
  "tracing",
@@ -9977,7 +9977,7 @@ dependencies = [
  "rand 0.8.5",
  "ring",
  "rustc-hash",
- "rustls 0.21.4",
+ "rustls 0.21.5",
  "slab",
  "thiserror",
  "tinyvec",
@@ -10413,7 +10413,7 @@ dependencies = [
  "aho-corasick 1.0.2",
  "memchr",
  "regex-automata 0.3.2",
- "regex-syntax 0.7.3",
+ "regex-syntax 0.7.4",
 ]
 
 [[package]]
@@ -10433,7 +10433,7 @@ checksum = "83d3daa6976cffb758ec878f108ba0e062a45b2d6ca3a2cca965338855476caf"
 dependencies = [
  "aho-corasick 1.0.2",
  "memchr",
- "regex-syntax 0.7.3",
+ "regex-syntax 0.7.4",
 ]
 
 [[package]]
@@ -10444,9 +10444,9 @@ checksum = "f162c6dd7b008981e4d40210aca20b4bd0f9b60ca9271061b07f78537722f2e1"
 
 [[package]]
 name = "regex-syntax"
-version = "0.7.3"
+version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ab07dc67230e4a4718e70fd5c20055a4334b121f1f9db8fe63ef39ce9b8c846"
+checksum = "e5ea92a5b6195c6ef2a0295ea818b312502c6fc94dde986c5553242e18fd4ce2"
 
 [[package]]
 name = "reqwest"
@@ -10473,7 +10473,7 @@ dependencies = [
  "once_cell",
  "percent-encoding",
  "pin-project-lite",
- "rustls 0.21.4",
+ "rustls 0.21.5",
  "rustls-pemfile",
  "serde 1.0.171",
  "serde_json",
@@ -10861,9 +10861,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.21.4"
+version = "0.21.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8620e6b3ea4348874f156afce0032895cb1d483d6ab6bee37543b71ce3cbd01f"
+checksum = "79ea77c539259495ce8ca47f53e66ae0330a8819f67e23ac96ca02f50e7b7d36"
 dependencies = [
  "log",
  "ring",
@@ -13263,7 +13263,7 @@ version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c28327cf380ac148141087fbfb9de9d7bd4e84ab5d2c28fbc911d753de8a7081"
 dependencies = [
- "rustls 0.21.4",
+ "rustls 0.21.5",
  "tokio",
 ]
 
@@ -13287,7 +13287,7 @@ checksum = "ec509ac96e9a0c43427c74f003127d953a265737636129424288d27cb5c4b12c"
 dependencies = [
  "futures-util",
  "log",
- "rustls 0.21.4",
+ "rustls 0.21.5",
  "tokio",
  "tokio-rustls 0.24.1",
  "tungstenite",
@@ -13836,7 +13836,7 @@ dependencies = [
  "httparse",
  "log",
  "rand 0.8.5",
- "rustls 0.21.4",
+ "rustls 0.21.5",
  "sha1",
  "thiserror",
  "url",
@@ -14699,108 +14699,6 @@ dependencies = [
 [[package]]
 name = "workspace-hack"
 version = "0.1.0"
-dependencies = [
- "Inflector",
- "ahash 0.7.6",
- "ahash 0.8.3",
- "anyhow",
- "arrayvec 0.7.4",
- "async-compression",
- "axum",
- "base64 0.13.1",
- "brotli",
- "byte-slice-cast",
- "byteorder",
- "bytes",
- "cc",
- "chrono",
- "crossbeam-utils",
- "crunchy",
- "crypto-common",
- "der 0.7.7",
- "derive_more",
- "digest 0.10.7",
- "ecdsa 0.16.7",
- "either",
- "elliptic-curve 0.13.5",
- "ethers-contract-abigen",
- "futures",
- "futures-channel",
- "futures-core",
- "futures-executor",
- "futures-io",
- "futures-task",
- "futures-util",
- "generic-array",
- "hashbrown 0.12.3",
- "hdrhistogram",
- "hex",
- "hmac 0.12.1",
- "hyper-rustls 0.23.2",
- "indexmap 1.9.3",
- "io-lifetimes",
- "itertools",
- "k256 0.13.1",
- "lazy_static 1.4.0",
- "libc",
- "log",
- "memchr",
- "mio 0.8.8",
- "num-bigint 0.4.3",
- "num-integer",
- "num-iter",
- "num-traits 0.2.15",
- "once_cell",
- "phf",
- "phf_shared 0.11.2",
- "pkcs8 0.10.2",
- "primitive-types 0.10.1",
- "proc-macro2 1.0.64",
- "quote 1.0.29",
- "rand 0.8.5",
- "rand_core 0.6.4",
- "regex",
- "regex-syntax 0.7.3",
- "reqwest",
- "ring",
- "ripemd",
- "rlp",
- "rustix 0.37.23",
- "rustix 0.38.3",
- "rustls 0.20.8",
- "rustls 0.21.4",
- "scopeguard",
- "sec1 0.7.2",
- "security-framework-sys",
- "semver 1.0.17",
- "serde 1.0.171",
- "serde_json",
- "sha2 0.10.7",
- "sha3 0.10.8",
- "spki 0.7.2",
- "subtle",
- "syn 1.0.109",
- "syn 2.0.25",
- "time 0.3.23",
- "tiny-keccak",
- "tokio",
- "tokio-rustls 0.23.4",
- "tokio-stream",
- "tokio-util 0.7.8",
- "toml 0.5.11",
- "tonic 0.8.3",
- "tower",
- "tower-http 0.4.1",
- "tracing-log",
- "tracing-subscriber 0.3.17",
- "uint",
- "unicode-bidi",
- "unicode-normalization",
- "url",
- "uuid 1.4.0",
- "zeroize",
- "zstd-sys",
-]
 
 [[package]]
 name = "workspace-hack"
@@ -15407,7 +15305,7 @@ dependencies = [
  "regex",
  "regex-automata 0.1.10",
  "regex-syntax 0.6.29",
- "regex-syntax 0.7.3",
+ "regex-syntax 0.7.4",
  "reqwest",
  "retain_mut",
  "rfc6979 0.3.1",
@@ -15435,7 +15333,7 @@ dependencies = [
  "rustix 0.36.15",
  "rustix 0.37.23",
  "rustls 0.20.8",
- "rustls 0.21.4",
+ "rustls 0.21.5",
  "rustls-native-certs",
  "rustls-pemfile",
  "rustls-webpki 0.100.1",

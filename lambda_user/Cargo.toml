@@ -11,12 +11,12 @@ path="src/main.rs"
 lib_users = { path = "../lib_users" }
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
 lib_util_jwt = { path = "../lib_util_jwt" }
-tower-http = { version="0.4.0", features=["full"]  }
+tower-http = { version="0.4.1", features=["full"]  }
 lambda_http = { version = "0.8", features = ["apigw_rest"]}
 lambda_runtime = "0.8"
 aws_lambda_events = { version = "0.10.0", features = ["apigw", "alb"] }
-serde = { version = "1.0.163", features = ["derive"] }
-serde_json = "1.0.96"
+serde = { version = "1.0.171", features = ["derive"] }
+serde_json = "1.0.100"
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3.17", default-features = false, features = ["fmt", "env-filter"] }
 tokio = { version = "1", features = ["full"] }
