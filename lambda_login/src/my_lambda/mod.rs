@@ -35,18 +35,10 @@ pub async fn function_handler(
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error>> {
     let context = req.lambda_context();
-    //let query_string = req.query_string_parameters().to_owned();
-    //request.uri().path()
-    //debug!("debug - uri {}", req.uri().path());
-    //info!("info - uri {}", req.uri().path());
-    //info!("{:#?}", req);
 
     let path = remove_stage_prefix( 
         req.uri().path().to_string(), 
         config.env_vars().api_stage().clone().unwrap());
-
-    info!("info - path {}", path);
-    debug!("debug - path {}", path);
 
     match req.method() {
         &Method::POST => match path.as_str()  {

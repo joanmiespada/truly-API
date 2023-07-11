@@ -1,86 +1,166 @@
-swagger: "2.0"
+openapi: '3.0.0'
 info:
-  version: "0.0.1"
+  version: '0.0.1'
   title: Truly API
-# during dev, should point to your local machine
-host: eu-stage.truly.video
-# basePath prefixes all resource paths 
-basePath: /
-# 
-schemes:
-  - https
-consumes:
-  - application/json
-produces:
-  - application/json
+servers:
+  - url: 'https://api.truly.video'
 paths:
-  /swagger:
-    x-swagger-pipe: swagger_raw
   /auth/signup:
     post:
       operationId: 'createUser'
-      parameters:
-        - in: 'body'
-          name: 'body'
-          description: 'User object to be created'
-          required: true
-          schema:
-            $ref: '#/definitions/NewUser'
+      requestBody:
+        description: 'User object to be created'
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUserRequest'
       responses:
-        "200":
-          description: A new user has been created successfully
-        "500":
-          description: System error
-          
-  /hello:
+        '201':
+          description: A new user has been created successfully.
+        '400':
+          description: Bad request, some data in body is invalid or missing. Check response for details.
+  /auth/login:
+    post:
+      operationId: 'login'
+      requestBody:
+        description: 'Login object to be checked'
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginByEmailAndPasswordRequest'
+      responses:
+        '200':
+          description: Login successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginByEmailAndPasswordResponse'
+        '400':
+          description: Credentials provided aren't correct, check email field as email pattern and password specification.
+        '403':
+          description: User has been deactivated.
+        '404':
+          description: Email not found or password doesn't match. Check credentials and try again.
+  /api/user:
     get:
-      description: Returns 'Hello' to the caller
-      # used as the method name of the controller
-      operationId: hello
-      parameters:
-        - name: name
-          in: query
-          description: The name of the person to whom to say hello
-          required: false
-          type: string
+      operationId: 'GetUserInfo'
       responses:
         "200":
-          description: Success
-          schema:
-            # a pointer to a definition
-            $ref: "#/definitions/HelloWorldResponse"
-        # responses may fall through to errors
-        default:
-          description: Error
-          schema:
-            $ref: "#/definitions/ErrorResponse"
-# complex objects have schema definitions
-definitions:
+          description: "Information about the userd loggeda: user_id, time stamps, roles, email and/or device and user's status."
+      security:
+        - BearerAuth: []
 
-  NewUser:
-    type: 'object'
-    description: This object describes a new user in the system. It accepts email or device fields. Only if email is provided, the password is mandatory.
-    properties: 
-      email:
-        type: 'string'
-        example: 'test1@test1.er.io'
-      password:
-        type: 'string'
-        example: 'Ay7pert&*fg'
-        description: minium lenght 12 characters, simbols, mayus,...
-      device:
-        type: 'string'
-        example: 'd4567-1234-1234-1234-1234-4567'
+    post:
+      operationId: "UpdateUserInfo"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        "200":
+          description: "user field/s have been updated successfully."
+      security:
+        - BearerAuth: []
 
-  HelloWorldResponse:
-    required:
-      - message
-    properties:
-      message:
-        type: string
-  ErrorResponse:
-    required:
-      - message
-    properties:
-      message:
-        type: string
+  /api/user/password:
+    post:
+      operationId: "UpdateUserPassword"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                password: 
+                  type: 'string'
+                  description: Check rules at NewUserRequest object
+      responses:
+        "200":
+          description: "user field/s have been updated successfully."
+      security:
+        - BearerAuth: []
+
+  /api/asset:
+    post:
+      operationId: "CreateUserAsset"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                url: 
+                  type: string
+                  description: Check rules at NewUserRequest object
+                hash:
+                  type: string
+                  description: Hash computed at origin
+                hashAlgorithm:
+                  type: string
+                  description: Algorithm used to compute hash
+      responses:
+        "201":
+          description: "Asset have been created successfully."
+      security:
+        - BearerAuth: []
+     
+
+components:
+  securitySchemes:
+    BearerAuth:           
+      type: 'http'
+      scheme: 'bearer'
+  responses:
+    '500':
+      description: System error, something unexpected happen in runtime
+  schemas:
+    NewUserRequest:
+      type: 'object'
+      description: This object describes a new user in the system. It accepts email or device fields. Only if email is provided, the password is mandatory.
+      properties: 
+        email:
+          type: 'string'
+          example: 'test1@test1.er.io'
+        password:
+          type: 'string'
+          example: 'Ay7pert&*fg'
+          description: Minimum length 8 and max 50 characters, at least 1 symbol, 1 number and 1 mayus must be provided.
+        device:
+          type: 'string'
+          example: 'd4567-1234-1234-1234-1234-4567'
+    LoginByEmailAndPasswordRequest:
+      type: 'object'
+      description: This object holds login data using email and password.
+      properties: 
+        email:
+          type: 'string'
+          example: 'me@truly.video'
+        password:
+          type: 'string'
+          description: Check newUser object to see password details.
+    LoginByEmailAndPasswordResponse:
+      type: 'object'
+      description: It will provide data to be stored in the client and provided in each API method that require authentication.
+      required:
+        - message
+      properties: 
+        message: 
+          type: object
+        token:
+          type: 'string'
+          description: JWT token to identify the user, it needs to be renewed after some time (usually 1h).
+    UserUpdateRequest:
+      type: 'object'
+      description: This object describes user's in the system. All user's info will be retrieved without sensitive information.
+      properties: 
+        email:
+          type: 'string'
+          example: 'test1@test1.er.io'
+        device:
+          type: 'string'
+          example: 'd4567-1234-1234-1234-1234-4567'
+        

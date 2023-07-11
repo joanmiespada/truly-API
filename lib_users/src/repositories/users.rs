@@ -40,7 +40,7 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 #[async_trait]
 pub trait UserRepository {
     async fn add(&self, user: &mut User, password: &Option<String>) -> ResultE<()>;
-    async fn update(&self, id: &String, user: &User) -> ResultE<()>;
+    async fn update(&self, id: &String, user_new: &User) -> ResultE<()>;
     async fn update_password(&self, id: &String, password: &String) -> ResultE<()>;
     async fn get_by_id(&self, id: &String) -> ResultE<User>;
     async fn get_by_device(&self, device: &String) -> ResultE<User>;
@@ -338,17 +338,17 @@ impl UsersRepo {
 
     async fn new_or_update_builder(
         &self,
-        user: &User,
+        new_user_data: &User,
         password: &Option<String>,
     ) -> ResultE<TransactWriteItemsFluentBuilder> {
         // TransactWriteItems> {
         let mut request = self.client.transact_write_items();
 
-        let creation_time_av = AttributeValue::S(iso8601(user.creation_time()));
+        let creation_time_av = AttributeValue::S(iso8601(new_user_data.creation_time()));
         let last_update_time_av = AttributeValue::S(iso8601(&Utc::now()));
-        let id_av = AttributeValue::S(user.user_id().clone());
-        let roles_av = AttributeValue::Ss(UserRoles::to_vec_str(user.roles()).clone());
-        let status_av: AttributeValue = AttributeValue::S(user.status().to_string());
+        let id_av = AttributeValue::S(new_user_data.user_id().clone());
+        let roles_av = AttributeValue::Ss(UserRoles::to_vec_str(new_user_data.roles()).clone());
+        let status_av: AttributeValue = AttributeValue::S(new_user_data.status().to_string());
 
         let mut user_fields = Put::builder();
         user_fields = user_fields
@@ -364,84 +364,73 @@ impl UsersRepo {
                 .build(),
         );
 
-        match user.device() {
-            None => {}
-            Some(dvc) => {
-                let device_av = AttributeValue::S(dvc.to_owned());
+        if let Some(dvc) = new_user_data.device() {
+            let device_av = AttributeValue::S(dvc.to_owned());
 
-                let mut device_fields = Put::builder();
-                device_fields = device_fields
-                    .item(USERID_FIELD_NAME, id_av.clone())
-                    .item(LOGIN_DEVICE_FIELD_NAME_PK, device_av);
+            let mut device_fields = Put::builder();
+            device_fields = device_fields
+                .item(USERID_FIELD_NAME, id_av.clone())
+                .item(LOGIN_DEVICE_FIELD_NAME_PK, device_av);
 
-                request = request.transact_items(
-                    TransactWriteItem::builder()
-                        .put(device_fields.table_name(LOGIN_DEVICE_TABLE_NAME).build())
-                        .build(),
-                );
-            }
+            request = request.transact_items(
+                TransactWriteItem::builder()
+                    .put(device_fields.table_name(LOGIN_DEVICE_TABLE_NAME).build())
+                    .build(),
+            );
         }
-        match user.wallet_address() {
-            None => {}
-            Some(wallet) => {
-                let wallet_av = AttributeValue::S(wallet.to_owned());
 
-                let mut wallet_fields = Put::builder();
-                wallet_fields = wallet_fields
-                    .item(USERID_FIELD_NAME, id_av.clone())
-                    .item(LOGIN_WALLET_FIELD_NAME_PK, wallet_av);
+        if let Some(wallet) = new_user_data.wallet_address() {
+            let wallet_av = AttributeValue::S(wallet.to_owned());
 
-                request = request.transact_items(
-                    TransactWriteItem::builder()
-                        .put(wallet_fields.table_name(LOGIN_WALLET_TABLE_NAME).build())
-                        .build(),
-                );
-            }
+            let mut wallet_fields = Put::builder();
+            wallet_fields = wallet_fields
+                .item(USERID_FIELD_NAME, id_av.clone())
+                .item(LOGIN_WALLET_FIELD_NAME_PK, wallet_av);
+
+            request = request.transact_items(
+                TransactWriteItem::builder()
+                    .put(wallet_fields.table_name(LOGIN_WALLET_TABLE_NAME).build())
+                    .build(),
+            );
         }
-        match user.email() {
-            None => {}
-            Some(email) => {
-                let mut email_fields = Put::builder();
+        if let Some(email) = new_user_data.email() {
+            let mut email_fields = Put::builder();
 
-                match password {
-                    Some(password) => {
-                        let hash =
-                            cypher_text(password, &self.environment_vars.hmac_secret().unwrap())?;
-                        let password_av: AttributeValue = AttributeValue::S(hash);
+            match password {
+                Some(password) => {
+                    let hash =
+                        cypher_text(password, &self.environment_vars.hmac_secret().unwrap())?;
+                    let password_av: AttributeValue = AttributeValue::S(hash);
+                    email_fields = email_fields.item(PASSWORD_FIELD_NAME, password_av);
+                }
+                None => {
+                    let pass = self
+                        .get_by_filter_user_id(
+                            LOGIN_EMAIL_USERID_INDEX,
+                            new_user_data.user_id(),
+                            PASSWORD_FIELD_NAME,
+                            LOGIN_EMAIL_TABLE_NAME,
+                        )
+                        .await?;
+                    if let Some(password_db) = pass {
+                        //it's already cyphered
+                        let password_av: AttributeValue = AttributeValue::S(password_db);
                         email_fields = email_fields.item(PASSWORD_FIELD_NAME, password_av);
                     }
-                    None => {
-                        let pass = self
-                            .get_by_filter_user_id(
-                                LOGIN_EMAIL_USERID_INDEX,
-                                user.user_id(),
-                                PASSWORD_FIELD_NAME,
-                                LOGIN_EMAIL_TABLE_NAME,
-                            )
-                            .await?;
-                        match pass {
-                            None => {}
-                            Some(password_db) => {
-                                //it's already cyphered
-                                let password_av: AttributeValue = AttributeValue::S(password_db);
-                                email_fields = email_fields.item(PASSWORD_FIELD_NAME, password_av);
-                            }
-                        }
-                    }
                 }
-
-                let email_av: AttributeValue = AttributeValue::S(email.to_owned());
-
-                email_fields = email_fields
-                    .item(USERID_FIELD_NAME, id_av.clone())
-                    .item(LOGIN_EMAIL_FIELD_NAME_PK, email_av);
-
-                request = request.transact_items(
-                    TransactWriteItem::builder()
-                        .put(email_fields.table_name(LOGIN_EMAIL_TABLE_NAME).build())
-                        .build(),
-                );
             }
+
+            let email_av: AttributeValue = AttributeValue::S(email.to_owned());
+
+            email_fields = email_fields
+                .item(USERID_FIELD_NAME, id_av.clone())
+                .item(LOGIN_EMAIL_FIELD_NAME_PK, email_av);
+
+            request = request.transact_items(
+                TransactWriteItem::builder()
+                    .put(email_fields.table_name(LOGIN_EMAIL_TABLE_NAME).build())
+                    .build(),
+            );
         }
         Ok(request)
     }
@@ -696,10 +685,12 @@ impl UserRepository for UsersRepo {
         }
     }
 
-    async fn update(&self, id: &String, user: &User) -> ResultE<()> {
+    async fn update(&self, id: &String, user_new_data: &User) -> ResultE<()> {
         //self.check_duplicates(user).await?;
 
-        let request = self.new_or_update_builder(user, &None).await?;
+        let request = self
+            .new_or_update_builder(user_new_data, &None)
+            .await?;
 
         match request.send().await {
             Ok(_updated) => {

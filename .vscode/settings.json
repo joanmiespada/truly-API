@@ -2,6 +2,9 @@
     //"editor.formatOnSave": true,
     "rust-analyzer.cargo.allFeatures": true,
     "rust-analyzer.showUnlinkedFileNotification": false,
+    "yaml.schemas": {
+        "openapi:v2": "file:///Users/joanmiquelespadasabat/Projects/tron/API/docs/swagger.yaml"
+    },
     // "serverlessConsole.services": [],
     // "rust-analyzer.checkOnSave.overrideCommand": [
     //     "cargo",

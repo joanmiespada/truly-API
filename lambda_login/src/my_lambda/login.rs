@@ -50,7 +50,7 @@ pub async fn login(
                             if let Some(_) = e.downcast_ref::<UserDynamoDBError>() {
                                 build_resp(e.to_string(), StatusCode::SERVICE_UNAVAILABLE)
                             } else if let Some(e) = e.downcast_ref::<UserNoExistsError>() {
-                                build_resp(e.to_string(), StatusCode::NOT_ACCEPTABLE)
+                                build_resp(e.to_string(), StatusCode::NOT_FOUND)
                             } else if let Some(m) = e.downcast_ref::<ValidationError>() {
                                 build_resp(m.to_string(), StatusCode::BAD_REQUEST)
                             }else if let Some(m) = e.downcast_ref::<UserStatusError>() {

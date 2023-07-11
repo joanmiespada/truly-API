@@ -120,32 +120,25 @@ impl UserManipulation for UsersService {
         user.validate()?;
 
         let dbuser = self.repository.get_by_id(id).await?;
-        let mut res: User = dbuser.clone();
+        let mut user_changes: User = dbuser.clone();
 
-        match &user.wallet {
-            None => (),
-            Some(wal) => res.set_wallet_address(&wal),
+        if let Some(wal) = &user.wallet {
+            user_changes.set_wallet_address(&wal);
         }
-        match &user.email {
-            None => (),
-            Some(eml) => res.set_email(&eml),
+        if let Some(eml) = &user.email {
+            user_changes.set_email(&eml);
         }
-        match &user.device {
-            None => (),
-            Some(dvc) => res.set_device(&dvc),
+        if let Some(dvc) = &user.device {
+            user_changes.set_device(&dvc);
         }
-        match &user.status {
-            None => (),
-            Some(sts) => {
-                let aux = UserStatus::parse(&sts);
-                match aux {
-                    None => {}
-                    Some(sts_val) => res.set_status(&sts_val),
-                }
+        if let Some(sts) = &user.status {
+            let aux = UserStatus::parse(&sts);
+            if let Some(sts_val) = aux {
+                user_changes.set_status(&sts_val);
             }
         }
 
-        self.repository.update(&id, &res).await?;
+        self.repository.update(&id, &user_changes).await?;
         Ok(())
     }
 

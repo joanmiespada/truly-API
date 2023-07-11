@@ -78,10 +78,7 @@ pub async fn create_basic_user(
             }
         }
         Ok(_) => {
-            //let res = NewIdUser { id: iid };
-            //HttpResponse::Ok().json(res)
-            //build_resp(json!(res).to_string(), StatusCode::OK)
-            build_resp("".to_string(), StatusCode::OK)
+            build_resp("".to_string(), StatusCode::CREATED)
         }
     }
 }

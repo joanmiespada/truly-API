@@ -110,6 +110,8 @@ async fn update_user_test() -> Result<(), Box<dyn std::error::Error + Send + Syn
         *user_db.wallet_address().clone().unwrap()
     );
 
+    assert_eq!( *user_db2.status(), UserStatus::Disabled );
+
     Ok(())
 }
 
