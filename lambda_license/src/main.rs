@@ -1,6 +1,6 @@
 use lambda_http::service_fn;
 use lib_blockchain::blockchains::chain::CloneBoxNFTsRepository;
-use lib_blockchain::blockchains::ganache::GanacheBlockChain;
+use lib_blockchain::blockchains::sui::SuiBlockChain;
 use lib_blockchain::repositories::block_tx::BlockchainTxRepo;
 use lib_blockchain::repositories::blockchain::BlockchainRepo;
 use lib_blockchain::repositories::contract::ContractRepo;
@@ -52,7 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let blockchains_repo = BlockchainRepo::new(&config);
     let contracts_repo = ContractRepo::new(&config);
 
-    let blockchain = GanacheBlockChain::new(&config, &contracts_repo, &blockchains_repo).await?;
+    let blockchain = SuiBlockChain::new(&config, &contracts_repo, &blockchains_repo).await?;
 
     let blockchain_service = NFTsService::new(
         blockchain.clone_box(),

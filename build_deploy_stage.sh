@@ -182,7 +182,7 @@ do
     region_label="$ENVIRONMENT-${region}"
     export TF_VAR_aws_region=$region
     export TF_VAR_dns_prefix="${letters}-${dns_prefix}"
-    export TF_VAR_kms_id_cypher_all_secret_keys=mapKeys[$region]
+    export TF_VAR_kms_id_cypher_all_secret_keys=$mapKeys[$region]
     terraform workspace new $region_label
     terraform workspace select $region_label
     echo "Planning infrastructure for ${region}..."

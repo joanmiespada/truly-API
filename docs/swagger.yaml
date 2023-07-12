@@ -102,6 +102,12 @@ paths:
                 hashAlgorithm:
                   type: string
                   description: Algorithm used to compute hash
+                sourceType:
+                  type: string
+                  description: Identify the source of the call, use Others.
+                sourceDetails:
+                  type: string
+                  description: Add your own information as caller.
       responses:
         "201":
           description: "Asset have been created successfully."
