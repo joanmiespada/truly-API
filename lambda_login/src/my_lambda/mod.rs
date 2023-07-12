@@ -11,7 +11,6 @@ use lib_users::services::users::UsersService;
 use login::login;
 use serde_json::json;
 use tracing::instrument;
-use log::{debug,info};
 
 #[derive(Debug)]
 pub struct ApiLambdaError(pub String);

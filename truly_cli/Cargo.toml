@@ -13,7 +13,7 @@ lib_blockchain = { path = "../lib_blockchain"}
 env_logger = "0.10.0"
 chrono = {version="0.4.26", features = ["serde"] }
 serde = { version = "1.0.171", features = ["derive"] }
-serde_json = "1.0.100"
+serde_json = "1.0.102"
 aws-config = "0.55.3"
 aws-sdk-dynamodb = "0.28.0"
 aws-sdk-secretsmanager = "0.28.0"

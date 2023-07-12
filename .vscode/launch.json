@@ -115,7 +115,32 @@
             "args": ["create_contract_and_mint_nft_test_sync_sui"],
             "cwd": "${workspaceFolder}",
             "sourceLanguages": ["rust"],
-        },
+        },{
+            "name": "User update test", // https://gist.github.com/xanathar/c7c83e6d53b72dd4464f695607012629
+            "type": "lldb",
+            "request": "launch",
+            "cargo": {
+                "args": [
+                    "test",
+                    //"--no-run",
+                    //"--all-features",
+                    //"--lib",
+                    //"login_user_email_password_test",
+                    "--package=lib_users",
+                    "--test=user_update",
+                    //"create_contract_and_mint_nft_test_sync",
+                    //"--",
+                    //"--nocapture"
+                ],
+                "filter": {
+                    "name": "integration",
+                    "kind": "test"
+                }
+            },
+            "args": ["login_user_email_password_test"],
+            //"cwd": "${workspaceFolder}",
+            "sourceLanguages": ["rust"],
+        }
         
     ]
 }
