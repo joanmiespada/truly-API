@@ -156,6 +156,12 @@ impl Schema for AssetTreeSchema {
             .attribute_definitions(ad1)
             .attribute_definitions(ad2)
             .billing_mode(BillingMode::PayPerRequest)
+            .stream_specification(
+                StreamSpecificationBuilder::default()
+                    .stream_enabled(true)
+                    .stream_view_type(StreamViewType::NewAndOldImages)
+                    .build(),
+            )
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
@@ -232,6 +238,12 @@ impl Schema for ShorterSchema {
             .attribute_definitions(asset_ad)
             .attribute_definitions(shorter_ad)
             .billing_mode(BillingMode::PayPerRequest)
+            .stream_specification(
+                StreamSpecificationBuilder::default()
+                    .stream_enabled(true)
+                    .stream_view_type(StreamViewType::NewAndOldImages)
+                    .build(),
+            )
             .tags(
                 Tag::builder()
                     .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))

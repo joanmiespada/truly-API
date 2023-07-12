@@ -116,7 +116,7 @@ components:
       scheme: 'bearer'
   responses:
     '500':
-      description: System error, something unexpected happen in runtime
+      description: System error, something unexpected happen in runtime. Retry again.
   schemas:
     NewUserRequest:
       type: 'object'
