@@ -14,9 +14,10 @@ use testcontainers::*;
 #[tokio::test]
 async fn update_user_test() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env::set_var("RUST_LOG", "debug");
-    env::set_var("ENVIRONMENT", "development");
+    env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
+    env::set_var("AWS_REGION", "eu-central-1");
 
-    env_logger::builder().is_test(true).init();
+    let _ = env_logger::builder().is_test(true).try_init();
 
     let docker = clients::Cli::default();
 

@@ -23,10 +23,9 @@ use chrono::{
 use lib_config::{config::Config, environment::EnvironmentVariables};
 
 use super::schema_user::{
-    LOGIN_DEVICE_FIELD_NAME_PK, LOGIN_DEVICE_TABLE_NAME, LOGIN_DEVICE_USERID_INDEX,
-    LOGIN_EMAIL_FIELD_NAME_PK, LOGIN_EMAIL_TABLE_NAME, LOGIN_EMAIL_USERID_INDEX,
-    LOGIN_WALLET_FIELD_NAME_PK, LOGIN_WALLET_TABLE_NAME, LOGIN_WALLET_USERID_INDEX,
-    USERID_FIELD_NAME, USERID_FIELD_NAME_PK, USERS_TABLE_NAME,
+    LOGIN_DEVICE_FIELD_NAME, LOGIN_DEVICE_INDEX, LOGIN_DEVICE_TABLE_NAME, LOGIN_EMAIL_FIELD_NAME,
+    LOGIN_EMAIL_INDEX, LOGIN_EMAIL_TABLE_NAME, LOGIN_WALLET_FIELD_NAME, LOGIN_WALLET_INDEX,
+    LOGIN_WALLET_TABLE_NAME, USERID_FIELD_NAME_PK, USERS_TABLE_NAME,
 };
 
 static PASSWORD_FIELD_NAME: &str = "password";
@@ -71,21 +70,13 @@ impl UsersRepo {
         return_field: &str,
         table_name: &str,
     ) -> ResultE<Option<String>> {
-        //let mut usersqueried = Vec::new();
         let value_av = AttributeValue::S(search_value.to_string());
-
-        //let mut filter = "".to_string();
-        //filter.push_str(&*field);
-        //filter.push_str(" = :value");
 
         let request = self
             .client
-            //.query()
             .get_item()
-            .table_name(table_name) //USERS_TABLE_NAME)
-            //.index_name(index)
+            .table_name(table_name)
             .key(search_field, value_av);
-        //.select(Select::AllProjectedAttributes);
 
         let results = request.send().await;
         match results {
@@ -122,9 +113,10 @@ impl UsersRepo {
         //Ok(usersqueried)
     }
 
-    async fn get_by_filter_user_id(
+    async fn get_by_filter_index(
         &self,
         index: &str,
+        search_field: &str,
         search_value: &String,
         return_field: &str,
         table_name: &str,
@@ -133,7 +125,7 @@ impl UsersRepo {
         let value_av = AttributeValue::S(search_value.to_string());
 
         let mut filter = "".to_string();
-        filter.push_str(USERID_FIELD_NAME);
+        filter.push_str(search_field);
         filter.push_str(" = :value");
 
         let request = self
@@ -189,79 +181,51 @@ impl UsersRepo {
     }
 
     async fn check_duplicates(&self, user: &User) -> ResultE<bool> {
-        match user.email() {
-            None => {}
-            Some(email) => {
-                let res = self
-                    .get_by_filter_key(
-                        LOGIN_EMAIL_FIELD_NAME_PK,
-                        email,
-                        USERID_FIELD_NAME,
-                        LOGIN_EMAIL_TABLE_NAME,
-                    )
-                    .await?;
-                /*
-                if res.into_iter().filter(|x| *x != *user.user_id()).count() > 0 {
-                    return Err(
-                        UserAlreadyExistsError("email is already in use".to_string()).into(),
-                    );
-                }*/
-                match res {
-                    None => {}
-                    Some(_) => {
-                        return Err(
-                            UserAlreadyExistsError("email is already in use".to_string()).into(),
-                        );
-                    }
-                }
+        if let Some(email) = user.email() {
+            let res = self
+                .get_by_filter_index(
+                    LOGIN_EMAIL_INDEX,
+                    LOGIN_EMAIL_FIELD_NAME,
+                    email,
+                    USERID_FIELD_NAME_PK,
+                    LOGIN_EMAIL_TABLE_NAME,
+                )
+                .await?;
+
+            if let Some(_) = res {
+                return Err(UserAlreadyExistsError("email is already in use".to_string()).into());
             }
         }
 
-        match user.device() {
-            None => {}
-            Some(device) => {
-                let res = self
-                    .get_by_filter_key(
-                        LOGIN_DEVICE_FIELD_NAME_PK,
-                        device,
-                        USERID_FIELD_NAME,
-                        LOGIN_DEVICE_TABLE_NAME,
-                    )
-                    .await?; /*
-                             if res.into_iter().filter(|x| *x != *user.user_id()).count() > 0 {
-                                 return Err(UserAlreadyExistsError("device already exists".to_string()).into());
-                             }*/
-                match res {
-                    None => {}
-                    Some(_) => {
-                        return Err(
-                            UserAlreadyExistsError("device is already in use".to_string()).into(),
-                        );
-                    }
-                }
+        if let Some(device) = user.device() {
+            let res = self
+                .get_by_filter_index(
+                    LOGIN_DEVICE_INDEX,
+                    LOGIN_DEVICE_FIELD_NAME,
+                    device,
+                    USERID_FIELD_NAME_PK,
+                    LOGIN_DEVICE_TABLE_NAME,
+                )
+                .await?;
+            if let Some(_) = res {
+                return Err(UserAlreadyExistsError("device is already in use".to_string()).into());
             }
         }
 
-        match user.wallet_address() {
-            None => {}
-            Some(wallet_address) => {
-                let res = self
-                    .get_by_filter_key(
-                        LOGIN_WALLET_FIELD_NAME_PK,
-                        wallet_address,
-                        USERID_FIELD_NAME,
-                        LOGIN_WALLET_TABLE_NAME,
-                    )
-                    .await?;
-                match res {
-                    None => {}
-                    Some(_) => {
-                        return Err(UserAlreadyExistsError(
-                            "wallet address is already in use".to_string(),
-                        )
-                        .into());
-                    }
-                }
+        if let Some(wallet_address) = user.wallet_address() {
+            let res = self
+                .get_by_filter_index(
+                    LOGIN_WALLET_INDEX,
+                    LOGIN_WALLET_FIELD_NAME,
+                    wallet_address,
+                    USERID_FIELD_NAME_PK,
+                    LOGIN_WALLET_TABLE_NAME,
+                )
+                .await?;
+            if let Some(_) = res {
+                return Err(
+                    UserAlreadyExistsError("wallet address is already in use".to_string()).into(),
+                );
             }
         }
 
@@ -278,17 +242,14 @@ impl UsersRepo {
             .key(USERID_FIELD_NAME_PK, user_id_av);
 
         let results = request.send().await;
-        match results {
-            Err(e) => {
-                let mssag = format!(
-                    "Error at [{}] - {} ",
-                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
-                    e
-                );
-                tracing::error!(mssag);
-                return Err(UserDynamoDBError(e.to_string()).into());
-            }
-            Ok(_) => {}
+        if let Err(e) = results {
+            let mssag = format!(
+                "Error at [{}] - {} ",
+                Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                e
+            );
+            tracing::error!(mssag);
+            return Err(UserDynamoDBError(e.to_string()).into());
         }
         match results.unwrap().item {
             None => Err(UserNoExistsError("id doesn't exist".to_string()).into()),
@@ -298,40 +259,37 @@ impl UsersRepo {
 
     async fn mapping_from_doc_to_user_logins(&self, id: &String, user: &mut User) -> ResultE<()> {
         let email_op = self
-            .get_by_filter_user_id(
-                LOGIN_EMAIL_USERID_INDEX,
+            .get_by_filter_key(
+                USERID_FIELD_NAME_PK,
                 id,
-                LOGIN_EMAIL_FIELD_NAME_PK,
+                LOGIN_EMAIL_FIELD_NAME,
                 LOGIN_EMAIL_TABLE_NAME,
             )
             .await?;
-        match email_op {
-            None => {}
-            Some(email) => user.set_email(&email),
+        if let Some(email) = email_op {
+            user.set_email(&email);
         }
         let device_op = self
-            .get_by_filter_user_id(
-                LOGIN_DEVICE_USERID_INDEX,
+            .get_by_filter_key(
+                USERID_FIELD_NAME_PK,
                 id,
-                LOGIN_DEVICE_FIELD_NAME_PK,
+                LOGIN_DEVICE_FIELD_NAME,
                 LOGIN_DEVICE_TABLE_NAME,
             )
             .await?;
-        match device_op {
-            None => {}
-            Some(device) => user.set_device(&device),
+        if let Some(device)= device_op {
+            user.set_device(&device)
         }
         let wallet_op = self
-            .get_by_filter_user_id(
-                LOGIN_WALLET_USERID_INDEX,
+            .get_by_filter_key(
+                USERID_FIELD_NAME_PK,
                 id,
-                LOGIN_WALLET_FIELD_NAME_PK,
+                LOGIN_WALLET_FIELD_NAME,
                 LOGIN_WALLET_TABLE_NAME,
             )
             .await?;
-        match wallet_op {
-            None => {}
-            Some(wallet) => user.set_wallet_address(&wallet),
+        if let Some(wallet) = wallet_op {
+            user.set_wallet_address(&wallet);
         }
         Ok(())
     }
@@ -369,8 +327,8 @@ impl UsersRepo {
 
             let mut device_fields = Put::builder();
             device_fields = device_fields
-                .item(USERID_FIELD_NAME, id_av.clone())
-                .item(LOGIN_DEVICE_FIELD_NAME_PK, device_av);
+                .item(USERID_FIELD_NAME_PK, id_av.clone())
+                .item(LOGIN_DEVICE_FIELD_NAME, device_av);
 
             request = request.transact_items(
                 TransactWriteItem::builder()
@@ -384,8 +342,8 @@ impl UsersRepo {
 
             let mut wallet_fields = Put::builder();
             wallet_fields = wallet_fields
-                .item(USERID_FIELD_NAME, id_av.clone())
-                .item(LOGIN_WALLET_FIELD_NAME_PK, wallet_av);
+                .item(USERID_FIELD_NAME_PK, id_av.clone())
+                .item(LOGIN_WALLET_FIELD_NAME, wallet_av);
 
             request = request.transact_items(
                 TransactWriteItem::builder()
@@ -405,8 +363,8 @@ impl UsersRepo {
                 }
                 None => {
                     let pass = self
-                        .get_by_filter_user_id(
-                            LOGIN_EMAIL_USERID_INDEX,
+                        .get_by_filter_key(
+                            USERID_FIELD_NAME_PK,
                             new_user_data.user_id(),
                             PASSWORD_FIELD_NAME,
                             LOGIN_EMAIL_TABLE_NAME,
@@ -423,8 +381,8 @@ impl UsersRepo {
             let email_av: AttributeValue = AttributeValue::S(email.to_owned());
 
             email_fields = email_fields
-                .item(USERID_FIELD_NAME, id_av.clone())
-                .item(LOGIN_EMAIL_FIELD_NAME_PK, email_av);
+                .item(USERID_FIELD_NAME_PK, id_av.clone())
+                .item(LOGIN_EMAIL_FIELD_NAME, email_av);
 
             request = request.transact_items(
                 TransactWriteItem::builder()
@@ -510,10 +468,11 @@ impl UserRepository for UsersRepo {
 
     async fn get_by_device(&self, device: &String) -> ResultE<User> {
         let res = self
-            .get_by_filter_key(
-                LOGIN_DEVICE_FIELD_NAME_PK,
+            .get_by_filter_index(
+                LOGIN_DEVICE_INDEX,
+                LOGIN_DEVICE_FIELD_NAME,
                 device,
-                USERID_FIELD_NAME,
+                USERID_FIELD_NAME_PK,
                 LOGIN_DEVICE_TABLE_NAME,
             )
             .await?;
@@ -528,28 +487,27 @@ impl UserRepository for UsersRepo {
                 user.set_device(device);
 
                 let wallet_op = self
-                    .get_by_filter_user_id(
-                        LOGIN_WALLET_USERID_INDEX,
+                    .get_by_filter_key(
+                        USERID_FIELD_NAME_PK,
                         &user_id,
-                        LOGIN_WALLET_FIELD_NAME_PK,
+                        LOGIN_WALLET_FIELD_NAME,
                         LOGIN_WALLET_TABLE_NAME,
                     )
                     .await?;
-                match wallet_op {
-                    None => {}
-                    Some(wallet) => user.set_wallet_address(&wallet),
+                if let Some(wallet)= wallet_op {
+                    user.set_wallet_address(&wallet);
                 }
+
                 let email_op = self
-                    .get_by_filter_user_id(
-                        LOGIN_EMAIL_USERID_INDEX,
+                    .get_by_filter_key(
+                        USERID_FIELD_NAME_PK,
                         &user_id,
-                        LOGIN_EMAIL_FIELD_NAME_PK,
+                        LOGIN_EMAIL_FIELD_NAME,
                         LOGIN_EMAIL_TABLE_NAME,
                     )
                     .await?;
-                match email_op {
-                    None => {}
-                    Some(email) => user.set_email(&email),
+                if let Some(email)= email_op {
+                     user.set_email(&email);
                 }
 
                 Ok(user)
@@ -559,10 +517,11 @@ impl UserRepository for UsersRepo {
 
     async fn get_by_wallet_address(&self, wallet: &String) -> ResultE<User> {
         let res = self
-            .get_by_filter_key(
-                LOGIN_WALLET_FIELD_NAME_PK,
+            .get_by_filter_index(
+                LOGIN_WALLET_INDEX,
+                LOGIN_WALLET_FIELD_NAME,
                 wallet,
-                USERID_FIELD_NAME,
+                USERID_FIELD_NAME_PK,
                 LOGIN_WALLET_TABLE_NAME,
             )
             .await?;
@@ -577,28 +536,26 @@ impl UserRepository for UsersRepo {
                 user.set_wallet_address(wallet);
 
                 let email_op = self
-                    .get_by_filter_user_id(
-                        LOGIN_EMAIL_USERID_INDEX,
+                    .get_by_filter_key(
+                        USERID_FIELD_NAME_PK,
                         &user_id,
-                        LOGIN_EMAIL_FIELD_NAME_PK,
+                        LOGIN_EMAIL_FIELD_NAME,
                         LOGIN_EMAIL_TABLE_NAME,
                     )
                     .await?;
-                match email_op {
-                    None => {}
-                    Some(email) => user.set_email(&email),
+                if let Some(email) = email_op {
+                    user.set_email(&email);
                 }
                 let device_op = self
-                    .get_by_filter_user_id(
-                        LOGIN_DEVICE_USERID_INDEX,
+                    .get_by_filter_key(
+                        USERID_FIELD_NAME_PK,
                         &user_id,
-                        LOGIN_DEVICE_FIELD_NAME_PK,
+                        LOGIN_DEVICE_FIELD_NAME,
                         LOGIN_DEVICE_TABLE_NAME,
                     )
                     .await?;
-                match device_op {
-                    None => {}
-                    Some(device) => user.set_device(&device),
+                if let Some(device) = device_op {
+                    user.set_device(&device);
                 }
 
                 Ok(user)
@@ -619,8 +576,9 @@ impl UserRepository for UsersRepo {
         }
 
         let res = self
-            .get_by_filter_key(
-                LOGIN_EMAIL_FIELD_NAME_PK,
+            .get_by_filter_index(
+                LOGIN_EMAIL_INDEX,
+                LOGIN_EMAIL_FIELD_NAME,
                 email,
                 PASSWORD_FIELD_NAME,
                 LOGIN_EMAIL_TABLE_NAME,
@@ -628,7 +586,7 @@ impl UserRepository for UsersRepo {
             .await?;
         match res {
             None => {
-                return Err(UserNoExistsError("no device found".to_string()).into());
+                return Err(UserNoExistsError("no email found".to_string()).into());
             }
             Some(password_stored_hashed) => {
                 let password_ok = cypher_check(
@@ -638,10 +596,11 @@ impl UserRepository for UsersRepo {
                 )?;
                 if password_ok {
                     let user_op = self
-                        .get_by_filter_key(
-                            LOGIN_EMAIL_FIELD_NAME_PK,
+                        .get_by_filter_index(
+                            LOGIN_EMAIL_INDEX,
+                            LOGIN_EMAIL_FIELD_NAME,
                             email,
-                            USERID_FIELD_NAME,
+                            USERID_FIELD_NAME_PK,
                             LOGIN_EMAIL_TABLE_NAME,
                         )
                         .await?;
@@ -653,28 +612,28 @@ impl UserRepository for UsersRepo {
                     user.set_email(email);
 
                     let device_op = self
-                        .get_by_filter_user_id(
-                            LOGIN_DEVICE_USERID_INDEX,
+                        .get_by_filter_key(
+                            USERID_FIELD_NAME_PK,
                             &user_id,
-                            LOGIN_DEVICE_FIELD_NAME_PK,
+                            LOGIN_DEVICE_FIELD_NAME,
                             LOGIN_DEVICE_TABLE_NAME,
                         )
                         .await?;
-                    match device_op {
-                        None => {}
-                        Some(device) => user.set_device(&device),
+
+                    if let Some(device) = device_op {
+                        user.set_device(&device);
                     }
+
                     let wallet_op = self
-                        .get_by_filter_user_id(
-                            LOGIN_WALLET_USERID_INDEX,
+                        .get_by_filter_key(
+                            USERID_FIELD_NAME_PK,
                             &user_id,
-                            LOGIN_WALLET_FIELD_NAME_PK,
+                            LOGIN_WALLET_FIELD_NAME,
                             LOGIN_WALLET_TABLE_NAME,
                         )
                         .await?;
-                    match wallet_op {
-                        None => {}
-                        Some(wallet) => user.set_wallet_address(&wallet),
+                    if let Some(wallet) = wallet_op {
+                        user.set_wallet_address(&wallet);
                     }
 
                     Ok(user)
@@ -688,9 +647,7 @@ impl UserRepository for UsersRepo {
     async fn update(&self, id: &String, user_new_data: &User) -> ResultE<()> {
         //self.check_duplicates(user).await?;
 
-        let request = self
-            .new_or_update_builder(user_new_data, &None)
-            .await?;
+        let request = self.new_or_update_builder(user_new_data, &None).await?;
 
         match request.send().await {
             Ok(_updated) => {

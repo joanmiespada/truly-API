@@ -12,11 +12,12 @@ use std::env;
 use testcontainers::*;
 
 #[tokio::test]
-async fn login_user_email_password_test() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn login_user_wallet_test() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env::set_var("RUST_LOG", "debug");
     env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
+    env::set_var("AWS_REGION", "eu-central-1");
 
-    env_logger::builder().is_test(true).init();
+    let _ = env_logger::builder().is_test(true).try_init();
 
     let docker = clients::Cli::default();
 
