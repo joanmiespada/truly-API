@@ -1,0 +1,55 @@
+[package]
+name = "lib_ledger"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+name = "lib_ledger"
+crate-type = ["lib"]
+
+[[test]]
+name = "integration"
+path = "test/lib.rs"
+
+
+[dependencies]
+lib_config = { git="https://github.com/joanmiespada/truly-shared" }
+lib_async_ops = { git="https://github.com/joanmiespada/truly-shared" }
+lib_licenses = { path = "../lib_licenses" }
+log = "0.4.19"
+chrono = { version = "0.4.26", features = ["serde"] }
+serde = { version = "1.0.171", features = ["derive"] }
+serde_json = "1.0.102"
+aws-config = "0.55.3"
+aws-sdk-qldb = "0.28.0"
+aws-sdk-qldbsession= "0.28.0"
+async-trait = "0.1.71"
+tracing = { version = "0.1", features = ["log"] }
+validator = { version = "0.16", features = ["derive"] }
+http = "0.2.9"
+http-serde = "1.1.2"
+url = { version = "2.4.0", features = ["serde"] }
+rand = "0.8.5"
+aws-sdk-kms = "0.28.0"
+aws-sdk-secretsmanager = "0.28.0"
+base64 = "0.21.2"
+uuid = { version = "1.4.0", features = [
+    "v4",
+    "fast-rng",
+    "macro-diagnostics",
+    "serde",
+] }
+tokio = { version = "1.29", features = ["macros"] }
+workspace-hack = { version = "0.1", path = "../workspace-hack" }
+
+[target.aarch64-apple-darwin.dev-dependencies]
+#[dev-dependencies]
+env_logger = "0.10.0"
+aws-types = "0.55.3"
+spectral = "0.6.0"
+#testcontainers = "0.14.0"
+#testcontainers = { git = "https://github.com/joanmiespada/testcontainers-rs", branch = "dev2" }
+testcontainers = { git = "https://github.com/joanmiespada/testcontainers-rs", rev="03bbe9a7611b1607810de3cabe52ce042196b3c1" }
+tokio = { version = "1.29.1", features = ["full"] }
+reqwest= { version = "0.11.18", features = ["json"]}
+dotenv = "0.15.0"

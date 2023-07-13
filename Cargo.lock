@@ -1177,6 +1177,55 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-sdk-qldb"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2830c648ba7f6e01a9ad354a0df577fb4e9b21e67bc49c6323a2be0780a4f9f8"
+dependencies = [
+ "aws-credential-types 0.55.3",
+ "aws-endpoint 0.55.3",
+ "aws-http 0.55.3",
+ "aws-sig-auth 0.55.3",
+ "aws-smithy-async 0.55.3",
+ "aws-smithy-client 0.55.3",
+ "aws-smithy-http 0.55.3",
+ "aws-smithy-http-tower 0.55.3",
+ "aws-smithy-json 0.55.3",
+ "aws-smithy-types 0.55.3",
+ "aws-types 0.55.3",
+ "bytes",
+ "http",
+ "regex",
+ "tokio-stream",
+ "tower",
+ "tracing",
+]
+
+[[package]]
+name = "aws-sdk-qldbsession"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93b6e5e094b9a0b6563bd559091d14dfb613e2c45ae361df05bd71a632e7ed86"
+dependencies = [
+ "aws-credential-types 0.55.3",
+ "aws-endpoint 0.55.3",
+ "aws-http 0.55.3",
+ "aws-sig-auth 0.55.3",
+ "aws-smithy-async 0.55.3",
+ "aws-smithy-client 0.55.3",
+ "aws-smithy-http 0.55.3",
+ "aws-smithy-http-tower 0.55.3",
+ "aws-smithy-json 0.55.3",
+ "aws-smithy-types 0.55.3",
+ "aws-types 0.55.3",
+ "bytes",
+ "http",
+ "regex",
+ "tower",
+ "tracing",
+]
+
+[[package]]
 name = "aws-sdk-secretsmanager"
 version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2184,7 +2233,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6798148dccfbff0fae41c7574d2fa8f1ef3492fba0face179de5d8d447d67b05"
 dependencies = [
  "memchr",
- "regex-automata 0.3.2",
+ "regex-automata 0.3.3",
  "serde 1.0.171",
 ]
 
@@ -3251,12 +3300,12 @@ dependencies = [
 
 [[package]]
 name = "darling"
-version = "0.20.1"
+version = "0.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0558d22a7b463ed0241e993f76f09f30b126687447751a8638587b864e4b3944"
+checksum = "0209d94da627ab5605dcccf08bb18afa5009cfbef48d8a8b7d7bdbc79be25c5e"
 dependencies = [
- "darling_core 0.20.1",
- "darling_macro 0.20.1",
+ "darling_core 0.20.3",
+ "darling_macro 0.20.3",
 ]
 
 [[package]]
@@ -3289,9 +3338,9 @@ dependencies = [
 
 [[package]]
 name = "darling_core"
-version = "0.20.1"
+version = "0.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab8bfa2e259f8ee1ce5e97824a3c55ec4404a0d772ca7fa96bf19f0752a046eb"
+checksum = "177e3443818124b357d8e76f53be906d60937f0d3a90773a664fa63fa253e621"
 dependencies = [
  "fnv",
  "ident_case",
@@ -3325,11 +3374,11 @@ dependencies = [
 
 [[package]]
 name = "darling_macro"
-version = "0.20.1"
+version = "0.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29a358ff9f12ec09c3e61fef9b5a9902623a695a46a917b07f269bff1445611a"
+checksum = "836a9bbc7ad63342d6d6e7b815ccab164bc77a2d95d84bc3117a8c0d5c98e2d5"
 dependencies = [
- "darling_core 0.20.1",
+ "darling_core 0.20.3",
  "quote 1.0.29",
  "syn 2.0.25",
 ]
@@ -5047,11 +5096,11 @@ checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
 name = "globset"
-version = "0.4.10"
+version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "029d74589adefde59de1a0c4f4732695c32805624aec7b68d91503d4dba79afc"
+checksum = "1391ab1f92ffcc08911957149833e682aa3fe252b9f45f966d2ef972274c97df"
 dependencies = [
- "aho-corasick 0.7.20",
+ "aho-corasick 1.0.2",
  "bstr",
  "fnv",
  "log",
@@ -6444,7 +6493,7 @@ dependencies = [
 [[package]]
 name = "lib_async_ops"
 version = "0.0.1"
-source = "git+https://github.com/joanmiespada/truly-shared#205ee873c9dc06b165ff450bff8b49a3b98de519"
+source = "git+https://github.com/joanmiespada/truly-shared#f5ed3350bc86c6a4d8c43e75d2704bfdb9c5bbd2"
 dependencies = [
  "aws-sdk-sns",
  "aws-sdk-sqs",
@@ -6497,7 +6546,7 @@ dependencies = [
  "sui-keys",
  "sui-sdk",
  "sui-types",
- "testcontainers",
+ "testcontainers 0.14.0 (git+https://github.com/joanmiespada/testcontainers-rs?branch=localstack2)",
  "tokio",
  "tracing",
  "url",
@@ -6510,8 +6559,8 @@ dependencies = [
 
 [[package]]
 name = "lib_config"
-version = "0.0.14"
-source = "git+https://github.com/joanmiespada/truly-shared#205ee873c9dc06b165ff450bff8b49a3b98de519"
+version = "0.0.15"
+source = "git+https://github.com/joanmiespada/truly-shared#f5ed3350bc86c6a4d8c43e75d2704bfdb9c5bbd2"
 dependencies = [
  "async-trait",
  "aws-config 0.55.3",
@@ -6520,6 +6569,7 @@ dependencies = [
  "aws-sdk-secretsmanager",
  "aws-types 0.55.3",
  "base64 0.21.2",
+ "chrono",
  "dotenv",
  "env_logger 0.10.0",
  "envy",
@@ -6533,6 +6583,41 @@ dependencies = [
  "tracing-opentelemetry",
  "tracing-subscriber 0.3.17",
  "url",
+]
+
+[[package]]
+name = "lib_ledger"
+version = "0.0.1"
+dependencies = [
+ "async-trait",
+ "aws-config 0.55.3",
+ "aws-sdk-kms",
+ "aws-sdk-qldb",
+ "aws-sdk-qldbsession",
+ "aws-sdk-secretsmanager",
+ "aws-types 0.55.3",
+ "base64 0.21.2",
+ "chrono",
+ "dotenv",
+ "env_logger 0.10.0",
+ "http",
+ "http-serde",
+ "lib_async_ops",
+ "lib_config",
+ "lib_licenses",
+ "log",
+ "rand 0.8.5",
+ "reqwest",
+ "serde 1.0.171",
+ "serde_json",
+ "spectral",
+ "testcontainers 0.14.0 (git+https://github.com/joanmiespada/testcontainers-rs?rev=03bbe9a7611b1607810de3cabe52ce042196b3c1)",
+ "tokio",
+ "tracing",
+ "url",
+ "uuid 1.4.0",
+ "validator",
+ "workspace-hack 0.1.0",
 ]
 
 [[package]]
@@ -6561,7 +6646,7 @@ dependencies = [
  "serde 1.0.171",
  "serde_json",
  "spectral",
- "testcontainers",
+ "testcontainers 0.14.0 (git+https://github.com/joanmiespada/testcontainers-rs?branch=localstack2)",
  "tokio",
  "tracing",
  "url",
@@ -6587,7 +6672,7 @@ dependencies = [
  "serde 1.0.171",
  "serde_json",
  "spectral",
- "testcontainers",
+ "testcontainers 0.14.0 (git+https://github.com/joanmiespada/testcontainers-rs?branch=localstack2)",
  "tokio",
  "tracing",
  "uuid 1.4.0",
@@ -6611,7 +6696,7 @@ dependencies = [
 [[package]]
 name = "lib_video_objs"
 version = "0.0.1"
-source = "git+https://github.com/joanmiespada/truly-shared#205ee873c9dc06b165ff450bff8b49a3b98de519"
+source = "git+https://github.com/joanmiespada/truly-shared#f5ed3350bc86c6a4d8c43e75d2704bfdb9c5bbd2"
 dependencies = [
  "async-trait",
  "base64 0.21.2",
@@ -10412,7 +10497,7 @@ checksum = "b2eae68fc220f7cf2532e4494aded17545fce192d59cd996e0fe7887f4ceb575"
 dependencies = [
  "aho-corasick 1.0.2",
  "memchr",
- "regex-automata 0.3.2",
+ "regex-automata 0.3.3",
  "regex-syntax 0.7.4",
 ]
 
@@ -10427,9 +10512,9 @@ dependencies = [
 
 [[package]]
 name = "regex-automata"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83d3daa6976cffb758ec878f108ba0e062a45b2d6ca3a2cca965338855476caf"
+checksum = "39354c10dd07468c2e73926b23bb9c2caca74c5501e38a35da70406f1d923310"
 dependencies = [
  "aho-corasick 1.0.2",
  "memchr",
@@ -11434,7 +11519,7 @@ version = "2.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "881b6f881b17d13214e5d494c939ebab463d01264ce1811e9d4ac3a882e7695f"
 dependencies = [
- "darling 0.20.1",
+ "darling 0.20.3",
  "proc-macro2 1.0.64",
  "quote 1.0.29",
  "syn 2.0.25",
@@ -11446,7 +11531,7 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "edc7d5d3932fb12ce722ee5e64dd38c504efba37567f0c402f6ca728c3b8b070"
 dependencies = [
- "darling 0.20.1",
+ "darling 0.20.3",
  "proc-macro2 1.0.64",
  "quote 1.0.29",
  "syn 2.0.25",
@@ -12977,7 +13062,7 @@ version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e17cd05c077c7b9c5d0045c539f9c5e911187bf65cd1b407d28239efc7b54880"
 dependencies = [
- "darling 0.20.1",
+ "darling 0.20.3",
  "if_chain",
  "itertools",
  "lazy_static 1.4.0",
@@ -13007,6 +13092,22 @@ dependencies = [
 name = "testcontainers"
 version = "0.14.0"
 source = "git+https://github.com/joanmiespada/testcontainers-rs?branch=localstack2#322e6f6caee980bfdcfe33671ea9dba40b207eca"
+dependencies = [
+ "bollard-stubs",
+ "futures",
+ "hex",
+ "hmac 0.12.1",
+ "log",
+ "rand 0.8.5",
+ "serde 1.0.171",
+ "serde_json",
+ "sha2 0.10.7",
+]
+
+[[package]]
+name = "testcontainers"
+version = "0.14.0"
+source = "git+https://github.com/joanmiespada/testcontainers-rs?rev=03bbe9a7611b1607810de3cabe52ce042196b3c1#03bbe9a7611b1607810de3cabe52ce042196b3c1"
 dependencies = [
  "bollard-stubs",
  "futures",
@@ -13796,7 +13897,7 @@ dependencies = [
  "serde_json",
  "spectral",
  "structopt",
- "testcontainers",
+ "testcontainers 0.14.0 (git+https://github.com/joanmiespada/testcontainers-rs?branch=localstack2)",
  "tokio",
  "url",
  "uuid 1.4.0",

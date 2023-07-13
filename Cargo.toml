@@ -2,11 +2,10 @@
 
 members = [
     "lib_users",
-    #"lib_config",
     "lib_licenses",
     "lib_blockchain",
+    "lib_ledger",
     "lib_util_jwt",
-    #"lib_async_ops",
     "lambda_login",
     "lambda_user",
     "lambda_mint",
