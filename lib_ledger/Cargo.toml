@@ -41,6 +41,8 @@ uuid = { version = "1.4.0", features = [
 ] }
 tokio = { version = "1.29", features = ["macros"] }
 workspace-hack = { version = "0.1", path = "../workspace-hack" }
+qldb = "3.2.7"
+#qldb = {git="https://github.com/joanmiespada/qldb-rs", branch="localstack"}
 
 [target.aarch64-apple-darwin.dev-dependencies]
 #[dev-dependencies]

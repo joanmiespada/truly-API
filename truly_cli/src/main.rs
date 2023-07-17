@@ -2,6 +2,7 @@ use admin_user::create_admin_user;
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
 use blockchains::manage_blockchains;
 use contracts::manage_contracts;
+use ledger::manage_ledger;
 use lib_config::config::Config;
 
 use schemas::create_schemas;
@@ -19,6 +20,7 @@ mod contracts;
 mod schemas;
 mod secrets;
 mod users;
+mod ledger;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct NewUser {
@@ -40,6 +42,7 @@ async fn command(
         password,
         contract,
         blockchain,
+        ledger,
         region,
         profile,
     }: Opt,
@@ -94,9 +97,9 @@ async fn command(
         .await?;
     }
 
-    // if let Some(_) = async_jobs {
-    //     manage_async_jobs(create, delete, environment.clone(), &config).await?;
-    // }
+    if let Some(_) = ledger {
+         manage_ledger(create, delete,  &config).await?;
+     }
 
     Ok(())
 }
@@ -142,13 +145,9 @@ pub struct Opt {
     #[structopt(long = "blockchain")]
     pub blockchain: Option<String>,
 
-    //#[structopt(long = "path")]
-    //pub path: Option<String>,
-    //#[structopt(long = "all")]
-    //pub all: Option<bool>,
+    #[structopt(long = "ledger")]
+    pub ledger: Option<bool>,
 
-    //#[structopt(long = "async")]
-    //pub async_jobs: Option<bool>,
     #[structopt(long = "region")]
     pub region: Option<String>,
 

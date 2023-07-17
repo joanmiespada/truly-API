@@ -14,6 +14,8 @@ terraform --version || exit 1
 zip_skip='false'
 secrets_skip='false'
 tables_skip='false'
+ledger_skip='false'
+terraform_skip='false'
 for arg in "$@"
 do
     case $arg in
@@ -25,6 +27,12 @@ do
             ;;
         "--tables_skip")
             tables_skip='true'
+            ;;
+        "--ledger_skip")
+            ledger_skip='true'
+            ;;
+        "--terraform_skip")
+            terraform_skip='true'
             ;;
     esac
 done
@@ -128,6 +136,16 @@ else
     echo "secrets skip, they need to be already created"
 fi
 
+if [[ "$ledger_skip" == 'false' ]]; then
+    echo "creating ledgers in each region, it will requiere several minutes"
+    for region in "${multi_region[@]}"; do
+        cargo run -p truly_cli -- --ledger true --create --region $region --profile $profile || exit 1
+    done
+else
+    echo "ledger creation skip"
+fi
+
+
 if [[ "$tables_skip" == 'false' ]]; then
     tables=$(aws dynamodb list-tables --region $multi_region[1] --output json | jq '[.TableNames[]] | length' )
     if (( $tables[@] <= 0 )); then
@@ -173,23 +191,28 @@ else
     echo "tables and master data skip"
 fi
 
-echo 'running terraform...'
-cd terraform
+if [[ "$terraform_skip" == 'false' ]]; then
 
-for region in "${multi_region[@]}"
-do
-    letters=${region%%-*}
-    region_label="$ENVIRONMENT-${region}"
-    export TF_VAR_aws_region=$region
-    export TF_VAR_dns_prefix="${letters}-${dns_prefix}"
-    export TF_VAR_kms_id_cypher_all_secret_keys=$mapKeys[$region]
-    terraform workspace new $region_label
-    terraform workspace select $region_label
-    echo "Planning infrastructure for ${region}..."
-    terraform plan
-    terraform apply --auto-approve
-done
-cd ..
+    echo 'running terraform...'
+    cd terraform
+
+    for region in "${multi_region[@]}"
+    do
+        letters=${region%%-*}
+        region_label="$ENVIRONMENT-${region}"
+        export TF_VAR_aws_region=$region
+        export TF_VAR_dns_prefix="${letters}-${dns_prefix}"
+        export TF_VAR_kms_id_cypher_all_secret_keys=$mapKeys[$region]
+        terraform workspace new $region_label
+        terraform workspace select $region_label
+        echo "Planning infrastructure for ${region}..."
+        terraform plan
+        terraform apply --auto-approve
+    done
+    cd ..
+else
+    echo "terraform skip"
+fi
 
 echo "At stage no dns geolocation is needed."
 

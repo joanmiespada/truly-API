@@ -8,8 +8,8 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 #[async_trait]
 pub trait LedgerManipulation {
     async fn add(&self, asset: &Asset) -> ResultE<Ledge>;
-    async fn get_by_id(&self, tx: &String) -> ResultE<Ledge>;
-    async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<Ledge>>;
+    async fn get_by_hash(&self, tx: &String) -> ResultE<Ledge>;
+    async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Ledge>;
 }
 
 #[derive(Debug)]
@@ -31,12 +31,12 @@ impl LedgerManipulation for LedgerService {
     }
 
     #[tracing::instrument()]
-    async fn get_by_id(&self, tx: &String) -> ResultE<Ledge> {
-        self.repository.get_by_id(tx).await
+    async fn get_by_hash(&self, tx: &String) -> ResultE<Ledge> {
+        self.repository.get_by_hash(tx).await
     }
 
     #[tracing::instrument()]
-    async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<Ledge>> {
+    async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Ledge> {
         self.repository.get_by_asset_id(asset_id).await
     }
 }

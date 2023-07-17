@@ -18,6 +18,7 @@ tables_skip='false'
 dns_skip='false'
 terraform_skip='false'
 geoloc_skip='false'
+ledger_skip='false'
 for arg in "$@"
 do
     case $arg in
@@ -41,6 +42,9 @@ do
             ;;
         "--geoloc_skip")
             geoloc_skip='true'
+            ;;
+        "--ledger_skip")
+            ledger_skip='true'
             ;;
     esac
 done
@@ -178,6 +182,15 @@ else
     echo "secrets skip"
 fi
 
+if [[ "$ledger_skip" == 'false' ]]; then
+    echo "creating ledgers in each region, it will requiere several minutes"
+    for region in "${multi_region[@]}"; do
+        cargo run -p truly_cli -- --ledger true --create --region $region --profile $profile || exit 1
+    done
+else
+    echo "ledger creation skip"
+fi
+
 if [[ "$tables_skip" == 'false' ]]; then
     tables=$(awslocal dynamodb list-tables --region $multi_region[1] --output json | jq '[.TableNames[]] | length' )
     if (( $tables[@] <= 0 )); then
@@ -294,3 +307,10 @@ fi
 
 echo 'all completed!'
 
+# aws qldb create-ledger --name vehicle-registration --permissions-mode STANDARD
+# aws qldb create-ledger \
+#     --name vehicle-registration \
+#     --no-deletion-protection \ // only for stage!!! remove it for prod
+#     --permissions-mode STANDARD \
+#     --kms-key arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab \
+#     --tags IsTest=true,Domain=Test

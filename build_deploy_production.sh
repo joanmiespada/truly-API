@@ -16,6 +16,7 @@ secrets_skip='false'
 tables_skip='false'
 terraform_skip='false'
 geoloc_skip='false'
+ledger_skip='false'
 for arg in "$@"
 do
     case $arg in
@@ -33,6 +34,9 @@ do
             ;;
         "--geoloc_skip")
             geoloc_skip='true'
+            ;;
+        "--ledger_skip")
+            ledger_skip='true'
             ;;
     esac
 done
@@ -139,6 +143,23 @@ if [[ "$secrets_skip" == 'false' ]]; then
 else
     echo "secrets skip, they need to be already created"
 fi
+
+
+if [[ "$ledger_skip" == 'false' ]]; then
+    echo "creating ledgers in each region, it will requiere several minutes"
+    for region in "${multi_region[@]}"; do
+
+        ledgers=$(aws qldb list-ledgers --region $region --output json | jq -r '.Ledgers[].Name' | wc -l )
+        if (( $ledgers[@] <= 0 )); then
+            cargo run -p truly_cli -- --ledger true --create --region $region --profile $profile || exit 1
+        else
+            echo "skip ledger creation at ${region}, looks like it's already exist"
+        fi
+    done
+else
+    echo "ledger creation skip"
+fi
+
 
 if [[ "$tables_skip" == 'false' ]]; then
     tables=$(aws dynamodb list-tables --region $multi_region[1] --output json | jq '[.TableNames[]] | length' )
