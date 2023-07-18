@@ -20,7 +20,7 @@ lib_async_ops = { git="https://github.com/joanmiespada/truly-shared" }
 log = "0.4.19"
 chrono = {version="0.4.26", features = ["serde"] }
 serde = { version = "1.0.171", features = ["derive"] }
-serde_json = "1.0.102"
+serde_json = "1.0.103"
 rust-argon2 = "1.0.0"
 aws-config = "0.55.3"
 aws-sdk-dynamodb = "0.28.0"
@@ -35,7 +35,7 @@ rand = "0.8.5"
 aws-sdk-kms = "0.28.0"
 aws-sdk-secretsmanager = "0.28.0"
 base64 = "0.21.2"
-uuid = { version = "1.4.0", features=["v4","fast-rng","macro-diagnostics","serde"]}
+uuid = { version = "1.4.1", features=["v4","fast-rng","macro-diagnostics","serde"]}
 maplit = "1.0.2"
 workspace-hack = { version = "0.1", path = "../workspace-hack" }
 tokio = { version="1.29.1", features=["full"]}

@@ -37,8 +37,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let mut config = Config::new();
     config.setup_with_secrets().await;
 
-    let repo_tx = BlockchainTxRepo::new(&config.clone());
-    let tx_service = BlockchainTxService::new(repo_tx);
 
     let asset_repo = AssetRepo::new(&config);
     let shorter_repo = ShorterRepo::new(&config);
@@ -48,6 +46,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let owners_service = OwnerService::new(owners_repo);
 
     let key_repo = KeyPairRepo::new(&config);
+
+    let repo_tx = BlockchainTxRepo::new(&config);
+    let tx_service = BlockchainTxService::new(repo_tx);
 
     let blockchains_repo = BlockchainRepo::new(&config);
     let contracts_repo = ContractRepo::new(&config);

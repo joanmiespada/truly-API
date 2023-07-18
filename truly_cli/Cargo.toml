@@ -14,7 +14,7 @@ lib_ledger = { path = "../lib_ledger"}
 env_logger = "0.10.0"
 chrono = {version="0.4.26", features = ["serde"] }
 serde = { version = "1.0.171", features = ["derive"] }
-serde_json = "1.0.102"
+serde_json = "1.0.103"
 aws-config = "0.55.3"
 aws-sdk-dynamodb = "0.28.0"
 aws-sdk-secretsmanager = "0.28.0"
@@ -23,7 +23,7 @@ async-trait = "0.1.71"
 validator = { version = "0.16", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 structopt = "0.3.26"
-uuid = { version = "1.4.0", features=["v4","fast-rng","macro-diagnostics","serde"]}
+uuid = { version = "1.4.1", features=["v4","fast-rng","macro-diagnostics","serde"]}
 url = {version="2.4.0", features=["serde"] }
 workspace-hack = { version = "0.1", path = "../workspace-hack" }
 log = "0.4.19"
@@ -35,8 +35,8 @@ spectral = "0.6.0"
 #testcontainers = "0.14.0"
 testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack2"  }
 tokio = { version="1.29.1", features=["full"]}
-ethers = "2.0.7"
+ethers = "2.0.8"
 base64 = "0.21.2"
-ethers-solc = "2.0.7"
+ethers-solc = "2.0.8"
 
 
