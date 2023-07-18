@@ -15,6 +15,8 @@ use web3::{
     Web3, //, signing::SecretKey,
 };
 
+use crate::errors::asset::AssetBlockachainError;
+use crate::models::block_tx::MintingStatus;
 use crate::{
     errors::nft::HydrateMasterSecretKeyError,
     models::block_tx::BlockchainTx,
@@ -28,7 +30,7 @@ use crate::{errors::nft::NftUserAddressMalformedError, models::keypair::KeyPair}
 const CONTRACT_METHOD_MINTING: &'static str = "mint";
 const CONTRACT_METHOD_GET_CONTENT_BY_TOKEN: &'static str = "getContentByToken";
 
-use lib_licenses::errors::asset::AssetBlockachainError;
+//use lib_licenses::errors::asset::AssetBlockachainError;
 
 use super::chain::{ContentState, ContractContentInfo, NFTsRepository};
 
@@ -238,6 +240,8 @@ impl NFTsRepository for GanacheBlockChain {
 
         let tx_paylaod = BlockchainTx::new(
             asset_id.to_owned(),
+            MintingStatus::CompletedSuccessfully,
+            Utc::now(),
             Utc::now(),
             Some(tx.transaction_hash.to_string()),
             Some(tx.block_number.unwrap().as_u64()),
@@ -250,7 +254,7 @@ impl NFTsRepository for GanacheBlockChain {
             Some("gweis".to_string()),
             Some(tx.from.to_string()),
             Some(tx.to.unwrap().to_string()),
-            self.contract_id,
+            Some(self.contract_id),
             None,
         );
         Ok(tx_paylaod)

@@ -10,6 +10,7 @@ use std::str::FromStr;
 use url::Url;
 use uuid::Uuid;
 
+use crate::models::block_tx::MintingStatus;
 use crate::models::keypair::KeyPair;
 use crate::{
     errors::block_tx::BlockchainTxError,
@@ -245,6 +246,8 @@ impl NFTsRepository for SuiBlockChain {
 
         let tx_paylaod = BlockchainTx::new(
             asset_id.to_owned(),
+            MintingStatus::CompletedSuccessfully,
+            Utc::now(),
             Utc::now(),
             Some(new_tx_address.to_string()), //Some(tx.digest),
             Some(epoch),                      //tx.block_number,
@@ -257,7 +260,7 @@ impl NFTsRepository for SuiBlockChain {
             Some("mist".to_string()),
             Some(paid_from.to_string()), //Some(tx.from),
             None,                        //Some("".to_string()), //tx.to,
-            self.contract_id,
+            Some(self.contract_id),
             None,
         );
         Ok(tx_paylaod)

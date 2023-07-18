@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::errors::asset::{AssetDynamoDBError, AssetNoExistsError, AssetTreeError};
 use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
-use crate::models::asset::{Asset, AssetStatus, MintingStatus, SourceType, VideoLicensingStatus};
+use crate::models::asset::{Asset, AssetStatus, SourceType, VideoLicensingStatus};
 use crate::models::owner::Owner;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{AttributeValue, Put, Select, TransactWriteItem};
@@ -33,8 +33,8 @@ const HASH_FIELD_NAME: &str = "hash_uri";
 const HASH_ALGORITHM_FIELD_NAME: &str = "hash_algorithm";
 const LATITUDE_FIELD_NAME: &str = "latitude";
 const LONGITUDE_FIELD_NAME: &str = "longitude";
-const MINTED_FIELD_NAME: &str = "minted";
-const MINTED_STATUS_FIELD_NAME: &str = "minting_status";
+//const MINTED_FIELD_NAME: &str = "minted";
+//const MINTED_STATUS_FIELD_NAME: &str = "minting_status";
 
 const COUNTER_FIELD_NAME: &str = "global_counter";
 const SHORTER_FIELD_NAME: &str = "shorter";
@@ -149,19 +149,19 @@ impl AssetRepo {
             let video_licensing_error_av = AttributeValue::S(value.to_string());
             items = items.item(VIDEO_LICENSING_FIELD_NAME, video_licensing_error_av);
         }
-        if let Some(value) = asset.minted_tx() {
-            let minted_tx_av = AttributeValue::S(value.clone());
-            items = items.item(MINTED_FIELD_NAME, minted_tx_av);
-        }
+        // if let Some(value) = asset.minted_tx() {
+        //     let minted_tx_av = AttributeValue::S(value.clone());
+        //     items = items.item(MINTED_FIELD_NAME, minted_tx_av);
+        // }
         items = items.item(
             VIDEO_LICENSING_STATUS_FIELD_NAME,
             AttributeValue::S(asset.video_licensing_status().to_string()),
         );
 
-        items = items.item(
-            MINTED_STATUS_FIELD_NAME,
-            AttributeValue::S(asset.mint_status().to_string()),
-        );
+        // items = items.item(
+        //     MINTED_STATUS_FIELD_NAME,
+        //     AttributeValue::S(asset.mint_status().to_string()),
+        // );
 
         if let Some(value) = asset.video_process_status() {
             let video_process_status_av = AttributeValue::S(value.to_string());
@@ -669,21 +669,21 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
         }
     }
 
-    let tx_minted = doc.get(MINTED_FIELD_NAME);
-    match tx_minted {
-        None => asset.set_minted_tx(&None),
-        Some(lati) => {
-            let val = lati.as_s().unwrap();
-            if val == NULLABLE {
-                asset.set_minted_tx(&None)
-            } else {
-                asset.set_minted_tx(&Some(val.clone()))
-            }
-        }
-    }
+    // let tx_minted = doc.get(MINTED_FIELD_NAME);
+    // match tx_minted {
+    //     None => asset.set_minted_tx(&None),
+    //     Some(lati) => {
+    //         let val = lati.as_s().unwrap();
+    //         if val == NULLABLE {
+    //             asset.set_minted_tx(&None)
+    //         } else {
+    //             asset.set_minted_tx(&Some(val.clone()))
+    //         }
+    //     }
+    // }
 
-    let minted_status = doc.get(MINTED_STATUS_FIELD_NAME).unwrap().as_s().unwrap();
-    asset.set_minted_status(MintingStatus::from_str(minted_status).unwrap());
+    //let minted_status = doc.get(MINTED_STATUS_FIELD_NAME).unwrap().as_s().unwrap();
+    //asset.set_minted_status(MintingStatus::from_str(minted_status).unwrap());
 
     let status_t = doc.get(STATUS_FIELD_NAME).unwrap().as_s().unwrap();
     let aux = AssetStatus::from_str(status_t).unwrap();

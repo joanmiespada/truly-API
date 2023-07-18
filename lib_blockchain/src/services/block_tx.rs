@@ -7,8 +7,9 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 #[async_trait]
 pub trait BlockchainTxManipulation {
     async fn add(&self, tx: &BlockchainTx) -> ResultE<()>;
+    async fn update(&self, tx: &BlockchainTx) -> ResultE<()>;
     async fn get_by_id(&self, hash: &String) -> ResultE<BlockchainTx>;
-    async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<BlockchainTx>>;
+    async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<BlockchainTx>;
 }
 
 #[derive(Debug)]
@@ -28,14 +29,17 @@ impl BlockchainTxManipulation for BlockchainTxService {
     async fn add(&self, tx: &BlockchainTx) -> ResultE<()> {
         self.repository.add(tx).await
     }
-
+    #[tracing::instrument()]
+    async fn update(&self, tx: &BlockchainTx) -> ResultE<()> {
+        self.repository.update(tx).await
+    }
     #[tracing::instrument()]
     async fn get_by_id(&self, hash: &String) -> ResultE<BlockchainTx> {
         self.repository.get_by_tx(hash).await
     }
 
     #[tracing::instrument()]
-    async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Vec<BlockchainTx>> {
+    async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<BlockchainTx> {
         self.repository.get_by_asset_id(asset_id).await
     }
 }

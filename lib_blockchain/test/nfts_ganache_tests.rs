@@ -3,6 +3,7 @@ use chrono::Utc;
 use ethers::utils::Ganache;
 use lib_blockchain::blockchains::chain::CloneBoxNFTsRepository;
 use lib_blockchain::blockchains::ganache::GanacheBlockChain;
+use lib_blockchain::models::block_tx::MintingStatus;
 use lib_blockchain::models::blockchain::Blockchain;
 use lib_blockchain::models::contract::{Contract, ContractStatus};
 use lib_blockchain::repositories::block_tx::BlockchainTxRepo;
@@ -21,20 +22,12 @@ use lib_config::infra::{
     build_local_stack_connection, create_key, create_secret_manager_with_values,
     cypher_with_secret_key,
 };
-use lib_licenses::models::asset::{MintingStatus, SourceType, VideoLicensingStatus};
-use lib_licenses::repositories::assets::AssetRepo;
-use lib_licenses::repositories::owners::OwnerRepo;
-use lib_licenses::repositories::schema_asset::AssetAllSchema;
-use lib_licenses::repositories::schema_owners::OwnerSchema;
-use lib_licenses::repositories::shorter::ShorterRepo;
-use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
-use lib_licenses::services::owners::OwnerService;
 
 use lib_blockchain::repositories::schema_blockchain::BlockchainSchema;
 use lib_config::schema::Schema;
 
 use spectral::{assert_that, result::ResultAssertions};
-use std::{env, str::FromStr};
+use std::env;
 use testcontainers::*;
 use url::Url;
 
@@ -88,12 +81,6 @@ async fn create_contract_and_mint_nft_test_sync_ganache(
     let creation = ContractSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();
 
-    let creation3 = AssetAllSchema::create_schema(&config).await; //  create_schema_assets_all(&dynamo_client).await;
-    assert_that(&creation3).is_ok();
-
-    let creation4 = OwnerSchema::create_schema(&config).await; // create_schema_owners(&dynamo_client).await;
-    assert_that(&creation4).is_ok();
-
     let creation = KeyPairSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();
 
@@ -104,46 +91,9 @@ async fn create_contract_and_mint_nft_test_sync_ganache(
     let repo_tx = BlockchainTxRepo::new(&config.clone());
     let tx_service = BlockchainTxService::new(repo_tx);
 
-    let repo_ow = OwnerRepo::new(&config.clone());
-    let owner_service = OwnerService::new(repo_ow);
-
-    let repo_as = AssetRepo::new(&config.clone());
-    let repo_sh = ShorterRepo::new(&config.clone());
-    let asset_service = AssetService::new(repo_as, repo_sh);
-
     let repo_keys = KeyPairRepo::new(&config.clone());
 
     let mut new_configuration = config.env_vars().clone();
-
-    //create fake test asset and user
-
-    let asset_url: Url = Url::parse("http://www.file1.com/test1.mp4").unwrap();
-    let asset_hash: String = "hash1234".to_string();
-    let asset_license: String =
-        String::from_str("license - open shared social networks - forbiden mass media").unwrap();
-
-    let mut as0 = CreatableFildsAsset {
-        url: asset_url.to_string(),
-        hash: asset_hash,
-        hash_algorithm: "MD5".to_string(),
-        license: asset_license,
-        longitude: None,
-        latitude: None,
-        father: None,
-        source: SourceType::Others,
-        source_details: None,
-    };
-
-    let user_id = String::from_str("user1234-1234-1234-1234").unwrap();
-
-    let new_asset_op = asset_service.add(&mut as0, &user_id).await;
-
-    assert_that!(&new_asset_op).is_ok();
-
-    let mut as1 = asset_service
-        .get_by_id(&new_asset_op.unwrap())
-        .await
-        .unwrap();
 
     //Create contract owner account
 
@@ -205,9 +155,6 @@ async fn create_contract_and_mint_nft_test_sync_ganache(
     );
     contracts_repo.add(&contract_entity).await?;
 
-    // new_configuration.set_blockchain_url(url.clone());
-    // new_configuration.set_contract_address(contract_address);
-    // new_configuration.set_contract_owner_address(contract_owner_address.clone());
     new_configuration.set_contract_id(contact_id);
     config.set_env_vars(&new_configuration);
 
@@ -218,58 +165,47 @@ async fn create_contract_and_mint_nft_test_sync_ganache(
     let nft_service = NFTsService::new(
         blockchain.clone_box(),
         repo_keys,
-        asset_service.clone(),
-        owner_service.clone(),
         tx_service.clone(),
         config.to_owned(),
     );
 
     let asset_price: u64 = 2000;
 
-    as1.set_video_licensing_status(VideoLicensingStatus::AlreadyLicensed);
-    as1.set_counter(&Some(1));
-    let update_op = asset_service.update_full(&as1).await;
-    assert_that!(&update_op).is_ok();
-
+    let asset_id = uuid::Uuid::new_v4();
     let mint_op = nft_service
-        .try_mint(as1.id(), &user_id, &Some(asset_price))
+        .try_mint(
+            &asset_id,
+            &"user1".to_string(),
+            &Some(asset_price),
+            &"hash".to_string(),
+            &"md5".to_string(),
+            &0,
+        )
         .await;
     assert_that!(&mint_op).is_ok();
     let tx_in_chain = mint_op.unwrap();
 
-    let check_op = nft_service.get(as1.id()).await;
+    let check_op = nft_service.get(&asset_id).await;
     assert_that!(&check_op).is_ok();
     let content = check_op.unwrap();
 
-    assert_eq!(content.hash_file, as1.hash().as_deref().unwrap());
+    assert_eq!(content.hash_file, "hash".to_string() );
     assert_eq!(content.price.unwrap(), asset_price);
     assert_eq!(content.state, NTFState::Active);
 
-    let tx_op = asset_service.get_by_id(as1.id()).await;
-
-    assert_that!(&tx_op).is_ok();
-
-    let content_minted = tx_op.unwrap();
-
-    assert_eq!(
-        *content_minted.mint_status(),
-        MintingStatus::CompletedSuccessfully
-    );
-    assert_ne!(*content_minted.minted_tx(), None);
-
-    let find = content_minted.minted_tx().clone().unwrap();
-    //let tx_find = H256::from_str(&find).unwrap();
-    let tx_tx = tx_service.get_by_id(&find).await;
+    let tx_tx = tx_service.get_by_id( &"hash".to_string() ).await;
     assert_that!(&tx_tx).is_ok();
     let final_tx = tx_tx.unwrap();
+    assert_eq!(
+        final_tx.mint_status(),
+        MintingStatus::CompletedSuccessfully
+    );
     let content1 = tx_in_chain.tx().clone().unwrap();
     let content2 = final_tx.tx().clone().unwrap();
     assert_eq!(content1, content2);
 
-    let txs_op = tx_service.get_by_asset_id(content_minted.id()).await;
+    let txs_op = tx_service.get_by_asset_id(&asset_id).await;
     assert_that!(&txs_op).is_ok();
-    let txs = txs_op.unwrap();
-    assert_eq!(txs.len(), 1);
 
     Ok(())
 }

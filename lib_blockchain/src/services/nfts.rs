@@ -11,11 +11,11 @@ use crate::errors::nft::{
     TokenHasBeenMintedAlreadyError, TokenMintingProcessHasBeenInitiatedError,
     TokenNotSuccessfullyMintedPreviously,
 };
-use crate::models::block_tx::BlockchainTx;
+use crate::models::block_tx::{BlockchainTx, BlockchainTxBuilder, MintingStatus};
 use crate::repositories::keypairs::{KeyPairRepo, KeyPairRepository};
-use lib_licenses::models::asset::{Asset, MintingStatus};
-use lib_licenses::services::assets::{AssetManipulation, AssetService};
-use lib_licenses::services::owners::{OwnerManipulation, OwnerService};
+//use lib_licenses::models::asset::{Asset, MintingStatus};
+//use lib_licenses::services::assets::{AssetManipulation, AssetService};
+//use lib_licenses::services::owners::{OwnerManipulation, OwnerService};
 
 use super::block_tx::{BlockchainTxManipulation, BlockchainTxService};
 
@@ -23,17 +23,20 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 
 #[async_trait]
 pub trait NFTsManipulation {
-    async fn prechecks_before_minting(
+    
+    async fn prechecks_before_minting_tx(
         &self,
         asset_id: &Uuid,
-        user_id: &String,
         price: &Option<u64>,
-    ) -> ResultE<Asset>;
+    ) -> ResultE<()>;
     async fn try_mint(
         &self,
         asset_id: &Uuid,
         user_id: &String,
         price: &Option<u64>,
+        hash: &String,
+        hash_algo: &String,
+        counter: &u64,
     ) -> ResultE<BlockchainTx>;
     async fn get(&self, asset_id: &Uuid) -> ResultE<NTFContentInfo>;
 }
@@ -42,8 +45,8 @@ pub trait NFTsManipulation {
 pub struct NFTsService {
     blockchain: Box<dyn NFTsRepository + Sync + Send>,
     keys_repo: KeyPairRepo,
-    asset_service: AssetService,
-    owner_service: OwnerService,
+    //asset_service: AssetService,
+    //owner_service: OwnerService,
     tx_service: BlockchainTxService,
     config: Config,
 }
@@ -52,16 +55,16 @@ impl NFTsService {
     pub fn new(
         repo: Box<dyn NFTsRepository + Sync + Send>,
         keys_repo: KeyPairRepo,
-        asset_service: AssetService,
-        owner_service: OwnerService,
+        //asset_service: AssetService,
+        //owner_service: OwnerService,
         tx_service: BlockchainTxService,
         config: Config,
     ) -> NFTsService {
         NFTsService {
             blockchain: repo,
             keys_repo,
-            asset_service,
-            owner_service,
+            //asset_service,
+            //owner_service,
             config,
             tx_service,
         }
@@ -70,7 +73,7 @@ impl NFTsService {
 
 #[async_trait]
 impl NFTsManipulation for NFTsService {
-    async fn prechecks_before_minting(
+    /*  async fn prechecks_before_minting(
         &self,
         asset_id: &Uuid,
         user_id: &String,
@@ -109,6 +112,36 @@ impl NFTsManipulation for NFTsService {
         //TODO: check price minimum ammount!!!!!
 
         Ok(asset.to_owned())
+    } */
+
+    async fn prechecks_before_minting_tx(
+        &self,
+        asset_id: &Uuid,
+        _price: &Option<u64>,
+    ) -> ResultE<()> {
+        let ttxx = self.tx_service.get_by_asset_id(asset_id).await?;
+        if ttxx.mint_status() == MintingStatus::CompletedSuccessfully {
+            return Err(TokenHasBeenMintedAlreadyError {
+                0: asset_id.to_owned(),
+            }
+            .into());
+        }
+        let last_update = ttxx.last_update_time();
+        let diff = Utc::now() - *last_update;
+        let diff_min = diff.num_minutes();
+        const LIMIT: i64 = 5;
+
+        if ttxx.mint_status() == MintingStatus::Started && diff_min < LIMIT {
+            return Err(TokenMintingProcessHasBeenInitiatedError {
+                0: asset_id.to_owned(),
+                1: LIMIT,
+            }
+            .into());
+        }
+
+        //TODO: check price minimum ammount!!!!!
+
+        Ok(())
     }
 
     #[tracing::instrument()]
@@ -117,9 +150,12 @@ impl NFTsManipulation for NFTsService {
         asset_id: &Uuid,
         user_id: &String,
         price: &Option<u64>,
+        hash: &String,
+        hash_algo: &String,
+        counter: &u64,
     ) -> ResultE<BlockchainTx> {
-        let asset = self
-            .prechecks_before_minting(asset_id, user_id, price)
+        self
+            .prechecks_before_minting_tx(asset_id, price)
             .await?;
 
         let user_wallet_address;
@@ -138,64 +174,72 @@ impl NFTsManipulation for NFTsService {
             }
         };
 
-        self.asset_service
-            .mint_status(asset_id, &None, MintingStatus::Started)
-            .await?;
-        let counter = asset.counter().unwrap();
-        let hash_file = asset.hash().to_owned().unwrap();
-        let hash_algo = asset.hash_algorithm().to_owned().unwrap();
+        //self.asset_service
+        //    .mint_status(asset_id, &None, MintingStatus::Started)
+        //    .await?;
+
+        let btx = BlockchainTxBuilder::new()
+            .asset_id(asset_id.to_owned())
+            .mint_status(MintingStatus::Started)
+            .build();
+        self.tx_service.add(&btx).await?;
+
         let transaction_op = self
             .blockchain
             .add(
                 asset_id,
                 &user_wallet_address,
-                &hash_file,
-                &hash_algo,
+                hash,
+                hash_algo,
                 price,
-                &counter,
+                counter,
             )
             .await;
 
         match transaction_op {
             Err(e) => {
-                let asset = self.asset_service.get_by_id(asset_id).await?;
+                //let asset = self.asset_service.get_by_id(asset_id).await?;
+                let ttxx = self.tx_service.get_by_asset_id(asset_id).await?;
+
                 //it has been previously minted by other process...
-                if *asset.mint_status() == MintingStatus::CompletedSuccessfully {
-                    let tx = asset.minted_tx().clone().unwrap();
-                    //let tx_hash = H256::from_str(tx.as_str()).unwrap();
-                    let transact = self.tx_service.get_by_id(&tx).await?;
-                    return Ok(transact);
+                if ttxx.mint_status() == MintingStatus::CompletedSuccessfully {
+                    //let tx = asset.minted_tx().clone().unwrap();
+                    //let transact = self.tx_service.get_by_id(&tx).await?;
+                    return Ok(ttxx);
                 } else {
-                    self.asset_service
-                        .mint_status(asset_id, &None, MintingStatus::Error)
-                        .await?;
+                    let mut ttxx = self.tx_service.get_by_asset_id(asset_id).await?;
+                    ttxx.set_minted_status(MintingStatus::Error);
+                    self.tx_service.update(&ttxx).await?;
 
-                    let tx_paylaod = BlockchainTx::new(
-                        asset_id.clone(),
-                        Utc::now(),
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        self.blockchain.contract_id(),
-                        Some(e.to_string()),
-                    );
-                    //tx_paylaod.set_asset_id(asset_id);
-                    //tx_paylaod.set_result(&e.to_string());
+                    // self.asset_service
+                    //     .mint_status(asset_id, &None, MintingStatus::Error)
+                    //     .await?;
 
-                    self.tx_service.add(&tx_paylaod).await?;
+                    // let tx_paylaod = BlockchainTx::new(
+                    //     asset_id.clone(),
+                    //     Utc::now(),
+                    //     None,
+                    //     None,
+                    //     None,
+                    //     None,
+                    //     None,
+                    //     None,
+                    //     None,
+                    //     None,
+                    //     self.blockchain.contract_id(),
+                    //     Some(e.to_string()),
+                    // );
+
+                    //self.tx_service.add(&tx_paylaod).await?;
                     return Err(e.into());
                 }
             }
-            Ok(transaction) => {
-                // let tx_res =  match *transaction.tx() {
-                //     None => None,
-                //     Some(x)=>{ Some( H256::to_string(&x)  )}
-                // };
+            Ok(mut ttxx) => {
+                //let mut ttxx = self.tx_service.get_by_asset_id(asset_id).await?;
+                ttxx.set_minted_status(MintingStatus::CompletedSuccessfully);
+                self.tx_service.update(&ttxx).await?;
+                Ok(ttxx)
+                /*
                 let tx_res = transaction.tx().clone();
                 self.asset_service
                     .mint_status(
@@ -207,28 +251,22 @@ impl NFTsManipulation for NFTsService {
                     .await?;
 
                 self.tx_service.add(&transaction).await?;
-                Ok(transaction)
+                Ok(transaction)*/
             }
         }
     }
 
     #[tracing::instrument()]
     async fn get(&self, asset_id: &Uuid) -> ResultE<NTFContentInfo> {
-        let txs = self.tx_service.get_by_asset_id(asset_id).await?;
+        let tx = self.tx_service.get_by_asset_id(asset_id).await;
 
-        let successfully = txs
-            .into_iter()
-            .filter(|x| x.tx_error().as_deref() == None)
-            .collect::<Vec<BlockchainTx>>();
-        let successfully = successfully.first();
-
-        if successfully == None {
+        if let Err(_) = tx {
             return Err(TokenNotSuccessfullyMintedPreviously {
                 0: asset_id.clone(),
             }
             .into());
         }
-        let successfully = successfully.unwrap();
+        let successfully = tx.unwrap();
         let token = successfully.tx().clone().unwrap();
 
         let aux = self.blockchain.get(&token).await?;
@@ -255,8 +293,8 @@ impl Clone for NFTsService {
         let aux = NFTsService {
             blockchain: self.blockchain.clone(),
             keys_repo: self.keys_repo.clone(),
-            owner_service: self.owner_service.clone(),
-            asset_service: self.asset_service.clone(),
+            //owner_service: self.owner_service.clone(),
+            //asset_service: self.asset_service.clone(),
             config: self.config.clone(),
             tx_service: self.tx_service.clone(),
         };

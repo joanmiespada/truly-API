@@ -6633,7 +6633,6 @@ dependencies = [
  "http-serde",
  "lib_async_ops",
  "lib_config",
- "lib_licenses",
  "log",
  "rand 0.8.5",
  "reqwest",

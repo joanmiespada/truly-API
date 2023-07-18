@@ -1,4 +1,4 @@
-use crate::models::asset::{Asset, AssetStatus, MintingStatus, SourceType};
+use crate::models::asset::{Asset, AssetStatus, SourceType};
 use crate::models::asset::{AssetEnhanced, VideoLicensingStatus};
 use crate::repositories::assets::{AssetRepo, AssetRepository};
 use crate::repositories::shorter::{ShorterRepo, ShorterRepository};
@@ -27,12 +27,12 @@ pub trait AssetManipulation {
     async fn add(&self, creation_asset: &CreatableFildsAsset, user_id: &String) -> ResultE<Uuid>;
     async fn update(&self, asset_id: &Uuid, asset: &UpdatableFildsAsset) -> ResultE<()>;
     async fn update_full(&self, asset: &Asset) -> ResultE<()>;
-    async fn mint_status(
-        &self,
-        id: &Uuid,
-        transaction: &Option<String>,
-        sts: MintingStatus,
-    ) -> ResultE<()>;
+    // async fn mint_status(
+    //     &self,
+    //     id: &Uuid,
+    //     transaction: &Option<String>,
+    //     sts: MintingStatus,
+    // ) -> ResultE<()>;
     async fn store_video_process(&self, video_res: &VideoResult) -> ResultE<()>;
     async fn shorter_video_status(
         &self,
@@ -186,7 +186,7 @@ impl AssetManipulation for AssetService {
         Ok(())
     }
 
-    #[tracing::instrument()]
+   /*  #[tracing::instrument()]
     async fn mint_status(
         &self,
         id: &Uuid,
@@ -202,7 +202,7 @@ impl AssetManipulation for AssetService {
 
         self.repository.update(&res).await?;
         Ok(())
-    }
+    } */
 
     #[tracing::instrument()]
     async fn shorter_video_status(
@@ -251,8 +251,8 @@ impl AssetManipulation for AssetService {
                 new_licensed_asset.set_url(&video_res.video_licensed);
                 new_licensed_asset.set_last_update_time(&Utc::now());
                 new_licensed_asset.set_creation_time(&Utc::now());
-                new_licensed_asset.set_minted_status(MintingStatus::NeverMinted);
-                new_licensed_asset.set_minted_tx(&None);
+                //new_licensed_asset.set_minted_status(MintingStatus::NeverMinted);
+                //new_licensed_asset.set_minted_tx(&None);
                 new_licensed_asset
                     .set_video_licensing_status(VideoLicensingStatus::AlreadyLicensed);
                 new_licensed_asset.set_counter(&Some(video_res.counter));

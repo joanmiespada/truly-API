@@ -17,7 +17,7 @@ use crate::SERVICE;
 
 pub const TX_TABLE_NAME: &str = "truly_blockchain_txs";
 pub const TX_ASSET_ID_FIELD_PK: &str = "assetId";
-pub const TX_TIMESTAMP_PK: &str = "timestamp";
+//pub const TX_TIMESTAMP_PK: &str = "timestamp";
 pub const TX_FIELD: &str = "tx";
 pub const TX_INDEX_NAME: &str = "tx_index";
 pub struct BlockTxSchema;
@@ -31,23 +31,23 @@ impl Schema for BlockTxSchema {
             .attribute_name(TX_ASSET_ID_FIELD_PK)
             .attribute_type(ScalarAttributeType::S)
             .build();
-        let time_ad = AttributeDefinition::builder()
-            .attribute_name(TX_TIMESTAMP_PK)
-            .attribute_type(ScalarAttributeType::S)
-            .build();
+        //let time_ad = AttributeDefinition::builder()
+        //    .attribute_name(TX_TIMESTAMP_PK)
+         //   .attribute_type(ScalarAttributeType::S)
+         //   .build();
         let tx_ad = AttributeDefinition::builder()
             .attribute_name(TX_FIELD)
             .attribute_type(ScalarAttributeType::S)
             .build();
 
-        let ks1 = KeySchemaElement::builder()
+        let ks = KeySchemaElement::builder()
             .attribute_name(TX_ASSET_ID_FIELD_PK)
             .key_type(KeyType::Hash)
             .build();
-        let ks2 = KeySchemaElement::builder()
-            .attribute_name(TX_TIMESTAMP_PK)
-            .key_type(KeyType::Range)
-            .build();
+        //let ks2 = KeySchemaElement::builder()
+        //    .attribute_name(TX_TIMESTAMP_PK)
+        //    .key_type(KeyType::Range)
+        //    .build();
 
         let second_index = GlobalSecondaryIndex::builder()
             .index_name(TX_INDEX_NAME)
@@ -67,11 +67,11 @@ impl Schema for BlockTxSchema {
         let op = client
             .create_table()
             .table_name(TX_TABLE_NAME)
-            .key_schema(ks1)
-            .key_schema(ks2)
+            .key_schema(ks)
+            //.key_schema(ks2)
             .global_secondary_indexes(second_index)
             .attribute_definitions(asset_ad)
-            .attribute_definitions(time_ad)
+            //.attribute_definitions(time_ad)
             .attribute_definitions(tx_ad)
             .billing_mode(BillingMode::PayPerRequest)
             .stream_specification(
