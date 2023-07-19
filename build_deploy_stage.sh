@@ -14,7 +14,7 @@ terraform --version || exit 1
 zip_skip='false'
 secrets_skip='false'
 tables_skip='false'
-ledger_skip='false'
+ledger_skip='true'
 terraform_skip='false'
 for arg in "$@"
 do
@@ -137,26 +137,9 @@ else
 fi
 
 if [[ "$ledger_skip" == 'false' ]]; then
-    echo "creating ledgers in each region, it might requiere several minutes."
-    for region in "${multi_region[@]}"; do
-
-        ledgers=$(aws qldb list-ledgers --region $region --output json | jq -r '.Ledgers[].Name' | wc -l )
-        if (( $ledgers[@] <= 0 )); then
-            echo "creating ledger at $region..."
-            aws qldb create-ledger --name truly-assets-ledger --no-deletion-protection  --permissions-mode STANDARD --region $region > /dev/null || exit 1
-
-            echo "creating table and indexes at $region in ledger... "
-            qldb --ledger truly-assets-ledger --region $region -f ion  --profile $profile > /dev/null <<EOF
-                CREATE TABLE Asset;
-                CREATE INDEX ON Asset (asset_hash);
-                CREATE INDEX ON Asset (asset_id); 
-EOF
-        else
-            echo "skip ledger creation at ${region}, looks like it's already exist"
-        fi
-    done
+   echo "ledger needs to be created before. run ./create_ledger.sh script" 
 else
-    echo "ledger creation skip"
+    echo "ledger creation skip. it needs to be create by ./create_ledger.sh script before"
 fi
 
 

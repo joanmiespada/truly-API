@@ -145,43 +145,6 @@ else
 fi
 
 
-if [[ "$ledger_skip" == 'false' ]]; then
-    echo "creating ledgers in each region, it will requiere several minutes"
-    for region in "${multi_region[@]}"; do
-
-        ledgers=$(aws qldb list-ledgers --region $region --output json | jq -r '.Ledgers[].Name' | wc -l )
-        if (( $ledgers[@] <= 0 )); then
-            aws qldb create-ledger --name truly-assets-ledger --deletion-protection --permissions-mode STANDARD --region $region > /dev/null || exit 1
-            qldb --ledger truly-assets-ledger -r $region -f ion  --profile $profile > /dev/null <<EOF
-                CREATE TABLE Asset;
-                CREATE INDEX ON Asset (asset_hash);
-                CREATE INDEX ON Asset (asset_id); 
-EOF
-        else
-            echo "skip ledger creation at ${region}, looks like it's already exist"
-        fi
-    done
-else
-    echo "ledger creation skip"
-fi
-
-if [[ "$ledger_skip" == 'false' ]]; then
-    echo "creating ledgers in each region, it will requiere several minutes"
-    for region in "${multi_region[@]}"; do
-        #cargo run -p truly_cli -- --ledger true --create --region $region  || exit 1 # it doesn't work locally
-        # get this information from /lib_ledger/src/repository/schema_ledger.rs
-        awslocal qldb create-ledger --name truly-assets-ledger  --permissions-mode ALLOW_ALL --region "$region" || exit 1
-        qldb -s http://127.0.0.1:4566 --ledger truly-assets-ledger -r "$region" -f ion -p localstack  <<EOF
-            CREATE TABLE Asset;
-            CREATE INDEX ON Asset (asset_hash);
-            CREATE INDEX ON Asset (asset_id); 
-EOF
-    done
-else
-    echo "Ledger skip flag is set to true. Skipping ledger creation."
-fi
-
-
 if [[ "$tables_skip" == 'false' ]]; then
     tables=$(aws dynamodb list-tables --region $multi_region[1] --output json | jq '[.TableNames[]] | length' )
     if (( $tables[@] <= 0 )); then
@@ -293,6 +256,12 @@ if [[ "$geoloc_skip" == 'false' ]]; then
     echo "dns geolocation applied!"
 else
     echo "dns geolocation skip!"
+fi
+
+if [[ "$ledger_skip" == 'false' ]]; then
+    echo "Ledger in production must be created manually in each region."
+else
+    echo "Ledger creation skip"
 fi
 
 echo 'completed!'
