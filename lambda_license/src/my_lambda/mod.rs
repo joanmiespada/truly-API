@@ -16,6 +16,7 @@ use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, Request
 //use lib_blockchain::services::nfts::NFTsService;
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, STAGE_ENV};
+use lib_ledger::service::LedgerService;
 use lib_licenses::services::licenses::LicenseService;
 use lib_licenses::services::video::VideoService;
 use lib_users::services::users::UsersService;
@@ -50,6 +51,7 @@ pub async fn function_handler(
     video_service: &VideoService,
     //tx_service: &BlockchainTxService,
     license_service: &LicenseService,
+    ledger_service: &LedgerService,
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error + Send + Sync>> {
     info!("income new request");
@@ -154,6 +156,7 @@ pub async fn function_handler(
                         asset_service,
                         //tx_service,
                         license_service,
+                        ledger_service,
                         &shorter_id,
                     )
                     .await;
@@ -204,6 +207,7 @@ pub async fn function_handler(
                         config,
                         asset_service,
                         owners_service,
+                        ledger_service,
                         &user_id,
                     )
                     .await

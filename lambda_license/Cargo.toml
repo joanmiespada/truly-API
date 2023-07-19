@@ -1,32 +1,41 @@
 [package]
-name="lambda_license"
-version="0.0.1"
+name = "lambda_license"
+version = "0.0.1"
 edition = "2021"
 
 [[bin]]
-name="lambda_license"
-path="src/main.rs"
+name = "lambda_license"
+path = "src/main.rs"
 
 [dependencies]
-lib_config = { git="https://github.com/joanmiespada/truly-shared" }
-lib_async_ops = { git="https://github.com/joanmiespada/truly-shared" }
+lib_config = { git = "https://github.com/joanmiespada/truly-shared" }
+lib_async_ops = { git = "https://github.com/joanmiespada/truly-shared" }
 lib_users = { path = "../lib_users" }
 lib_licenses = { path = "../lib_licenses" }
 lib_util_jwt = { path = "../lib_util_jwt" }
 #lib_blockchain = { git="https://github.com/joanmiespada/truly-blockchains"}
-chrono = {version="0.4.26", features = ["serde"] }
-tower-http = { version="0.4.2", features=["full"]  }
-lambda_http = { version = "0.8", features = ["apigw_rest"]}
+lib_ledger = { path = "../lib_ledger" }
+chrono = { version = "0.4.26", features = ["serde"] }
+tower-http = { version = "0.4.2", features = ["full"] }
+lambda_http = { version = "0.8", features = ["apigw_rest"] }
 lambda_runtime = "0.8"
 aws_lambda_events = { version = "0.10.0", features = ["apigw", "alb"] }
 serde = { version = "1.0.171", features = ["derive"] }
 serde_json = "1.0.103"
 tracing = { version = "0.1", features = ["log"] }
-tracing-subscriber = { version = "0.3.17", default-features = false, features = ["fmt", "env-filter"] }
+tracing-subscriber = { version = "0.3.17", default-features = false, features = [
+    "fmt",
+    "env-filter",
+] }
 tokio = { version = "1", features = ["full"] }
 validator = { version = "0.16", features = ["derive"] }
-url = {version="2.4.0", features=["serde"] }
+url = { version = "2.4.0", features = ["serde"] }
 matchit = "0.7.0"
-uuid = { version = "1.4.1", features = ["v4","fast-rng",  "macro-diagnostics",  "serde"]}
+uuid = { version = "1.4.1", features = [
+    "v4",
+    "fast-rng",
+    "macro-diagnostics",
+    "serde",
+] }
 aws-sdk-sqs = "0.28.0"
 workspace-hack = { version = "0.1", path = "../workspace-hack" }

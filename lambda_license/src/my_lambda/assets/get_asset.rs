@@ -4,6 +4,8 @@ use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 //use lib_blockchain::models::block_tx::BlockchainTx;
 //use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
 use lib_config::config::Config;
+use lib_ledger::models::Ledge;
+use lib_ledger::service::{LedgerService, LedgerManipulation};
 use lib_licenses::models::asset::{AssetStatus, VideoLicensingStatus};
 use lib_licenses::models::license::License;
 use lib_licenses::services::licenses::{LicenseManipulation, LicenseService};
@@ -32,7 +34,9 @@ pub async fn get_asset(
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     let op_res = asset_service.get_by_id_enhanced(asset_id).await;
     match op_res {
-        Ok(asset) => build_resp(json!(asset).to_string(), StatusCode::OK),
+        Ok(asset) => {
+            build_resp(json!(asset).to_string(), StatusCode::OK)
+        },
         Err(e) => {
             if let Some(e) = e.downcast_ref::<AssetDynamoDBError>() {
                 return build_resp(e.to_string(), StatusCode::SERVICE_UNAVAILABLE);
@@ -63,10 +67,15 @@ pub struct AssetTx {
     //pub mint_status: MintingStatus,
     pub video_licensing_status: VideoLicensingStatus,
     //pub tx: Option<BlockchainTx>,
+    pub tx_hash: String,
+    pub tx_blockchain_id: String,
+    pub tx_blockchain_seq: u64,
+    pub tx_blockchain_timestamp: DateTime<Utc>,
 }
 
 impl AssetTx {
     pub fn new(asset: &Asset, //tx: &Option<BlockchainTx>, 
+                ledge: &Ledge,
                 lics: &Option<Vec<License>>) -> AssetTx {
         AssetTx {
             id: asset.id().clone(),
@@ -79,6 +88,10 @@ impl AssetTx {
             //mint_status: asset.mint_status().clone(),
             video_licensing_status: asset.video_licensing_status().clone(),
             //tx: tx.clone(),
+            tx_hash: ledge.hash.clone(),
+            tx_blockchain_id: ledge.blockchain_id.clone(),
+            tx_blockchain_seq: ledge.blockchain_seq.clone(),
+            tx_blockchain_timestamp: ledge.metadata_tx_time.clone(),
             license: lics.clone(),
         }
     }
@@ -92,15 +105,18 @@ pub async fn get_asset_by_shorter(
     asset_service: &AssetService,
     //tx_service: &BlockchainTxService,
     license_service: &LicenseService,
+    ledger_service: &LedgerService,
     shorter_id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     let op_res = asset_service.get_by_shorter(shorter_id).await;
     match op_res {
         Ok(asset) => {
             let licenses = license_service.get_by_asset(asset.id()).await?;
+            let ledge = ledger_service.get_by_asset_id(asset.id()).await?;
+
             //match asset.minted_tx() {
             //    None => {
-                    let res = AssetTx::new(&asset, //&None,
+                    let res = AssetTx::new(&asset, &ledge,
                                              &Some(licenses));
 
                     build_resp_no_cache(json!(res.to_owned()).to_string(), StatusCode::OK)

@@ -1,13 +1,12 @@
 use async_trait::async_trait;
-use lib_licenses::models::asset::Asset;
 use uuid::Uuid;
 
-use crate::{models::Ledge, repository::{LedgerRepo, LedgerRepository}};
+use crate::{models::{Ledge, AssetLedged}, repository::{LedgerRepo, LedgerRepository}};
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
 #[async_trait]
 pub trait LedgerManipulation {
-    async fn add(&self, asset: &Asset) -> ResultE<Ledge>;
+    async fn add(&self, asset: &AssetLedged) -> ResultE<Ledge>;
     async fn get_by_hash(&self, tx: &String) -> ResultE<Ledge>;
     async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Ledge>;
 }
@@ -26,7 +25,7 @@ impl LedgerService {
 #[async_trait]
 impl LedgerManipulation for LedgerService {
     #[tracing::instrument()]
-    async fn add(&self, asset: &Asset) -> ResultE<Ledge> {
+    async fn add(&self, asset: &AssetLedged) -> ResultE<Ledge> {
         self.repository.add(asset).await
     }
 

@@ -9,14 +9,13 @@ use base64::Engine;
 use chrono::{prelude::Utc, DateTime};
 use lib_config::config::Config;
 use lib_config::result::ResultE;
-use lib_licenses::models::asset::Asset;
 use qldb::{ion::IonValue, Document, QldbClient};
 use uuid::Uuid;
 pub mod schema_ledger;
 
 #[async_trait]
 pub trait LedgerRepository {
-    async fn add(&self, asset: &Asset) -> ResultE<Ledge>;
+    async fn add(&self, asset: &AssetLedged) -> ResultE<Ledge>;
     async fn get_by_hash(&self, hash: &String) -> ResultE<Ledge>;
     async fn get_by_asset_id(&self, asset_id: &Uuid) -> ResultE<Ledge>;
 }
@@ -37,20 +36,20 @@ impl LedgerRepo {
         }
     }
 
-    fn asset_to_ledged(asset: &Asset) -> AssetLedged {
-        AssetLedged {
-            asset_id: asset.id().clone(),
-            asset_hash: asset.hash().clone().unwrap(),
-            asset_hash_algorithm: asset.hash_algorithm().clone().unwrap(),
-            asset_creation_time: Utc::now(),
-        }
-    }
+    // fn asset_to_ledged(asset: &Asset) -> AssetLedged {
+    //     AssetLedged {
+    //         asset_id: asset.id().clone(),
+    //         asset_hash: asset.hash().clone().unwrap(),
+    //         asset_hash_algorithm: asset.hash_algorithm().clone().unwrap(),
+    //         asset_creation_time: Utc::now(),
+    //     }
+    // }
 }
 
 #[async_trait]
 impl LedgerRepository for LedgerRepo {
-    async fn add(&self, asset: &Asset) -> ResultE<Ledge> {
-        let asset = LedgerRepo::asset_to_ledged(asset);
+    async fn add(&self, asset: &AssetLedged) -> ResultE<Ledge> {
+        //let asset = LedgerRepo::asset_to_ledged(asset);
         let data = asset.to_hash_map();
 
         let client = QldbClient::default(LEDGER_NAME, 200).await?;
