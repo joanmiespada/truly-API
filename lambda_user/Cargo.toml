@@ -11,7 +11,7 @@ path="src/main.rs"
 lib_users = { path = "../lib_users" }
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
 lib_util_jwt = { path = "../lib_util_jwt" }
-tower-http = { version="0.4.1", features=["full"]  }
+tower-http = { version="0.4.2", features=["full"]  }
 lambda_http = { version = "0.8", features = ["apigw_rest"]}
 lambda_runtime = "0.8"
 aws_lambda_events = { version = "0.10.0", features = ["apigw", "alb"] }

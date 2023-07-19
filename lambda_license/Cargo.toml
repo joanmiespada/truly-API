@@ -15,7 +15,7 @@ lib_licenses = { path = "../lib_licenses" }
 lib_util_jwt = { path = "../lib_util_jwt" }
 #lib_blockchain = { git="https://github.com/joanmiespada/truly-blockchains"}
 chrono = {version="0.4.26", features = ["serde"] }
-tower-http = { version="0.4.1", features=["full"]  }
+tower-http = { version="0.4.2", features=["full"]  }
 lambda_http = { version = "0.8", features = ["apigw_rest"]}
 lambda_runtime = "0.8"
 aws_lambda_events = { version = "0.10.0", features = ["apigw", "alb"] }

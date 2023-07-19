@@ -137,12 +137,15 @@ else
 fi
 
 if [[ "$ledger_skip" == 'false' ]]; then
-    echo "creating ledgers in each region, it will requiere several minutes."
+    echo "creating ledgers in each region, it might requiere several minutes."
     for region in "${multi_region[@]}"; do
 
         ledgers=$(aws qldb list-ledgers --region $region --output json | jq -r '.Ledgers[].Name' | wc -l )
         if (( $ledgers[@] <= 0 )); then
+            echo "creating ledger at $region..."
             aws qldb create-ledger --name truly-assets-ledger  --permissions-mode STANDARD --region $region > /dev/null || exit 1
+
+            echo "creating table and indexes at $region in ledger... "
             qldb --ledger truly-assets-ledger --region $region -f ion  --profile $profile > /dev/null <<EOF
                 CREATE TABLE Asset;
                 CREATE INDEX ON Asset (asset_hash);
