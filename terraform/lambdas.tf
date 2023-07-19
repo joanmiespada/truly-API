@@ -110,7 +110,18 @@ resource "aws_iam_role_policy_attachment" "truly_lambda_SQS" {
   role       = aws_iam_role.truly_lambda_execution_role.name
   policy_arn = aws_iam_policy.truly_lambda_SQS_policy.arn
 }
+// -------------- QLDB -------------------
+resource "aws_iam_policy" "truly_lambda_QLDB_policy" {
+  name        = "truly_lambda_QLDB_policy-${local.region_prefix}"
+  path        = "/"
+  description = "IAM policy for QLDB from a lambda within truly api"
 
+  policy = file("./role_policies/qldb.json")
+}
+resource "aws_iam_role_policy_attachment" "truly_lambda_QLDB" {
+  role       = aws_iam_role.truly_lambda_execution_role.name
+  policy_arn = aws_iam_policy.truly_lambda_QLDB_policy.arn
+}
 // -------------- execution role -------------------
 resource "aws_iam_role_policy_attachment" "truly_lambda_execution_policy" {
   role       = aws_iam_role.truly_lambda_execution_role.name
