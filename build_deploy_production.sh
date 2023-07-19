@@ -62,7 +62,7 @@ architecture="aarch64-linux-gnu"
 path_base=$(pwd)'/cross-compile/openssl/'${architecture}
 folder="target/lambda_${architecture}"
 
-multi_region=("eu-central-1" "us-west-1" "ap-northeast-1") #in which regions we want to deploy or infra. First one in this list is the master.
+multi_region=("eu-central-1" "us-west-2" "ap-northeast-1") #in which regions we want to deploy or infra. First one in this list is the master.
 declare -A mapGeoLocations
 mapGeoLocations=(
   [us]="NA SA"
@@ -151,13 +151,34 @@ if [[ "$ledger_skip" == 'false' ]]; then
 
         ledgers=$(aws qldb list-ledgers --region $region --output json | jq -r '.Ledgers[].Name' | wc -l )
         if (( $ledgers[@] <= 0 )); then
-            cargo run -p truly_cli -- --ledger true --create --region $region --profile $profile || exit 1
+            aws qldb create-ledger --name truly-assets-ledger  --permissions-mode STANDARD --region $region > /dev/null || exit 1
+            qldb --ledger truly-assets-ledger -r $region -f ion  --profile $profile > /dev/null <<EOF
+                CREATE TABLE Asset;
+                CREATE INDEX ON Asset (asset_hash);
+                CREATE INDEX ON Asset (asset_id); 
+EOF
         else
             echo "skip ledger creation at ${region}, looks like it's already exist"
         fi
     done
 else
     echo "ledger creation skip"
+fi
+
+if [[ "$ledger_skip" == 'false' ]]; then
+    echo "creating ledgers in each region, it will requiere several minutes"
+    for region in "${multi_region[@]}"; do
+        #cargo run -p truly_cli -- --ledger true --create --region $region  || exit 1 # it doesn't work locally
+        # get this information from /lib_ledger/src/repository/schema_ledger.rs
+        awslocal qldb create-ledger --name truly-assets-ledger  --permissions-mode ALLOW_ALL --region "$region" || exit 1
+        qldb -s http://127.0.0.1:4566 --ledger truly-assets-ledger -r "$region" -f ion -p localstack  <<EOF
+            CREATE TABLE Asset;
+            CREATE INDEX ON Asset (asset_hash);
+            CREATE INDEX ON Asset (asset_id); 
+EOF
+    done
+else
+    echo "Ledger skip flag is set to true. Skipping ledger creation."
 fi
 
 
@@ -199,9 +220,9 @@ if [[ "$tables_skip" == 'false' ]]; then
         
     done
 
-    echo "filling master data at ${multi_region[1]}. Note: if global tables are enabled, we can only insert only one time and it will be replicated to other tables automatically."
-    cargo run -p truly_cli -- --blockchain ./truly_cli/res/blockchain_stage.json --create --region $multi_region[1] --profile $profile || exit 1
-    cargo run -p truly_cli -- --contract  ./truly_cli/res/contract_stage.json --create --region $multi_region[1] --profile $profile || exit 1
+    #echo "filling master data at ${multi_region[1]}. Note: if global tables are enabled, we can only insert only one time and it will be replicated to other tables automatically."
+    #cargo run -p truly_cli -- --blockchain ./truly_cli/res/blockchain_stage.json --create --region $multi_region[1] --profile $profile || exit 1
+    #cargo run -p truly_cli -- --contract  ./truly_cli/res/contract_stage.json --create --region $multi_region[1] --profile $profile || exit 1
 else
     echo "tables and master data skip"
 fi

@@ -137,9 +137,20 @@ else
 fi
 
 if [[ "$ledger_skip" == 'false' ]]; then
-    echo "creating ledgers in each region, it will requiere several minutes"
+    echo "creating ledgers in each region, it will requiere several minutes."
     for region in "${multi_region[@]}"; do
-        cargo run -p truly_cli -- --ledger true --create --region $region --profile $profile || exit 1
+
+        ledgers=$(aws qldb list-ledgers --region $region --output json | jq -r '.Ledgers[].Name' | wc -l )
+        if (( $ledgers[@] <= 0 )); then
+            aws qldb create-ledger --name truly-assets-ledger  --permissions-mode STANDARD --region $region > /dev/null || exit 1
+            qldb --ledger truly-assets-ledger --region $region -f ion  --profile $profile > /dev/null <<EOF
+                CREATE TABLE Asset;
+                CREATE INDEX ON Asset (asset_hash);
+                CREATE INDEX ON Asset (asset_id); 
+EOF
+        else
+            echo "skip ledger creation at ${region}, looks like it's already exist"
+        fi
     done
 else
     echo "ledger creation skip"
@@ -184,9 +195,9 @@ if [[ "$tables_skip" == 'false' ]]; then
         
     done
 
-    echo "filling master data at ${multi_region[1]}. Note: if global tables are enabled, we can only insert only one time and it will be replicated to other tables automatically."
-    cargo run -p truly_cli -- --blockchain ./truly_cli/res/blockchain_stage.json --create --region $multi_region[1] --profile $profile || exit 1
-    cargo run -p truly_cli -- --contract  ./truly_cli/res/contract_stage.json --create --region $multi_region[1] --profile $profile || exit 1
+    #echo "filling master data at ${multi_region[1]}. Note: if global tables are enabled, we can only insert only one time and it will be replicated to other tables automatically."
+    #cargo run -p truly_cli -- --blockchain ./truly_cli/res/blockchain_stage.json --create --region $multi_region[1] --profile $profile || exit 1
+    #cargo run -p truly_cli -- --contract  ./truly_cli/res/contract_stage.json --create --region $multi_region[1] --profile $profile || exit 1
 else
     echo "tables and master data skip"
 fi

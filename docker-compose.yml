@@ -17,7 +17,7 @@ services:
     environment:
       - DEBUG=1
       - LS_LOG=info #error,debug,info,trace, trace-internal
-      - PERSISTENCE=1 #set to 1 if you want to keep changes between restarts
+      - PERSISTENCE=0 #set to 1 if you want to keep changes between restarts
       - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY-}  # required for Pro
       - LAMBDA_DOCKER_FLAGS=-p 127.0.0.1:5050:5050 # debug port
       - DOCKER_HOST=unix:///var/run/docker.sock
@@ -39,7 +39,7 @@ services:
       - PORT_WEB_UI=8080
       - LAMBDA_EXECUTOR=docker
       - DOCKER_HOST=unix:///var/run/docker.sock
-      - AWS_DEFAULT_REGION=eu-central-1
+      #- AWS_DEFAULT_REGION=eu-central-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - DATA_DIR=/tmp/localstack/data
