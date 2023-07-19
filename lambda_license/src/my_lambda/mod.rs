@@ -1,7 +1,7 @@
 mod assets;
 pub mod error;
 mod licenses;
-mod nft;
+//mod nft;
 mod video;
 
 use std::str::FromStr;
@@ -10,10 +10,10 @@ use crate::my_lambda::assets::get_asset::get_asset_by_shorter;
 use crate::my_lambda::licenses::create_my_license::create_my_license;
 use crate::my_lambda::licenses::get_licenses::get_licenses;
 use crate::my_lambda::licenses::get_my_license::get_my_licenses_all;
-use crate::my_lambda::nft::get_tx::{get_tx, get_txs};
+//use crate::my_lambda::nft::get_tx::{get_tx, get_txs};
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
-use lib_blockchain::services::block_tx::BlockchainTxService;
-use lib_blockchain::services::nfts::NFTsService;
+//use lib_blockchain::services::block_tx::BlockchainTxService;
+//use lib_blockchain::services::nfts::NFTsService;
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, STAGE_ENV};
 use lib_licenses::services::licenses::LicenseService;
@@ -26,7 +26,7 @@ use self::assets::create_my_asset::create_my_asset;
 use self::assets::get_asset::get_asset;
 use self::assets::get_my_asset::get_my_assets_all;
 use self::error::ApiLambdaError;
-use self::nft::async_create_my_nft::async_create_my_nft_sns;
+//use self::nft::async_create_my_nft::async_create_my_nft_sns;
 use self::video::async_create_my_shorter::async_create_my_shorter_sns;
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
@@ -45,10 +45,10 @@ pub async fn function_handler(
     config: &Config,
     asset_service: &AssetService,
     owners_service: &OwnerService,
-    blockchain_service: &NFTsService,
+    //blockchain_service: &NFTsService,
     user_service: &UsersService,
     video_service: &VideoService,
-    tx_service: &BlockchainTxService,
+    //tx_service: &BlockchainTxService,
     license_service: &LicenseService,
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error + Send + Sync>> {
@@ -67,13 +67,13 @@ pub async fn function_handler(
     let mut router = Router::new();
     router.insert("/api/asset", Some("1"))?;
     router.insert("/api/asset/:id", Some("2"))?;
-    router.insert("/api/nft", Some("3"))?;
+    //router.insert("/api/nft", Some("3"))?;
     router.insert("/api/license", Some("4"))?;
     router.insert("/api/license/:id", Some("44"))?;
     router.insert("/api/shorter/:id", Some("5"))?;
     router.insert("/api/shorter", Some("55"))?;
-    router.insert("/api/tx/:hash", Some("6"))?;
-    router.insert("/api/txs/:id", Some("7"))?;
+    //router.insert("/api/tx/:hash", Some("6"))?;
+    //router.insert("/api/txs/:id", Some("7"))?;
 
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
@@ -152,33 +152,33 @@ pub async fn function_handler(
                         &context,
                         config,
                         asset_service,
-                        tx_service,
+                        //tx_service,
                         license_service,
                         &shorter_id,
                     )
                     .await;
                 }
-                "6" => {
-                    match jwt_mandatory(&req, config) {
-                        Err(e) => {
-                            return Ok(e);
-                        }
-                        Ok(_) => {}
-                    };
-                    let tx_hash = matched.params.get("hash").unwrap().to_string();
-                    return get_tx(&req, &context, config, tx_service, &tx_hash).await;
-                }
-                "7" => {
-                    match jwt_mandatory(&req, config) {
-                        Err(e) => {
-                            return Ok(e);
-                        }
-                        Ok(_) => {}
-                    };
-                    let id = matched.params.get("id").unwrap().to_string();
-                    let asset_id = Uuid::from_str(id.as_str())?;
-                    return get_txs(&req, &context, config, tx_service, &asset_id).await;
-                }
+                // "6" => {
+                //     match jwt_mandatory(&req, config) {
+                //         Err(e) => {
+                //             return Ok(e);
+                //         }
+                //         Ok(_) => {}
+                //     };
+                //     let tx_hash = matched.params.get("hash").unwrap().to_string();
+                //     return get_tx(&req, &context, config, tx_service, &tx_hash).await;
+                // }
+                // "7" => {
+                //     match jwt_mandatory(&req, config) {
+                //         Err(e) => {
+                //             return Ok(e);
+                //         }
+                //         Ok(_) => {}
+                //     };
+                //     let id = matched.params.get("id").unwrap().to_string();
+                //     let asset_id = Uuid::from_str(id.as_str())?;
+                //     return get_txs(&req, &context, config, tx_service,&asset_id).await;
+                // }
                 _ => build_resp(
                     "method not allowed".to_string(),
                     StatusCode::METHOD_NOT_ALLOWED,
@@ -209,29 +209,29 @@ pub async fn function_handler(
                     .await
                 }
 
-                "3" => {
-                    //let id = matched.params.get("id").unwrap().to_string();
-                    //let asset_id = Uuid::from_str(id.as_str())?;
+                // "3" => {
+                //     //let id = matched.params.get("id").unwrap().to_string();
+                //     //let asset_id = Uuid::from_str(id.as_str())?;
 
-                    match jwt_mandatory(&req, config) {
-                        Err(e) => {
-                            return Ok(e);
-                        }
-                        Ok(user) => user_id = user,
-                    };
+                //     match jwt_mandatory(&req, config) {
+                //         Err(e) => {
+                //             return Ok(e);
+                //         }
+                //         Ok(user) => user_id = user,
+                //     };
 
-                    return async_create_my_nft_sns(
-                        &req,
-                        &context,
-                        config,
-                        asset_service,
-                        owners_service,
-                        blockchain_service,
-                        user_service,
-                        &user_id,
-                    )
-                    .await;
-                }
+                //     return async_create_my_nft_sns(
+                //         &req,
+                //         &context,
+                //         config,
+                //         asset_service,
+                //         owners_service,
+                //         blockchain_service,
+                //         user_service,
+                //         &user_id,
+                //     )
+                //     .await;
+                // }
                 "4" => {
                     match jwt_mandatory(&req, config) {
                         Err(e) => {

@@ -1,7 +1,7 @@
 use admin_user::create_admin_user;
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
-use blockchains::manage_blockchains;
-use contracts::manage_contracts;
+//use blockchains::manage_blockchains;
+//use contracts::manage_contracts;
 use ledger::manage_ledger;
 use lib_config::config::Config;
 
@@ -15,8 +15,8 @@ use users::manage_user;
 
 mod admin_user;
 mod async_jobs;
-mod blockchains;
-mod contracts;
+//mod blockchains;
+//mod contracts;
 mod schemas;
 mod secrets;
 mod users;
@@ -40,8 +40,8 @@ async fn command(
         adminuser,
         user_id,
         password,
-        contract,
-        blockchain,
+        // contract,
+        // blockchain,
         ledger,
         region,
         profile,
@@ -82,20 +82,20 @@ async fn command(
         manage_user(id, create, delete, environment.clone(), &mut config).await?;
     }
 
-    if let Some(contract_path) = contract {
-        manage_contracts(contract_path, create, delete, environment.clone(), &config).await?;
-    }
+    // if let Some(contract_path) = contract {
+    //     manage_contracts(contract_path, create, delete, environment.clone(), &config).await?;
+    // }
 
-    if let Some(blockchain_path) = blockchain {
-        manage_blockchains(
-            blockchain_path,
-            create,
-            delete,
-            environment.clone(),
-            &config,
-        )
-        .await?;
-    }
+    // if let Some(blockchain_path) = blockchain {
+    //     manage_blockchains(
+    //         blockchain_path,
+    //         create,
+    //         delete,
+    //         environment.clone(),
+    //         &config,
+    //     )
+    //     .await?;
+    // }
 
     if let Some(_) = ledger {
          manage_ledger(create, delete,  &config).await?;
@@ -139,11 +139,11 @@ pub struct Opt {
     #[structopt(long = "password")]
     pub password: Option<String>,
 
-    #[structopt(long = "contract")]
-    pub contract: Option<String>,
+    // #[structopt(long = "contract")]
+    // pub contract: Option<String>,
 
-    #[structopt(long = "blockchain")]
-    pub blockchain: Option<String>,
+    // #[structopt(long = "blockchain")]
+    // pub blockchain: Option<String>,
 
     #[structopt(long = "ledger")]
     pub ledger: Option<bool>,

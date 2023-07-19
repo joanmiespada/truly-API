@@ -1,10 +1,10 @@
 use chrono::{DateTime, Utc};
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
-use lib_blockchain::errors::block_tx::{BlockchainTxError, BlockchainTxNoExistsError};
-use lib_blockchain::models::block_tx::BlockchainTx;
-use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
+//use lib_blockchain::errors::block_tx::{BlockchainTxError, BlockchainTxNoExistsError};
+//use lib_blockchain::models::block_tx::BlockchainTx;
+//use lib_blockchain::services::block_tx::{BlockchainTxManipulation, BlockchainTxService};
 use lib_config::config::Config;
-use lib_licenses::models::asset::{AssetStatus, MintingStatus, VideoLicensingStatus};
+use lib_licenses::models::asset::{AssetStatus, VideoLicensingStatus};
 use lib_licenses::models::license::License;
 use lib_licenses::services::licenses::{LicenseManipulation, LicenseService};
 use lib_licenses::services::owners::OwnerService;
@@ -60,13 +60,14 @@ pub struct AssetTx {
     pub longitude: Option<f64>,
     pub hash: String,
     pub license: Option<Vec<License>>,
-    pub mint_status: MintingStatus,
+    //pub mint_status: MintingStatus,
     pub video_licensing_status: VideoLicensingStatus,
-    pub tx: Option<BlockchainTx>,
+    //pub tx: Option<BlockchainTx>,
 }
 
 impl AssetTx {
-    pub fn new(asset: &Asset, tx: &Option<BlockchainTx>, lics: &Option<Vec<License>>) -> AssetTx {
+    pub fn new(asset: &Asset, //tx: &Option<BlockchainTx>, 
+                lics: &Option<Vec<License>>) -> AssetTx {
         AssetTx {
             id: asset.id().clone(),
             creation_time: asset.creation_time().clone(),
@@ -75,9 +76,9 @@ impl AssetTx {
             latitude: asset.latitude().clone(),
             longitude: asset.longitude().clone(),
             hash: asset.hash().clone().unwrap().clone(),
-            mint_status: asset.mint_status().clone(),
+            //mint_status: asset.mint_status().clone(),
             video_licensing_status: asset.video_licensing_status().clone(),
-            tx: tx.clone(),
+            //tx: tx.clone(),
             license: lics.clone(),
         }
     }
@@ -89,7 +90,7 @@ pub async fn get_asset_by_shorter(
     _c: &Context,
     config: &Config,
     asset_service: &AssetService,
-    tx_service: &BlockchainTxService,
+    //tx_service: &BlockchainTxService,
     license_service: &LicenseService,
     shorter_id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
@@ -97,13 +98,15 @@ pub async fn get_asset_by_shorter(
     match op_res {
         Ok(asset) => {
             let licenses = license_service.get_by_asset(asset.id()).await?;
-            match asset.minted_tx() {
-                None => {
-                    let res = AssetTx::new(&asset, &None, &Some(licenses));
+            //match asset.minted_tx() {
+            //    None => {
+                    let res = AssetTx::new(&asset, //&None,
+                                             &Some(licenses));
 
                     build_resp_no_cache(json!(res.to_owned()).to_string(), StatusCode::OK)
-                }
-                Some(hash) => {
+            //    }
+
+            /*     Some(hash) => {
                     let tx_op = tx_service.get_by_id(hash).await;
                     match tx_op {
                         Ok(tx) => {
@@ -125,7 +128,7 @@ pub async fn get_asset_by_shorter(
                         }
                     }
                 }
-            }
+            }*/
         }
         Err(e) => {
             if let Some(e) = e.downcast_ref::<AssetDynamoDBError>() {

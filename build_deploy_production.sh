@@ -77,7 +77,7 @@ if [[ "$zip_skip" == 'false' ]]; then
     export OPENSSL_LIB_DIR=${path_base}/lib
     export OPENSSL_INCLUDE_DIR=${path_base}/include
 
-    cargo lambda build --release --arm64 --output-format zip --workspace  --exclude server_* --exclude truly_cli --lambda-dir $folder
+    cargo lambda build --release --arm64 --output-format zip --workspace  --exclude truly_cli --lambda-dir $folder
     
     if [ $? -ne 0 ]; then
         echo 'compiling error, please check cargo build.'

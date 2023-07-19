@@ -76,7 +76,7 @@ mapGeoLocations=(
 if [[ "$zip_skip" == 'false' ]]; then
     
     echo 'compiling lambdas...'
-    cargo build --workspace --exclude server_*
+    cargo build --workspace --exclude truly_cli
     
     if [ $? -ne 0 ]; then
         echo 'compiling error, please check cargo build.'
@@ -86,7 +86,7 @@ if [[ "$zip_skip" == 'false' ]]; then
     rm -rf $folder
     mkdir $folder
     
-    lambdas=("lambda_login" "lambda_admin" "lambda_after_video" "lambda_license" "lambda_mint" "lambda_user")
+    lambdas=("lambda_login" "lambda_admin" "lambda_after_video" "lambda_license" "lambda_user") #  "lambda_mint")
     
     echo 'zipping lambdas...'
     for lambda_name in "${lambdas[@]}"

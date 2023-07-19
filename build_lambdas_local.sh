@@ -1,11 +1,11 @@
 #!/bin/bash
 rm -rf target/lambda_local
 
-cargo build --workspace --exclude server_* --exclude command_* --exclude truly_cli
+cargo build --workspace --exclude truly_cli
 
 mkdir target/lambda_local
 
-lambdas=("lambda_login" "lambda_admin" "lambda_after_video" "lambda_license" "lambda_mint" "lambda_user")
+lambdas=("lambda_login" "lambda_admin" "lambda_after_video" "lambda_license" "lambda_user") # "lambda_mint" )
 
 for lambda_name in "${lambdas[@]}"
 do

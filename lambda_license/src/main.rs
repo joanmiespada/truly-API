@@ -1,12 +1,12 @@
 use lambda_http::service_fn;
-use lib_blockchain::blockchains::chain::CloneBoxNFTsRepository;
-use lib_blockchain::blockchains::sui::SuiBlockChain;
-use lib_blockchain::repositories::block_tx::BlockchainTxRepo;
-use lib_blockchain::repositories::blockchain::BlockchainRepo;
-use lib_blockchain::repositories::contract::ContractRepo;
-use lib_blockchain::repositories::keypairs::KeyPairRepo;
-use lib_blockchain::services::block_tx::BlockchainTxService;
-use lib_blockchain::services::nfts::NFTsService;
+// use lib_blockchain::blockchains::chain::CloneBoxNFTsRepository;
+// use lib_blockchain::blockchains::sui::SuiBlockChain;
+// use lib_blockchain::repositories::block_tx::BlockchainTxRepo;
+// use lib_blockchain::repositories::blockchain::BlockchainRepo;
+// use lib_blockchain::repositories::contract::ContractRepo;
+// use lib_blockchain::repositories::keypairs::KeyPairRepo;
+// use lib_blockchain::services::block_tx::BlockchainTxService;
+// use lib_blockchain::services::nfts::NFTsService;
 use lib_config::config::Config;
 use lib_licenses::repositories::licenses::LicenseRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
@@ -45,24 +45,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let owners_repo = OwnerRepo::new(&config);
     let owners_service = OwnerService::new(owners_repo);
 
-    let key_repo = KeyPairRepo::new(&config);
-
-    let repo_tx = BlockchainTxRepo::new(&config);
-    let tx_service = BlockchainTxService::new(repo_tx);
-
-    let blockchains_repo = BlockchainRepo::new(&config);
-    let contracts_repo = ContractRepo::new(&config);
-
-    let blockchain = SuiBlockChain::new(&config, &contracts_repo, &blockchains_repo).await?;
-
-    let blockchain_service = NFTsService::new(
-        blockchain.clone_box(),
-        key_repo,
-        asset_service.to_owned(),
-        owners_service.to_owned(),
-        tx_service.to_owned(),
-        config.to_owned(),
-    );
+    // let key_repo = KeyPairRepo::new(&config);
+    // let repo_tx = BlockchainTxRepo::new(&config);
+    // let tx_service = BlockchainTxService::new(repo_tx);
+    // let blockchains_repo = BlockchainRepo::new(&config);
+    // let contracts_repo = ContractRepo::new(&config);
+    // let blockchain = SuiBlockChain::new(&config, &contracts_repo, &blockchains_repo).await?;
+    // let blockchain_service = NFTsService::new(
+    //     blockchain.clone_box(),
+    //     key_repo,
+    //     asset_service.to_owned(),
+    //     owners_service.to_owned(),
+    //     tx_service.to_owned(),
+    //     config.to_owned(),
+    // );
 
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);
@@ -78,10 +74,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
             &config,
             &asset_service,
             &owners_service,
-            &blockchain_service,
+            //&blockchain_service,
             &user_service,
             &video_service,
-            &tx_service,
+            //&tx_service,
             &license_service,
             event,
         )
