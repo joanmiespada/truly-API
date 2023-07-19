@@ -151,7 +151,7 @@ if [[ "$ledger_skip" == 'false' ]]; then
 
         ledgers=$(aws qldb list-ledgers --region $region --output json | jq -r '.Ledgers[].Name' | wc -l )
         if (( $ledgers[@] <= 0 )); then
-            aws qldb create-ledger --name truly-assets-ledger  --permissions-mode STANDARD --region $region > /dev/null || exit 1
+            aws qldb create-ledger --name truly-assets-ledger --deletion-protection --permissions-mode STANDARD --region $region > /dev/null || exit 1
             qldb --ledger truly-assets-ledger -r $region -f ion  --profile $profile > /dev/null <<EOF
                 CREATE TABLE Asset;
                 CREATE INDEX ON Asset (asset_hash);

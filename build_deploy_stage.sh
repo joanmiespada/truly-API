@@ -69,7 +69,7 @@ if [[ "$zip_skip" == 'false' ]]; then
     export OPENSSL_LIB_DIR=${path_base}/lib
     export OPENSSL_INCLUDE_DIR=${path_base}/include
 
-    cargo lambda build --arm64 --output-format zip --workspace --exclude truly_cli --lambda-dir $folder
+    cargo lambda build --release --arm64 --output-format zip --workspace --exclude truly_cli --lambda-dir $folder
     
     if [ $? -ne 0 ]; then
         echo 'compiling error, please check cargo build.'
@@ -143,7 +143,7 @@ if [[ "$ledger_skip" == 'false' ]]; then
         ledgers=$(aws qldb list-ledgers --region $region --output json | jq -r '.Ledgers[].Name' | wc -l )
         if (( $ledgers[@] <= 0 )); then
             echo "creating ledger at $region..."
-            aws qldb create-ledger --name truly-assets-ledger  --permissions-mode STANDARD --region $region > /dev/null || exit 1
+            aws qldb create-ledger --name truly-assets-ledger --no-deletion-protection  --permissions-mode STANDARD --region $region > /dev/null || exit 1
 
             echo "creating table and indexes at $region in ledger... "
             qldb --ledger truly-assets-ledger --region $region -f ion  --profile $profile > /dev/null <<EOF
