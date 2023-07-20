@@ -188,7 +188,7 @@ if [[ "$ledger_skip" == 'false' ]]; then
     for region in "${multi_region[@]}"; do
         #cargo run -p truly_cli -- --ledger true --create --region $region  || exit 1 # it doesn't work locally
         # get this information from /lib_ledger/src/repository/schema_ledger.rs
-        awslocal qldb create-ledger --name truly-assets-ledger  --permissions-mode STANDARD --region $region > /dev/null || exit 1
+        awslocal qldb create-ledger --name truly-assets-ledger  --permissions-mode STANDARD  --region $region > /dev/null || exit 1
         qldb -s http://127.0.0.1:4566 --ledger truly-assets-ledger --region $region -f ion -p localstack > /dev/null  <<EOF
             CREATE TABLE Asset;
             CREATE INDEX ON Asset (asset_hash);

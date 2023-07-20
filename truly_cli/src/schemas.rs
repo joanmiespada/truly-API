@@ -5,6 +5,7 @@ use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
 //};
 use lib_config::config::Config;
 use lib_config::schema::Schema;
+use lib_ledger::repository::schema_ledger::LedgerSchema;
 use lib_licenses::repositories::{
     schema_asset::AssetAllSchema, schema_licenses::LicenseSchema, schema_owners::OwnerSchema,
 };
@@ -32,6 +33,15 @@ pub async fn create_schemas(
                 AssetAllSchema::create_schema(config).await?
             } else if delete {
                 AssetAllSchema::delete_schema(config).await?
+            } else {
+                return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
+            }
+        }
+        "ledger" => {
+            if create {
+                LedgerSchema::create_schema(config).await?
+            } else if delete {
+                LedgerSchema::delete_schema(config).await?
             } else {
                 return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
             }
@@ -104,6 +114,7 @@ pub async fn create_schemas(
                 //BlockTxSchema::create_schema(&config).await?;
                 UserAllSchema::create_schema(config).await?;
                 LicenseSchema::create_schema(config).await?;
+                LedgerSchema::create_schema(config).await?
             } else if delete {
                 //BlockchainSchema::delete_schema(config).await?;
                 //ContractSchema::delete_schema(config).await?;
@@ -113,6 +124,7 @@ pub async fn create_schemas(
                 //BlockTxSchema::delete_schema(&config).await?;
                 UserAllSchema::delete_schema(config).await?;
                 LicenseSchema::delete_schema(config).await?;
+                LedgerSchema::delete_schema(config).await?
             } else {
                 return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
             }

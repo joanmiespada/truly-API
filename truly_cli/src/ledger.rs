@@ -12,9 +12,13 @@ pub async fn manage_ledger(
     if create {
 
         LedgerSchema::create_schema(config).await?; 
+        // qldb client doesn't work properly
+        //LedgerSchema::create_qldb_schema(config).await?;
         
     } else if delete {
-        panic!("not allowed, in prod is forbidden, in stage do it with AWS console")
+        LedgerSchema::delete_schema(config).await?; 
+        // qldb client doesn't work properly
+        //LedgerSchema::delete_qldb_schema(config).await?;
     } else {
         return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
     }

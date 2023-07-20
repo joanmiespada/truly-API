@@ -104,7 +104,7 @@ impl LedgerSchema {
         Ok(())
     }
 
-    async fn create_qldb_schema(config: &Config) -> ResultE<()> {
+    pub async fn create_qldb_schema(config: &Config) -> ResultE<()> {
         let client = aws_sdk_qldb::Client::new(config.aws_config());
 
         let op = client
@@ -201,13 +201,25 @@ impl LedgerSchema {
 
         Ok(())
     }
+
+    pub async fn delete_qldb_schema(config: &Config) -> ResultE<()> {
+        if config.env_vars().environment().unwrap() != PROD_ENV {
+            let client = aws_sdk_qldb::Client::new(config.aws_config());
+            client.delete_ledger().name(LEDGER_NAME).send().await?;
+        }else{
+            println!("remove ledger in prod is forbidden.")
+        } 
+        Ok(())  
+    }
+
 }
 
 #[async_trait]
 impl Schema for LedgerSchema {
     async fn create_schema(config: &Config) -> ResultE<()> {
-        LedgerSchema::create_qldb_schema(config).await?;
         LedgerSchema::create_dynamodb_schema(config).await?;
+        println!("ledger dynamodb table created successfully.");
+        println!("Please, run ledger creation by script.");
         Ok(())
     }
 
@@ -219,10 +231,9 @@ impl Schema for LedgerSchema {
             .send()
             .await?;
 
-        if config.env_vars().environment().unwrap() != PROD_ENV {
-            let client = aws_sdk_qldb::Client::new(config.aws_config());
-            client.delete_ledger().name(LEDGER_NAME).send().await?;
-        }
+        println!("ledger dynamodb table deleted successfully.");
+        println!("Please, delete ledger manually.");
+        
 
         Ok(())
     }

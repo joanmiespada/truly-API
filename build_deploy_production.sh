@@ -9,6 +9,7 @@
 #check if aws and tf are in $PATH
 aws --version || exit 1
 terraform --version || exit 1
+qldb --version || exit 1  #install https://docs.aws.amazon.com/qldb/latest/developerguide/data-shell.html
 
 #check paramaters. They allow to skip some sections
 zip_skip='false'
