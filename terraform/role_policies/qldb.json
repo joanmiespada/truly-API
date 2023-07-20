@@ -4,11 +4,7 @@
         {
             "Effect": "Allow",
             "Action": [
-                "qldb:PartiQLInsert",
-                "qldb:PartiQLUpdate",
-                "qldb:PartiQLSelect",
-                "qldb:PartiQLHistoryFunction",
-                "qldb:SendCommand"
+                "qldb:*"           
             ],
             "Resource": "arn:aws:qldb:::*"
         }

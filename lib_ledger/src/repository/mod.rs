@@ -17,6 +17,7 @@ use lib_config::config::Config;
 use lib_config::result::ResultE;
 use lib_config::timing::from_iso8601;
 use qldb::{ion::IonValue, Document, QldbClient};
+use tracing::info;
 use uuid::Uuid;
 pub mod schema_ledger;
 
@@ -52,9 +53,12 @@ impl LedgerRepo {
     async fn add_qldb(&self, asset: &AssetLedged) -> ResultE<Ledge> {
         let data = asset.to_hash_map();
 
-        let client = QldbClient::default(LEDGER_NAME, 200).await?;
+       info!("calling ledger service: getting qldb session");
+       let client = QldbClient::default(LEDGER_NAME, 200).await?;
+       info!("calling ledger service: check if asset id already exist");
         let op: Result<Option<String>, qldb::QldbError> = client
             .transaction_within(|client| async move {
+                info!("calling now!!!");
                 let doc_id;
                 let result = client
                     .query(
@@ -65,20 +69,31 @@ impl LedgerRepo {
                         .as_str(),
                     )
                     .param(asset.asset_id.to_string())
-                    .execute()
+                    .count()
+                    //.execute()
                     .await;
+                info!("called!!!");
+                let first_count_op = result;
+                let first_count;
+                match first_count_op {
+                    Ok(val) => first_count=val,
+                    Err(e)=>{
+                        panic!("{}",e)
+                    }
+                    
+                }
+                info!("response! {}", first_count);
 
-                let result = result.unwrap();
-
-                let first_count = match result[0].get("_1") {
-                    Some(IonValue::Integer(count)) => count.to_owned(),
-                    _ => panic!("First count returned a non integer"),
-                };
+                //let first_count = match result //[0].get("_1") {
+                //    Some(IonValue::Integer(count)) => count.to_owned(),
+                //    _ => panic!("First count returned a non integer"),
+                //};
 
                 if first_count != 0 {
                     client.rollback().await?;
                     return Ok(None);
                 } else {
+                    info!("inserting a new one!!!");
                     let sentence = format!("INSERT INTO {} VALUE ?", LEDGER_TABLE_NAME);
                     //println!("{}", sentence);
                     let op = client.query(&sentence.as_str()).param(data).execute().await;
@@ -94,13 +109,14 @@ impl LedgerRepo {
                                 _ => panic!("DocumentID returned non String"),
                             };
                             //println!("documentId created: {}", id);
-                            doc_id = id;
+                            doc_id = id.to_owned();
+                            info!("calling ledger service: asset id created successfully at QLDB service, documnet ID: {}", id );
                         }
                     }
                     //client.commit().await?;
                 }
                 Ok(Some(doc_id))
-            })
+            }) 
             .await;
 
         if let Err(e) = op {
@@ -115,6 +131,7 @@ impl LedgerRepo {
                     return Err(Box::new(LedgerError {0:"Error creating doc at ledger".to_string() }));
                 },
                 Some(doc_id) => {
+                    info!("getting blockchain information...");
                     let sentence = format!(
                         r#"SELECT * FROM _ql_committed_{table} as r  WHERE  r.metadata.id = '{doc}' "#,
                         table = LEDGER_TABLE_NAME,
@@ -133,6 +150,7 @@ impl LedgerRepo {
                     let value = stataux[0].clone();
 
                     let qldb_committed = qldb_map_to_ledge(value);
+                    info!("blockchain data got it");
                     Ok(qldb_committed)
                 }
             }
@@ -177,7 +195,10 @@ impl LedgerRepo {
 #[async_trait]
 impl LedgerRepository for LedgerRepo {
     async fn add(&self, asset: &AssetLedged) -> ResultE<Ledge> {
+
+       info!("calling ledger service: adding qldb");
        let l = self.add_qldb(asset).await?; 
+       info!("calling ledger service: adding dynamodb");
        self.add_dynamodb( &asset.asset_id, &l).await?;
        Ok(l)
     }

@@ -36,7 +36,7 @@ for region in "${multi_region[@]}"; do
         if [[ $env == "production" ]]; then
             create_ledger_output=$($AWS_CLI qldb create-ledger --name truly-assets-ledger --permissions-mode STANDARD --deletion-protection --region $region --tags "Projecte=Truly,Service=Api,Environment=${ENVIRONMENT}" 2>&1)
         else
-            create_ledger_output=$($AWS_CLI qldb create-ledger --name truly-assets-ledger --permissions-mode STANDARD --no-deletion-protection --region $region --tags "Projecte=Truly,Service=Api,Environment=${ENVIRONMENT}" 2>&1)
+            create_ledger_output=$($AWS_CLI qldb create-ledger --name truly-assets-ledger --permissions-mode ALLOW_ALL --no-deletion-protection --region $region --tags "Projecte=Truly,Service=Api,Environment=${ENVIRONMENT}" 2>&1)
         fi
 
         if [[ $? != 0 ]]; then
