@@ -13,7 +13,7 @@ lib_users = { path = "../lib_users" }
 lib_ledger = { path = "../lib_ledger"}
 env_logger = "0.10.0"
 chrono = {version="0.4.26", features = ["serde"] }
-serde = { version = "1.0.171", features = ["derive"] }
+serde = { version = "1.0.173", features = ["derive"] }
 serde_json = "1.0.103"
 aws-config = "0.55.3"
 aws-sdk-dynamodb = "0.28.0"
@@ -35,8 +35,8 @@ spectral = "0.6.0"
 #testcontainers = "0.14.0"
 testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack2"  }
 tokio = { version="1.29.1", features=["full"]}
-ethers = "2.0.8"
+#ethers = "2.0.8"
 base64 = "0.21.2"
-ethers-solc = "2.0.8"
+#ethers-solc = "2.0.8"
 
 
