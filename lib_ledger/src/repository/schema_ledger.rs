@@ -98,6 +98,11 @@ impl LedgerSchema {
                     .set_value(Some(SERVICE.to_string()))
                     .build(),
             )
+            .deletion_protection_enabled(if config.env_vars().environment().unwrap() == PROD_ENV {
+                true
+            } else {
+                false
+            })
             .send()
             .await?;
 

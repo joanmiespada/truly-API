@@ -8,7 +8,7 @@ use aws_sdk_dynamodb::types::{
 use lib_config::{
     config::Config,
     environment::{
-        ENV_VAR_ENVIRONMENT, ENV_VAR_PROJECT, ENV_VAR_PROJECT_LABEL, ENV_VAR_SERVICE_LABEL,
+        ENV_VAR_ENVIRONMENT, ENV_VAR_PROJECT, ENV_VAR_PROJECT_LABEL, ENV_VAR_SERVICE_LABEL, PROD_ENV,
     },
     result::ResultE,
     schema::Schema,
@@ -77,6 +77,11 @@ impl Schema for UserSchema {
                     .set_value(Some(SERVICE.to_string()))
                     .build(),
             )
+            .deletion_protection_enabled(if config.env_vars().environment().unwrap() == PROD_ENV {
+                true
+            } else {
+                false
+            })
             .send()
             .await?;
 
