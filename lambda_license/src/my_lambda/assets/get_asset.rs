@@ -116,8 +116,8 @@ pub async fn get_asset_by_shorter(
 
             //match asset.minted_tx() {
             //    None => {
-                    let res = AssetTx::new(&asset, &ledge,
-                                             &Some(licenses));
+                    let aux = ledge.unwrap();
+                    let res = AssetTx::new(&asset, &aux, &Some(licenses));
 
                     build_resp_no_cache(json!(res.to_owned()).to_string(), StatusCode::OK)
             //    }

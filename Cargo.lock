@@ -3119,10 +3119,9 @@ version = "0.0.1"
 dependencies = [
  "async-trait",
  "aws-config",
- "aws-sdk-kms",
+ "aws-sdk-dynamodb",
  "aws-sdk-qldb",
  "aws-sdk-qldbsession",
- "aws-sdk-secretsmanager",
  "aws-types",
  "base64 0.21.2",
  "chrono",

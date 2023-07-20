@@ -20,15 +20,16 @@ use uuid::Uuid;
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 
-//#[tokio::test]
+#[tokio::test]
 //TODO: qldb client can't aim to localstack endpoint.
-async fn _asset_test_local() -> ResultE<()> {
+async fn asset_test_local() -> ResultE<()> {
     //dotenv::dotenv().ok();
     dotenv::from_filename(".env-stage").ok();
 
     env::set_var("RUST_LOG", "debug");
     env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
     env::set_var("AWS_REGION", "eu-central-1");
+    env::set_var("AWS_PROFILE", "localstack");
 
     let local_stack_api_key = env::var("LOCALSTACK_API_KEY").unwrap();
 

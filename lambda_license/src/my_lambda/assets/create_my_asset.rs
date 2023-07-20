@@ -5,7 +5,7 @@ use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
 use lib_ledger::errors::LedgerError;
 use lib_ledger::models::AssetLedged;
-use lib_ledger::service::{LedgerService, LedgerManipulation};
+use lib_ledger::service::{LedgerManipulation, LedgerService};
 use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::services::owners::OwnerService;
@@ -36,22 +36,22 @@ pub async fn create_my_asset(
     }
     info!("calling asset service: add");
     let op1 = asset_service.add(&asset_fields, id).await;
-    if let Err(e)= op1 {
-            if let Some(m) = e.downcast_ref::<AssetDynamoDBError>() {
-                return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
-            } else if let Some(m) = e.downcast_ref::<AssetNoExistsError>() {
-                return build_resp(m.to_string(), StatusCode::NO_CONTENT);
-            } else if let Some(m) = e.downcast_ref::<ValidationError>() {
-                return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
-            } else {
-                return build_resp_env(
-                    &config.env_vars().environment().unwrap(),
-                    e,
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                );
-            }
+    if let Err(e) = op1 {
+        if let Some(m) = e.downcast_ref::<AssetDynamoDBError>() {
+            return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
+        } else if let Some(m) = e.downcast_ref::<AssetNoExistsError>() {
+            return build_resp(m.to_string(), StatusCode::NO_CONTENT);
+        } else if let Some(m) = e.downcast_ref::<ValidationError>() {
+            return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
+        } else {
+            return build_resp_env(
+                &config.env_vars().environment().unwrap(),
+                e,
+                StatusCode::INTERNAL_SERVER_ERROR,
+            );
+        }
     }
-    let asset_id= op1.ok().unwrap();
+    let asset_id = op1.ok().unwrap();
     let assetled = AssetLedged {
         asset_id,
         asset_hash: asset_fields.hash,
@@ -60,10 +60,10 @@ pub async fn create_my_asset(
     };
     info!("calling ledger service: add");
     let op2 = ledger_service.add(&assetled).await;
-    if let Err(e)= op2 {
+    if let  Err(e) = op2 {
             if let Some(m) = e.downcast_ref::<LedgerError>() {
                 return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
-            }  else {
+            } else {
                 return build_resp_env(
                     &config.env_vars().environment().unwrap(),
                     e,
@@ -72,8 +72,7 @@ pub async fn create_my_asset(
             }
     }
 
-    let val = format!("{{asset_id: {uuid} }}",uuid=asset_id.to_string());
-    
+    let val = format!("{{asset_id: {uuid} }}", uuid = asset_id.to_string());
+
     build_resp(val, StatusCode::OK)
-    
 }
