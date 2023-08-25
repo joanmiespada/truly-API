@@ -15,19 +15,19 @@ path = "test/lib.rs"
 [dependencies]
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
 lib_async_ops = { git="https://github.com/joanmiespada/truly-shared" }
-log = "0.4.19"
+log = "0.4.20"
 chrono = { version = "0.4.26", features = ["serde"] }
-serde = { version = "1.0.173", features = ["derive"] }
-serde_json = "1.0.103"
+serde = { version = "1.0.186", features = ["derive"] }
+serde_json = "1.0.105"
 aws-config = "0.55.3"
 aws-sdk-qldb = "0.28.0"
 aws-sdk-qldbsession= "0.28.0"
-async-trait = "0.1.71"
+async-trait = "0.1.73"
 aws-sdk-dynamodb = "0.28.0"
 tracing = { version = "0.1", features = ["log"] }
 validator = { version = "0.16", features = ["derive"] }
 http = "0.2.9"
-http-serde = "1.1.2"
+http-serde = "1.1.3"
 url = { version = "2.4.0", features = ["serde"] }
 rand = "0.8.5"
 base64 = "0.21.2"
@@ -46,8 +46,9 @@ env_logger = "0.10.0"
 aws-types = "0.55.3"
 spectral = "0.6.0"
 #testcontainers = "0.14.0"
-#testcontainers = { git = "https://github.com/joanmiespada/testcontainers-rs", branch = "dev2" }
-testcontainers = { git = "https://github.com/joanmiespada/testcontainers-rs", rev="03bbe9a7611b1607810de3cabe52ce042196b3c1" }
-tokio = { version = "1.29.1", features = ["full"] }
-reqwest= { version = "0.11.18", features = ["json"]}
+testcontainers = { git = "https://github.com/joanmiespada/testcontainers-rs", branch = "dev2" }
+#testcontainers = { git = "https://github.com/joanmiespada/testcontainers-rs", rev="03bbe9a7611b1607810de3cabe52ce042196b3c1" }
+#testcontainers = { git = "https://github.com/joanmiespada/testcontainers-rs", branch="localstack2" }
+tokio = { version = "1.32.0", features = ["full"] }
+reqwest= { version = "0.11.20", features = ["json"]}
 dotenv = "0.15.0"
