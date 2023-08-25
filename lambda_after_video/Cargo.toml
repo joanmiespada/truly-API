@@ -23,6 +23,5 @@ tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3.17", default-features = false, features = ["fmt", "env-filter"] }
 tokio = { version = "1", features = ["full"] }
 validator = { version = "0.16", features = ["derive"] }
-aws-sdk-sqs = "0.28.0"
+aws-sdk-sqs = "0.30.0"
 uuid = { version = "1.4.1", features = ["v4","fast-rng",  "macro-diagnostics",  "serde"]}
-workspace-hack = { version = "0.1", path = "../workspace-hack" }

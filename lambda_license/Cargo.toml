@@ -37,5 +37,4 @@ uuid = { version = "1.4.1", features = [
     "macro-diagnostics",
     "serde",
 ] }
-aws-sdk-sqs = "0.28.0"
-workspace-hack = { version = "0.1", path = "../workspace-hack" }
+aws-sdk-sqs = "0.30.0"

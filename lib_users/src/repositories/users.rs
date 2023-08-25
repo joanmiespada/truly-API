@@ -782,7 +782,7 @@ fn cypher_text(text: &String, key: &String) -> ResultE<String> {
         mem_cost: 65536,
         time_cost: 10,
         lanes: 4,
-        thread_mode: argon2::ThreadMode::Parallel,
+        //thread_mode: argon2::ThreadMode::Parallel,
         secret: key.as_bytes(),
         ad: &[],
         hash_length: 32,

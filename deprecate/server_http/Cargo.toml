@@ -39,7 +39,6 @@ rand = "0.8.5"
 rust-argon2 = "1.0.0"
 validator = { version = "0.16", features = ["derive"] }
 url = {version="2.4.0", features=["serde"] }
-workspace-hack = { version = "0.1", path = "../workspace-hack" }
 
 
 [dependencies.uuid]

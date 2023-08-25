@@ -16,7 +16,6 @@
       <sourceFolder url="file://$MODULE_DIR$/lib_util_jwt/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/server_http/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/truly_cli/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/workspace-hack/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
