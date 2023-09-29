@@ -1,5 +1,4 @@
 pub mod asset;
 pub mod license;
 pub mod owner;
-pub mod shorter;
-pub mod video;
+pub mod hash;

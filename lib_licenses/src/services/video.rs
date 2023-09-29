@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use crate::{
     errors::video::VideoError,
-    models::asset::{Asset, VideoLicensingStatus},
+    models::{asset::{Asset, VideoLicensingStatus}, hash::CreateHashes},
 };
 
 use super::assets::{AssetManipulation, AssetService};
@@ -19,6 +19,7 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 #[async_trait]
 pub trait VideoManipulation {
     async fn shorter_video_async(&self, asset_id: &Uuid, user_id: &String) -> ResultE<String>;
+    async fn compute_hash_and_similarities_async(&self, asset_id: &Uuid) -> ResultE<String>;
 }
 
 #[derive(Debug)]
@@ -133,5 +134,64 @@ impl VideoManipulation for VideoService {
                 return Ok(val);
             }
         };
+    }
+
+    #[tracing::instrument()]
+    async fn compute_hash_and_similarities_async(&self, asset_id: &Uuid) -> ResultE<String>{
+        //check user owns the asset.
+        let checks_op = self
+            .asset_service
+            .get_by_id(asset_id)
+            .await;
+        if let Err(e)= checks_op {
+                return Err(VideoError {
+                    0: format!(
+                        "asset {} doesn't exist error: {:?}",
+                        asset_id, e
+                    ),
+                }
+                .into());
+        }
+        let asset = checks_op.unwrap();
+        let new_hashes = CreateHashes {
+            url_file: asset.url().clone().unwrap(),
+            asset_id: asset_id.clone(),
+        };
+        
+        let json_text = serde_json::to_string(&new_hashes)?;
+
+        let message = SNSMessage {
+            body: json_text.to_owned(),
+        };
+
+        let topic_arn = self
+            .config
+            .env_vars()
+            .topic_arn_hashes_similars_start()
+            .unwrap();
+
+        let enqueded_op = send(&self.config, &message, topic_arn).await;
+
+        match enqueded_op {
+            Err(e) => {
+                if let Some(m) = e.downcast_ref::<AsyncOpError>() {
+                    return Err(VideoError {
+                        0: format!("{:?}", m),
+                    }
+                    .into());
+                } else {
+                    return Err(VideoError {
+                        0: format!("unknown error with video hashes computation at sns topic"),
+                    }
+                    .into());
+                }
+            }
+            Ok(val) => {
+                return Ok(val);
+            }
+        };
+
+
+
     }
 }

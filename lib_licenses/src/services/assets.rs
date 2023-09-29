@@ -153,7 +153,7 @@ impl AssetManipulation for AssetService {
 
         asset.set_father(&creation_asset.father);
 
-        info!("attaching new asset to repository ");
+        info!("attaching new asset to repository");
         let res = self.repository.add(&asset, user_id).await?;
         Ok(res)
     }

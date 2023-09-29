@@ -10,6 +10,7 @@
 aws --version || exit 1
 terraform --version || exit 1
 qldb --version || exit 1
+jq --version || exit 1
 
 #check paramaters. They allow to skip some sections
 zip_skip='false'
@@ -204,8 +205,9 @@ if [[ "$terraform_skip" == 'false' ]]; then
         terraform workspace new $region_label
         terraform workspace select $region_label
         echo "Planning infrastructure for ${region}..."
-        terraform plan
-        terraform apply --auto-approve
+        terraform plan -out=plan.tfplan || exit 1
+        echo "Applying infrastructure for ${region}..."
+        terraform apply --auto-approve plan.tfplan || exit 1
     done
     cd ..
 else

@@ -10,12 +10,12 @@ use validator::Validate;
 use crate::my_lambda::build_resp;
 
 #[derive(Debug, Serialize, Deserialize, Clone, Validate)]
-pub struct CreateShorterAsync {
+pub struct CreateHashSimilarsAsync {
     pub asset_id: Uuid,
 }
 
 #[tracing::instrument]
-pub async fn async_create_my_shorter_sns(
+pub async fn async_create_my_hash_similars_sns(
     req: &Request,
     _c: &Context,
     config: &Config,
@@ -23,8 +23,8 @@ pub async fn async_create_my_shorter_sns(
     video_service: &VideoService,
     user_id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
-    let new_shorter_video;
-    match req.payload::<CreateShorterAsync>() {
+    let new_hash_similar_video;
+    match req.payload::<CreateHashSimilarsAsync>() {
         Err(e) => {
             return build_resp(e.to_string(), StatusCode::BAD_REQUEST);
         }
@@ -37,14 +37,14 @@ pub async fn async_create_my_shorter_sns(
                     return build_resp(e.to_string(), StatusCode::BAD_REQUEST);
                 }
                 Ok(_) => {
-                    new_shorter_video = payload.clone();
+                    new_hash_similar_video = payload.clone();
                 }
             },
         },
     }
 
     let post_request_op = video_service
-        .shorter_video_async(&new_shorter_video.asset_id, &user_id)
+        .compute_hash_and_similarities_async(&new_hash_similar_video.asset_id)
         .await;
 
     match post_request_op {

@@ -27,8 +27,8 @@ use self::assets::create_my_asset::create_my_asset;
 use self::assets::get_asset::get_asset;
 use self::assets::get_my_asset::get_my_assets_all;
 use self::error::ApiLambdaError;
-//use self::nft::async_create_my_nft::async_create_my_nft_sns;
 use self::video::async_create_my_shorter::async_create_my_shorter_sns;
+use self::video::async_create_my_hash::async_create_my_hash_similars_sns;
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
 use matchit::Router;
@@ -76,6 +76,8 @@ pub async fn function_handler(
     router.insert("/api/shorter", Some("55"))?;
     //router.insert("/api/tx/:hash", Some("6"))?;
     //router.insert("/api/txs/:id", Some("7"))?;
+    //router.insert("/api/hash", Some("8"))?;
+    router.insert("/api/hash/:id", Some("88"))?;
 
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
@@ -255,6 +257,25 @@ pub async fn function_handler(
                     };
 
                     return async_create_my_shorter_sns(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        video_service,
+                        &user_id,
+                    )
+                    .await;
+                }
+                
+                "88" => {
+                    match jwt_mandatory(&req, config) {
+                        Err(e) => {
+                            return Ok(e);
+                        }
+                        Ok(user) => user_id = user,
+                    };
+
+                    return async_create_my_hash_similars_sns (
                         &req,
                         &context,
                         config,
