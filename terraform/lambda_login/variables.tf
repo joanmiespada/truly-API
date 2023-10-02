@@ -5,13 +5,12 @@ variable "lambda_login_file" {
   default     = "lambda_login/bootstrap.zip"
 }
 
-variable "truly_lambda_login_function_name" {
-  default = "truly_login"
-  type    = string
-}
+# variable "truly_lambda_login_function_name" {
+#   default = "truly_login"
+#   type    = string
+# }
 
 variable "service_name" {
-  default = "login"
   type    = string
 }
 

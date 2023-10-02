@@ -37,7 +37,7 @@ uuid = { version = "1.4.1", features = [
     "macro-diagnostics",
     "serde",
 ] }
-qldb = "3.2.7"
+qldb = "3.2.8"
 
 [target.aarch64-apple-darwin.dev-dependencies]
 #[dev-dependencies]

@@ -113,7 +113,25 @@ paths:
           description: "Asset have been created successfully."
       security:
         - BearerAuth: []
-     
+    
+  /api/hash:
+    post: 
+      operationId: "CreateHashesAsset"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                asset_id: 
+                  type: string
+                  description: calculate hashes for this asset id
+      responses:
+        "201":
+          description: "Hashes have been calculated successfully."
+      security:
+        - BearerAuth: []
+      
 
 components:
   securitySchemes:

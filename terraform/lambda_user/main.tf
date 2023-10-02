@@ -1,13 +1,13 @@
 locals {
   lambda_file            = "${var.lambda_deploy_folder}/${var.lambda_user_file}"
   region_prefix          = element(split("-", var.aws_region), 0)
-  lambda_name_descriptor = "${var.truly_lambda_user_function_name}-${local.region_prefix}-${var.api_stage_version}"
+  lambda_name_descriptor = "${var.common_tags.project}-${var.common_tags.service}-${var.common_tags.environment}-${var.aws_region}-${var.api_stage_version}-${var.service_name}"
 }
 resource "aws_cloudwatch_log_group" "truly_lambda_user_cloudwatch" {
   name              = "/aws/lambda/${local.lambda_name_descriptor}" #${var.truly_lambda_user_function_name}-${local.region_prefix}"
   retention_in_days = 1
 
-  tags = merge(var.common_tags, { service : "${var.service_name}" })
+  tags = merge(var.common_tags, { logic : "${var.service_name}" })
 }
 
 

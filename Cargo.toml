@@ -4,13 +4,13 @@ resolver = "2"
 members = [
     "lib_users",
     "lib_licenses",
-    "lib_ledger",
+    #"lib_ledger",
     "lib_util_jwt",
     "lambda_login",
     "lambda_user",
     "lambda_license",
     "lambda_admin",
-    "lambda_after_video",
+    #"lambda_after_video",
     "truly_cli",
 ]
 

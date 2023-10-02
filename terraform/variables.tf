@@ -32,7 +32,6 @@ variable "service_tag" {
   default = "api"
 }
 
-
 variable "trace_log" {
   description = "tracing lambdas"
   type = string

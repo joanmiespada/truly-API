@@ -7,6 +7,7 @@ mod video;
 use std::str::FromStr;
 
 use crate::my_lambda::assets::get_asset::get_asset_by_shorter;
+use crate::my_lambda::assets::get_similar_assets::get_similar_assets_by_id;
 use crate::my_lambda::licenses::create_my_license::create_my_license;
 use crate::my_lambda::licenses::get_licenses::get_licenses;
 use crate::my_lambda::licenses::get_my_license::get_my_licenses_all;
@@ -16,7 +17,7 @@ use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, Request
 //use lib_blockchain::services::nfts::NFTsService;
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, STAGE_ENV};
-use lib_ledger::service::LedgerService;
+//use lib_ledger::service::LedgerService;
 use lib_licenses::services::licenses::LicenseService;
 use lib_licenses::services::video::VideoService;
 use lib_users::services::users::UsersService;
@@ -51,7 +52,7 @@ pub async fn function_handler(
     video_service: &VideoService,
     //tx_service: &BlockchainTxService,
     license_service: &LicenseService,
-    ledger_service: &LedgerService,
+    //ledger_service: &LedgerService,
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error + Send + Sync>> {
     info!("income new request");
@@ -70,14 +71,15 @@ pub async fn function_handler(
     router.insert("/api/asset", Some("1"))?;
     router.insert("/api/asset/:id", Some("2"))?;
     //router.insert("/api/nft", Some("3"))?;
-    router.insert("/api/license", Some("4"))?;
-    router.insert("/api/license/:id", Some("44"))?;
-    router.insert("/api/shorter/:id", Some("5"))?;
-    router.insert("/api/shorter", Some("55"))?;
+    // router.insert("/api/license", Some("4"))?;
+    // router.insert("/api/license/:id", Some("44"))?;
+    // router.insert("/api/shorter/:id", Some("5"))?;
+    // router.insert("/api/shorter", Some("55"))?;
     //router.insert("/api/tx/:hash", Some("6"))?;
     //router.insert("/api/txs/:id", Some("7"))?;
     //router.insert("/api/hash", Some("8"))?;
     router.insert("/api/hash/:id", Some("88"))?;
+    router.insert("/api/similar/:id", Some("99"))?;
 
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
@@ -158,7 +160,7 @@ pub async fn function_handler(
                         asset_service,
                         //tx_service,
                         license_service,
-                        ledger_service,
+                        //ledger_service,
                         &shorter_id,
                     )
                     .await;
@@ -184,6 +186,25 @@ pub async fn function_handler(
                 //     let asset_id = Uuid::from_str(id.as_str())?;
                 //     return get_txs(&req, &context, config, tx_service,&asset_id).await;
                 // }
+
+                "99" => {
+                    let id = matched.params.get("id").unwrap().to_string();
+                    let asset_id = Uuid::from_str(id.as_str())?;
+                    // public, not required jwt token
+                    return get_similar_assets_by_id(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        //tx_service,
+                        video_service,
+                        //ledger_service,
+                        &asset_id,
+                    )
+                    .await;
+                }
+
+
                 _ => build_resp(
                     "method not allowed".to_string(),
                     StatusCode::METHOD_NOT_ALLOWED,
@@ -209,7 +230,7 @@ pub async fn function_handler(
                         config,
                         asset_service,
                         owners_service,
-                        ledger_service,
+                        //ledger_service,
                         &user_id,
                     )
                     .await

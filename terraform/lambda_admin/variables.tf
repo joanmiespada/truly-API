@@ -5,13 +5,12 @@ variable "lambda_admin_file" {
   default = "lambda_admin/bootstrap.zip"
 }
 
-variable "truly_lambda_admin_function_name" {
-  default = "truly_admin"
-  type    = string
-}
+# variable "truly_lambda_admin_function_name" {
+#   default = "truly_admin"
+#   type    = string
+# }
 
 variable "service_name" {
-  default = "admin"
   type    = string
 }
 

@@ -5,13 +5,12 @@ variable "lambda_licenses_file" {
   default     = "lambda_license/bootstrap.zip"
 }
 
-variable "truly_lambda_licenses_function_name" {
-  default = "truly_licenses"
-  type    = string
-}
+# variable "truly_lambda_licenses_function_name" {
+#   default = "truly_licenses"
+#   type    = string
+# }
 
 variable "service_name" {
-  default = "licenses"
   type    = string
 }
 
@@ -77,3 +76,7 @@ variable "runtime" {
   type    = string
 }
 
+variable "hashes_similarities_arn" {
+  type    = string
+  description = "topic where hash calculation and similarities will be triggered"
+}

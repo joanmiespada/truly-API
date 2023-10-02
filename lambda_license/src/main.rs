@@ -17,8 +17,8 @@ use lib_licenses::services::video::VideoService;
 use lib_licenses::{repositories::assets::AssetRepo, services::licenses::LicenseService};
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
-use lib_ledger::repository::LedgerRepo;
-use lib_ledger::service::LedgerService;
+// use lib_ledger::repository::LedgerRepo;
+// use lib_ledger::service::LedgerService;
 use my_lambda::{error::ApiLambdaError, function_handler};
 use tracing::info;
 
@@ -70,8 +70,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let license_repo = LicenseRepo::new(&config);
     let license_service = LicenseService::new(license_repo, asset_repo);
     
-    let ledger_repo = LedgerRepo::new(&config);
-    let ledger_service = LedgerService::new(ledger_repo);
+    // let ledger_repo = LedgerRepo::new(&config);
+    // let ledger_service = LedgerService::new(ledger_repo);
 
     info!("bootstrapping dependencies: completed. Lambda ready.");
     let resp = lambda_http::run(service_fn(|event| {
@@ -84,7 +84,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
             &video_service,
             //&tx_service,
             &license_service,
-            &ledger_service,
+            //&ledger_service,
             event,
         )
     }))

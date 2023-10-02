@@ -10,7 +10,7 @@ lib_async_ops = { git="https://github.com/joanmiespada/truly-shared" }
 lib_licenses = { path = "../lib_licenses" }
 lib_users = { path = "../lib_users" }
 #lib_blockchain = { git = "https://github.com/joanmiespada/truly-blockchains"}
-lib_ledger = { path = "../lib_ledger"}
+lib_ledger = { path = "../deprecate/lib_ledger"}
 env_logger = "0.10.0"
 chrono = {version="0.4.31", features = ["serde"] }
 serde = { version = "1.0.188", features = ["derive"] }

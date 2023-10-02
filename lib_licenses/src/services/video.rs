@@ -9,17 +9,23 @@ use uuid::Uuid;
 
 use crate::{
     errors::video::VideoError,
-    models::{asset::{Asset, VideoLicensingStatus}, hash::CreateHashes},
+    models::{asset::{Asset, VideoLicensingStatus}, hash::CreateHashes, video::MatchAPIResponse},
 };
 
 use super::assets::{AssetManipulation, AssetService};
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
+
+
+
+
+
 #[async_trait]
 pub trait VideoManipulation {
     async fn shorter_video_async(&self, asset_id: &Uuid, user_id: &String) -> ResultE<String>;
     async fn compute_hash_and_similarities_async(&self, asset_id: &Uuid) -> ResultE<String>;
+    async fn get_similar_hashes(&self, asset_id: &Uuid) -> ResultE<MatchAPIResponse>;
 }
 
 #[derive(Debug)]
@@ -194,4 +200,19 @@ impl VideoManipulation for VideoService {
 
 
     }
+
+    #[tracing::instrument()]
+    async fn get_similar_hashes(&self, asset_id: &Uuid) -> ResultE<MatchAPIResponse>{
+        let url_matchapi:String = format!("{}?asset_id={}", self.config.env_vars().matchapi_endpoint().unwrap().to_string(), asset_id.to_string());
+
+        let mut resp: MatchAPIResponse = reqwest::get(url_matchapi).await?.json().await?;
+
+        for item in &mut resp.similars {
+            let ass1 = self.asset_service.get_by_id(&item.asset_id).await?;
+            item.asset_url = ass1.url().clone();
+        }
+
+        Ok(resp)
+    }
+
 }

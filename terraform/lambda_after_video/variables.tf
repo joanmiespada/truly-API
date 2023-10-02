@@ -5,13 +5,13 @@ variable "lambda_after_video_file" {
   default     = "lambda_after_video/bootstrap.zip"
 }
 
-variable "truly_lambda_after_video_function_name" {
-  default = "truly_after_video"
-  type    = string
-}
+# variable "truly_lambda_after_video_function_name" {
+#   default = "truly_after_video"
+#   type    = string
+# }
 
 variable "service_name" {
-  default = "after_video_update"
+  #default = "after_video_update"
   type    = string
 }
 

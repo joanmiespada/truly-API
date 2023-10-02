@@ -1,13 +1,14 @@
 locals {
   lambda_file            = "${var.lambda_deploy_folder}/${var.lambda_licenses_file}"
   region_prefix          = element(split("-", var.aws_region), 0)
-  lambda_name_descriptor = "${var.truly_lambda_licenses_function_name}-${local.region_prefix}-${var.api_stage_version}"
+  #lambda_name_descriptor = "${var.truly_lambda_licenses_function_name}-${local.region_prefix}-${var.api_stage_version}"
+  lambda_name_descriptor = "${var.common_tags.project}-${var.common_tags.service}-${var.common_tags.environment}-${var.aws_region}-${var.api_stage_version}-${var.service_name}"
 }
 resource "aws_cloudwatch_log_group" "truly_lambda_licenses_cloudwatch" {
   name              = "/aws/lambda/${local.lambda_name_descriptor}" #${var.truly_lambda_licenses_function_name}-${local.region_prefix}"
   retention_in_days = 1
 
-  tags = merge(var.common_tags, { service : "${var.service_name}" })
+  tags = merge(var.common_tags, { logic : "${var.service_name}" })
 }
 
 
@@ -31,14 +32,15 @@ resource "aws_lambda_function" "truly_lambda_licenses" {
       ENVIRONMENT             = "${var.environment_flag}"
       RUST_LOG                = "${var.rust_log}"
       KMS_KEY_ID              = "${var.kms_cypher_owner}"
-      DEAD_LETTER_QUEUE_MINT  = "${var.dead_letter_queue_mint}"
-      TOPIC_ARN_MINT_ASYNC    = "${var.minting_async_topic_arn}"
+      #DEAD_LETTER_QUEUE_MINT  = "${var.dead_letter_queue_mint}"
+      #TOPIC_ARN_MINT_ASYNC    = "${var.minting_async_topic_arn}"
       RUST_BACKTRACE          = "${var.rust_backtrace}"
-      SHORTER_VIDEO_IN_TOPIC  = "${var.video_in_topic}"
-      SHORTER_VIDEO_OUT_TOPIC = "${var.video_out_topic}"
-      MINTING_FAILS_TOPIC     = "${var.minting_fails_topic_arn}"
+      #SHORTER_VIDEO_IN_TOPIC  = "${var.video_in_topic}"
+      #SHORTER_VIDEO_OUT_TOPIC = "${var.video_out_topic}"
+      #MINTING_FAILS_TOPIC     = "${var.minting_fails_topic_arn}"
       API_STAGE               = "${var.api_stage_version}"
-      CONTRACT_ID             = "1"
+      #CONTRACT_ID             = "1"
+      HASHES_SIMILAR_VIDEO_IN_TOPIC = "${var.hashes_similarities_arn}"
     }
   }
 

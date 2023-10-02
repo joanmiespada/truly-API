@@ -38,6 +38,7 @@ base64 = "0.21.4"
 uuid = { version = "1.4.1", features=["v4","fast-rng","macro-diagnostics","serde"]}
 maplit = "1.0.2"
 tokio = { version="1.32.0", features=["full"]}
+reqwest = {version = "0.11.20" ,features = ["json"]}
 
 [target.aarch64-apple-darwin.dev-dependencies]
 env_logger = "0.10.0"
