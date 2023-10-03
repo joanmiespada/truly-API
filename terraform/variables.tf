@@ -117,7 +117,5 @@ variable "runtime" {
 
 variable "matchapi_endpoint" {
   type = string
-  default = "http://a.b.c.d"
-  
 }
 

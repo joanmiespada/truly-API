@@ -40,12 +40,12 @@ do
 done
 
 # environment variables
-export ENVIRONMENT=stage
+export ENVIRONMENT="stage"
 export TF_VAR_environment_flag=$ENVIRONMENT
-export RUST_LOG=info
+export RUST_LOG="info"
 export TF_VAR_telemtry=false
 export TF_VAR_telemetry_endpoint=""
-export TF_VAR_rust_log=debug
+export TF_VAR_rust_log="debug"
 export TF_VAR_rust_backtrace="full"
 export TF_VAR_trace_log="cargo_lambda=info"
 export TF_VAR_jwt_token_time_exp_hours=8
@@ -202,6 +202,7 @@ if [[ "$terraform_skip" == 'false' ]]; then
         export TF_VAR_aws_region=$region
         export TF_VAR_dns_prefix="${letters}-${dns_prefix}"
         export TF_VAR_kms_id_cypher_all_secret_keys=$mapKeys[$region]
+        export TF_VAR_matchapi_endpoint= $(grep -E '^MATCHAPI_ENDPOINT=' .env-stage | cut -d '=' -f2-)
         terraform workspace new $region_label
         terraform workspace select $region_label
         echo "Planning infrastructure for ${region}..."
