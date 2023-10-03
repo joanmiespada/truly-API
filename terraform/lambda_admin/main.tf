@@ -48,7 +48,7 @@ resource "aws_lambda_function" "truly_lambda_admin" {
     var.rust_backtrace
   ]
 
-  tags = merge(var.common_tags, { service : "${var.service_name}" })
+  tags = merge(var.common_tags, { "logic" : "${var.service_name}" })
 
 }
 

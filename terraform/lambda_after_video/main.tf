@@ -8,7 +8,7 @@ resource "aws_cloudwatch_log_group" "truly_lambda_after_video_cloudwatch" {
   name              = "/aws/lambda/${local.lambda_name_descriptor}" # ${var.truly_lambda_after_video_function_name}-${local.region_prefix}"
   retention_in_days = 1
 
-  tags = merge(var.common_tags, { logic : "${var.service_name}" })
+  tags = merge(var.common_tags, { "logic" : "${var.service_name}" })
 }
 
 
@@ -49,7 +49,7 @@ resource "aws_lambda_function" "truly_lambda_after_video" {
   ]
 
 
-  tags = merge(var.common_tags, { service : "${var.service_name}" })
+  tags = merge(var.common_tags, { "logic" : "${var.service_name}" })
 
 }
 

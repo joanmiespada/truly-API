@@ -115,3 +115,9 @@ variable "runtime" {
   default = "provided.al2"
 }
 
+variable "matchapi_endpoint" {
+  type = string
+  default = "http://a.b.c.d"
+  
+}
+

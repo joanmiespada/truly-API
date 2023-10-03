@@ -149,6 +149,8 @@ module "lambda_licenses" {
   runtime           = var.runtime
   hashes_similarities_arn = aws_sns_topic.hash_similar_in_topic.arn
 
+  matchapi_endpoint = var.matchapi_endpoint
+
 }
 # module "lambda_mint" {
 #   source = "./lambda_mint"

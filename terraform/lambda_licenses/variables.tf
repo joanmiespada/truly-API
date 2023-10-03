@@ -80,3 +80,9 @@ variable "hashes_similarities_arn" {
   type    = string
   description = "topic where hash calculation and similarities will be triggered"
 }
+
+variable "matchapi_endpoint" {
+  type = string
+  description = "url where matchapi endpoint is"
+  
+}
