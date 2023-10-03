@@ -16,7 +16,7 @@ jq --version || exit 1
 zip_skip='false'
 secrets_skip='false'
 tables_skip='false'
-ledger_skip='true'
+#ledger_skip='true'
 terraform_skip='false'
 for arg in "$@"
 do
@@ -30,9 +30,9 @@ do
         "--tables_skip")
             tables_skip='true'
             ;;
-        "--ledger_skip")
-            ledger_skip='true'
-            ;;
+        # "--ledger_skip")
+        #     ledger_skip='true'
+        #     ;;
         "--terraform_skip")
             terraform_skip='true'
             ;;
@@ -138,11 +138,11 @@ else
     echo "secrets skip, they need to be already created"
 fi
 
-if [[ "$ledger_skip" == 'false' ]]; then
-   echo "ledger needs to be created before. run ./create_ledger.sh script" 
-else
-    echo "ledger creation skip. it needs to be create by ./create_ledger.sh script before"
-fi
+# if [[ "$ledger_skip" == 'false' ]]; then
+#    echo "ledger needs to be created before. run ./create_ledger.sh script" 
+# else
+#     echo "ledger creation skip. it needs to be create by ./create_ledger.sh script before"
+# fi
 
 
 if [[ "$tables_skip" == 'false' ]]; then
@@ -190,6 +190,15 @@ else
     echo "tables and master data skip"
 fi
 
+if [[ -f .env-stage ]]; then
+    # Extract the value of X and store it in Y
+    mathchapi=$(grep -E '^MATCHAPI_ENDPOINT\s*=' .env-stage | cut -d '=' -f2- | tr -d ' "' | xargs)
+    #echo $mathchapi
+else
+    echo ".env-stage file not found"
+    exit 1
+fi
+
 if [[ "$terraform_skip" == 'false' ]]; then
 
     echo 'running terraform...'
@@ -202,7 +211,7 @@ if [[ "$terraform_skip" == 'false' ]]; then
         export TF_VAR_aws_region=$region
         export TF_VAR_dns_prefix="${letters}-${dns_prefix}"
         export TF_VAR_kms_id_cypher_all_secret_keys=$mapKeys[$region]
-        export TF_VAR_matchapi_endpoint= $(grep -E '^MATCHAPI_ENDPOINT=' .env-stage | cut -d '=' -f2-)
+        export TF_VAR_matchapi_endpoint=$mathchapi
         terraform workspace new $region_label
         terraform workspace select $region_label
         echo "Planning infrastructure for ${region}..."

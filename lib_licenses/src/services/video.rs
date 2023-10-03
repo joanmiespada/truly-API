@@ -17,10 +17,6 @@ use super::assets::{AssetManipulation, AssetService};
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
 
-
-
-
-
 #[async_trait]
 pub trait VideoManipulation {
     async fn shorter_video_async(&self, asset_id: &Uuid, user_id: &String) -> ResultE<String>;
@@ -197,8 +193,6 @@ impl VideoManipulation for VideoService {
             }
         };
 
-
-
     }
 
     #[tracing::instrument()]
@@ -211,7 +205,6 @@ impl VideoManipulation for VideoService {
             let ass1 = self.asset_service.get_by_id(&item.asset_id).await?;
             item.asset_url = ass1.url().clone();
         }
-
         Ok(resp)
     }
 
