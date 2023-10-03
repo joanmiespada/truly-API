@@ -1,6 +1,34 @@
+
+locals {
+  route_configurations = [
+    aws_apigatewayv2_route.truly_admin_route,
+    aws_apigatewayv2_route.truly_licenses_route_asset,
+    aws_apigatewayv2_route.truly_licenses_route_asset_by_id,
+    aws_apigatewayv2_route.truly_licenses_route_hash_by_id,
+    aws_apigatewayv2_route.truly_login_route,
+    aws_apigatewayv2_route.truly_user_route,
+    aws_apigatewayv2_route.truly_user_route_by_id
+    # Add other routes as needed, remember to modify it to force auto-deploy
+  ]
+
+  integration_configurations = [
+    aws_apigatewayv2_integration.truly_admin_integration,
+    aws_apigatewayv2_integration.truly_licenses_integration,
+    aws_apigatewayv2_integration.truly_login_integration,
+    aws_apigatewayv2_integration.truly_user_integration
+    # Add other integrations as needed
+  ]
+
+  api_configuration_checksum = sha1(jsonencode({
+    routes      = local.route_configurations,
+    integrations = local.integration_configurations
+  }))
+}
+
+
 resource "aws_apigatewayv2_api" "truly_api" {
-  name          = "Truly API"
-  description   = "Truly API"
+  name          = "Truly-API"
+  description   = "Truly-API"
   protocol_type = "HTTP"
 
   cors_configuration {
@@ -26,7 +54,26 @@ resource "aws_apigatewayv2_stage" "default_stage" { # targe the current one by d
   auto_deploy = false
   tags        = merge(local.common_tags, {})
   deployment_id = length(var.active_api_stage) > 0 ? var.active_api_stage : aws_apigatewayv2_deployment.truly_api_deployment.id
+
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_gateway_logs.arn
+    format = "$context.identity.sourceIp - - [$context.requestTime] \"$context.httpMethod $context.routeKey $context.protocol\" $context.status $context.responseLength $context.requestId"
+  }
+
+  default_route_settings {
+    logging_level = "INFO"
+    data_trace_enabled = true  # Enables detailed request/response logging
+    throttling_burst_limit = 2000
+    throttling_rate_limit  = 5000
+  }
+
 }
+
+resource "aws_cloudwatch_log_group" "api_gateway_logs" {
+  name = "/aws/apigateway/${aws_apigatewayv2_api.truly_api.name}"
+  retention_in_days = 1  # Adjust as needed
+}
+
 
 //---------------- lambda login ----------------------------
 resource "aws_apigatewayv2_integration" "truly_login_integration" {
@@ -53,7 +100,7 @@ resource "aws_lambda_permission" "truly_login_permission" {
   function_name = module.lambda_login.lambda.function_name
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_login_route.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_login_route.route_key)[1]}"
+  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/*${split(" ", aws_apigatewayv2_route.truly_login_route.route_key)[1]}"
 
 }
 
@@ -82,7 +129,7 @@ resource "aws_lambda_permission" "truly_admin_permission" {
   function_name = module.lambda_admin.lambda.function_name
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_admin_route.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_admin_route.route_key)[1]}"
+  #source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_admin_route.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_admin_route.route_key)[1]}"
 
 }
 
@@ -109,7 +156,7 @@ resource "aws_lambda_permission" "truly_user_permission" {
   function_name = module.lambda_user.lambda.function_name
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_user_route.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_user_route.route_key)[1]}"
+  #source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_user_route.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_user_route.route_key)[1]}"
 }
 resource "aws_apigatewayv2_route" "truly_user_route_by_id" {
   api_id    = aws_apigatewayv2_api.truly_api.id
@@ -120,7 +167,7 @@ resource "aws_lambda_permission" "truly_user_permission_by_id" {
   function_name = module.lambda_user.lambda.function_name
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_user_route_by_id.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_user_route_by_id.route_key)[1]}"
+  #source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_user_route_by_id.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_user_route_by_id.route_key)[1]}"
 }
 
 //---------------- lambda license ----------------------------
@@ -148,7 +195,7 @@ resource "aws_lambda_permission" "truly_licenses_permission_asset" {
   function_name = module.lambda_licenses.lambda.function_name
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset.route_key)[1]}"
+  #source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset.route_key)[1]}"
 
 }
 
@@ -162,7 +209,7 @@ resource "aws_lambda_permission" "truly_licenses_permission_asset_by_id" {
   function_name = module.lambda_licenses.lambda.function_name
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset_by_id.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset_by_id.route_key)[1]}"
+  #source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset_by_id.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset_by_id.route_key)[1]}"
 }
 
 resource "aws_apigatewayv2_route" "truly_licenses_route_hash_by_id" {
@@ -175,7 +222,7 @@ resource "aws_lambda_permission" "truly_licenses_permission_hash_by_id" {
   function_name = module.lambda_licenses.lambda.function_name
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_hash_by_id.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_hash_by_id.route_key)[1]}"
+  #source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_hash_by_id.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_hash_by_id.route_key)[1]}"
 }
 
 # resource "aws_apigatewayv2_route" "truly_licenses_route_nft" {
@@ -269,9 +316,13 @@ resource "aws_apigatewayv2_deployment" "truly_api_deployment" {
   api_id      = aws_apigatewayv2_api.truly_api.id
   description = "truly API deployment version: ${var.api_stage_version}"
 
-  # lifecycle {
-  #   create_before_destroy = true
-  # }
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  triggers = {
+    configuration = local.api_configuration_checksum
+  }
 
   depends_on = [
     aws_apigatewayv2_route.truly_admin_route,
