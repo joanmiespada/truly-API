@@ -1,23 +1,16 @@
-use chrono::{DateTime, Utc};
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
-use lib_licenses::models::asset::{AssetStatus, VideoLicensingStatus};
-use lib_licenses::models::license::License;
-use lib_licenses::services::licenses::{LicenseManipulation, LicenseService};
-use lib_licenses::services::owners::OwnerService;
 use lib_licenses::services::video::{VideoManipulation, VideoService};
 use lib_licenses::{
     errors::asset::{AssetDynamoDBError, AssetNoExistsError},
-    //models::asset::Asset,
     services::assets::{AssetManipulation, AssetService},
 };
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tracing::instrument;
 use uuid::Uuid;
 use validator::ValidationError;
 
-use crate::my_lambda::{build_resp, build_resp_env, build_resp_no_cache};
+use crate::my_lambda::{build_resp, build_resp_env};
 
 #[instrument]
 pub async fn get_similar_assets_by_id(

@@ -55,8 +55,8 @@ resource "aws_lambda_function" "truly_lambda_licenses" {
     var.resource_sqs,
     var.resource_sns,
     aws_cloudwatch_log_group.truly_lambda_licenses_cloudwatch,
-    var.dead_letter_queue_mint,
-    var.minting_async_topic_arn,
+    //var.dead_letter_queue_mint,
+    //var.minting_async_topic_arn,
     var.rust_backtrace
   ]
 
