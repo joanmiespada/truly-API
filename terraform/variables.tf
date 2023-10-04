@@ -43,11 +43,11 @@ variable "rust_log" {
   //default = "cargo_lambda=info" //"cargo_lambda=trace"
 }
 
-variable "lambda_deploy_folder" {
-  description = "it helps to identify the correct folder lambda with infra arm64 or linux"
-  type = string
- // default = "../target/lambda_arm64/"
-}
+#variable "lambda_deploy_folder" {
+#  description = "it helps to identify the correct folder lambda with infra arm64 or linux"
+#  type = string
+# // default = "../target/lambda_arm64/"
+#}
 
 variable "kms_id_cypher_all_secret_keys"  {
   description = "kms id key where the api uses to encrypt all private keys"
@@ -123,4 +123,14 @@ variable "ecr_license_lambda" {
   type=string
   
 }
-
+variable "ecr_admin_lambda" {
+  type=string
+  
+}
+variable "ecr_login_lambda" {
+  type=string
+  
+}
+variable "ecr_user_lambda" {
+  type=string 
+}

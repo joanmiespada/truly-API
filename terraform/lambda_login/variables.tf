@@ -1,14 +1,4 @@
 
-variable "lambda_login_file" {
-  description = "The binary zip file for the login lambda."
-  type        = string
-  default     = "lambda_login/bootstrap.zip"
-}
-
-# variable "truly_lambda_login_function_name" {
-#   default = "truly_login"
-#   type    = string
-# }
 
 variable "service_name" {
   type    = string
@@ -28,7 +18,6 @@ variable "environment_flag" {}
 variable "trace_log" {}
 variable "rust_log" {}
 
-variable "lambda_deploy_folder" {}
 variable "jwt_token_time_exp_hours" {
   description = "time expiration jwt in production based on hours"
   type        = number
@@ -46,11 +35,10 @@ variable "api_stage_version" {
 variable "architectures" {
   type    = list(string)
 }
-variable "handler" {
-  type    = string
-}
-variable "runtime" {
-  type    = string
+
+variable "ecr_image" {
+  type = string
+  description = "ecr repo where I must pull the image base"
 }
 
 

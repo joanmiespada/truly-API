@@ -1,15 +1,4 @@
 
-variable "lambda_licenses_file" {
-  description = "The binary zip file for the user lambda."
-  type        = string
-  default     = "lambda_license/bootstrap.zip"
-}
-
-# variable "truly_lambda_licenses_function_name" {
-#   default = "truly_licenses"
-#   type    = string
-# }
-
 variable "service_name" {
   type    = string
 }
@@ -26,7 +15,6 @@ variable "role" {}
 variable "environment_flag" {}
 variable "trace_log" {}
 variable "rust_log" {}
-variable "lambda_deploy_folder" {}
 
 variable "kms_cypher_owner" {
   type      = string
@@ -69,12 +57,6 @@ variable "api_stage_version" {
 variable "architectures" {
   type    = list(string)
 }
-# variable "handler" {
-#   type    = string
-# }
-# variable "runtime" {
-#   type    = string
-# }
 
 variable "hashes_similarities_arn" {
   type    = string
@@ -90,5 +72,4 @@ variable "matchapi_endpoint" {
 variable "ecr_image" {
   type = string
   description = "ecr repo where I must pull the image base"
-  
 }

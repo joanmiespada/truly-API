@@ -28,7 +28,6 @@ variable "environment_flag" {}
 variable "trace_log" {}
 variable "rust_log" {}
 
-variable "lambda_deploy_folder" {}
 
 variable "rust_backtrace" {
   type= string
@@ -43,10 +42,9 @@ variable "api_stage_version" {
 variable "architectures" {
   type    = list(string)
 }
-variable "handler" {
-  type    = string
-}
-variable "runtime" {
-  type    = string
+
+variable "ecr_image" {
+  type = string
+  description = "ecr repo where I must pull the image base"
 }
 

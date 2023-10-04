@@ -55,13 +55,11 @@ module "lambda_login" {
   environment_flag         = var.environment_flag
   trace_log                = var.trace_log
   rust_log                 = var.rust_log
-  lambda_deploy_folder     = var.lambda_deploy_folder
   rust_backtrace           = var.rust_backtrace
   aws_region               = var.aws_region
   api_stage_version        = var.api_stage_version
   architectures            = var.architectures
-  handler                  = var.handler
-  runtime                  = var.runtime
+  ecr_image                = var.ecr_login_lambda 
 
 }
 
@@ -79,14 +77,12 @@ module "lambda_user" {
   environment_flag     = var.environment_flag
   trace_log            = var.trace_log
   rust_log             = var.rust_log
-  lambda_deploy_folder = var.lambda_deploy_folder
 
   rust_backtrace    = var.rust_backtrace
   aws_region        = var.aws_region
   api_stage_version = var.api_stage_version
   architectures     = var.architectures
-  handler           = var.handler
-  runtime           = var.runtime
+  ecr_image         = var.ecr_user_lambda 
 }
 
 module "lambda_admin" {
@@ -103,14 +99,12 @@ module "lambda_admin" {
   environment_flag     = var.environment_flag
   trace_log            = var.trace_log
   rust_log             = var.rust_log
-  lambda_deploy_folder = var.lambda_deploy_folder
 
   rust_backtrace    = var.rust_backtrace
   aws_region        = var.aws_region
   api_stage_version = var.api_stage_version
   architectures     = var.architectures
-  handler           = var.handler
-  runtime           = var.runtime
+  ecr_image         = var.ecr_admin_lambda 
 
 }
 
@@ -131,7 +125,6 @@ module "lambda_licenses" {
   environment_flag     = var.environment_flag
   trace_log            = var.trace_log
   rust_log             = var.rust_log
-  lambda_deploy_folder = var.lambda_deploy_folder
 
   #dead_letter_queue_mint  = aws_sqs_queue.minting_queue_deadletter.url
   #minting_async_topic_arn = aws_sns_topic.minting_topic.arn
@@ -145,8 +138,6 @@ module "lambda_licenses" {
   aws_region        = var.aws_region
   api_stage_version = var.api_stage_version
   architectures     = var.architectures
-  #handler           = var.handler
-  #runtime           = var.runtime
   hashes_similarities_arn = aws_sns_topic.hash_similar_in_topic.arn
 
   matchapi_endpoint = var.matchapi_endpoint

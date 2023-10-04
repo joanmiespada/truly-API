@@ -13,7 +13,7 @@ qldb --version || exit 1
 jq --version || exit 1
 
 #check paramaters. They allow to skip some sections
-zip_skip='false'
+#zip_skip='false'
 image_skip='false'
 secrets_skip='false'
 tables_skip='false'
@@ -22,9 +22,9 @@ terraform_skip='false'
 for arg in "$@"
 do
     case $arg in
-        "--zip_skip")
-            zip_skip='true'
-            ;;
+        # "--zip_skip")
+        #     zip_skip='true'
+        #     ;;
         "--image_skip")
             image_skip='true'
             ;;
@@ -75,6 +75,21 @@ lambdas='[
             "version": "0.0.1",
             "path": "lambda_license/image/Dockerfile",
             "description": "License lambda: manage assets"
+        },{
+            "name": "admin_lambda",
+            "version": "0.0.0",
+            "path": "lambda_admin/image/Dockerfile",
+            "description": "Admin lambda: manage operation with high privilegies"
+        },{
+            "name": "login_lambda",
+            "version": "0.0.0",
+            "path": "lambda_login/image/Dockerfile",
+            "description": "Login lambda: manage login and signups"
+        },{
+            "name": "user_lambda",
+            "version": "0.0.0",
+            "path": "lambda_user/image/Dockerfile",
+            "description": "User lambda: manage user crud ops"
         }
     ]'
 
@@ -113,7 +128,7 @@ else
         lambda_name=$(echo $lambda | jq -r '.name')
         imageVersion=$(echo $lambda | jq -r '.version')
         docker_path=$(echo $lambda | jq -r '.path')
-        repo_name="$lambda_name-$environ"
+        repo_name="$lambda_name-$ENVIRONMENT"
 
         for region in "${multi_region[@]}"
         do
@@ -127,23 +142,23 @@ fi
 
 
 
-if [[ "$zip_skip" == 'false' ]]; then
+# if [[ "$zip_skip" == 'false' ]]; then
     
-    echo "compiling lambdas ${architecture}..."
-    export OPENSSL_LIB_DIR=${path_base}/lib
-    export OPENSSL_INCLUDE_DIR=${path_base}/include
+#     echo "compiling lambdas ${architecture}..."
+#     export OPENSSL_LIB_DIR=${path_base}/lib
+#     export OPENSSL_INCLUDE_DIR=${path_base}/include
 
-    cargo lambda build --release --arm64 --output-format zip --workspace --exclude truly_cli --lambda-dir $folder
+#     cargo lambda build --release --arm64 --output-format zip --workspace --exclude truly_cli --lambda-dir $folder
     
-    if [ $? -ne 0 ]; then
-        echo 'compiling error, please check cargo build.'
-        exit 1
-    fi
-else
-    echo 'skipping lambdas compilation, reusing current folders and zip files.'
-fi
-export TF_VAR_lambda_deploy_folder=../${folder}
-echo "lambdas will be seek at: ${TF_VAR_lambda_deploy_folder}"
+#     if [ $? -ne 0 ]; then
+#         echo 'compiling error, please check cargo build.'
+#         exit 1
+#     fi
+# else
+#     echo 'skipping lambdas compilation, reusing current folders and zip files.'
+# fi
+# export TF_VAR_lambda_deploy_folder=../${folder}
+# echo "lambdas will be seek at: ${TF_VAR_lambda_deploy_folder}"
 
 echo 'running hard pre-requisits: keys and secrets'
 declare -A mapKeys

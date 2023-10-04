@@ -22,18 +22,18 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 
 WORKDIR /tmp
 
-COPY lambda_license/src /tmp/lambda_license/src
-COPY lambda_license/Cargo.toml /tmp/lambda_license/Cargo.toml
+COPY lambda_admin/src /tmp/lambda_admin/src
+COPY lambda_admin/Cargo.toml /tmp/lambda_admin/Cargo.toml
 COPY lib_licenses /tmp/lib_licenses
 COPY lib_users /tmp/lib_users
 COPY lib_util_jwt /tmp/lib_util_jwt
 
 
-WORKDIR /tmp/lambda_license
+WORKDIR /tmp/lambda_admin
 
 RUN cargo build --release
 
-RUN strip /tmp/lambda_license/target/release/lambda_license
+RUN strip /tmp/lambda_admin/target/release/lambda_admin
 
 FROM public.ecr.aws/lambda/provided:al2 
 
@@ -43,6 +43,6 @@ RUN yum install -y \
 
 WORKDIR /var/task
 
-COPY --from=builder /tmp/lambda_license/target/release/lambda_license /var/runtime/bootstrap
+COPY --from=builder /tmp/lambda_admin/target/release/lambda_admin /var/runtime/bootstrap
 
 CMD ["bootstrap.function_handler"]
