@@ -14,6 +14,7 @@ jq --version || exit 1
 
 #check paramaters. They allow to skip some sections
 zip_skip='false'
+image_skip='false'
 secrets_skip='false'
 tables_skip='false'
 #ledger_skip='true'
@@ -23,6 +24,9 @@ do
     case $arg in
         "--zip_skip")
             zip_skip='true'
+            ;;
+        "--image_skip")
+            image_skip='true'
             ;;
         "--secrets_skip")
             secrets_skip='true'
@@ -63,6 +67,64 @@ architecture="aarch64-linux-gnu"
 path_base=$(pwd)'/cross-compile/openssl/'${architecture}
 folder="target/lambda_${architecture}"
 multi_region=("eu-west-1")
+account_id=$(aws sts get-caller-identity --query Account --profile $profile --output text)
+
+lambdas='[
+        {
+            "name": "license_lambda",
+            "version": "0.0.1",
+            "path": "lambda_license/image/Dockerfile",
+            "description": "License lambda: manage assets"
+        }
+    ]'
+
+if [[ "$image_skip" == 'false' ]]; then
+
+    echo $lambdas | jq -c '.[]' | while read -r lambda; do
+        lambda_name=$(echo $lambda | jq -r '.name')
+        imageVersion=$(echo $lambda | jq -r '.version')
+        docker_path=$(echo $lambda | jq -r '.path')
+        repo_name="$lambda_name-$ENVIRONMENT"
+
+        docker build --platform=linux/arm64  -t $lambda_name:$imageVersion -f $docker_path . || exit 1
+
+        for region in "${multi_region[@]}"
+        do
+            reg=${region//-/_}
+            eval "declare -A map_lambda_repos_${reg}"
+            # Check if ECR repository exists
+            if ! aws ecr describe-repositories --region $region --profile $profile --repository-names $repo_name &> /dev/null; then
+                echo "Repository $repo_name doesn't exist in $region. Creating..."
+                res=$(aws ecr create-repository --repository-name $repo_name --region $region --profile $profile || exit 1)
+            fi
+
+            repo_url="$account_id.dkr.ecr.$region.amazonaws.com/$repo_name"
+            aws ecr get-login-password --region $region --profile $profile  | docker login --username AWS --password-stdin $repo_url || exit 1
+            docker tag $lambda_name:$imageVersion $repo_url:$imageVersion  || exit 1
+            docker push $repo_url:$imageVersion  || exit 1
+            eval "map_lambda_repos_${reg}[$lambda_name]=${repo_url}:${imageVersion}"
+            
+        done
+    done
+else
+    echo 'skipping lambdas compilation, reusing current images already pushed'
+
+    echo $lambdas | jq -c '.[]' | while read -r lambda; do
+        lambda_name=$(echo $lambda | jq -r '.name')
+        imageVersion=$(echo $lambda | jq -r '.version')
+        docker_path=$(echo $lambda | jq -r '.path')
+        repo_name="$lambda_name-$environ"
+
+        for region in "${multi_region[@]}"
+        do
+            reg=${region//-/_}
+            eval "declare -A map_lambda_repos_${reg}"
+            repo_url="$account_id.dkr.ecr.$region.amazonaws.com/$repo_name"
+            eval "map_lambda_repos_${reg}[$lambda_name]=${repo_url}:${imageVersion}"
+        done
+    done
+fi
+
 
 
 if [[ "$zip_skip" == 'false' ]]; then
@@ -212,6 +274,17 @@ if [[ "$terraform_skip" == 'false' ]]; then
         export TF_VAR_dns_prefix="${letters}-${dns_prefix}"
         export TF_VAR_kms_id_cypher_all_secret_keys=$mapKeys[$region]
         export TF_VAR_matchapi_endpoint=$mathchapi
+
+        cmd="ecrs=(\"\${(k)map_lambda_repos_${reg}[@]}\")"
+        eval "$cmd"
+
+        for lambda_name in "${ecrs[@]}"
+        do 
+            eval "repo=\${map_lambda_repos_${reg}[$lambda_name]}"
+            echo "exporting ecr_${lambda_name} = ${repo}..."
+            export TF_VAR_ecr_${lambda_name}="$repo"
+        done
+
         terraform workspace new $region_label
         terraform workspace select $region_label
         echo "Planning infrastructure for ${region}..."

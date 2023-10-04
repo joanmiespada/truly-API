@@ -129,7 +129,7 @@ resource "aws_lambda_permission" "truly_admin_permission" {
   function_name = module.lambda_admin.lambda.function_name
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  #source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_admin_route.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_admin_route.route_key)[1]}"
+  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_admin_route.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_admin_route.route_key)[1]}"
 
 }
 
@@ -156,7 +156,7 @@ resource "aws_lambda_permission" "truly_user_permission" {
   function_name = module.lambda_user.lambda.function_name
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  #source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_user_route.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_user_route.route_key)[1]}"
+  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_user_route.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_user_route.route_key)[1]}"
 }
 resource "aws_apigatewayv2_route" "truly_user_route_by_id" {
   api_id    = aws_apigatewayv2_api.truly_api.id
@@ -167,7 +167,7 @@ resource "aws_lambda_permission" "truly_user_permission_by_id" {
   function_name = module.lambda_user.lambda.function_name
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  #source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_user_route_by_id.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_user_route_by_id.route_key)[1]}"
+  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_user_route_by_id.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_user_route_by_id.route_key)[1]}"
 }
 
 //---------------- lambda license ----------------------------
@@ -195,7 +195,7 @@ resource "aws_lambda_permission" "truly_licenses_permission_asset" {
   function_name = module.lambda_licenses.lambda.function_name
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  #source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset.route_key)[1]}"
+  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset.route_key)[1]}"
 
 }
 
@@ -209,7 +209,7 @@ resource "aws_lambda_permission" "truly_licenses_permission_asset_by_id" {
   function_name = module.lambda_licenses.lambda.function_name
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  #source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset_by_id.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset_by_id.route_key)[1]}"
+  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset_by_id.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_asset_by_id.route_key)[1]}"
 }
 
 resource "aws_apigatewayv2_route" "truly_licenses_route_hash_by_id" {
@@ -222,7 +222,7 @@ resource "aws_lambda_permission" "truly_licenses_permission_hash_by_id" {
   function_name = module.lambda_licenses.lambda.function_name
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  #source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_hash_by_id.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_hash_by_id.route_key)[1]}"
+  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_hash_by_id.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_hash_by_id.route_key)[1]}"
 }
 
 # resource "aws_apigatewayv2_route" "truly_licenses_route_nft" {

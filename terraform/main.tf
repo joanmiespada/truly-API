@@ -145,11 +145,13 @@ module "lambda_licenses" {
   aws_region        = var.aws_region
   api_stage_version = var.api_stage_version
   architectures     = var.architectures
-  handler           = var.handler
-  runtime           = var.runtime
+  #handler           = var.handler
+  #runtime           = var.runtime
   hashes_similarities_arn = aws_sns_topic.hash_similar_in_topic.arn
 
   matchapi_endpoint = var.matchapi_endpoint
+
+  ecr_image         = var.ecr_license_lambda 
 
 }
 # module "lambda_mint" {

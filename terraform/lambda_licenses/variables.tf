@@ -69,12 +69,12 @@ variable "api_stage_version" {
 variable "architectures" {
   type    = list(string)
 }
-variable "handler" {
-  type    = string
-}
-variable "runtime" {
-  type    = string
-}
+# variable "handler" {
+#   type    = string
+# }
+# variable "runtime" {
+#   type    = string
+# }
 
 variable "hashes_similarities_arn" {
   type    = string
@@ -84,5 +84,11 @@ variable "hashes_similarities_arn" {
 variable "matchapi_endpoint" {
   type = string
   description = "url where matchapi endpoint is"
+  
+}
+
+variable "ecr_image" {
+  type = string
+  description = "ecr repo where I must pull the image base"
   
 }

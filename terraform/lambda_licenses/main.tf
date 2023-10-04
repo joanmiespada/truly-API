@@ -1,5 +1,5 @@
 locals {
-  lambda_file            = "${var.lambda_deploy_folder}/${var.lambda_licenses_file}"
+  #lambda_file            = "${var.lambda_deploy_folder}/${var.lambda_licenses_file}"
   region_prefix          = element(split("-", var.aws_region), 0)
   #lambda_name_descriptor = "${var.truly_lambda_licenses_function_name}-${local.region_prefix}-${var.api_stage_version}"
   lambda_name_descriptor = "${var.common_tags.project}-${var.common_tags.service}-${var.common_tags.environment}-${var.aws_region}-${var.api_stage_version}-${var.service_name}"
@@ -16,14 +16,17 @@ resource "aws_lambda_function" "truly_lambda_licenses" {
   function_name    = local.lambda_name_descriptor # var.truly_lambda_licenses_function_name
   architectures    = var.architectures
   memory_size      = 512
-  source_code_hash = filebase64sha256(local.lambda_file)
-  filename         = local.lambda_file
-  timeout          = 60
+  #source_code_hash = filebase64sha256(local.lambda_file)
+  #filename         = local.lambda_file
+  timeout          = 30
   tracing_config {
     mode = "Active"
   }
-  handler = var.handler #"function_handler"
-  runtime = var.runtime #"provided.al2"
+  package_type     = "Image"
+  image_uri        =  var.ecr_image
+
+  #handler = var.handler #"function_handler"
+  #runtime = var.runtime #"provided.al2"
 
   role = var.role
 

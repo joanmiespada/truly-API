@@ -119,3 +119,8 @@ variable "matchapi_endpoint" {
   type = string
 }
 
+variable "ecr_license_lambda" {
+  type=string
+  
+}
+
