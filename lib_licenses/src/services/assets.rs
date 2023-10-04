@@ -69,12 +69,12 @@ pub struct UpdatableFildsAsset {
 #[derive(Debug, Serialize, Deserialize, Validate, Clone)]
 pub struct CreatableFildsAsset {
     #[validate(length(max = 100))]
-    pub license: String,
+    pub license: Option<String>,
     pub url: String,
     #[validate(length(max = 2000))]
-    pub hash: String,
+    pub hash: Option<String>,
     #[validate(length(max = 2000))]
-    pub hash_algorithm: String,
+    pub hash_algorithm: Option<String>,
 
     pub latitude: Option<f64>,
     pub longitude: Option<f64>,
@@ -145,8 +145,16 @@ impl AssetManipulation for AssetService {
         asset.set_id(&Uuid::new_v4());
         let aux = creation_asset.url.clone();
         asset.set_url(&Some(url::Url::parse(aux.as_str())?));
-        asset.set_hash(&Some(creation_asset.hash.clone()));
-        asset.set_hash_algorithm(&Some(creation_asset.hash_algorithm.clone()));
+        if let Some(hash) = creation_asset.clone().hash {
+            asset.set_hash(&Some( hash.clone()));
+        }else{
+            asset.set_hash(&None);
+        }
+        if let Some(hash_algorithm) = creation_asset.clone().hash_algorithm {
+            asset.set_hash_algorithm(&Some(hash_algorithm.clone()));
+        }else{
+            asset.set_hash_algorithm(&None);
+        }
 
         asset.set_longitude(&creation_asset.longitude);
         asset.set_latitude(&creation_asset.latitude);

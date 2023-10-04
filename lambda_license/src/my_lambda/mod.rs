@@ -1,7 +1,6 @@
 mod assets;
 pub mod error;
 mod licenses;
-//mod nft;
 mod video;
 
 use std::str::FromStr;
@@ -11,13 +10,9 @@ use crate::my_lambda::assets::get_similar_assets::get_similar_assets_by_id;
 use crate::my_lambda::licenses::create_my_license::create_my_license;
 use crate::my_lambda::licenses::get_licenses::get_licenses;
 use crate::my_lambda::licenses::get_my_license::get_my_licenses_all;
-//use crate::my_lambda::nft::get_tx::{get_tx, get_txs};
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
-//use lib_blockchain::services::block_tx::BlockchainTxService;
-//use lib_blockchain::services::nfts::NFTsService;
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, STAGE_ENV};
-//use lib_ledger::service::LedgerService;
 use lib_licenses::services::licenses::LicenseService;
 use lib_licenses::services::video::VideoService;
 use lib_users::services::users::UsersService;
@@ -47,12 +42,9 @@ pub async fn function_handler(
     config: &Config,
     asset_service: &AssetService,
     owners_service: &OwnerService,
-    //blockchain_service: &NFTsService,
     user_service: &UsersService,
     video_service: &VideoService,
-    //tx_service: &BlockchainTxService,
     license_service: &LicenseService,
-    //ledger_service: &LedgerService,
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error + Send + Sync>> {
     info!("income new request");
@@ -78,7 +70,7 @@ pub async fn function_handler(
     //router.insert("/api/tx/:hash", Some("6"))?;
     //router.insert("/api/txs/:id", Some("7"))?;
     //router.insert("/api/hash", Some("8"))?;
-    router.insert("/api/hash/:id", Some("88"))?;
+    router.insert("/api/hash", Some("88"))?;
     router.insert("/api/similar/:id", Some("99"))?;
 
     match req.method() {

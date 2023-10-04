@@ -100,9 +100,9 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
             None => {
                 as1 = CreatableFildsAsset {
                     url: user.1 .0.to_string(),
-                    hash: "hash1234".to_string(),
-                    hash_algorithm: "MD5".to_string(),
-                    license: String::from_str("gnu").unwrap(),
+                    hash: Some("hash1234".to_string()),
+                    hash_algorithm: Some("MD5".to_string()),
+                    license: Some(String::from_str("gnu").unwrap()),
                     longitude: None,
                     latitude: None,
                     father: None,
@@ -115,9 +115,9 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
                 let father_id = Some(asset_father.id().to_owned());
                 as1 = CreatableFildsAsset {
                     url: user.1 .0.to_string(),
-                    hash: "hash1234".to_string(),
-                    hash_algorithm: "MD5".to_string(),
-                    license: String::from_str("gnu").unwrap(),
+                    hash: Some("hash1234".to_string()),
+                    hash_algorithm: Some("MD5".to_string()),
+                    license: Some(String::from_str("gnu").unwrap()),
                     longitude: None,
                     latitude: None,
                     father: father_id,

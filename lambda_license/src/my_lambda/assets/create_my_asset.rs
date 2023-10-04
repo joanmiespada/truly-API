@@ -52,27 +52,6 @@ pub async fn create_my_asset(
         }
     }
     let asset_id = op1.ok().unwrap();
-    // let assetled = AssetLedged {
-    //     asset_id,
-    //     asset_hash: asset_fields.hash,
-    //     asset_hash_algorithm: asset_fields.hash_algorithm,
-    //     asset_creation_time: Utc::now(),
-    // };
-    // info!("calling ledger service: add");
-    // let op2 = ledger_service.add(&assetled).await;
-    // if let  Err(e) = op2 {
-    //         if let Some(m) = e.downcast_ref::<LedgerError>() {
-    //             return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
-    //         } else {
-    //             return build_resp_env(
-    //                 &config.env_vars().environment().unwrap(),
-    //                 e,
-    //                 StatusCode::INTERNAL_SERVER_ERROR,
-    //             );
-    //         }
-    // }
 
-    let val = format!("{{asset_id: {uuid} }}", uuid = asset_id.to_string());
-
-    build_resp(val, StatusCode::OK)
+    build_resp(asset_id.to_string(), StatusCode::OK)
 }

@@ -115,8 +115,6 @@ impl AssetRepo {
         let update_time_av = AttributeValue::S(iso8601(asset.last_update_time()));
         let status_av = AttributeValue::S(asset.state().to_string());
 
-        let hash_av = AttributeValue::S(asset.hash().clone().unwrap().to_string());
-        let hash_algo_av = AttributeValue::S(asset.hash_algorithm().clone().unwrap().to_string());
 
         let mut items = Put::builder();
         items = items
@@ -124,10 +122,16 @@ impl AssetRepo {
             .item(CREATIONTIME_FIELD_NAME, creation_time_av)
             .item(LASTUPDATETIME_FIELD_NAME, update_time_av)
             .item(URL_FIELD_NAME, url_av)
-            .item(STATUS_FIELD_NAME, status_av)
-            .item(HASH_FIELD_NAME, hash_av)
-            .item(HASH_ALGORITHM_FIELD_NAME, hash_algo_av);
+            .item(STATUS_FIELD_NAME, status_av);
 
+        if let Some(hash) = asset.hash() {
+            let hash_av = AttributeValue::S(hash.to_string());
+            items = items.item(HASH_FIELD_NAME, hash_av);
+        }
+        if let Some(hash_algo) = asset.hash_algorithm(){
+            let hash_algo_av = AttributeValue::S(hash_algo.to_string());
+            items = items.item( HASH_ALGORITHM_FIELD_NAME, hash_algo_av);
+        }
         if let Some(value) = asset.longitude() {
             let longitude_av = AttributeValue::S(value.to_string());
             items = items.item(LONGITUDE_FIELD_NAME, longitude_av);
@@ -611,13 +615,15 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
     let url = Url::parse(asset_url).unwrap();
     asset.set_url(&Some(url));
 
-    let _hash = doc.get(HASH_FIELD_NAME).unwrap();
-    let asset_hash = _hash.as_s().unwrap();
-    asset.set_hash(&Some(asset_hash.to_string()));
+    if let Some(hash) = doc.get(HASH_FIELD_NAME){
+        let asset_hash = hash.as_s().unwrap();
+        asset.set_hash(&Some(asset_hash.to_string()));
+    }
 
-    let _hash_algo = doc.get(HASH_ALGORITHM_FIELD_NAME).unwrap();
-    let asset_hash_algo = _hash_algo.as_s().unwrap();
-    asset.set_hash_algorithm(&Some(asset_hash_algo.to_string()));
+    if let Some(hash_algo) = doc.get(HASH_ALGORITHM_FIELD_NAME) {
+        let asset_hash_algo = hash_algo.as_s().unwrap();
+        asset.set_hash_algorithm(&Some(asset_hash_algo.to_string()));
+    }
 
     let creation_time_t = doc.get(CREATIONTIME_FIELD_NAME);
     match creation_time_t {

@@ -56,12 +56,12 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     let user_id = Uuid::new_v4().to_string();
 
     let creation_asset = CreatableFildsAsset {
-        license: "gnu".to_string(),
+        license: Some("gnu".to_string()),
         latitude: None,
         longitude: None,
         url: "http://w111.test.com/f1.mov".to_string(),
-        hash: "hash_f1".to_string(),
-        hash_algorithm: "MD5".to_string(),
+        hash: Some("hash_f1".to_string()),
+        hash_algorithm: Some("MD5".to_string()),
         father: None,
         source: SourceType::Others,
         source_details: None,
@@ -74,8 +74,8 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
 
     let shorter = CreateShorter {
         url_file: Url::from_str(creation_asset.url.as_str()).unwrap(),
-        hash: creation_asset.hash.to_owned(),
-        hash_algorithm: creation_asset.hash_algorithm.to_owned(),
+        hash: creation_asset.hash.to_owned().unwrap(),
+        hash_algorithm: creation_asset.hash_algorithm.to_owned().unwrap(),
         user_id: user_id.to_owned(),
         asset_id: asset_original,
         keep_original: true,
@@ -89,8 +89,8 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     //simulate response after posting the request:
     let mut video_res = VideoResult {
         url_file: Url::from_str(creation_asset.url.as_str()).unwrap(),
-        hash: creation_asset.hash.to_owned(),
-        hash_algorithm: creation_asset.hash_algorithm.to_owned(),
+        hash: creation_asset.hash.to_owned().unwrap(),
+        hash_algorithm: creation_asset.hash_algorithm.to_owned().unwrap(),
         user_id: user_id.to_owned(),
         asset_id: asset_original,
         keep_original: shorter.keep_original,
@@ -121,8 +121,8 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
 
     video_res = VideoResult {
         url_file: Url::from_str(creation_asset.url.as_str()).unwrap(),
-        hash: creation_asset.hash.to_owned(),
-        hash_algorithm: creation_asset.hash_algorithm.to_owned(),
+        hash: creation_asset.hash.to_owned().unwrap(),
+        hash_algorithm: creation_asset.hash_algorithm.to_owned().unwrap(),
         user_id: user_id.to_owned(),
         asset_id: asset_original,
         keep_original: shorter.keep_original,
@@ -153,8 +153,8 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
 
     video_res = VideoResult {
         url_file: Url::from_str(creation_asset.url.as_str()).unwrap(),
-        hash: creation_asset.hash,
-        hash_algorithm: creation_asset.hash_algorithm.to_owned(),
+        hash: creation_asset.hash.to_owned().unwrap(),
+        hash_algorithm: creation_asset.hash_algorithm.to_owned().unwrap(),
         user_id,
         asset_id: asset_original,
         keep_original: shorter.keep_original,
