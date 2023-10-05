@@ -139,12 +139,18 @@ impl AssetManipulation for AssetService {
     async fn add(&self, creation_asset: &CreatableFildsAsset, user_id: &String) -> ResultE<Uuid> {
         creation_asset.validate()?;
 
+        let new_intent_asset = creation_asset.url.clone();
+        let urll = url::Url::parse(new_intent_asset.as_str())?;
+        let res_op = self.repository.get_by_url(&urll).await;
+        if let Ok(_) = res_op {
+            return Err(format!("asset with url {} already exists", urll).into());
+        }
+
         info!("asset fields validated");
         let mut asset = Asset::new();
         asset.set_state(&AssetStatus::Enabled);
         asset.set_id(&Uuid::new_v4());
-        let aux = creation_asset.url.clone();
-        asset.set_url(&Some(url::Url::parse(aux.as_str())?));
+        asset.set_url(&Some(urll));
         if let Some(hash) = creation_asset.clone().hash {
             asset.set_hash(&Some( hash.clone()));
         }else{

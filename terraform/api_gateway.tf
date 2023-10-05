@@ -238,7 +238,7 @@ resource "aws_lambda_permission" "truly_licenses_permission_similar_by_id" {
   function_name = module.lambda_licenses.lambda.function_name
   action        = "lambda:InvokeFunction"
   principal     = "apigateway.amazonaws.com"
-  #source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_similar_by_id.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_similar_by_id.route_key)[1]}"
+  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_similar_by_id.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_similar_by_id.route_key)[1]}"
 }
 
 # resource "aws_apigatewayv2_route" "truly_licenses_route_nft" {
