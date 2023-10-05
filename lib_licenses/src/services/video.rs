@@ -209,11 +209,17 @@ impl VideoManipulation for VideoService {
             let ass1 = self.asset_service.get_by_id(&item.asset_id).await?;
             let asset_url = ass1.url().clone();
 
+            let frame_second;
+            match item.frame_second.parse::<f32>(){
+                Ok(value) => frame_second=Some(value),
+                Err(_) => frame_second= None
+            };
+
             let aux =SimilarItem{
                 asset_id: item.asset_id.clone(),
                 frame_id: item.frame_id.clone(),
                 frame_url: item.frame_url.clone(),
-                frame_second: item.frame_second.clone(),
+                frame_second,
                 asset_url
             };
 
