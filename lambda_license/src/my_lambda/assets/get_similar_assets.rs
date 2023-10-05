@@ -6,15 +6,15 @@ use lib_licenses::{
     services::assets::{AssetManipulation, AssetService},
 };
 use serde_json::json;
-use tracing::instrument;
+use tracing::info;
 use uuid::Uuid;
 use validator::ValidationError;
 
-use crate::my_lambda::{build_resp, build_resp_env};
+use crate::my_lambda::{build_resp, build_resp_env };
 
-#[instrument]
+//#[instrument]
 pub async fn get_similar_assets_by_id(
-    req: &Request,
+    _req: &Request,
     _c: &Context,
     config: &Config,
     asset_service: &AssetService,
@@ -25,9 +25,11 @@ pub async fn get_similar_assets_by_id(
     let op_res = asset_service.get_by_id(asset_id).await;
     match op_res {
         Ok(_asset) => {
+            info!("requesting similar ones for: {}", asset_id);
             
             let res = video_service.get_similar_hashes(asset_id).await?;
 
+            info!("completed!");
             build_resp(json!(res).to_string(), StatusCode::OK)
         },
         Err(e) => {

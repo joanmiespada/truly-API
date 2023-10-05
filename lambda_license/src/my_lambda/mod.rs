@@ -37,12 +37,12 @@ fn jwt_mandatory(req: &Request, config: &Config) -> Result<String, Response<Stri
     }
 }
 
-#[tracing::instrument]
+//#[tracing::instrument]
 pub async fn function_handler(
     config: &Config,
     asset_service: &AssetService,
     owners_service: &OwnerService,
-    user_service: &UsersService,
+    _user_service: &UsersService,
     video_service: &VideoService,
     license_service: &LicenseService,
     req: Request,
@@ -319,7 +319,8 @@ fn build_resp(
     let res = Response::builder()
         .status(status_code)
         .header("content-type", "text/json")
-        .body(msg);
+        .body(msg.clone());
+    info!("result: {} status code: {}", msg,status_code);
     match res {
         Err(e) => Err(ApiLambdaError { 0: e.to_string() }.into()),
         Ok(resp) => Ok(resp),
@@ -334,7 +335,8 @@ fn build_resp_no_cache(
         .status(status_code)
         .header("content-type", "text/json")
         .header("cache-control", "no-cache,max-age=0")
-        .body(msg);
+        .body(msg.clone());
+    info!("result: {} status code: {}", msg,status_code);
     match res {
         Err(e) => Err(ApiLambdaError { 0: e.to_string() }.into()),
         Ok(resp) => Ok(resp),

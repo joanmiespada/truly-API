@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateHashes {
-    pub url_file: Url,
+    pub source_url: Url,
     pub asset_id: Uuid,
 }
 
@@ -13,7 +13,7 @@ impl std::fmt::Display for CreateHashes {
         write!(
             f,
             "url: {} asset_id: {}",
-            self.url_file.to_string(),
+            self.source_url.to_string(),
             self.asset_id.to_string()
         )
     }

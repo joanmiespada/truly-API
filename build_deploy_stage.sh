@@ -9,7 +9,7 @@
 #check if aws and tf are in $PATH
 aws --version || exit 1
 terraform --version || exit 1
-qldb --version || exit 1
+#qldb --version || exit 1
 jq --version || exit 1
 
 #check paramaters. They allow to skip some sections
@@ -62,32 +62,33 @@ export AWS_PROFILE=$profile
 export TF_VAR_dns_base=$dns_domain
 dns_prefix="staging"
 export TF_VAR_dns_prefix=$dns_prefix
-architecture="aarch64-linux-gnu"
+#architecture="aarch64-linux-gnu"
 #path_base='/Users/joanmiquelespadasabat/Projects/tron/API/cross-compile/openssl/'${architecture}
-path_base=$(pwd)'/cross-compile/openssl/'${architecture}
-folder="target/lambda_${architecture}"
+#path_base=$(pwd)'/cross-compile/openssl/'${architecture}
+#folder="target/lambda_${architecture}"
+export TF_VAR_hash_similar_in_topic_arn="arn:aws:sns:eu-west-1:172619864391:truly-matchapi-download-eu"
 multi_region=("eu-west-1")
 account_id=$(aws sts get-caller-identity --query Account --profile $profile --output text)
 
 lambdas='[
         {
             "name": "license_lambda",
-            "version": "0.0.4",
+            "version": "0.0.3",
             "path": "lambda_license/image/Dockerfile",
             "description": "License lambda: manage assets"
         },{
             "name": "admin_lambda",
-            "version": "0.0.2",
+            "version": "0.0.1",
             "path": "lambda_admin/image/Dockerfile",
             "description": "Admin lambda: manage operation with high privilegies"
         },{
             "name": "login_lambda",
-            "version": "0.0.2",
+            "version": "0.0.1",
             "path": "lambda_login/image/Dockerfile",
             "description": "Login lambda: manage login and signups"
         },{
             "name": "user_lambda",
-            "version": "0.0.2",
+            "version": "0.0.1",
             "path": "lambda_user/image/Dockerfile",
             "description": "User lambda: manage user crud ops"
         }

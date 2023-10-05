@@ -6,10 +6,11 @@ use lib_async_ops::{
 use lib_config::config::Config;
 use lib_video_objs::shorter::CreateShorter;
 use uuid::Uuid;
+use tracing::info;
 
 use crate::{
     errors::video::VideoError,
-    models::{asset::{Asset, VideoLicensingStatus}, hash::CreateHashes, video::MatchAPIResponse},
+    models::{asset::{Asset, VideoLicensingStatus}, hash::CreateHashes, video::{MatchAPIResponse, SimilarResponse, SimilarItem}},
 };
 
 use super::assets::{AssetManipulation, AssetService};
@@ -21,7 +22,7 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 pub trait VideoManipulation {
     async fn shorter_video_async(&self, asset_id: &Uuid, user_id: &String) -> ResultE<String>;
     async fn compute_hash_and_similarities_async(&self, asset_id: &Uuid) -> ResultE<String>;
-    async fn get_similar_hashes(&self, asset_id: &Uuid) -> ResultE<MatchAPIResponse>;
+    async fn get_similar_hashes(&self, asset_id: &Uuid) -> ResultE<SimilarResponse>;
 }
 
 #[derive(Debug)]
@@ -156,7 +157,7 @@ impl VideoManipulation for VideoService {
         }
         let asset = checks_op.unwrap();
         let new_hashes = CreateHashes {
-            url_file: asset.url().clone().unwrap(),
+            source_url: asset.url().clone().unwrap(),
             asset_id: asset_id.clone(),
         };
         
@@ -195,17 +196,36 @@ impl VideoManipulation for VideoService {
 
     }
 
-    #[tracing::instrument()]
-    async fn get_similar_hashes(&self, asset_id: &Uuid) -> ResultE<MatchAPIResponse>{
+    //#[tracing::instrument()]
+    async fn get_similar_hashes(&self, asset_id: &Uuid) -> ResultE<SimilarResponse>{
         let url_matchapi:String = format!("{}?asset_id={}", self.config.env_vars().matchapi_endpoint().unwrap().to_string(), asset_id.to_string());
+        info!("calling external service: {}", url_matchapi);
 
         let mut resp: MatchAPIResponse = reqwest::get(url_matchapi).await?.json().await?;
 
+        let mut similar_items :Vec<SimilarItem>= vec![];
+
         for item in &mut resp.similars {
             let ass1 = self.asset_service.get_by_id(&item.asset_id).await?;
-            item.asset_url = ass1.url().clone();
-        }
-        Ok(resp)
+            let asset_url = ass1.url().clone();
+
+            let aux =SimilarItem{
+                asset_id: item.asset_id.clone(),
+                frame_id: item.frame_id.clone(),
+                frame_url: item.frame_url.clone(),
+                frame_second: item.frame_second.clone(),
+                asset_url
+            };
+
+            similar_items.push(aux);
+        };
+
+        let result = SimilarResponse{
+            next_token: resp.next_token,
+            similars: similar_items
+        };
+
+        Ok(result)
     }
 
 }

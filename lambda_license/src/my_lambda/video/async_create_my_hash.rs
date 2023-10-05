@@ -9,19 +9,19 @@ use validator::Validate;
 
 use crate::my_lambda::build_resp;
 
-#[derive(Debug, Serialize, Deserialize, Clone, Validate)]
+#[derive(Debug, Serialize, Validate, Deserialize, Clone, Copy)]
 pub struct CreateHashSimilarsAsync {
     pub asset_id: Uuid,
 }
 
-#[tracing::instrument]
+//#[tracing::instrument]
 pub async fn async_create_my_hash_similars_sns(
     req: &Request,
     _c: &Context,
-    config: &Config,
-    asset_service: &AssetService,
+    _config: &Config,
+    _asset_service: &AssetService,
     video_service: &VideoService,
-    user_id: &String,
+    _user_id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     let new_hash_similar_video;
     match req.payload::<CreateHashSimilarsAsync>() {

@@ -138,7 +138,7 @@ module "lambda_licenses" {
   aws_region        = var.aws_region
   api_stage_version = var.api_stage_version
   architectures     = var.architectures
-  hashes_similarities_arn = aws_sns_topic.hash_similar_in_topic.arn
+  hashes_similarities_arn = var.hash_similar_in_topic_arn   #aws_sns_topic.hash_similar_in_topic.arn
 
   matchapi_endpoint = var.matchapi_endpoint
 

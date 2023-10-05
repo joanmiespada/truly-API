@@ -23,7 +23,7 @@ serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.107"
 rust-argon2 = "2.0.0"
 aws-config = "0.56.1"
-aws-sdk-dynamodb = "0.31.1"
+aws-sdk-dynamodb = "0.32.0"
 async-trait = "0.1.73"
 tracing = { version = "0.1", features = ["log"] }
 validator = { version = "0.16", features = ["derive"] }
@@ -32,13 +32,13 @@ http-serde = "1.1.3"
 url = {version="2.4.1", features=["serde"] }
 hex = "0.4.3"
 rand = "0.8.5"
-aws-sdk-kms = "0.31.1"
-aws-sdk-secretsmanager = "0.31.1"
+aws-sdk-kms = "0.32.0"
+aws-sdk-secretsmanager = "0.32.0"
 base64 = "0.21.4"
 uuid = { version = "1.4.1", features=["v4","fast-rng","macro-diagnostics","serde"]}
 maplit = "1.0.2"
 tokio = { version="1.32.0", features=["full"]}
-reqwest = {version = "0.11.20" ,features = ["json"]}
+reqwest = {version = "0.11.22" ,features = ["json"]}
 
 [target.aarch64-apple-darwin.dev-dependencies]
 env_logger = "0.10.0"

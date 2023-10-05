@@ -1,5 +1,8 @@
-output "invoke_url_aws" {
+output "invoke_url_v1" {
   value = aws_apigatewayv2_stage.truly_stage.invoke_url
+}
+output "invoke_url_default" {
+  value = aws_apigatewayv2_stage.default_stage.invoke_url
 }
 # output "video_in_topic" {
 #   value = aws_sns_topic.video_in_topic.arn

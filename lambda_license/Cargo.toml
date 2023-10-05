@@ -37,4 +37,4 @@ uuid = { version = "1.4.1", features = [
     "macro-diagnostics",
     "serde",
 ] }
-aws-sdk-sqs = "0.31.1"
+aws-sdk-sqs = "0.32.0"

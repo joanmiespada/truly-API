@@ -320,9 +320,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-dynamodb"
-version = "0.31.1"
+version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68c8031724f83eebc927fe26658b9849dd66f2a6c7c30984f1e9adcd42e9e7b9"
+checksum = "37779120020190d09d90682a65618ce0ecfa942944334fec62d6097870835d92"
 dependencies = [
  "aws-credential-types",
  "aws-http",
@@ -345,9 +345,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-kms"
-version = "0.31.1"
+version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7974062fdff17dbf4bcc0e2eb9939a056ab7aa393287422b33b965bb3281176a"
+checksum = "66c57e06dbdb216b03ff6045a2b19eef081d1bc1cbffe5bd684d2333d0ac22ae"
 dependencies = [
  "aws-credential-types",
  "aws-http",
@@ -369,9 +369,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-qldb"
-version = "0.31.1"
+version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c965ac6ae0dc5390cd5567e68e6b58eaa2d03f27612df945a404333f97cae622"
+checksum = "0a8d5491ba6d12b77b28c34e537395b6532b7a2378fcdd8a5886d3ccee690490"
 dependencies = [
  "aws-credential-types",
  "aws-http",
@@ -393,9 +393,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-qldbsession"
-version = "0.31.1"
+version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95fddaa89523aa11ecaa6efb5f55c89f0954597264f383130cc5d81e351f4059"
+checksum = "f64a19b2567bafe2eb05d674dec20bc23375ebc49589413fe189a9983e880ad5"
 dependencies = [
  "aws-credential-types",
  "aws-http",
@@ -416,9 +416,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-secretsmanager"
-version = "0.31.1"
+version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c1ed36f87416492f8a7529f201de656ffda5346cff3cce6cf0c16b63081dd35"
+checksum = "2f8a22b8700660fbca67c4d6cd8fc585bf4b837319fe1c0ec81b5d2355c01143"
 dependencies = [
  "aws-credential-types",
  "aws-http",
@@ -441,9 +441,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-sns"
-version = "0.31.1"
+version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef17647a808c209a668525c394920be25cae1b0e5120bc5f320a6685b46ba693"
+checksum = "67517d20a1852e82e3a55218159457f17396d93e30405272e4bb0f8d5db2f273"
 dependencies = [
  "aws-credential-types",
  "aws-http",
@@ -466,9 +466,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-sqs"
-version = "0.31.1"
+version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66383b8f846ee2513bcea03576603978fb4a9cde26ad97f4a1d30954dd0762fc"
+checksum = "06cbe04cc2b7c5f05d6149ae6c4ca5d7e63f40710b7a7c9bd9c36026c6e09759"
 dependencies = [
  "aws-credential-types",
  "aws-http",
@@ -1935,7 +1935,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cb0889898416213fab133e1d33a0e5858a48177452750691bde3666d0fdbaf8b"
 dependencies = [
  "hermit-abi 0.3.3",
- "rustix 0.38.15",
+ "rustix 0.38.17",
  "windows-sys",
 ]
 
@@ -2137,8 +2137,8 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "lib_async_ops"
-version = "0.0.1"
-source = "git+https://github.com/joanmiespada/truly-shared#acd01a012f81d38cfc14de78abe0cc23b4cbfaa6"
+version = "0.0.2"
+source = "git+https://github.com/joanmiespada/truly-shared#9641ccbed7cd75d5b2a20ccabb4bfa7651daa432"
 dependencies = [
  "aws-sdk-sns",
  "aws-sdk-sqs",
@@ -2156,7 +2156,7 @@ dependencies = [
 [[package]]
 name = "lib_config"
 version = "0.0.18"
-source = "git+https://github.com/joanmiespada/truly-shared#acd01a012f81d38cfc14de78abe0cc23b4cbfaa6"
+source = "git+https://github.com/joanmiespada/truly-shared#9641ccbed7cd75d5b2a20ccabb4bfa7651daa432"
 dependencies = [
  "async-trait",
  "aws-config",
@@ -2288,7 +2288,7 @@ dependencies = [
 [[package]]
 name = "lib_video_objs"
 version = "0.0.1"
-source = "git+https://github.com/joanmiespada/truly-shared#acd01a012f81d38cfc14de78abe0cc23b4cbfaa6"
+source = "git+https://github.com/joanmiespada/truly-shared#9641ccbed7cd75d5b2a20ccabb4bfa7651daa432"
 dependencies = [
  "async-trait",
  "base64 0.21.4",
@@ -3080,9 +3080,9 @@ checksum = "dbb5fb1acd8a1a18b3dd5be62d25485eb770e05afb408a9627d14d451bae12da"
 
 [[package]]
 name = "reqwest"
-version = "0.11.20"
+version = "0.11.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e9ad3fe7488d7e34558a2033d45a0c90b72d97b4f80705666fea71472e2e6a1"
+checksum = "046cd98826c46c2ac8ddecae268eb5c2e58628688a5fc7a2643704a73faba95b"
 dependencies = [
  "base64 0.21.4",
  "bytes",
@@ -3105,6 +3105,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_urlencoded",
+ "system-configuration",
  "tokio",
  "tokio-native-tls",
  "tower-service",
@@ -3261,9 +3262,9 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "0.38.15"
+version = "0.38.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2f9da0cbd88f9f09e7814e388301c8414c51c62aa6ce1e4b5c551d49d96e531"
+checksum = "f25469e9ae0f3d0047ca8b93fc56843f38e6774f0914a107ff8b41be8be8e0b7"
 dependencies = [
  "bitflags 2.4.0",
  "errno",
@@ -3533,9 +3534,9 @@ dependencies = [
 
 [[package]]
 name = "sharded-slab"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1b21f559e07218024e7e9f90f96f601825397de0e25420135f7f952453fed0b"
+checksum = "f40ca3c46823713e0d4209592e8d6e826aa57e928f09752619fc696c499637f6"
 dependencies = [
  "lazy_static",
 ]
@@ -3688,6 +3689,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2047c6ded9c721764247e62cd3b03c09ffc529b2ba5b10ec482ae507a4a70160"
 
 [[package]]
+name = "system-configuration"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba3a3adc5c275d719af8cb4272ea1c4a6d668a777f37e115f6d11ddbc1c8e0e7"
+dependencies = [
+ "bitflags 1.3.2",
+ "core-foundation",
+ "system-configuration-sys",
+]
+
+[[package]]
+name = "system-configuration-sys"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a75fb188eb626b924683e3b95e3a48e63551fcfb51949de2f06a9d91dbee93c9"
+dependencies = [
+ "core-foundation-sys",
+ "libc",
+]
+
+[[package]]
 name = "tempfile"
 version = "3.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3696,7 +3718,7 @@ dependencies = [
  "cfg-if",
  "fastrand 2.0.1",
  "redox_syscall 0.3.5",
- "rustix 0.38.15",
+ "rustix 0.38.17",
  "windows-sys",
 ]
 
