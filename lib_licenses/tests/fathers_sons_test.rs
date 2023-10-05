@@ -127,7 +127,7 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
             }
         }
 
-        let new_op = service.add(&mut as1, &username).await;
+        let new_op = service.add(&mut as1, &Some(username)).await;
         assert_that!(&new_op).is_ok();
 
         let new_id = new_op.unwrap();

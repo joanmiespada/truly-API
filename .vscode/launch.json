@@ -92,30 +92,31 @@
             "args": [ ],
             "cwd": "${workspaceFolder}"
         },
+        // {
+        //     "name": "NFT test", // https://gist.github.com/xanathar/c7c83e6d53b72dd4464f695607012629
+        //     "type": "lldb",
+        //     "request": "launch",
+        //     "cargo": {
+        //         "args": [
+        //             "test",
+        //             //"--no-run",
+        //             "--all-features",
+        //             //"--lib",
+        //             "--package=lib_blockchain",
+        //             //"create_contract_and_mint_nft_test_sync",
+        //             //"--",
+        //             //"--nocapture"
+        //         ],
+        //         "filter": {
+        //             "name": "lib_blockchain",
+        //             "kind": "lib"
+        //         }
+        //     },
+        //     "args": ["create_contract_and_mint_nft_test_sync_sui"],
+        //     "cwd": "${workspaceFolder}",
+        //     "sourceLanguages": ["rust"],
+        // },
         {
-            "name": "NFT test", // https://gist.github.com/xanathar/c7c83e6d53b72dd4464f695607012629
-            "type": "lldb",
-            "request": "launch",
-            "cargo": {
-                "args": [
-                    "test",
-                    //"--no-run",
-                    "--all-features",
-                    //"--lib",
-                    "--package=lib_blockchain",
-                    //"create_contract_and_mint_nft_test_sync",
-                    //"--",
-                    //"--nocapture"
-                ],
-                "filter": {
-                    "name": "lib_blockchain",
-                    "kind": "lib"
-                }
-            },
-            "args": ["create_contract_and_mint_nft_test_sync_sui"],
-            "cwd": "${workspaceFolder}",
-            "sourceLanguages": ["rust"],
-        },{
             "name": "User update test", // https://gist.github.com/xanathar/c7c83e6d53b72dd4464f695607012629
             "type": "lldb",
             "request": "launch",

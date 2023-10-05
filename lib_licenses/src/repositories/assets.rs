@@ -51,7 +51,7 @@ type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send
 
 #[async_trait]
 pub trait AssetRepository {
-    async fn add(&self, asset: &Asset, user_id: &String) -> ResultE<Uuid>;
+    async fn add(&self, asset: &Asset, user_id: &Option<String>) -> ResultE<Uuid>;
     async fn update(&self, ass: &Asset) -> ResultE<()>;
     async fn get_by_id(&self, id: &Uuid) -> ResultE<Asset>;
     async fn get_by_url(&self, url: &Url) -> ResultE<Asset>;
@@ -185,7 +185,15 @@ impl AssetRepo {
 
 #[async_trait]
 impl AssetRepository for AssetRepo {
-    async fn add(&self, asset: &Asset, user_id: &String) -> ResultE<Uuid> {
+    async fn add(&self, asset: &Asset, user_d: &Option<String>) -> ResultE<Uuid> {
+
+        let user_id:String;
+
+        match user_d{
+            None => user_id= Uuid::nil().to_string(),
+            Some(value)=> user_id= value.clone()
+        }
+
         let asset_id_av = AttributeValue::S(asset.id().to_string());
         let user_id_av = AttributeValue::S(user_id.clone());
 

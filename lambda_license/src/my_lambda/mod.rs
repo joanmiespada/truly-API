@@ -210,20 +210,21 @@ pub async fn function_handler(
             ),
             Ok(matched) => match matched.value.unwrap() {
                 "1" => {
-                    match jwt_mandatory(&req, config) {
-                        Err(e) => {
-                            return Ok(e);
-                        }
-                        Ok(user) => user_id = user,
-                    };
+                    // match jwt_mandatory(&req, config) {
+                    //     Err(e) => {
+                    //         return Ok(e);
+                    //     }
+                    //     Ok(user) => user_id = user,
+                    // };
                     create_my_asset(
                         &req,
                         &context,
                         config,
                         asset_service,
                         owners_service,
+                        video_service,
                         //ledger_service,
-                        &user_id,
+                        //&user_id,
                     )
                     .await
                 }

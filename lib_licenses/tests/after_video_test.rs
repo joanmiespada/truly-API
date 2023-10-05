@@ -68,7 +68,7 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     };
     let shorter_id = "0".to_string();
 
-    let asset_original_op = service.add(&creation_asset, &user_id).await;
+    let asset_original_op = service.add(&creation_asset, &Some(user_id.clone())).await;
     assert_that!(&asset_original_op).is_ok();
     let asset_original = asset_original_op.unwrap();
 

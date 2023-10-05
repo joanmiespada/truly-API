@@ -9,6 +9,7 @@ use lib_config::config::Config;
 use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::services::owners::OwnerService;
+use lib_licenses::services::video::{VideoService, VideoManipulation};
 use tracing::{info, instrument};
 use validator::ValidationError;
 
@@ -19,8 +20,9 @@ pub async fn create_my_asset(
     config: &Config,
     asset_service: &AssetService,
     owner_service: &OwnerService,
+    video_service: &VideoService,
     //ledger_service: &LedgerService,
-    id: &String,
+    //id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     let asset_fields;
     match req.payload::<CreatableFildsAsset>() {
@@ -35,7 +37,8 @@ pub async fn create_my_asset(
         },
     }
     info!("calling asset service: add");
-    let op1 = asset_service.add(&asset_fields, id).await;
+    let op1 = asset_service.add(&asset_fields, &None).await;
+
     if let Err(e) = op1 {
         if let Some(m) = e.downcast_ref::<AssetDynamoDBError>() {
             return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
@@ -52,6 +55,10 @@ pub async fn create_my_asset(
         }
     }
     let asset_id = op1.ok().unwrap();
+
+    video_service
+        .compute_hash_and_similarities_async(&asset_id)
+        .await?;
 
     build_resp(asset_id.to_string(), StatusCode::OK)
 }

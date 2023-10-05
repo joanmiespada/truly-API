@@ -86,7 +86,7 @@ async fn run_licenses() -> ResultE<()> {
         .hash_algorithm("MD5")
         .build();
 
-    asset_id1 = ass_repo.add(&asset, &user_id).await?;
+    asset_id1 = ass_repo.add(&asset, &Some(user_id.clone())).await?;
 
     let asset = AssetBuilder::default()
         .id(Uuid::new_v4())
@@ -95,7 +95,7 @@ async fn run_licenses() -> ResultE<()> {
         .hash_algorithm("MD5")
         .build();
 
-    asset_id2 = ass_repo.add(&asset, &user_id).await?;
+    asset_id2 = ass_repo.add(&asset, &Some(user_id)).await?;
 
     let service = LicenseService::new(repo, ass_repo);
 

@@ -93,7 +93,7 @@ async fn add_assets() {
 
     let user = String::from_str("user1").unwrap();
 
-    let new_op = service.add(&as1, &user).await;
+    let new_op = service.add(&as1, &Some(user)).await;
     assert_that!(&new_op).is_ok();
     let new_id = new_op.unwrap();
 
@@ -238,7 +238,7 @@ async fn check_ownership() {
                 source_details: None,
             };
 
-            let new_op = service.add(&mut as1, &username).await;
+            let new_op = service.add(&mut as1, &Some(username.clone())).await;
             assert_that!(&new_op).is_ok();
 
             let new_id = new_op.unwrap().clone();
@@ -317,7 +317,7 @@ async fn check_asset_tree_father_son() {
                 source_details: None,
             };
 
-            let new_op = service.add(&mut as1, &username).await;
+            let new_op = service.add(&mut as1, &Some(username.clone())).await;
             assert_that!(&new_op).is_ok();
 
             let new_id = new_op.unwrap().clone();
