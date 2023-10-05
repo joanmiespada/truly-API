@@ -10,7 +10,7 @@ use tracing::info;
 
 use crate::{
     errors::video::VideoError,
-    models::{asset::{Asset, VideoLicensingStatus}, hash::CreateHashes, video::{MatchAPIResponse, SimilarResponse, SimilarItem}},
+    models::{asset::{Asset, VideoLicensingStatus, AssetStatus}, hash::CreateHashes, video::{MatchAPIResponse, SimilarResponse, SimilarItem}},
 };
 
 use super::assets::{AssetManipulation, AssetService};
@@ -207,23 +207,27 @@ impl VideoManipulation for VideoService {
 
         for item in &mut resp.similars {
             let ass1 = self.asset_service.get_by_id(&item.asset_id).await?;
-            let asset_url = ass1.url().clone();
 
-            let frame_second;
-            match item.frame_second.parse::<f32>(){
-                Ok(value) => frame_second=Some(value),
-                Err(_) => frame_second= None
-            };
+            if ass1.state() == &AssetStatus::Enabled {
 
-            let aux =SimilarItem{
-                asset_id: item.asset_id.clone(),
-                frame_id: item.frame_id.clone(),
-                frame_url: item.frame_url.clone(),
-                frame_second,
-                asset_url
-            };
+                let asset_url = ass1.url().clone();
 
-            similar_items.push(aux);
+                let frame_second;
+                match item.frame_second.parse::<f32>(){
+                    Ok(value) => frame_second=Some(value),
+                    Err(_) => frame_second= None
+                };
+
+                let aux =SimilarItem{
+                    asset_id: item.asset_id.clone(),
+                    frame_id: item.frame_id.clone(),
+                    frame_url: item.frame_url.clone(),
+                    frame_second,
+                    asset_url
+                };
+
+                similar_items.push(aux);
+            }
         };
 
         let result = SimilarResponse{
