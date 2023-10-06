@@ -9,13 +9,12 @@ use tracing::{info, instrument};
 use validator::ValidationError;
 
 #[instrument]
-pub async fn create_my_asset(
+pub async fn create_asset(
     req: &Request,
     _c: &Context,
     config: &Config,
     asset_service: &AssetService,
     video_service: &VideoService,
-    id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     let asset_fields;
     match req.payload::<CreatableFildsAsset>() {
@@ -30,7 +29,7 @@ pub async fn create_my_asset(
         },
     }
     info!("calling asset service: add");
-    let op1 = asset_service.add(&asset_fields, &Some(id.to_string())).await;
+    let op1 = asset_service.add(&asset_fields, &None).await;
 
     if let Err(e) = op1 {
         if let Some(m) = e.downcast_ref::<AssetDynamoDBError>() {

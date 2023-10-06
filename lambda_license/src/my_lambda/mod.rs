@@ -5,11 +5,7 @@ mod video;
 
 use std::str::FromStr;
 
-use crate::my_lambda::assets::get_asset::get_asset_by_shorter;
-use crate::my_lambda::assets::get_similar_assets::get_similar_assets_by_id;
-use crate::my_lambda::licenses::create_my_license::create_my_license;
-use crate::my_lambda::licenses::get_licenses::get_licenses;
-use crate::my_lambda::licenses::get_my_license::get_my_licenses_all;
+use crate::my_lambda::assets::get_similar_assets::{get_similar_assets_by_id, get_similar_assets_by_url};
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, STAGE_ENV};
@@ -18,12 +14,13 @@ use lib_licenses::services::video::VideoService;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
 use tracing::info;
+use url::Url;
 
 use self::assets::create_my_asset::create_my_asset;
+use self::assets::create_asset::create_asset;
 use self::assets::get_asset::get_asset;
 use self::assets::get_my_asset::get_my_assets_all;
 use self::error::ApiLambdaError;
-use self::video::async_create_my_shorter::async_create_my_shorter_sns;
 use self::video::async_create_my_hash::async_create_my_hash_similars_sns;
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
@@ -44,7 +41,7 @@ pub async fn function_handler(
     owners_service: &OwnerService,
     _user_service: &UsersService,
     video_service: &VideoService,
-    license_service: &LicenseService,
+    _license_service: &LicenseService,
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error + Send + Sync>> {
     info!("income new request");
@@ -62,6 +59,7 @@ pub async fn function_handler(
     let mut router = Router::new();
     router.insert("/api/asset", Some("1"))?;
     router.insert("/api/asset/:id", Some("2"))?;
+    router.insert("/api/my-asset", Some("11"))?;
     //router.insert("/api/nft", Some("3"))?;
     // router.insert("/api/license", Some("4"))?;
     // router.insert("/api/license/:id", Some("44"))?;
@@ -111,52 +109,52 @@ pub async fn function_handler(
                     )
                     .await;
                 }
-                "4" => {
-                    match jwt_mandatory(&req, config) {
-                        Err(e) => {
-                            return Ok(e);
-                        }
-                        Ok(user) => user_id = user,
-                    };
-                    get_my_licenses_all(
-                        &req,
-                        &context,
-                        config,
-                        license_service,
-                        asset_service,
-                        &user_id,
-                    )
-                    .await
-                }
-                "44" => {
-                    // public, not required jwt token
-                    let id = matched.params.get("id").unwrap().to_string();
-                    let asset_id = Uuid::from_str(id.as_str())?;
-                    return get_licenses(
-                        &req,
-                        &context,
-                        config,
-                        asset_service,
-                        license_service,
-                        &asset_id,
-                    )
-                    .await;
-                }
-                "5" => {
-                    // public, not required jwt token
-                    let shorter_id = matched.params.get("id").unwrap().to_string();
-                    return get_asset_by_shorter(
-                        &req,
-                        &context,
-                        config,
-                        asset_service,
-                        //tx_service,
-                        license_service,
-                        //ledger_service,
-                        &shorter_id,
-                    )
-                    .await;
-                }
+                // "4" => {
+                //     match jwt_mandatory(&req, config) {
+                //         Err(e) => {
+                //             return Ok(e);
+                //         }
+                //         Ok(user) => user_id = user,
+                //     };
+                //     get_my_licenses_all(
+                //         &req,
+                //         &context,
+                //         config,
+                //         license_service,
+                //         asset_service,
+                //         &user_id,
+                //     )
+                //     .await
+                // }
+                // "44" => {
+                //     // public, not required jwt token
+                //     let id = matched.params.get("id").unwrap().to_string();
+                //     let asset_id = Uuid::from_str(id.as_str())?;
+                //     return get_licenses(
+                //         &req,
+                //         &context,
+                //         config,
+                //         asset_service,
+                //         license_service,
+                //         &asset_id,
+                //     )
+                //     .await;
+                // }
+                // "5" => {
+                //     // public, not required jwt token
+                //     let shorter_id = matched.params.get("id").unwrap().to_string();
+                //     return get_asset_by_shorter(
+                //         &req,
+                //         &context,
+                //         config,
+                //         asset_service,
+                //         //tx_service,
+                //         license_service,
+                //         //ledger_service,
+                //         &shorter_id,
+                //     )
+                //     .await;
+                // }
                 // "6" => {
                 //     match jwt_mandatory(&req, config) {
                 //         Err(e) => {
@@ -181,21 +179,35 @@ pub async fn function_handler(
 
                 "99" => {
                     let id = matched.params.get("id").unwrap().to_string();
-                    let asset_id = Uuid::from_str(id.as_str())?;
-                    // public, not required jwt token
-                    return get_similar_assets_by_id(
-                        &req,
-                        &context,
-                        config,
-                        asset_service,
-                        //tx_service,
-                        video_service,
-                        //ledger_service,
-                        &asset_id,
-                    )
-                    .await;
-                }
 
+                    if let Ok(asset_id) = Uuid::from_str(id.as_str()) {
+
+                        return get_similar_assets_by_id(
+                            &req,
+                            &context,
+                            config,
+                            asset_service,
+                            video_service,
+                            &asset_id,
+                        )
+                        .await;
+                    }else if  let Ok(url) = Url::from_str(id.as_str()) {
+                        return get_similar_assets_by_url(
+                            &req,
+                            &context,
+                            config,
+                            asset_service,
+                            video_service,
+                            &url,
+                        )
+                        .await;
+                    }else{
+                        build_resp(
+                            "id param must be UUID or URL".to_string(),
+                    StatusCode::NOT_ACCEPTABLE,
+                        )
+                    } 
+                }
 
                 _ => build_resp(
                     "method not allowed".to_string(),
@@ -216,15 +228,33 @@ pub async fn function_handler(
                     //     }
                     //     Ok(user) => user_id = user,
                     // };
+                    create_asset(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        //owners_service,
+                        video_service,
+                    )
+                    .await
+                }
+
+                "11" => {
+                    match jwt_mandatory(&req, config) {
+                        Err(e) => {
+                            return Ok(e);
+                        }
+                        Ok(user) => user_id = user,
+                    };
                     create_my_asset(
                         &req,
                         &context,
                         config,
                         asset_service,
-                        owners_service,
+                        //owners_service,
                         video_service,
                         //ledger_service,
-                        //&user_id,
+                        &user_id,
                     )
                     .await
                 }
@@ -252,34 +282,34 @@ pub async fn function_handler(
                 //     )
                 //     .await;
                 // }
-                "4" => {
-                    match jwt_mandatory(&req, config) {
-                        Err(e) => {
-                            return Ok(e);
-                        }
-                        Ok(user) => user_id = user,
-                    };
-                    create_my_license(&req, &context, config, license_service, &user_id).await
-                }
+                // "4" => {
+                //     match jwt_mandatory(&req, config) {
+                //         Err(e) => {
+                //             return Ok(e);
+                //         }
+                //         Ok(user) => user_id = user,
+                //     };
+                //     create_my_license(&req, &context, config, license_service, &user_id).await
+                // }
 
-                "55" => {
-                    match jwt_mandatory(&req, config) {
-                        Err(e) => {
-                            return Ok(e);
-                        }
-                        Ok(user) => user_id = user,
-                    };
+                // "55" => {
+                //     match jwt_mandatory(&req, config) {
+                //         Err(e) => {
+                //             return Ok(e);
+                //         }
+                //         Ok(user) => user_id = user,
+                //     };
 
-                    return async_create_my_shorter_sns(
-                        &req,
-                        &context,
-                        config,
-                        asset_service,
-                        video_service,
-                        &user_id,
-                    )
-                    .await;
-                }
+                //     return async_create_my_shorter_sns(
+                //         &req,
+                //         &context,
+                //         config,
+                //         asset_service,
+                //         video_service,
+                //         &user_id,
+                //     )
+                //     .await;
+                // }
                 
                 "88" => {
                     match jwt_mandatory(&req, config) {
