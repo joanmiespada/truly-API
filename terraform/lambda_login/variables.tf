@@ -41,4 +41,7 @@ variable "ecr_image" {
   description = "ecr repo where I must pull the image base"
 }
 
+variable "trace_level" {
+  type=string
+}
 

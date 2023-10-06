@@ -11,13 +11,13 @@ resource "aws_cloudwatch_log_group" "truly_lambda_user_cloudwatch" {
 
 
 resource "aws_lambda_function" "truly_lambda_user" {
-  function_name    = local.lambda_name_descriptor
-  architectures    = var.architectures # ["arm64"]
-  memory_size      = 512
-  timeout          = 30
+  function_name = local.lambda_name_descriptor
+  architectures = var.architectures # ["arm64"]
+  memory_size   = 512
+  timeout       = 30
 
-  package_type     = "Image"
-  image_uri        =  var.ecr_image
+  package_type = "Image"
+  image_uri    = var.ecr_image
   tracing_config {
     mode = "Active"
   }
@@ -26,10 +26,11 @@ resource "aws_lambda_function" "truly_lambda_user" {
 
   environment {
     variables = {
-      ENVIRONMENT    = "${var.environment_flag}"
-      RUST_LOG       = "${var.rust_log}"
-      RUST_BACKTRACE = "${var.rust_backtrace}"
-      API_STAGE      = "${var.api_stage_version}"
+      ENVIRONMENT    = var.environment_flag
+      RUST_LOG       = var.rust_log
+      RUST_BACKTRACE = var.rust_backtrace
+      API_STAGE      = var.api_stage_version
+      TRACE_LEVEL    = var.trace_level
     }
   }
 

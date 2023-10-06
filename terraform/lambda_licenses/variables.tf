@@ -73,3 +73,7 @@ variable "ecr_image" {
   type = string
   description = "ecr repo where I must pull the image base"
 }
+
+variable "trace_level" {
+  type=string
+}

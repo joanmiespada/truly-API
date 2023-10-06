@@ -49,12 +49,13 @@ export TF_VAR_environment_flag=$ENVIRONMENT
 export RUST_LOG="info"
 export TF_VAR_telemtry=false
 export TF_VAR_telemetry_endpoint=""
-export TF_VAR_rust_log="debug"
+export TF_VAR_rust_log="info"
+export TF_VAR_trace_level="info"
 export TF_VAR_rust_backtrace="full"
 export TF_VAR_trace_log="cargo_lambda=info"
 export TF_VAR_jwt_token_time_exp_hours=8
 export TF_VAR_telemetry=false
-export TF_VAR_telemetry_endpoint="http://127.0.0.1:8080"
+#export TF_VAR_telemetry_endpoint="http://127.0.0.1:8080"
 export TF_VAR_email="joanmi@espada.cat"
 dns_domain="truly.video"
 profile="truly"

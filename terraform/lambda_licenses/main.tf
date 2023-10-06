@@ -11,33 +11,34 @@ resource "aws_cloudwatch_log_group" "truly_lambda_licenses_cloudwatch" {
 
 
 resource "aws_lambda_function" "truly_lambda_licenses" {
-  function_name    = local.lambda_name_descriptor # var.truly_lambda_licenses_function_name
-  architectures    = var.architectures
-  memory_size      = 512
-  timeout          = 30
+  function_name = local.lambda_name_descriptor # var.truly_lambda_licenses_function_name
+  architectures = var.architectures
+  memory_size   = 512
+  timeout       = 30
   tracing_config {
     mode = "Active"
   }
-  package_type     = "Image"
-  image_uri        =  var.ecr_image
+  package_type = "Image"
+  image_uri    = var.ecr_image
 
   role = var.role
 
   environment {
     variables = {
-      ENVIRONMENT             = var.environment_flag
-      RUST_LOG                = var.rust_log
-      KMS_KEY_ID              = var.kms_cypher_owner
+      ENVIRONMENT = var.environment_flag
+      RUST_LOG    = var.rust_log
+      KMS_KEY_ID  = var.kms_cypher_owner
       #DEAD_LETTER_QUEUE_MINT  = "${var.dead_letter_queue_mint}"
       #TOPIC_ARN_MINT_ASYNC    = "${var.minting_async_topic_arn}"
-      RUST_BACKTRACE          = var.rust_backtrace
+      RUST_BACKTRACE = var.rust_backtrace
       #SHORTER_VIDEO_IN_TOPIC  = "${var.video_in_topic}"
       #SHORTER_VIDEO_OUT_TOPIC = "${var.video_out_topic}"
       #MINTING_FAILS_TOPIC     = "${var.minting_fails_topic_arn}"
-      API_STAGE               = var.api_stage_version
+      API_STAGE = var.api_stage_version
       #CONTRACT_ID             = "1"
       HASHES_SIMILAR_VIDEO_IN_TOPIC = var.hashes_similarities_arn
-      MATCHAPI_ENDPOINT       =  var.matchapi_endpoint
+      MATCHAPI_ENDPOINT             = var.matchapi_endpoint
+      TRACE_LEVEL                   = var.trace_level
     }
   }
 

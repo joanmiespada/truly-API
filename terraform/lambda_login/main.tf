@@ -12,12 +12,12 @@ resource "aws_cloudwatch_log_group" "truly_lambda_login_cloudwatch" {
 
 
 resource "aws_lambda_function" "truly_lambda_login" {
-  function_name    = local.lambda_name_descriptor #var.truly_lambda_login_function_name
-  architectures    = var.architectures            # [ "arm64" ]
-  memory_size      = 512
-  timeout          = 30
-  package_type     = "Image"
-  image_uri        =  var.ecr_image
+  function_name = local.lambda_name_descriptor #var.truly_lambda_login_function_name
+  architectures = var.architectures            # [ "arm64" ]
+  memory_size   = 512
+  timeout       = 30
+  package_type  = "Image"
+  image_uri     = var.ecr_image
   tracing_config {
     mode = "Active"
   }
@@ -30,13 +30,14 @@ resource "aws_lambda_function" "truly_lambda_login" {
       JWT_TOKEN_TIME_EXP_HOURS = "${var.jwt_token_time_exp_hours}"
       RUST_BACKTRACE           = "${var.rust_backtrace}"
       API_STAGE                = "${var.api_stage_version}"
+      TRACE_LEVEL              = var.trace_level
     }
   }
 
   depends_on = [
     var.resource_logs,     //aws_iam_role_policy_attachment.truly_lambda_logs,
     var.resource_dynamodb, //aws_iam_role_policy_attachment.truly_lambda_dynamodb,
-    var.resource_xray, //aws_iam_role_policy_attachment.truly_lambda_XRAY,
+    var.resource_xray,     //aws_iam_role_policy_attachment.truly_lambda_XRAY,
     var.resource_secretsman,
     aws_cloudwatch_log_group.truly_lambda_login_cloudwatch,
     var.rust_backtrace

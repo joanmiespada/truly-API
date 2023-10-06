@@ -40,11 +40,13 @@ locals {
     environment = var.environment_flag
   }
 
+
+
 }
 
 module "lambda_login" {
-  source = "./lambda_login"
-  service_name             = "login" 
+  source                   = "./lambda_login"
+  service_name             = "login"
   common_tags              = local.common_tags
   resource_logs            = aws_iam_role_policy_attachment.truly_lambda_logs
   resource_xray            = aws_iam_role_policy_attachment.truly_lambda_XRAY
@@ -59,14 +61,15 @@ module "lambda_login" {
   aws_region               = var.aws_region
   api_stage_version        = var.api_stage_version
   architectures            = var.architectures
-  ecr_image                = var.ecr_login_lambda 
+  ecr_image                = var.ecr_login_lambda
+  trace_level              = var.trace_level
 
 }
 
 module "lambda_user" {
   source = "./lambda_user"
 
-  service_name        = "user" 
+  service_name        = "user"
   common_tags         = local.common_tags
   resource_logs       = aws_iam_role_policy_attachment.truly_lambda_logs
   resource_xray       = aws_iam_role_policy_attachment.truly_lambda_XRAY
@@ -74,21 +77,22 @@ module "lambda_user" {
   resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
   role                = aws_iam_role.truly_lambda_execution_role.arn
 
-  environment_flag     = var.environment_flag
-  trace_log            = var.trace_log
-  rust_log             = var.rust_log
+  environment_flag = var.environment_flag
+  trace_log        = var.trace_log
+  rust_log         = var.rust_log
 
   rust_backtrace    = var.rust_backtrace
   aws_region        = var.aws_region
   api_stage_version = var.api_stage_version
   architectures     = var.architectures
-  ecr_image         = var.ecr_user_lambda 
+  ecr_image         = var.ecr_user_lambda
+  trace_level       = var.trace_level
 }
 
 module "lambda_admin" {
   source = "./lambda_admin"
 
-  service_name        = "admin" 
+  service_name        = "admin"
   common_tags         = local.common_tags
   resource_logs       = aws_iam_role_policy_attachment.truly_lambda_logs
   resource_xray       = aws_iam_role_policy_attachment.truly_lambda_XRAY
@@ -96,22 +100,22 @@ module "lambda_admin" {
   resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
   role                = aws_iam_role.truly_lambda_execution_role.arn
 
-  environment_flag     = var.environment_flag
-  trace_log            = var.trace_log
-  rust_log             = var.rust_log
+  environment_flag = var.environment_flag
+  trace_log        = var.trace_log
+  rust_log         = var.rust_log
 
   rust_backtrace    = var.rust_backtrace
   aws_region        = var.aws_region
   api_stage_version = var.api_stage_version
   architectures     = var.architectures
-  ecr_image         = var.ecr_admin_lambda 
-
+  ecr_image         = var.ecr_admin_lambda
+  trace_level       = var.trace_level
 }
 
 module "lambda_licenses" {
   source = "./lambda_licenses"
 
-  service_name        = "licenses" 
+  service_name        = "licenses"
   common_tags         = local.common_tags
   resource_logs       = aws_iam_role_policy_attachment.truly_lambda_logs
   resource_xray       = aws_iam_role_policy_attachment.truly_lambda_XRAY
@@ -122,27 +126,29 @@ module "lambda_licenses" {
   resource_sns        = aws_iam_role_policy_attachment.truly_lambda_SNS
   role                = aws_iam_role.truly_lambda_execution_role.arn
 
-  environment_flag     = var.environment_flag
-  trace_log            = var.trace_log
-  rust_log             = var.rust_log
+  environment_flag = var.environment_flag
+  trace_log        = var.trace_log
+  rust_log         = var.rust_log
 
   #dead_letter_queue_mint  = aws_sqs_queue.minting_queue_deadletter.url
   #minting_async_topic_arn = aws_sns_topic.minting_topic.arn
   #minting_fails_topic_arn = aws_sns_topic.minting_fails_after_max_retries_topic.arn
-  kms_cypher_owner        = var.kms_id_cypher_all_secret_keys
+  kms_cypher_owner = var.kms_id_cypher_all_secret_keys
 
   rust_backtrace = var.rust_backtrace
 
   #video_in_topic    = aws_sns_topic.video_in_topic.arn
   #video_out_topic   = aws_sns_topic.video_out_topic.arn
-  aws_region        = var.aws_region
-  api_stage_version = var.api_stage_version
-  architectures     = var.architectures
-  hashes_similarities_arn = var.hash_similar_in_topic_arn   #aws_sns_topic.hash_similar_in_topic.arn
+  aws_region              = var.aws_region
+  api_stage_version       = var.api_stage_version
+  architectures           = var.architectures
+  hashes_similarities_arn = var.hash_similar_in_topic_arn #aws_sns_topic.hash_similar_in_topic.arn
 
   matchapi_endpoint = var.matchapi_endpoint
 
-  ecr_image         = var.ecr_license_lambda 
+  ecr_image = var.ecr_license_lambda
+
+  trace_level = var.trace_level
 
 }
 # module "lambda_mint" {

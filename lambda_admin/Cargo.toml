@@ -23,6 +23,6 @@ tracing-subscriber = { version = "0.3.17", default-features = false, features = 
 tokio = { version = "1", features = ["full"] }
 matchit = "0.7.3"
 validator = { version = "0.16", features = ["derive"] }
-
+log = "0.4.20"
 
 

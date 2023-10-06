@@ -38,3 +38,4 @@ uuid = { version = "1.4.1", features = [
     "serde",
 ] }
 aws-sdk-sqs = "0.32.0"
+log = "0.4.20"

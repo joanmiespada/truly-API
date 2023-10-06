@@ -21,6 +21,6 @@ tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3.17", default-features = false, features = ["fmt", "env-filter"] }
 tokio = { version = "1", features = ["full"] }
 validator = { version = "0.16", features = ["derive"] }
-
+log = "0.4.20"
 
 

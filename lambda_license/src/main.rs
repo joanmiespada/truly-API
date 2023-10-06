@@ -8,6 +8,8 @@ use lambda_http::service_fn;
 // use lib_blockchain::services::block_tx::BlockchainTxService;
 // use lib_blockchain::services::nfts::NFTsService;
 use lib_config::config::Config;
+use lib_config::logs::setup_log;
+use lib_config::traces::setup_tracing_level;
 use lib_licenses::repositories::licenses::LicenseRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::repositories::shorter::ShorterRepo;
@@ -20,25 +22,20 @@ use lib_users::services::users::UsersService;
 // use lib_ledger::repository::LedgerRepo;
 // use lib_ledger::service::LedgerService;
 use my_lambda::{error::ApiLambdaError, function_handler};
-use tracing::info;
 
 mod my_lambda;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
-        // disable printing the name of the module in every log line.
-        //.with_target(false)
-        // disabling time is handy because CloudWatch will add the ingestion time.
-        //.without_time()
-        .init();
 
-    info!("bootstrapping dependencies...");
+    setup_log();
 
     let mut config = Config::new();
     config.setup_with_secrets().await;
 
+    setup_tracing_level(config.env_vars());
+
+    log::info!("bootstrapping dependencies...");
 
     let asset_repo = AssetRepo::new(&config);
     let shorter_repo = ShorterRepo::new(&config);
@@ -73,7 +70,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     // let ledger_repo = LedgerRepo::new(&config);
     // let ledger_service = LedgerService::new(ledger_repo);
 
-    info!("bootstrapping dependencies: completed. Lambda ready.");
+    log::info!("bootstrapping dependencies: completed. Lambda ready.");
     let resp = lambda_http::run(service_fn(|event| {
         function_handler(
             &config,

@@ -140,3 +140,8 @@ variable "hash_similar_in_topic_arn" {
   description = "sns topic where the matchapi will be triggered"
   
 }
+
+variable "trace_level" {
+  type = string
+  description = "Error, info or warning. Tracing system"
+}
