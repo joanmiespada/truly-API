@@ -5,10 +5,10 @@ use lib_config::config::Config;
 use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::services::video::{VideoService, VideoManipulation};
-use tracing::{info, instrument};
+use tracing::info;
 use validator::ValidationError;
 
-#[instrument]
+//#[instrument]
 pub async fn create_my_asset(
     req: &Request,
     _c: &Context,

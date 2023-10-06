@@ -9,7 +9,7 @@ use tracing::{error, info, instrument};
 
 const MAX_RETRIES: usize = 5;
 
-#[instrument]
+//#[instrument]
 pub async fn async_minting(
     data: &mut CreateNFTAsync,
     config: &Config,

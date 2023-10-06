@@ -2,7 +2,7 @@ use crate::errors::users::UserNoExistsError;
 use crate::errors::users::UserStatusError;
 use crate::models::user::UserRoles;
 use async_trait::async_trait;
-use tracing::instrument;
+//use tracing::instrument;
 
 use super::users::UserManipulation;
 use super::users::UsersService;
@@ -28,7 +28,7 @@ pub trait LoginOps {
 
 #[async_trait]
 impl LoginOps for UsersService {
-    #[instrument]
+    //#[instrument]
     async fn login(
         &self,
         device: &Option<String>,

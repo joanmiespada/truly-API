@@ -5,7 +5,6 @@ use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError};
 use lib_users::services::users::{UserManipulation, UsersService};
 use lib_users::validate_password;
 use serde::{Deserialize, Serialize};
-use tracing::instrument;
 use validator::{Validate, ValidationError};
 
 use super::build_resp;
@@ -15,11 +14,11 @@ pub struct UpdatePasswordUser {
     #[validate(length(min = 8, max = 50), custom = "validate_password")]
     pub password: String,
 }
-#[instrument]
+//#[instrument]
 pub async fn password_update_my_user(
     req: &Request,
     _c: &Context,
-    config: &Config,
+    _config: &Config,
     user_service: &UsersService,
     id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error>> {

@@ -7,7 +7,6 @@ use lib_users::services::users::UsersService;
 use lib_util_jwt::create_jwt;
 use serde::Deserialize;
 use serde_json::json;
-use tracing::instrument;
 
 use crate::my_lambda::build_resp;
 use validator::{Validate, ValidationError};
@@ -24,7 +23,7 @@ pub struct LoginPayload {
     pub device: Option<String>,
 }
 
-#[instrument]
+//#[tracing::instrument(skip(config), level )]
 pub async fn login(
     _req: &Request,
     _c: &Context,

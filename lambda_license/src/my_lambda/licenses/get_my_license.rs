@@ -11,16 +11,16 @@ use lib_licenses::{
     services::assets::{AssetManipulation, AssetService},
 };
 use serde_json::json;
-use tracing::instrument;
 use tracing::log::error;
 use uuid::Uuid;
 use validator::ValidationError;
 
 use crate::my_lambda::{build_resp, build_resp_env, build_resp_no_cache};
 
-#[instrument]
+//#[instrument]
+#[allow(dead_code)]
 pub async fn get_my_license(
-    req: &Request,
+    _req: &Request,
     _c: &Context,
     config: &Config,
     lic_service: &LicenseService,
@@ -67,9 +67,10 @@ pub async fn get_my_license(
     }
 }
 
-#[instrument]
+//#[instrument]
+#[allow(dead_code)]
 pub async fn get_my_licenses_all(
-    req: &Request,
+    _req: &Request,
     _c: &Context,
     config: &Config,
     lic_service: &LicenseService,

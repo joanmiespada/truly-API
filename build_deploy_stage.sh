@@ -55,7 +55,6 @@ export TF_VAR_rust_backtrace="full"
 export TF_VAR_trace_log="cargo_lambda=info"
 export TF_VAR_jwt_token_time_exp_hours=8
 export TF_VAR_telemetry=false
-#export TF_VAR_telemetry_endpoint="http://127.0.0.1:8080"
 export TF_VAR_email="joanmi@espada.cat"
 dns_domain="truly.video"
 profile="truly"
@@ -63,10 +62,6 @@ export AWS_PROFILE=$profile
 export TF_VAR_dns_base=$dns_domain
 dns_prefix="staging"
 export TF_VAR_dns_prefix=$dns_prefix
-#architecture="aarch64-linux-gnu"
-#path_base='/Users/joanmiquelespadasabat/Projects/tron/API/cross-compile/openssl/'${architecture}
-#path_base=$(pwd)'/cross-compile/openssl/'${architecture}
-#folder="target/lambda_${architecture}"
 export TF_VAR_hash_similar_in_topic_arn="arn:aws:sns:eu-west-1:172619864391:truly-matchapi-download-eu"
 multi_region=("eu-west-1")
 account_id=$(aws sts get-caller-identity --query Account --profile $profile --output text)
@@ -74,22 +69,22 @@ account_id=$(aws sts get-caller-identity --query Account --profile $profile --ou
 lambdas='[
         {
             "name": "license_lambda",
-            "version": "0.0.6",
+            "version": "0.0.10",
             "path": "lambda_license/image/Dockerfile",
             "description": "License lambda: manage assets"
         },{
             "name": "admin_lambda",
-            "version": "0.0.3",
+            "version": "0.0.7",
             "path": "lambda_admin/image/Dockerfile",
             "description": "Admin lambda: manage operation with high privilegies"
         },{
             "name": "login_lambda",
-            "version": "0.0.3",
+            "version": "0.0.10",
             "path": "lambda_login/image/Dockerfile",
             "description": "Login lambda: manage login and signups"
         },{
             "name": "user_lambda",
-            "version": "0.0.3",
+            "version": "0.0.7",
             "path": "lambda_user/image/Dockerfile",
             "description": "User lambda: manage user crud ops"
         }
@@ -97,13 +92,18 @@ lambdas='[
 
 if [[ "$image_skip" == 'false' ]]; then
 
+
+
     echo $lambdas | jq -c '.[]' | while read -r lambda; do
         lambda_name=$(echo $lambda | jq -r '.name')
         imageVersion=$(echo $lambda | jq -r '.version')
+        #imageVersion="latest"
         docker_path=$(echo $lambda | jq -r '.path')
         repo_name="$lambda_name-$ENVIRONMENT"
 
-        docker build --platform=linux/arm64  -t $lambda_name:$imageVersion -f $docker_path . || exit 1
+        echo "Building $lambda_name..."
+        #docker build --platform=linux/arm64  -t $lambda_name:$imageVersion -f $docker_path . || exit 1
+        docker build --platform=linux/arm64  -t $lambda_name:latest -f $docker_path . || exit 1
 
         for region in "${multi_region[@]}"
         do
@@ -113,11 +113,26 @@ if [[ "$image_skip" == 'false' ]]; then
             if ! aws ecr describe-repositories --region $region --profile $profile --repository-names $repo_name &> /dev/null; then
                 echo "Repository $repo_name doesn't exist in $region. Creating..."
                 res=$(aws ecr create-repository --repository-name $repo_name --region $region --profile $profile || exit 1)
+                #imageVersion="0.0.0"
+            # else
+            #     # Get the latest image tag
+            #     latest_image=$(aws ecr list-images --region $region --profile $profile --repository-name $repo_name | jq -r '.imageIds | sort_by(.imagePushedAt) | .[-1].imageTag' || exit 1)
+            #     if [ "$latest_image" != "null" ] && [ -n "$latest_image" ]; then
+            #         echo "Latest image in the $repo_name repository in $region is: $latest_image"
+            #         # Extract the version portion, e.g., "lambda_login:0.0.0" -> "0.0.0"
+            #         latest_version="${latest_image#*:}"
+            #         # Increment the version
+            #         imageVersion=$(increment_version $latest_version)
+            #     else
+            #         echo "No images found in the $repo_name repository in $region"
+            #         imageVersion="0.0.0"
+            #     fi
             fi
 
             repo_url="$account_id.dkr.ecr.$region.amazonaws.com/$repo_name"
             aws ecr get-login-password --region $region --profile $profile  | docker login --username AWS --password-stdin $repo_url || exit 1
-            docker tag $lambda_name:$imageVersion $repo_url:$imageVersion  || exit 1
+            #docker tag $lambda_name:$imageVersion $repo_url:$imageVersion  || exit 1
+            docker tag $lambda_name:latest $repo_url:$imageVersion  || exit 1
             docker push $repo_url:$imageVersion  || exit 1
             eval "map_lambda_repos_${reg}[$lambda_name]=${repo_url}:${imageVersion}"
             
@@ -143,25 +158,6 @@ else
 fi
 
 
-
-# if [[ "$zip_skip" == 'false' ]]; then
-    
-#     echo "compiling lambdas ${architecture}..."
-#     export OPENSSL_LIB_DIR=${path_base}/lib
-#     export OPENSSL_INCLUDE_DIR=${path_base}/include
-
-#     cargo lambda build --release --arm64 --output-format zip --workspace --exclude truly_cli --lambda-dir $folder
-    
-#     if [ $? -ne 0 ]; then
-#         echo 'compiling error, please check cargo build.'
-#         exit 1
-#     fi
-# else
-#     echo 'skipping lambdas compilation, reusing current folders and zip files.'
-# fi
-# export TF_VAR_lambda_deploy_folder=../${folder}
-# echo "lambdas will be seek at: ${TF_VAR_lambda_deploy_folder}"
-
 echo 'running hard pre-requisits: keys and secrets'
 declare -A mapKeys
 mapKeys_string="{ "
@@ -182,7 +178,6 @@ for region in "${multi_region[@]}"; do
     done 
 done
 mapKeys_string+=" }"
-#echo "${mapKeys_string}"
 if [[ ${#mapKeys[@]} -eq 0 ]]; then
     echo "no keys were found! check if keys exist and/or tags are corrected annotated"
     exit 1
@@ -261,10 +256,6 @@ if [[ "$tables_skip" == 'false' ]]; then
         fi
         
     done
-
-    #echo "filling master data at ${multi_region[1]}. Note: if global tables are enabled, we can only insert only one time and it will be replicated to other tables automatically."
-    #cargo run -p truly_cli -- --blockchain ./truly_cli/res/blockchain_stage.json --create --region $multi_region[1] --profile $profile || exit 1
-    #cargo run -p truly_cli -- --contract  ./truly_cli/res/contract_stage.json --create --region $multi_region[1] --profile $profile || exit 1
 else
     echo "tables and master data skip"
 fi

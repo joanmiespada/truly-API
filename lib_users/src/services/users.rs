@@ -51,47 +51,47 @@ pub struct UpdatableFildsUser {
 
 #[async_trait]
 impl UserManipulation for UsersService {
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<User>> {
         let res = self.repository.get_all(page_number, page_size).await?;
         Ok(res)
     }
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn get_by_id(&self, id: &String) -> ResultE<User> {
         let res = self.repository.get_by_id(id).await?;
         Ok(res)
     }
 
-    #[tracing::instrument( fields( device= tracing::field::Empty) )]
+    //#[tracing::instrument( fields( device= tracing::field::Empty) )]
     async fn get_by_device(&self, device: &String) -> ResultE<User> {
-        tracing::Span::current().record("device", &tracing::field::display(&device));
+        //tracing::Span::current().record("device", &tracing::field::display(&device));
         let res = self.repository.get_by_device(device).await?;
         Ok(res)
     }
     async fn get_by_wallet(&self, wallet_address: &String) -> ResultE<User> {
-        tracing::Span::current()
-            .record("wallet_address", &tracing::field::display(&wallet_address));
+        //tracing::Span::current()
+            //.record("wallet_address", &tracing::field::display(&wallet_address));
         let res = self
             .repository
             .get_by_wallet_address(wallet_address)
             .await?;
         Ok(res)
     }
-    #[tracing::instrument(fields(email, success = false))]
+    //#[tracing::instrument(fields(email, success = false), skip(password))]
     async fn get_by_email_and_password(&self, email: &String, password: &String) -> ResultE<User> {
-        tracing::Span::current().record("email", &tracing::field::display(&email));
+        //tracing::Span::current().record("email", &tracing::field::display(&email));
 
         let res = self
             .repository
             .get_by_email_and_password(email, password)
             .await?;
 
-        tracing::Span::current().record("success", &tracing::field::display(true));
+        //tracing::Span::current().record("success", &tracing::field::display(true));
         Ok(res)
     }
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn add(&self, user: &mut User, password: &Option<String>) -> ResultE<String> {
         match password {
             None => {}
@@ -108,14 +108,14 @@ impl UserManipulation for UsersService {
         Ok(id.to_string())
     }
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn remove_by_id(&self, id: &String) -> ResultE<()> {
         let user = self.get_by_id(id).await?;
         let res = self.repository.remove(user.user_id()).await?;
         Ok(res)
     }
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn update(&self, id: &String, user: &UpdatableFildsUser) -> ResultE<()> {
         user.validate()?;
 
@@ -142,7 +142,7 @@ impl UserManipulation for UsersService {
         Ok(())
     }
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn update_password(&self, id: &String, password: &String) -> ResultE<()> {
         validate_password(password)?;
         _ = self.repository.update_password(id, password).await?;
@@ -167,7 +167,7 @@ impl UserManipulation for UsersService {
 }
 
 impl Clone for UsersService {
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     fn clone(&self) -> UsersService {
         let aux = UsersService {
             repository: self.repository.clone(),

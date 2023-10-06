@@ -17,19 +17,18 @@ use lib_licenses::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use tracing::instrument;
 use uuid::Uuid;
 use validator::ValidationError;
 
 use crate::my_lambda::{build_resp, build_resp_env, build_resp_no_cache};
 
-#[instrument]
+//#[instrument]
 pub async fn get_asset(
-    req: &Request,
+    _req: &Request,
     _c: &Context,
     config: &Config,
     asset_service: &AssetService,
-    owner_service: &OwnerService,
+    _owner_service: &OwnerService,
     asset_id: &Uuid,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     let op_res = asset_service.get_by_id_enhanced(asset_id).await;
@@ -97,9 +96,10 @@ pub struct AssetTx {
 //     }
 // }
 
-#[instrument]
+//#[instrument]
+#[allow(dead_code)]
 pub async fn get_asset_by_shorter(
-    req: &Request,
+    _req: &Request,
     _c: &Context,
     config: &Config,
     asset_service: &AssetService,

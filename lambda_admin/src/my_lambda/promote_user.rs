@@ -2,12 +2,11 @@ use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
 use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError};
 use lib_users::services::users::{PromoteUser, UserManipulation, UsersService};
-use tracing::instrument;
 
 use super::build_resp;
 use validator::ValidationError;
 
-#[instrument]
+//#[instrument]
 pub async fn promote_user(
     req: &Request,
     c: &Context,
@@ -18,7 +17,7 @@ pub async fn promote_user(
     downgrade_upgrade_user(req, c, config, user_service, id, &PromoteUser::Upgrade).await
 }
 
-#[instrument]
+//#[instrument]
 pub async fn downgrade_user(
     req: &Request,
     c: &Context,
@@ -29,11 +28,11 @@ pub async fn downgrade_user(
     downgrade_upgrade_user(req, c, config, user_service, id, &PromoteUser::Downgrade).await
 }
 
-#[instrument]
+//#[instrument]
 async fn downgrade_upgrade_user(
-    req: &Request,
+    _req: &Request,
     _c: &Context,
-    config: &Config,
+    _config: &Config,
     user_service: &UsersService,
     id: &String,
     grade: &PromoteUser,

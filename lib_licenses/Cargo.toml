@@ -25,7 +25,7 @@ rust-argon2 = "2.0.0"
 aws-config = "0.56.1"
 aws-sdk-dynamodb = "0.32.0"
 async-trait = "0.1.73"
-tracing = { version = "0.1", features = ["log"] }
+#tracing = { version = "0.1", features = ["log"] }
 validator = { version = "0.16", features = ["derive"] }
 http = "0.2.9"
 http-serde = "1.1.3"

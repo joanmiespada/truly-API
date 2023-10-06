@@ -7,10 +7,11 @@ use lib_licenses::errors::license::LicenseDynamoDBError;
 use lib_licenses::errors::owner::OwnerNoExistsError;
 use lib_licenses::models::license::CreatableFildsLicense;
 use lib_licenses::services::licenses::{LicenseManipulation, LicenseService};
-use tracing::{info, instrument};
+use tracing::info;
 use validator::ValidationError;
 
-#[instrument]
+//#[instrument]
+#[allow(dead_code)]
 pub async fn create_my_license(
     req: &Request,
     _c: &Context,

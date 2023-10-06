@@ -3,7 +3,7 @@ use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
 use lib_users::services::users::{UserManipulation, UsersService};
 use serde_json::json;
-use tracing::instrument;
+//use tracing::instrument;
 
 use super::build_resp;
 
@@ -11,11 +11,11 @@ const PAGESIZE_MAX: u32 = 20;
 const PAGESIZE_MIN: u32 = 5;
 const PAGENUM_MIN: u32 = 1;
 
-#[instrument]
+//#[instrument]
 pub async fn get_users(
     req: &Request,
     _c: &Context,
-    config: &Config,
+    _config: &Config,
     user_service: &UsersService,
 ) -> Result<Response<String>, Box<dyn std::error::Error>> {
     let page_number;

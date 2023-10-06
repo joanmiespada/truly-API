@@ -6,7 +6,8 @@ use lib_async_ops::{
 use lib_config::config::Config;
 use lib_video_objs::shorter::CreateShorter;
 use uuid::Uuid;
-use tracing::info;
+//use tracing::info;
+use log::info;
 
 use crate::{
     errors::video::VideoError,
@@ -42,7 +43,7 @@ impl VideoService {
 
 #[async_trait]
 impl VideoManipulation for VideoService {
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn shorter_video_async(&self, asset_id: &Uuid, user_id: &String) -> ResultE<String> {
         //check user owns the asset.
         let checks_op = self
@@ -139,7 +140,7 @@ impl VideoManipulation for VideoService {
         };
     }
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn compute_hash_and_similarities_async(&self, asset_id: &Uuid) -> ResultE<String>{
         //check user owns the asset.
         let checks_op = self

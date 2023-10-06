@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use argon2::{self};
 use aws_sdk_dynamodb::operation::transact_write_items::builders::TransactWriteItemsFluentBuilder;
 use aws_sdk_dynamodb::types::{Put, TransactWriteItem};
-use tracing::error;
+//use tracing::error;
 use uuid::Uuid;
 
 use crate::errors::users::{
@@ -86,7 +86,7 @@ impl UsersRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                log::error!("{}",mssag);
                 return Err(UserDynamoDBError(e.to_string()).into());
             }
             Ok(items) => {
@@ -148,7 +148,8 @@ impl UsersRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}",mssag);
                 return Err(UserDynamoDBError(e.to_string()).into());
             }
             Ok(items) => {
@@ -248,7 +249,8 @@ impl UsersRepo {
                 Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                 e
             );
-            tracing::error!(mssag);
+            //tracing::error!(mssag);
+            log::error!("{}",mssag);
             return Err(UserDynamoDBError(e.to_string()).into());
         }
         match results.unwrap().item {
@@ -407,7 +409,8 @@ impl UserRepository for UsersRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     user.user_id().to_string()
                 );
-                tracing::debug!(mssag);
+                //tracing::debug!(mssag);
+                log::debug!("{}",mssag);
 
                 Ok(())
             }
@@ -417,8 +420,7 @@ impl UserRepository for UsersRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e.to_string()
                 );
-                error!(mssag);
-                error!("{}", e);
+                log::error!("{}",mssag);
                 return Err(UserDynamoDBError(e.to_string()).into());
             }
         }
@@ -436,7 +438,8 @@ impl UserRepository for UsersRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}", e);
                 return Err(UserDynamoDBError(e.to_string()).into());
             }
             Ok(result) => {
@@ -563,10 +566,10 @@ impl UserRepository for UsersRepo {
         }
     }
 
-    #[tracing::instrument(
-        skip(password),
-        fields(email=email)
-    )]
+    //#[tracing::instrument(
+    //    skip(password),
+    //    fields(email=email)
+    //)]
     async fn get_by_email_and_password(&self, email: &String, password: &String) -> ResultE<User> {
         if email.is_empty() {
             return Err(UserParamNotAccepted("email".to_string()).into());
@@ -656,7 +659,8 @@ impl UserRepository for UsersRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     id.to_string()
                 );
-                tracing::debug!(mssag);
+                //tracing::debug!(mssag);
+                log::debug!("{}", mssag);
 
                 Ok(())
             }
@@ -666,8 +670,9 @@ impl UserRepository for UsersRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e.to_string()
                 );
-                error!(mssag);
-                error!("{}", e);
+                log::error!("{}", mssag);
+                //error!(mssag);
+                //error!("{}", e);
                 return Err(UserDynamoDBError(e.to_string()).into());
             }
         }
@@ -685,7 +690,8 @@ impl UserRepository for UsersRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     id.to_string()
                 );
-                tracing::debug!(mssag);
+                //tracing::debug!(mssag);
+                log::debug!("{}", mssag);
 
                 Ok(())
             }
@@ -695,8 +701,9 @@ impl UserRepository for UsersRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e.to_string()
                 );
-                error!(mssag);
-                error!("{}", e);
+                log::error!("{}",mssag);
+                //error!(mssag);
+                //error!("{}", e);
                 return Err(UserDynamoDBError(e.to_string()).into());
             }
         }
@@ -719,7 +726,8 @@ impl UserRepository for UsersRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}", mssag);
                 return Err(UserDynamoDBError(e.to_string()).into());
             }
             Ok(_) => {

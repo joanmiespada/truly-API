@@ -57,7 +57,7 @@ impl ShorterRepository for ShorterRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                log::error!("{}",mssag);
                 return Err(AssetDynamoDBError(e.to_string()).into());
             }
             Ok(_) => {}
@@ -96,7 +96,7 @@ impl ShorterRepository for ShorterRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                log::error!("{}",mssag);
                 return Err(AssetDynamoDBError(e.to_string()).into());
             }
         }

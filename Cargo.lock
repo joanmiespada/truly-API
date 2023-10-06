@@ -2141,7 +2141,7 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 [[package]]
 name = "lib_async_ops"
 version = "0.0.2"
-source = "git+https://github.com/joanmiespada/truly-shared#9ca7d68854fdf9b07248959e2504a1ffe22a12d5"
+source = "git+https://github.com/joanmiespada/truly-shared#41e1a3e00ebcc2cc4fdccceec58ea62e8f40fa20"
 dependencies = [
  "aws-sdk-sns",
  "aws-sdk-sqs",
@@ -2158,8 +2158,8 @@ dependencies = [
 
 [[package]]
 name = "lib_config"
-version = "0.0.20"
-source = "git+https://github.com/joanmiespada/truly-shared#9ca7d68854fdf9b07248959e2504a1ffe22a12d5"
+version = "0.0.21"
+source = "git+https://github.com/joanmiespada/truly-shared#41e1a3e00ebcc2cc4fdccceec58ea62e8f40fa20"
 dependencies = [
  "async-trait",
  "aws-config",
@@ -2247,7 +2247,6 @@ dependencies = [
  "spectral",
  "testcontainers 0.14.0",
  "tokio",
- "tracing",
  "url",
  "uuid",
  "validator",
@@ -2265,6 +2264,7 @@ dependencies = [
  "chrono",
  "env_logger",
  "lib_config",
+ "log",
  "regex",
  "rust-argon2",
  "serde",
@@ -2272,7 +2272,6 @@ dependencies = [
  "spectral",
  "testcontainers 0.14.0",
  "tokio",
- "tracing",
  "uuid",
  "validator",
  "zxcvbn",
@@ -2292,7 +2291,7 @@ dependencies = [
 [[package]]
 name = "lib_video_objs"
 version = "0.0.1"
-source = "git+https://github.com/joanmiespada/truly-shared#9ca7d68854fdf9b07248959e2504a1ffe22a12d5"
+source = "git+https://github.com/joanmiespada/truly-shared#41e1a3e00ebcc2cc4fdccceec58ea62e8f40fa20"
 dependencies = [
  "async-trait",
  "base64 0.21.4",

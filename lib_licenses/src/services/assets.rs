@@ -7,7 +7,7 @@ use chrono::Utc;
 use lib_video_objs::video::VideoResult;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-use tracing::{error, info};
+use log::{error, info};
 use url::Url;
 use uuid::Uuid;
 
@@ -88,13 +88,13 @@ pub struct CreatableFildsAsset {
 
 #[async_trait]
 impl AssetManipulation for AssetService {
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Asset>> {
         let res = self.repository.get_all(page_number, page_size).await?;
         Ok(res)
     }
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn get_by_id(
         &self,
         id: &Uuid,
@@ -107,7 +107,7 @@ impl AssetManipulation for AssetService {
         Ok(res)
     }
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn get_by_id_enhanced(
         &self,
         id: &Uuid,
@@ -128,14 +128,14 @@ impl AssetManipulation for AssetService {
         Ok(result)
     }
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn get_by_shorter(&self, shorter_id: &String) -> ResultE<Asset> {
         let res = self.short_repository.get_by_shorter(shorter_id).await?;
         let asset = self.repository.get_by_id(&res).await?;
         Ok(asset)
     }
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn add(&self, creation_asset: &CreatableFildsAsset, user_id: &Option<String>) -> ResultE<Uuid> {
         creation_asset.validate()?;
 
@@ -172,7 +172,7 @@ impl AssetManipulation for AssetService {
         Ok(res)
     }
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn update(&self, id: &Uuid, asset: &UpdatableFildsAsset) -> ResultE<()> {
         asset.validate()?;
 
@@ -194,7 +194,7 @@ impl AssetManipulation for AssetService {
         Ok(())
     }
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn update_full(&self, asset: &Asset) -> ResultE<()> {
         self.repository.update(asset).await?;
         Ok(())
@@ -218,7 +218,7 @@ impl AssetManipulation for AssetService {
         Ok(())
     } */
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn shorter_video_status(
         &self,
         id: &Uuid,
@@ -235,12 +235,12 @@ impl AssetManipulation for AssetService {
         Ok(())
     }
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn get_by_user_id(&self, user_id: &String) -> ResultE<Vec<Asset>> {
         let res = self.repository.get_by_user_id(user_id).await?;
         Ok(res)
     }
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn get_by_user_asset_id(&self, asset_id: &Uuid, user_id: &String) -> ResultE<Asset> {
         let res = self
             .repository
@@ -248,7 +248,7 @@ impl AssetManipulation for AssetService {
             .await?;
         Ok(res)
     }
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn store_video_process(&self, video_res: &VideoResult) -> ResultE<()> {
         let mut original_asset = self.repository.get_by_id(&video_res.asset_id).await?;
 
@@ -313,7 +313,7 @@ impl AssetManipulation for AssetService {
 }
 
 impl Clone for AssetService {
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     fn clone(&self) -> AssetService {
         let aux = AssetService {
             repository: self.repository.clone(),

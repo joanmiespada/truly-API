@@ -10,7 +10,7 @@ use lib_config::{config::Config, stage::remove_stage_prefix};
 use lib_users::services::users::UsersService;
 use login::login;
 use serde_json::json;
-use tracing::instrument;
+//use tracing::instrument;
 
 #[derive(Debug)]
 pub struct ApiLambdaError(pub String);
@@ -27,7 +27,7 @@ impl std::fmt::Display for ApiLambdaError {
 /// Write your code inside it.
 /// There are some code example in the following URLs:
 /// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
-#[instrument]
+//#[instrument]
 pub async fn function_handler(
     config: &Config,
     user_service: &UsersService,
@@ -48,7 +48,7 @@ pub async fn function_handler(
         _ => not_allowed(&req, &context),
     }
 }
-#[tracing::instrument]
+//#[tracing::instrument]
 fn build_resp(
     msg: String,
     status_code: StatusCode,
@@ -66,7 +66,7 @@ fn build_resp(
     //Ok(res)
 }
 
-#[tracing::instrument]
+//#[tracing::instrument]
 fn not_allowed(
     _req: &Request,
     _c: &Context,

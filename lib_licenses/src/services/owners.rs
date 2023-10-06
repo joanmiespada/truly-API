@@ -35,25 +35,25 @@ pub struct UpdatableFildsOwner {
 
 #[async_trait]
 impl OwnerManipulation for OwnerService {
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Owner>> {
         let res = self.repository.get_all(page_number, page_size).await?;
         Ok(res)
     }
 
-    #[tracing::instrument()]
+   // #[tracing::instrument()]
     async fn get_by_asset(&self, asset_id: &Uuid) -> ResultE<Owner> {
         let res = self.repository.get_by_asset(asset_id).await?;
         Ok(res)
     }
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn get_by_user(&self, user_id: &String) -> ResultE<Vec<Owner>> {
         let res = self.repository.get_by_user(user_id).await?;
         Ok(res)
     }
 
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     async fn add(&self, owner: &mut Owner) -> ResultE<()> {
         owner.validate()?;
         self.repository.add(owner).await?;
@@ -76,7 +76,7 @@ impl OwnerManipulation for OwnerService {
 }
 
 impl Clone for OwnerService {
-    #[tracing::instrument()]
+    //#[tracing::instrument()]
     fn clone(&self) -> OwnerService {
         let aux = OwnerService {
             repository: self.repository.clone(),

@@ -79,7 +79,8 @@ impl LicenseRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(message);
+                //tracing::error!(message);
+                log::error!("{}", message);
                 return Err(LicenseCreationError(e.to_string()).into());
             }
             Ok(data) => {
@@ -125,7 +126,8 @@ impl LicenseRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+               // tracing::error!(mssag);
+                log::error!("{}", mssag );
                 return Err(LicenseDynamoDBError(e.to_string()).into());
             }
             Ok(res) => match res.item {
@@ -194,7 +196,8 @@ impl LicenseRepository for LicenseRepo {
             Ok(_) => Ok(()),
             Err(e) => {
                 let message = format!("Error creating license: {}", e);
-                tracing::error!("{}", message);
+                //tracing::error!("{}", message);
+                log::error!("{}", message );
                 Err(LicenseDynamoDBError(message).into())
             }
         }
@@ -278,7 +281,8 @@ impl LicenseRepository for LicenseRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}", mssag );
                 return Err(LicenseDynamoDBError(e.to_string()).into());
             }
             Ok(result) => {
@@ -319,7 +323,8 @@ impl LicenseRepository for LicenseRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(message);
+                //tracing::error!(message);
+                log::error!("{}", message );
                 return Err(LicenseCreationError(e.to_string()).into());
             }
         }
@@ -344,7 +349,8 @@ impl LicenseRepository for LicenseRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(message);
+                //tracing::error!(message);
+                log::error!("{}", message );
                 return Err(LicenseCreationError(e.to_string()).into());
             }
         }

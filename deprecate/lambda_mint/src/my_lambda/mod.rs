@@ -27,7 +27,7 @@ impl std::fmt::Display for ApiLambdaError {
 /// Write your code inside it.
 /// There are some code example in the following URLs:
 /// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
-#[instrument]
+//#[instrument]
 pub async fn function_handler(
     //event: LambdaEvent<SqsEventObj<CreateNFTAsync>>,
     event: LambdaEvent<SqsEventObj<Value>>,

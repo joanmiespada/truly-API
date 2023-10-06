@@ -7,7 +7,6 @@ use lib_users::models::user::User;
 use lib_users::services::users::{UserManipulation, UsersService};
 use lib_users::validate_password;
 use serde::{Deserialize, Serialize};
-use tracing::instrument;
 use validator::{Validate, ValidationError};
 
 #[derive(Debug, Deserialize, Validate, Default)]
@@ -24,11 +23,11 @@ pub struct NewUser {
 pub struct NewIdUser {
     pub id: String,
 }
-#[instrument]
+//#[instrument]
 pub async fn create_basic_user(
     _req: &Request,
     _c: &Context,
-    config: &Config,
+    _config: &Config,
     user_service: &UsersService,
 ) -> Result<Response<String>, Box<dyn std::error::Error>> {
     let mut user = User::new();

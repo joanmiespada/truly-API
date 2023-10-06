@@ -3,7 +3,7 @@ use lib_config::config::Config;
 use lib_users::models::user::UserRoles;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
-use tracing::{info, instrument};
+use tracing::info;
 
 use self::error::ApiLambdaAdminUserError;
 use self::get_user_by_id::get_user_by_id;
@@ -20,7 +20,7 @@ mod password_update_user;
 mod promote_user;
 mod update_user;
 
-#[instrument]
+//#[instrument]
 pub async fn function_handler(
     config: &Config,
     user_service: &UsersService,

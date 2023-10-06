@@ -4,7 +4,6 @@ use lib_config::config::Config;
 use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError};
 use lib_users::services::users::{UpdatableFildsUser, UserManipulation, UsersService};
 use serde::{Deserialize, Serialize};
-use tracing::instrument;
 use validator::{Validate, ValidationError};
 
 #[derive(Debug, Serialize, Validate, Deserialize)]
@@ -17,11 +16,11 @@ pub struct UpdateUser {
 }
 use super::build_resp;
 
-#[instrument]
+//#[instrument]
 pub async fn update_user(
     req: &Request,
     _c: &Context,
-    config: &Config,
+    _config: &Config,
     user_service: &UsersService,
     id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error>> {

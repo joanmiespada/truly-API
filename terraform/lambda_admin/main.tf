@@ -35,12 +35,12 @@ resource "aws_lambda_function" "truly_lambda_admin" {
   }
 
   depends_on = [
-    var.resource_logs,
-    var.resource_dynamodb,
-    var.resource_xray,
-    var.resource_secretsman,
+    # var.resource_logs,
+    # var.resource_dynamodb,
+    # var.resource_xray,
+    # var.resource_secretsman,
     aws_cloudwatch_log_group.truly_lambda_admin_cloudwatch,
-    var.rust_backtrace
+    #var.rust_backtrace
   ]
 
   tags = merge(var.common_tags, { "logic" : "${var.service_name}" })

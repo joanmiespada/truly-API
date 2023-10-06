@@ -9,19 +9,19 @@ use lib_licenses::{
     services::assets::{AssetManipulation, AssetService},
 };
 use serde_json::json;
-use tracing::instrument;
 use uuid::Uuid;
 use validator::ValidationError;
 
 use crate::my_lambda::{build_resp, build_resp_env, build_resp_no_cache};
 
-#[instrument]
+//#[instrument]
+#[allow(dead_code)]
 pub async fn get_my_asset(
-    req: &Request,
+    _req: &Request,
     _c: &Context,
     config: &Config,
     asset_service: &AssetService,
-    owner_service: &OwnerService,
+    _owner_service: &OwnerService,
     asset_id: &Uuid,
     user_id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
@@ -48,13 +48,13 @@ pub async fn get_my_asset(
     }
 }
 
-#[instrument]
+//#[instrument]
 pub async fn get_my_assets_all(
-    req: &Request,
+    _req: &Request,
     _c: &Context,
     config: &Config,
     asset_service: &AssetService,
-    owner_service: &OwnerService,
+    _owner_service: &OwnerService,
     user_id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     let op_res = asset_service.get_by_user_id(&user_id).await;

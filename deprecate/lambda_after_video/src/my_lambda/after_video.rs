@@ -3,7 +3,7 @@ use lib_licenses::services::assets::{AssetManipulation, AssetService};
 use lib_video_objs::video::VideoResult;
 use tracing::{error, info, instrument};
 
-#[instrument]
+//#[instrument]
 pub async fn store_after_video_process(
     data: &VideoResult,
     config: &Config,

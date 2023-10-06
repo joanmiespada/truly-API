@@ -43,15 +43,15 @@ resource "aws_lambda_function" "truly_lambda_licenses" {
   }
 
   depends_on = [
-    var.resource_logs,
-    var.resource_dynamodb,
-    var.resource_xray,
-    var.resource_secretsman,
-    var.resource_kms,
-    var.resource_sqs,
-    var.resource_sns,
+    # var.resource_logs,
+    # var.resource_dynamodb,
+    # var.resource_xray,
+    # var.resource_secretsman,
+    # var.resource_kms,
+    # var.resource_sqs,
+    # var.resource_sns,
     aws_cloudwatch_log_group.truly_lambda_licenses_cloudwatch,
-    var.rust_backtrace
+    #var.rust_backtrace
   ]
 
   tags = merge(var.common_tags, { "logic" : "${var.service_name}" })

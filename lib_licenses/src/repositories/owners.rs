@@ -70,7 +70,7 @@ impl OwnerRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                log::error!("{}", mssag);
                 return Err(OwnerDynamoDBError(e.to_string()).into());
             }
             Ok(data) => {
@@ -119,7 +119,8 @@ impl OwnerRepository for OwnerRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}", mssag);
                 return Err(OwnerDynamoDBError(e.to_string()).into());
             }
         }
@@ -142,7 +143,8 @@ impl OwnerRepository for OwnerRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}", mssag);
                 return Err(OwnerDynamoDBError(e.to_string()).into());
             }
             Ok(result) => {
@@ -217,7 +219,8 @@ impl OwnerRepository for OwnerRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}", mssag);
                 return Err(OwnerDynamoDBError(e.to_string()).into());
             }
             Ok(_) => {}
@@ -261,7 +264,8 @@ impl OwnerRepository for OwnerRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}", mssag);
                 return Err(OwnerDynamoDBError(e.to_string()).into());
             }
         }

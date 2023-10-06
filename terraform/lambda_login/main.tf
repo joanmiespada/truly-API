@@ -34,14 +34,14 @@ resource "aws_lambda_function" "truly_lambda_login" {
     }
   }
 
-  depends_on = [
-    var.resource_logs,     //aws_iam_role_policy_attachment.truly_lambda_logs,
-    var.resource_dynamodb, //aws_iam_role_policy_attachment.truly_lambda_dynamodb,
-    var.resource_xray,     //aws_iam_role_policy_attachment.truly_lambda_XRAY,
-    var.resource_secretsman,
-    aws_cloudwatch_log_group.truly_lambda_login_cloudwatch,
-    var.rust_backtrace
-  ]
+  # depends_on = [
+  #   var.resource_logs,     //aws_iam_role_policy_attachment.truly_lambda_logs,
+  #   var.resource_dynamodb, //aws_iam_role_policy_attachment.truly_lambda_dynamodb,
+  #   var.resource_xray,     //aws_iam_role_policy_attachment.truly_lambda_XRAY,
+  #   var.resource_secretsman,
+  #   aws_cloudwatch_log_group.truly_lambda_login_cloudwatch,
+  #   var.rust_backtrace
+  # ]
 
   tags = merge(var.common_tags, { "logic" : "${var.service_name}" })
 

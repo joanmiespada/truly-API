@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use lib_video_objs::video::VideoProcessStatus;
-use tracing::{error, info};
+use log::{error, info};
 use url::Url;
 use uuid::Uuid;
 
@@ -94,7 +94,8 @@ impl AssetRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}", mssag );
                 return Err(AssetDynamoDBError(e.to_string()).into());
             }
             Ok(_) => {}
@@ -248,7 +249,7 @@ impl AssetRepository for AssetRepo {
                     user_id,
                     asset.id().to_string()
                 );
-                info!(mssag);
+                info!("{}",mssag);
 
                 return Ok(asset.id().clone());
             }
@@ -258,7 +259,7 @@ impl AssetRepository for AssetRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                error!(mssag);
+                error!("{}",mssag);
                 return Err(AssetDynamoDBError(e.to_string()).into());
             }
         }
@@ -281,7 +282,8 @@ impl AssetRepository for AssetRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}",mssag);
                 return Err(AssetDynamoDBError(e.to_string()).into());
             }
             Ok(result) => {
@@ -346,7 +348,8 @@ impl AssetRepository for AssetRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}",mssag);
                 return Err(AssetTreeError(e.to_string()).into());
             }
             Ok(data) => {
@@ -388,7 +391,8 @@ impl AssetRepository for AssetRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     asset.id().to_string()
                 );
-                tracing::debug!(mssag);
+                //tracing::debug!(mssag);
+                log::debug!("{}",mssag);
 
                 Ok(())
             }
@@ -398,7 +402,8 @@ impl AssetRepository for AssetRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e.to_string()
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}",mssag);
                 return Err(AssetDynamoDBError(e.to_string()).into());
             }
         }
@@ -430,7 +435,8 @@ impl AssetRepository for AssetRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}",mssag);
                 return Err(AssetTreeError(e.to_string()).into());
             }
             Ok(data) => {
@@ -480,7 +486,8 @@ impl AssetRepository for AssetRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}",mssag);
                 return Err(OwnerDynamoDBError(e.to_string()).into());
             }
             Ok(data) => {
@@ -535,7 +542,8 @@ impl AssetRepository for AssetRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}",mssag);
                 return Err(OwnerDynamoDBError(e.to_string()).into());
             }
             Ok(_) => {}
@@ -578,7 +586,8 @@ impl AssetRepository for AssetRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                tracing::error!(mssag);
+                //tracing::error!(mssag);
+                log::error!("{}",mssag);
                 return Err(OwnerDynamoDBError(e.to_string()).into());
             }
             Ok(_) => {}
