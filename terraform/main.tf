@@ -39,9 +39,6 @@ locals {
     service     = var.service_tag
     environment = var.environment_flag
   }
-
-
-
 }
 
 module "lambda_login" {
@@ -117,22 +114,9 @@ module "lambda_licenses" {
 
   service_name        = "licenses"
   common_tags         = local.common_tags
-  resource_logs       = aws_iam_role_policy_attachment.truly_lambda_logs
-  resource_xray       = aws_iam_role_policy_attachment.truly_lambda_XRAY
-  resource_dynamodb   = aws_iam_role_policy_attachment.truly_lambda_dynamodb
-  resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
-  resource_kms        = aws_iam_role_policy_attachment.truly_lambda_KMS
-  resource_sqs        = aws_iam_role_policy_attachment.truly_lambda_SQS
-  resource_sns        = aws_iam_role_policy_attachment.truly_lambda_SNS
   role                = aws_iam_role.truly_lambda_execution_role.arn
-
   environment_flag = var.environment_flag
-  trace_log        = var.trace_log
   rust_log         = var.rust_log
-
-  #dead_letter_queue_mint  = aws_sqs_queue.minting_queue_deadletter.url
-  #minting_async_topic_arn = aws_sns_topic.minting_topic.arn
-  #minting_fails_topic_arn = aws_sns_topic.minting_fails_after_max_retries_topic.arn
   kms_cypher_owner = var.kms_id_cypher_all_secret_keys
 
   rust_backtrace = var.rust_backtrace
@@ -150,64 +134,6 @@ module "lambda_licenses" {
 
   trace_level = var.trace_level
 
+  url_base_permanent_images = "https://cdn.${var.dns_prefix}.${var.dns_base}"
+
 }
-# module "lambda_mint" {
-#   source = "./lambda_mint"
-
-#   common_tags         = local.common_tags
-#   resource_logs       = aws_iam_role_policy_attachment.truly_lambda_logs
-#   resource_xray       = aws_iam_role_policy_attachment.truly_lambda_XRAY
-#   resource_dynamodb   = aws_iam_role_policy_attachment.truly_lambda_dynamodb
-#   resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
-#   resource_kms        = aws_iam_role_policy_attachment.truly_lambda_KMS
-#   resource_sqs        = aws_iam_role_policy_attachment.truly_lambda_SQS
-#   role                = aws_iam_role.truly_lambda_execution_role.arn
-
-#   environment_flag     = var.environment_flag
-#   trace_log            = var.trace_log
-#   rust_log             = var.rust_log
-#   lambda_deploy_folder = var.lambda_deploy_folder
-
-#   dead_letter_queue_mint  = aws_sqs_queue.minting_queue_deadletter.url
-#   kms_cypher_owner        = var.kms_id_cypher_all_secret_keys
-#   queue_mint_arn          = aws_sqs_queue.minting_queue.arn
-#   minting_async_topic_arn = aws_sns_topic.minting_topic.arn
-#   minting_fails_topic_arn = aws_sns_topic.minting_fails_after_max_retries_topic.arn
-
-
-#   rust_backtrace    = var.rust_backtrace
-#   aws_region        = var.aws_region
-#   api_stage_version = var.api_stage_version
-#   architectures     = var.architectures
-#   handler           = var.handler
-#   runtime           = var.runtime
-
-# }
-# module "lambda_after_video" {
-#   source = "./lambda_after_video"
-
-#   common_tags         = local.common_tags
-#   resource_logs       = aws_iam_role_policy_attachment.truly_lambda_logs
-#   resource_xray       = aws_iam_role_policy_attachment.truly_lambda_XRAY
-#   resource_dynamodb   = aws_iam_role_policy_attachment.truly_lambda_dynamodb
-#   resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
-#   resource_kms        = aws_iam_role_policy_attachment.truly_lambda_KMS
-#   resource_sqs        = aws_iam_role_policy_attachment.truly_lambda_SQS
-#   role                = aws_iam_role.truly_lambda_execution_role.arn
-
-#   environment_flag     = var.environment_flag
-#   trace_log            = var.trace_log
-#   rust_log             = var.rust_log
-#   lambda_deploy_folder = var.lambda_deploy_folder
-
-#   kms_cypher_owner            = var.kms_id_cypher_all_secret_keys
-#   sqs_after_video_process_arn = aws_sqs_queue.after_video_queue.arn
-
-#   rust_backtrace    = var.rust_backtrace
-#   aws_region        = var.aws_region
-#   api_stage_version = var.api_stage_version
-#   architectures     = var.architectures
-#   handler           = var.handler
-#   runtime           = var.runtime
-
-# }

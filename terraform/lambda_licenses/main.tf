@@ -1,12 +1,12 @@
 locals {
-  region_prefix          = element(split("-", var.aws_region), 0)
+  #region_prefix          = element(split("-", var.aws_region), 0)
   lambda_name_descriptor = "${var.common_tags.project}-${var.common_tags.service}-${var.common_tags.environment}-${var.aws_region}-${var.api_stage_version}-${var.service_name}"
 }
 resource "aws_cloudwatch_log_group" "truly_lambda_licenses_cloudwatch" {
   name              = "/aws/lambda/${local.lambda_name_descriptor}" #${var.truly_lambda_licenses_function_name}-${local.region_prefix}"
   retention_in_days = 1
 
-  tags = merge(var.common_tags, { "logic" : "${var.service_name}" })
+  tags = merge(var.common_tags, { "logic" : var.service_name })
 }
 
 
@@ -39,6 +39,8 @@ resource "aws_lambda_function" "truly_lambda_licenses" {
       HASHES_SIMILAR_VIDEO_IN_TOPIC = var.hashes_similarities_arn
       MATCHAPI_ENDPOINT             = var.matchapi_endpoint
       TRACE_LEVEL                   = var.trace_level
+      URL_BASE_PERMANENT_IMAGES     = var.url_base_permanent_images
+
     }
   }
 
@@ -54,7 +56,7 @@ resource "aws_lambda_function" "truly_lambda_licenses" {
     #var.rust_backtrace
   ]
 
-  tags = merge(var.common_tags, { "logic" : "${var.service_name}" })
+  tags = merge(var.common_tags, { "logic" : var.service_name })
 
 }
 

@@ -3,17 +3,17 @@ variable "aws_region" {
   type    = string
 }
 
-variable "secrets_manager_app_keys_name" {
-  description = "secret's manager for app values like API keys, jwt token, etc..."
-  type    = string
-  default = "truly_app_keys" //from lib_config::secrets
-}
+# variable "secrets_manager_app_keys_name" {
+#   description = "secret's manager for app values like API keys, jwt token, etc..."
+#   type    = string
+#   default = "truly_app_keys" //from lib_config::secrets
+#}
 
-variable "secrets_manager_contract_owner_secret_key_name" {
-  description = "secret's manager where the secret_key is stored encrypted"
-  type    = string
-  default = "truly_contract_owners_secret_key" //from lib_config::secrets
-}
+# variable "secrets_manager_contract_owner_secret_key_name" {
+#   description = "secret's manager where the secret_key is stored encrypted"
+#   type    = string
+#   default = "truly_contract_owners_secret_key" //from lib_config::secrets
+# }
 
 variable "environment_flag" {
   description = "environment flag"
@@ -74,15 +74,15 @@ variable "dns_base" {
   #default = "truly.video"
 } 
 
-variable "telemetry" {
-  type=bool
-  description = "enable or disable telemetry"
-}
+# variable "telemetry" {
+#   type=bool
+#   description = "enable or disable telemetry"
+# }
 
-variable "telemetry_endpoint" {
-  type=string
-  description = "endpoint to forward observability metrics"
-}
+# variable "telemetry_endpoint" {
+#   type=string
+#   description = "endpoint to forward observability metrics"
+# }
 
 variable "email" {
   description = "AWS SES email notifications"
@@ -106,14 +106,14 @@ variable "architectures" {
   default = [ "arm64" ]
 }
 
-variable "handler" {
-  type    = string
-  default = "function_handler"
-}
-variable "runtime" {
-  type    = string
-  default = "provided.al2"
-}
+# variable "handler" {
+#   type    = string
+#   default = "function_handler"
+# }
+# variable "runtime" {
+#   type    = string
+#   default = "provided.al2"
+# }
 
 variable "matchapi_endpoint" {
   type = string

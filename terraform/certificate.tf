@@ -7,6 +7,9 @@ data "aws_route53_zone" "selected" {
 resource "aws_acm_certificate" "cert" {
   domain_name       = format("*.%s",var.dns_base)
   validation_method = "DNS"
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_acm_certificate_validation" "cert" {

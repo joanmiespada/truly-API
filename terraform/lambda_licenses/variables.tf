@@ -4,17 +4,22 @@ variable "service_name" {
 }
 
 variable "common_tags" {}
-variable "resource_logs" {}
-variable "resource_dynamodb" {}
-variable "resource_xray" {}
-variable "resource_secretsman" {}
-variable "resource_kms" {}
-variable "resource_sqs" {}
-variable "resource_sns" {}
-variable "role" {}
-variable "environment_flag" {}
-variable "trace_log" {}
-variable "rust_log" {}
+#variable "resource_logs" {}
+#variable "resource_dynamodb" {}
+#variable "resource_xray" {}
+#variable "resource_secretsman" {}
+#variable "resource_kms" {}
+#variable "resource_sqs" {}
+#variable "resource_sns" {}
+variable "role" {
+}
+variable "environment_flag" {
+  type = string
+}
+#variable "trace_log" {}
+variable "rust_log" {
+  type = string
+}
 
 variable "kms_cypher_owner" {
   type      = string
@@ -75,5 +80,9 @@ variable "ecr_image" {
 }
 
 variable "trace_level" {
+  type=string
+}
+
+variable "url_base_permanent_images" {
   type=string
 }

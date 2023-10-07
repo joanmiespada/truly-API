@@ -206,6 +206,8 @@ impl VideoManipulation for VideoService {
 
         let mut similar_items :Vec<SimilarItem>= vec![];
 
+        let url_base_images = self.config.env_vars().url_base_permanent_images().unwrap().to_string();
+
         for item in &mut resp.similars {
             let ass1 = self.asset_service.get_by_id(&item.asset_id).await?;
 
@@ -222,7 +224,7 @@ impl VideoManipulation for VideoService {
                 let aux =SimilarItem{
                     asset_id: item.asset_id.clone(),
                     frame_id: item.frame_id.clone(),
-                    frame_url: item.frame_url.clone(),
+                    frame_url:  format!("{}/{}", url_base_images,  item.frame_url.clone()),
                     frame_second,
                     asset_url
                 };

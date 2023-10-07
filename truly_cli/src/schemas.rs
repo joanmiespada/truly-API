@@ -7,9 +7,9 @@ use lib_config::config::Config;
 use lib_config::schema::Schema;
 use lib_ledger::repository::schema_ledger::LedgerSchema;
 use lib_licenses::repositories::{
-    schema_asset::AssetAllSchema, schema_licenses::LicenseSchema, schema_owners::OwnerSchema,
+    schema_asset::{AssetAllSchema, ASSETS_TABLE_NAME}, schema_licenses::{LicenseSchema, LICENSES_TABLE_NAME}, schema_owners::{OwnerSchema, OWNERS_TABLE_NAME}, 
 };
-use lib_users::repositories::schema_user::UserAllSchema;
+use lib_users::repositories::schema_user::{UserAllSchema, USERS_TABLE_NAME };
 
 pub async fn create_schemas(
     table_name: String,
@@ -19,7 +19,7 @@ pub async fn create_schemas(
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let er = ResourceNotFoundException::builder().build();
     match table_name.as_str() {
-        "owners" => {
+        OWNERS_TABLE_NAME => {
             if create {
                 OwnerSchema::create_schema(config).await?;
             } else if delete {
@@ -28,7 +28,7 @@ pub async fn create_schemas(
                 return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
             }
         }
-        "assets" => {
+        ASSETS_TABLE_NAME => {
             if create {
                 AssetAllSchema::create_schema(config).await?
             } else if delete {
@@ -37,15 +37,15 @@ pub async fn create_schemas(
                 return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
             }
         }
-        "ledger" => {
-            if create {
-                LedgerSchema::create_schema(config).await?
-            } else if delete {
-                LedgerSchema::delete_schema(config).await?
-            } else {
-                return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
-            }
-        }
+        // "ledger" => {
+        //     if create {
+        //         LedgerSchema::create_schema(config).await?
+        //     } else if delete {
+        //         LedgerSchema::delete_schema(config).await?
+        //     } else {
+        //         return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
+        //     }
+        // }
         // "keypairs" => {
         //     if create {
         //         KeyPairSchema::create_schema(&config).await?;
@@ -64,7 +64,7 @@ pub async fn create_schemas(
         //         return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
         //     }
         // }
-        "users" => {
+        USERS_TABLE_NAME => {
             if create {
                 UserAllSchema::create_schema(config).await?;
                 //schema_user::create_schema_users(&client).await?
@@ -93,7 +93,7 @@ pub async fn create_schemas(
         //         return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
         //     }
         // }
-        "licenses" => {
+        LICENSES_TABLE_NAME => {
             if create {
                 LicenseSchema::create_schema(config).await?;
                 //schema_licenses::create_schema_licenses(&client).await?;

@@ -26,7 +26,7 @@ locals {
     integrations = local.integration_configurations
   }))
 
-  deployed_at = "${timestamp()}" 
+  #deployed_at = "${timestamp()}" 
 
 }
 
