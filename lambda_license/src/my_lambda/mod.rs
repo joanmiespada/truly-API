@@ -5,7 +5,9 @@ mod video;
 
 use std::str::FromStr;
 
-use crate::my_lambda::assets::get_similar_assets::{get_similar_assets_by_id, get_similar_assets_by_url};
+use crate::my_lambda::assets::get_similar_assets::{
+    get_similar_assets_by_id, get_similar_assets_by_url,
+};
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, STAGE_ENV};
@@ -13,11 +15,10 @@ use lib_licenses::services::licenses::LicenseService;
 use lib_licenses::services::video::VideoService;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
-use tracing::info;
-use url::Url;
+//use tracing::info;
 
-use self::assets::create_my_asset::create_my_asset;
 use self::assets::create_asset::create_asset;
+use self::assets::create_my_asset::create_my_asset;
 use self::assets::get_asset::get_asset;
 use self::assets::get_my_asset::get_my_assets_all;
 use self::error::ApiLambdaError;
@@ -26,6 +27,7 @@ use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
 use matchit::Router;
 use uuid::Uuid;
+
 
 fn jwt_mandatory(req: &Request, config: &Config) -> Result<String, Response<String>> {
     match check_jwt_token_as_user_logged(&req, config) {
@@ -44,7 +46,7 @@ pub async fn function_handler(
     _license_service: &LicenseService,
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error + Send + Sync>> {
-    info!("income new request");
+    log::info!("income new request");
     let context = req.lambda_context();
     //let query_string = req.query_string_parameters().to_owned();
     //request.uri().path()
@@ -70,11 +72,12 @@ pub async fn function_handler(
     //router.insert("/api/hash", Some("8"))?;
     router.insert("/api/hash", Some("88"))?;
     router.insert("/api/similar/:id", Some("99"))?;
+    router.insert("/api/similar", Some("999"))?;
 
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
             Err(_) => build_resp(
-                "method not allowed".to_string(),
+                "method not allowed - ".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
             ),
             Ok(matched) => match matched.value.unwrap() {
@@ -176,12 +179,10 @@ pub async fn function_handler(
                 //     let asset_id = Uuid::from_str(id.as_str())?;
                 //     return get_txs(&req, &context, config, tx_service,&asset_id).await;
                 // }
-
                 "99" => {
                     let id = matched.params.get("id").unwrap().to_string();
 
                     if let Ok(asset_id) = Uuid::from_str(id.as_str()) {
-
                         return get_similar_assets_by_id(
                             &req,
                             &context,
@@ -191,33 +192,36 @@ pub async fn function_handler(
                             &asset_id,
                         )
                         .await;
-                    }else if  let Ok(url) = Url::from_str(id.as_str()) {
-                        return get_similar_assets_by_url(
-                            &req,
-                            &context,
-                            config,
-                            asset_service,
-                            video_service,
-                            &url,
-                        )
-                        .await;
-                    }else{
+                    } else {
                         build_resp(
-                            "id param must be UUID or URL".to_string(),
-                    StatusCode::NOT_ACCEPTABLE,
+                            "id param must be UUID".to_string(),
+                            StatusCode::NOT_ACCEPTABLE,
                         )
-                    } 
+                    }
                 }
 
+                "999" => {
+                    //let url = matched.params.get("url").unwrap().to_string();
+                    return get_similar_assets_by_url(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        video_service
+                    )
+                    .await;
+                }
+                
+
                 _ => build_resp(
-                    "method not allowed".to_string(),
+                    "GET method not allowed".to_string(),
                     StatusCode::METHOD_NOT_ALLOWED,
                 ),
             },
         },
         &Method::POST => match router.at(req.uri().path()) {
             Err(_) => build_resp(
-                "method not allowed".to_string(),
+                "method not allowed *".to_string(),
                 StatusCode::METHOD_NOT_ALLOWED,
             ),
             Ok(matched) => match matched.value.unwrap() {
@@ -310,7 +314,6 @@ pub async fn function_handler(
                 //     )
                 //     .await;
                 // }
-                
                 "88" => {
                     match jwt_mandatory(&req, config) {
                         Err(e) => {
@@ -319,7 +322,7 @@ pub async fn function_handler(
                         Ok(user) => user_id = user,
                     };
 
-                    return async_create_my_hash_similars_sns (
+                    return async_create_my_hash_similars_sns(
                         &req,
                         &context,
                         config,
@@ -330,8 +333,19 @@ pub async fn function_handler(
                     .await;
                 }
 
+                "999" => {
+                    return get_similar_assets_by_url(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        video_service
+                    )
+                    .await;
+                }
+
                 &_ => build_resp(
-                    "method not allowed".to_string(),
+                    "POST method not allowed".to_string(),
                     StatusCode::METHOD_NOT_ALLOWED,
                 ),
             },
@@ -351,7 +365,7 @@ fn build_resp(
         .status(status_code)
         .header("content-type", "text/json")
         .body(msg.clone());
-    info!("result: {} status code: {}", msg,status_code);
+    log::info!("result: {} status code: {}", msg, status_code);
     match res {
         Err(e) => Err(ApiLambdaError { 0: e.to_string() }.into()),
         Ok(resp) => Ok(resp),
@@ -367,7 +381,7 @@ fn build_resp_no_cache(
         .header("content-type", "text/json")
         .header("cache-control", "no-cache,max-age=0")
         .body(msg.clone());
-    info!("result: {} status code: {}", msg,status_code);
+    log::info!("result: {} status code: {}", msg, status_code);
     match res {
         Err(e) => Err(ApiLambdaError { 0: e.to_string() }.into()),
         Ok(resp) => Ok(resp),

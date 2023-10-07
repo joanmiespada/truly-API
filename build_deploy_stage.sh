@@ -14,7 +14,7 @@ jq --version || exit 1
 
 #check paramaters. They allow to skip some sections
 #zip_skip='false'
-image_skip='false'
+images_skip='false'
 secrets_skip='false'
 tables_skip='false'
 #ledger_skip='true'
@@ -25,8 +25,8 @@ do
         # "--zip_skip")
         #     zip_skip='true'
         #     ;;
-        "--image_skip")
-            image_skip='true'
+        "--images_skip")
+            images_skip='true'
             ;;
         "--secrets_skip")
             secrets_skip='true'
@@ -69,7 +69,7 @@ account_id=$(aws sts get-caller-identity --query Account --profile $profile --ou
 lambdas='[
         {
             "name": "license_lambda",
-            "version": "0.0.10",
+            "version": "0.0.11",
             "path": "lambda_license/image/Dockerfile",
             "description": "License lambda: manage assets"
         },{
@@ -90,7 +90,7 @@ lambdas='[
         }
     ]'
 
-if [[ "$image_skip" == 'false' ]]; then
+if [[ "$images_skip" == 'false' ]]; then
 
 
 

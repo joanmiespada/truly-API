@@ -439,7 +439,7 @@ impl UserRepository for UsersRepo {
                     e
                 );
                 //tracing::error!(mssag);
-                log::error!("{}", e);
+                log::error!("{}", mssag);
                 return Err(UserDynamoDBError(e.to_string()).into());
             }
             Ok(result) => {
