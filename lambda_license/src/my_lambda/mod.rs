@@ -18,7 +18,6 @@ use lib_util_jwt::{get_header_jwt, JWTSecurityError};
 //use tracing::info;
 
 use self::assets::create_asset::create_asset;
-use self::assets::create_my_asset::create_my_asset;
 use self::assets::get_asset::get_asset;
 use self::assets::get_my_asset::get_my_assets_all;
 use self::error::ApiLambdaError;
@@ -61,7 +60,7 @@ pub async fn function_handler(
     let mut router = Router::new();
     router.insert("/api/asset", Some("1"))?;
     router.insert("/api/asset/:id", Some("2"))?;
-    router.insert("/api/my-asset", Some("11"))?;
+    //router.insert("/api/my-asset", Some("11"))?;
     //router.insert("/api/nft", Some("3"))?;
     // router.insert("/api/license", Some("4"))?;
     // router.insert("/api/license/:id", Some("44"))?;
@@ -226,42 +225,40 @@ pub async fn function_handler(
             ),
             Ok(matched) => match matched.value.unwrap() {
                 "1" => {
-                    // match jwt_mandatory(&req, config) {
-                    //     Err(e) => {
-                    //         return Ok(e);
-                    //     }
-                    //     Ok(user) => user_id = user,
-                    // };
+                    let ussrr = match jwt_mandatory(&req, config) {
+                        Err(_) => None,
+                        Ok(user) => Some(user)
+                    };
                     create_asset(
                         &req,
                         &context,
                         config,
                         asset_service,
-                        //owners_service,
                         video_service,
+                        ussrr
                     )
                     .await
                 }
 
-                "11" => {
-                    match jwt_mandatory(&req, config) {
-                        Err(e) => {
-                            return Ok(e);
-                        }
-                        Ok(user) => user_id = user,
-                    };
-                    create_my_asset(
-                        &req,
-                        &context,
-                        config,
-                        asset_service,
-                        //owners_service,
-                        video_service,
-                        //ledger_service,
-                        &user_id,
-                    )
-                    .await
-                }
+                // "11" => {
+                //     match jwt_mandatory(&req, config) {
+                //         Err(e) => {
+                //             return Ok(e);
+                //         }
+                //         Ok(user) => user_id = user,
+                //     };
+                //     create_asset(
+                //         &req,
+                //         &context,
+                //         config,
+                //         asset_service,
+                //         //owners_service,
+                //         video_service,
+                //         //ledger_service,
+                //         Some(user_id),
+                //     )
+                //     .await
+                // }
 
                 // "3" => {
                 //     //let id = matched.params.get("id").unwrap().to_string();

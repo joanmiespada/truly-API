@@ -11,12 +11,15 @@
 # }
 
 // start processing hashes and similarities
-resource "aws_sns_topic" "hash_similar_in_topic" {
+resource "aws_sns_topic" "video_in_topic" {
   name = "video_in_topic" # no need to add region 
   tags = merge(local.common_tags, { logic : "for matchapi" })
 }
 
-
+resource "aws_sns_topic" "video_out_topic" {
+  name = "video_out_topic" # no need to add region 
+  tags = merge(local.common_tags, { logic : "for matchapi" })
+}
 
 # // ---------- minting  ------------
 # resource "aws_sqs_queue" "minting_queue" {

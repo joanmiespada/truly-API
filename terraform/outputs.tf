@@ -4,13 +4,13 @@ output "invoke_url_v1" {
 output "invoke_url_default" {
   value = aws_apigatewayv2_stage.default_stage.invoke_url
 }
-# output "video_in_topic" {
-#   value = aws_sns_topic.video_in_topic.arn
-# }
+output "video_in_topic" {
+  value = aws_sns_topic.video_in_topic.arn
+}
 
-# output "video_out_topic" {
-#   value = aws_sns_topic.video_out_topic.arn
-# }
+output "video_out_topic" {
+  value = aws_sns_topic.video_out_topic.arn
+}
 
 output "api_domain_name_default" {
   value = aws_apigatewayv2_domain_name.truly_api_domain_name_default.domain_name

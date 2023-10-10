@@ -143,7 +143,7 @@ impl AssetManipulation for AssetService {
         let urll = url::Url::parse(new_intent_asset.as_str())?;
         let res_op = self.repository.get_by_url(&urll).await;
         if let Ok(_) = res_op {
-            return Err(format!("asset with url {} already exists", urll).into());
+            return Err(format!("asset with url {} already exists", urll.to_string()).into());
         }
 
         info!("asset fields validated");

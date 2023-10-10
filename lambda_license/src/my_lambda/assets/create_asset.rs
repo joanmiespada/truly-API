@@ -15,6 +15,7 @@ pub async fn create_asset(
     config: &Config,
     asset_service: &AssetService,
     video_service: &VideoService,
+    user_id: Option<String>
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     let asset_fields;
     match req.payload::<CreatableFildsAsset>() {
@@ -29,7 +30,7 @@ pub async fn create_asset(
         },
     }
     info!("calling asset service: add");
-    let op1 = asset_service.add(&asset_fields, &None).await;
+    let op1 = asset_service.add(&asset_fields, &user_id).await;
 
     if let Err(e) = op1 {
         if let Some(m) = e.downcast_ref::<AssetDynamoDBError>() {
