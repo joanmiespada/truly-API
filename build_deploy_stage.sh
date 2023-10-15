@@ -14,18 +14,13 @@ tflint --version || exit 1
 jq --version || exit 1
 
 #check paramaters. They allow to skip some sections
-#zip_skip='false'
 images_skip='false'
 secrets_skip='false'
 tables_skip='false'
-#ledger_skip='true'
 terraform_skip='false'
 for arg in "$@"
 do
     case $arg in
-        # "--zip_skip")
-        #     zip_skip='true'
-        #     ;;
         "--images_skip")
             images_skip='true'
             ;;
@@ -35,9 +30,6 @@ do
         "--tables_skip")
             tables_skip='true'
             ;;
-        # "--ledger_skip")
-        #     ledger_skip='true'
-        #     ;;
         "--terraform_skip")
             terraform_skip='true'
             ;;
@@ -70,22 +62,22 @@ account_id=$(aws sts get-caller-identity --query Account --profile $profile --ou
 lambdas='[
         {
             "name": "license_lambda",
-            "version": "0.0.12",
+            "version": "0.0.13",
             "path": "lambda_license/image/Dockerfile",
             "description": "License lambda: manage assets"
         },{
             "name": "admin_lambda",
-            "version": "0.0.8",
+            "version": "0.0.9",
             "path": "lambda_admin/image/Dockerfile",
             "description": "Admin lambda: manage operation with high privilegies"
         },{
             "name": "login_lambda",
-            "version": "0.0.11",
+            "version": "0.0.12",
             "path": "lambda_login/image/Dockerfile",
             "description": "Login lambda: manage login and signups"
         },{
             "name": "user_lambda",
-            "version": "0.0.8",
+            "version": "0.0.9",
             "path": "lambda_user/image/Dockerfile",
             "description": "User lambda: manage user crud ops"
         }
@@ -212,12 +204,6 @@ if [[ "$secrets_skip" == 'false' ]]; then
 else
     echo "secrets skip, they need to be already created"
 fi
-
-# if [[ "$ledger_skip" == 'false' ]]; then
-#    echo "ledger needs to be created before. run ./create_ledger.sh script" 
-# else
-#     echo "ledger creation skip. it needs to be create by ./create_ledger.sh script before"
-# fi
 
 
 if [[ "$tables_skip" == 'false' ]]; then
@@ -353,7 +339,7 @@ if [[ "$terraform_skip" == 'false' ]]; then
         terraform workspace new $region_label
         terraform workspace select $region_label
         echo "Planning infrastructure for ${region}..."
-        tflint --recursive 
+        #tflint --recursive 
         terraform validate || exit 1
         terraform plan -out=plan.tfplan || exit 1
         echo "Applying infrastructure for ${region}..."

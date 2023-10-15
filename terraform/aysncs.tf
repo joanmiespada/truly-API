@@ -20,6 +20,10 @@ resource "aws_sns_topic" "video_out_topic" {
   name = "video_out_topic" # no need to add region 
   tags = merge(local.common_tags, { logic : "for matchapi" })
 }
+resource "aws_sns_topic" "video_error_topic" {
+  name = "video_error_topic" # no need to add region 
+  tags = merge(local.common_tags, { logic : "for matchapi" })
+}
 
 # // ---------- minting  ------------
 # resource "aws_sqs_queue" "minting_queue" {
