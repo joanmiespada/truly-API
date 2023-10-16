@@ -1,4 +1,3 @@
-use crate::SERVICE;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{
     builders::StreamSpecificationBuilder,
@@ -17,14 +16,19 @@ use aws_sdk_dynamodb::types::{
 };
 use lib_config::{
     config::Config,
-    environment::{
-        ENV_VAR_ENVIRONMENT, ENV_VAR_PROJECT, ENV_VAR_PROJECT_LABEL, ENV_VAR_SERVICE_LABEL, PROD_ENV,
-    },
+    environment::PROD_ENV,
     result::ResultE,
     schema::Schema,
+    constants::{
+        VALUE_PROJECT, API_DOMAIN, TAG_PROJECT, TAG_SERVICE, TAG_ENVIRONMENT
+    }
 };
 
-pub const OWNERS_TABLE_NAME: &str = "truly_owners";
+
+lazy_static! {
+    pub static ref OWNERS_TABLE_NAME: String = format!("{}_{}_owners", VALUE_PROJECT, API_DOMAIN);
+}
+
 pub const OWNER_USER_ID_FIELD_PK: &str = "userId";
 pub const OWNER_ASSET_ID_FIELD_PK: &str = "assetId";
 pub const OWNERS_USER_ID_INDEX: &str = "user_id_index";
@@ -84,7 +88,7 @@ impl Schema for OwnerSchema {
 
         client
             .create_table()
-            .table_name(OWNERS_TABLE_NAME)
+            .table_name(OWNERS_TABLE_NAME.clone())
             .key_schema(ks1)
             .key_schema(ks2)
             .global_secondary_indexes(second_index_by_user)
@@ -100,20 +104,20 @@ impl Schema for OwnerSchema {
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
+                    .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_PROJECT_LABEL.to_string()))
-                    .set_value(Some(ENV_VAR_PROJECT.to_string()))
+                    .set_key(Some(TAG_PROJECT.to_string()))
+                    .set_value(Some(VALUE_PROJECT.to_string()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_SERVICE_LABEL.to_string()))
-                    .set_value(Some(SERVICE.to_string()))
+                    .set_key(Some(TAG_SERVICE.to_string()))
+                    .set_value(Some(API_DOMAIN.to_string()))
                     .build(),
             )
             .deletion_protection_enabled(if config.env_vars().environment().unwrap() == PROD_ENV {
@@ -124,7 +128,7 @@ impl Schema for OwnerSchema {
             .send()
             .await?;
 
-        wait_until_table_is_active(&client, OWNERS_TABLE_NAME).await?;
+        wait_until_table_is_active(&client, OWNERS_TABLE_NAME.as_str()).await?;
 
         Ok(())
     }
@@ -133,7 +137,7 @@ impl Schema for OwnerSchema {
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
         client
             .delete_table()
-            .table_name(OWNERS_TABLE_NAME)
+            .table_name(OWNERS_TABLE_NAME.clone())
             .send()
             .await?;
 

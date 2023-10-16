@@ -1,4 +1,3 @@
-use crate::SERVICE;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{
     builders::StreamSpecificationBuilder, AttributeDefinition, BillingMode, GlobalSecondaryIndex,
@@ -7,14 +6,18 @@ use aws_sdk_dynamodb::types::{
 };
 use lib_config::{
     config::Config,
-    environment::{
-        ENV_VAR_ENVIRONMENT, ENV_VAR_PROJECT, ENV_VAR_PROJECT_LABEL, ENV_VAR_SERVICE_LABEL, PROD_ENV,
-    },
+    environment::PROD_ENV,
     result::ResultE,
     schema::Schema,
+    constants::{
+        VALUE_PROJECT, API_DOMAIN, TAG_PROJECT, TAG_SERVICE, TAG_ENVIRONMENT
+    }
 };
 
-pub const LICENSES_TABLE_NAME: &str = "truly_licenses";
+lazy_static! {
+    pub static ref LICENSES_TABLE_NAME: String = format!("{}_{}_licenses", VALUE_PROJECT, API_DOMAIN ); 
+}
+
 pub const LICENSE_ID_FIELD_PK: &str = "licenseId";
 pub const LICENSE_ASSET_ID_FIELD_PK: &str = "assetId";
 pub const LICENSES_ASSET_ID_INDEX: &str = "asset_id_index";
@@ -74,7 +77,7 @@ impl Schema for LicenseSchema {
             .build();
         client
             .create_table()
-            .table_name(LICENSES_TABLE_NAME)
+            .table_name(LICENSES_TABLE_NAME.clone())
             .key_schema(ks1)
             .key_schema(ks2)
             .global_secondary_indexes(second_index_by_asset)
@@ -90,20 +93,20 @@ impl Schema for LicenseSchema {
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
+                    .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_PROJECT_LABEL.to_string()))
-                    .set_value(Some(ENV_VAR_PROJECT.to_string()))
+                    .set_key(Some(TAG_PROJECT.to_string()))
+                    .set_value(Some(VALUE_PROJECT.to_string()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_SERVICE_LABEL.to_string()))
-                    .set_value(Some(SERVICE.to_string()))
+                    .set_key(Some(TAG_SERVICE.to_string()))
+                    .set_value(Some(API_DOMAIN.to_string()))
                     .build(),
             )
             .deletion_protection_enabled(if config.env_vars().environment().unwrap() == PROD_ENV {
@@ -121,7 +124,7 @@ impl Schema for LicenseSchema {
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
         client
             .delete_table()
-            .table_name(LICENSES_TABLE_NAME)
+            .table_name(LICENSES_TABLE_NAME.clone())
             .send()
             .await?;
 

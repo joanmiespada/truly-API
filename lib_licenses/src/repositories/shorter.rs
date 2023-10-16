@@ -46,7 +46,7 @@ impl ShorterRepository for ShorterRepo {
         let request = self
             .client
             .get_item()
-            .table_name(SHORTER_TABLE_NAME)
+            .table_name(SHORTER_TABLE_NAME.clone())
             .key(SHORTER_FIELD_PK, shorter_av);
 
         let results = request.send().await;
@@ -84,7 +84,7 @@ impl ShorterRepository for ShorterRepo {
 
         let request = self.client.transact_write_items().transact_items(
             TransactWriteItem::builder()
-                .put(items.table_name(SHORTER_TABLE_NAME).build())
+                .put(items.table_name(SHORTER_TABLE_NAME.clone()).build())
                 .build(),
         );
 

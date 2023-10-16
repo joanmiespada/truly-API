@@ -83,7 +83,7 @@ impl AssetRepo {
         let request = self
             .client
             .get_item()
-            .table_name(ASSETS_TABLE_NAME)
+            .table_name(ASSETS_TABLE_NAME.clone())
             .key(ASSET_ID_FIELD_PK, asset_id_av);
 
         let results = request.send().await;
@@ -206,7 +206,7 @@ impl AssetRepository for AssetRepo {
             .transact_write_items()
             .transact_items(
                 TransactWriteItem::builder()
-                    .put(items.table_name(ASSETS_TABLE_NAME).build())
+                    .put(items.table_name(ASSETS_TABLE_NAME.clone()).build())
                     .build(),
             )
             .transact_items(
@@ -215,7 +215,7 @@ impl AssetRepository for AssetRepo {
                         Put::builder()
                             .item(OWNER_USER_ID_FIELD_PK, user_id_av.clone())
                             .item(OWNER_ASSET_ID_FIELD_PK, asset_id_av.clone())
-                            .table_name(OWNERS_TABLE_NAME)
+                            .table_name(OWNERS_TABLE_NAME.clone())
                             .build(),
                     )
                     .build(),
@@ -232,7 +232,7 @@ impl AssetRepository for AssetRepo {
                             Put::builder()
                                 .item(ASSET_TREE_FATHER_ID_FIELD_PK, father_id_av)
                                 .item(ASSET_TREE_SON_ID_FIELD_PK, asset_id_av)
-                                .table_name(ASSET_TREE_TABLE_NAME)
+                                .table_name(ASSET_TREE_TABLE_NAME.clone())
                                 .build(),
                         )
                         .build(),
@@ -271,7 +271,7 @@ impl AssetRepository for AssetRepo {
         let results = self
             .client
             .scan()
-            .table_name(ASSETS_TABLE_NAME)
+            .table_name(ASSETS_TABLE_NAME.clone())
             .send()
             .await;
 
@@ -333,7 +333,7 @@ impl AssetRepository for AssetRepo {
         let request = self
             .client
             .query()
-            .table_name(ASSETS_TABLE_NAME)
+            .table_name(ASSETS_TABLE_NAME.clone())
             .index_name(URL_INDEX_NAME)
             .key_condition_expression(filter)
             .expression_attribute_values(":value".to_string(), asset_url_av)
@@ -380,7 +380,7 @@ impl AssetRepository for AssetRepo {
 
         let request = self.client.transact_write_items().transact_items(
             TransactWriteItem::builder()
-                .put(items.table_name(ASSETS_TABLE_NAME).build())
+                .put(items.table_name(ASSETS_TABLE_NAME.clone()).build())
                 .build(),
         );
 
@@ -420,7 +420,7 @@ impl AssetRepository for AssetRepo {
         let request = self
             .client
             .query()
-            .table_name(ASSET_TREE_TABLE_NAME)
+            .table_name(ASSET_TREE_TABLE_NAME.clone())
             .index_name(ASSET_TREE_FATHER_INDEX)
             .key_condition_expression(filter)
             .expression_attribute_values(":value".to_string(), asset_father_id_av)
@@ -471,7 +471,7 @@ impl AssetRepository for AssetRepo {
         let request = self
             .client
             .query()
-            .table_name(OWNERS_TABLE_NAME)
+            .table_name(OWNERS_TABLE_NAME.clone())
             .key_condition_expression(filter)
             .expression_attribute_values(":value".to_string(), user_id_av);
         //.select(Select::AllProjectedAttributes);
@@ -531,7 +531,7 @@ impl AssetRepository for AssetRepo {
             .client
             //.query()
             .get_item()
-            .table_name(OWNERS_TABLE_NAME)
+            .table_name(OWNERS_TABLE_NAME.clone())
             .set_key(Some(filter2));
 
         let results = request.send().await;
@@ -575,7 +575,7 @@ impl AssetRepository for AssetRepo {
             .client
             //.query()
             .get_item()
-            .table_name(ASSET_TREE_TABLE_NAME)
+            .table_name(ASSET_TREE_TABLE_NAME.clone())
             .set_key(Some(filter));
 
         let results = request.send().await;

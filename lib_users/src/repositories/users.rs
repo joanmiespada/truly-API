@@ -189,7 +189,7 @@ impl UsersRepo {
                     LOGIN_EMAIL_FIELD_NAME,
                     email,
                     USERID_FIELD_NAME_PK,
-                    LOGIN_EMAIL_TABLE_NAME,
+                    LOGIN_EMAIL_TABLE_NAME.as_str(),
                 )
                 .await?;
 
@@ -205,7 +205,7 @@ impl UsersRepo {
                     LOGIN_DEVICE_FIELD_NAME,
                     device,
                     USERID_FIELD_NAME_PK,
-                    LOGIN_DEVICE_TABLE_NAME,
+                    LOGIN_DEVICE_TABLE_NAME.as_str(),
                 )
                 .await?;
             if let Some(_) = res {
@@ -220,7 +220,7 @@ impl UsersRepo {
                     LOGIN_WALLET_FIELD_NAME,
                     wallet_address,
                     USERID_FIELD_NAME_PK,
-                    LOGIN_WALLET_TABLE_NAME,
+                    LOGIN_WALLET_TABLE_NAME.as_str(),
                 )
                 .await?;
             if let Some(_) = res {
@@ -239,7 +239,7 @@ impl UsersRepo {
         let request = self
             .client
             .get_item()
-            .table_name(USERS_TABLE_NAME)
+            .table_name(USERS_TABLE_NAME.as_str())
             .key(USERID_FIELD_NAME_PK, user_id_av);
 
         let results = request.send().await;
@@ -265,7 +265,7 @@ impl UsersRepo {
                 USERID_FIELD_NAME_PK,
                 id,
                 LOGIN_EMAIL_FIELD_NAME,
-                LOGIN_EMAIL_TABLE_NAME,
+                LOGIN_EMAIL_TABLE_NAME.as_str(),
             )
             .await?;
         if let Some(email) = email_op {
@@ -276,7 +276,7 @@ impl UsersRepo {
                 USERID_FIELD_NAME_PK,
                 id,
                 LOGIN_DEVICE_FIELD_NAME,
-                LOGIN_DEVICE_TABLE_NAME,
+                LOGIN_DEVICE_TABLE_NAME.as_str(),
             )
             .await?;
         if let Some(device)= device_op {
@@ -287,7 +287,7 @@ impl UsersRepo {
                 USERID_FIELD_NAME_PK,
                 id,
                 LOGIN_WALLET_FIELD_NAME,
-                LOGIN_WALLET_TABLE_NAME,
+                LOGIN_WALLET_TABLE_NAME.as_str(),
             )
             .await?;
         if let Some(wallet) = wallet_op {
@@ -320,7 +320,7 @@ impl UsersRepo {
 
         request = request.transact_items(
             TransactWriteItem::builder()
-                .put(user_fields.table_name(USERS_TABLE_NAME).build())
+                .put(user_fields.table_name(USERS_TABLE_NAME.as_str()).build())
                 .build(),
         );
 
@@ -334,7 +334,7 @@ impl UsersRepo {
 
             request = request.transact_items(
                 TransactWriteItem::builder()
-                    .put(device_fields.table_name(LOGIN_DEVICE_TABLE_NAME).build())
+                    .put(device_fields.table_name(LOGIN_DEVICE_TABLE_NAME.as_str()).build())
                     .build(),
             );
         }
@@ -349,7 +349,7 @@ impl UsersRepo {
 
             request = request.transact_items(
                 TransactWriteItem::builder()
-                    .put(wallet_fields.table_name(LOGIN_WALLET_TABLE_NAME).build())
+                    .put(wallet_fields.table_name(LOGIN_WALLET_TABLE_NAME.as_str()).build())
                     .build(),
             );
         }
@@ -369,7 +369,7 @@ impl UsersRepo {
                             USERID_FIELD_NAME_PK,
                             new_user_data.user_id(),
                             PASSWORD_FIELD_NAME,
-                            LOGIN_EMAIL_TABLE_NAME,
+                            LOGIN_EMAIL_TABLE_NAME.as_str(),
                         )
                         .await?;
                     if let Some(password_db) = pass {
@@ -388,7 +388,7 @@ impl UsersRepo {
 
             request = request.transact_items(
                 TransactWriteItem::builder()
-                    .put(email_fields.table_name(LOGIN_EMAIL_TABLE_NAME).build())
+                    .put(email_fields.table_name(LOGIN_EMAIL_TABLE_NAME.as_str()).build())
                     .build(),
             );
         }
@@ -429,7 +429,7 @@ impl UserRepository for UsersRepo {
     async fn get_all(&self, _page_number: u32, _page_size: u32) -> ResultE<Vec<User>> {
         let mut usersqueried = Vec::new();
 
-        let results = self.client.scan().table_name(USERS_TABLE_NAME).send().await;
+        let results = self.client.scan().table_name(USERS_TABLE_NAME.as_str()).send().await;
 
         match results {
             Err(e) => {
@@ -476,7 +476,7 @@ impl UserRepository for UsersRepo {
                 LOGIN_DEVICE_FIELD_NAME,
                 device,
                 USERID_FIELD_NAME_PK,
-                LOGIN_DEVICE_TABLE_NAME,
+                LOGIN_DEVICE_TABLE_NAME.as_str(),
             )
             .await?;
         match res {
@@ -494,7 +494,7 @@ impl UserRepository for UsersRepo {
                         USERID_FIELD_NAME_PK,
                         &user_id,
                         LOGIN_WALLET_FIELD_NAME,
-                        LOGIN_WALLET_TABLE_NAME,
+                        LOGIN_WALLET_TABLE_NAME.as_str(),
                     )
                     .await?;
                 if let Some(wallet)= wallet_op {
@@ -506,7 +506,7 @@ impl UserRepository for UsersRepo {
                         USERID_FIELD_NAME_PK,
                         &user_id,
                         LOGIN_EMAIL_FIELD_NAME,
-                        LOGIN_EMAIL_TABLE_NAME,
+                        LOGIN_EMAIL_TABLE_NAME.as_str(),
                     )
                     .await?;
                 if let Some(email)= email_op {
@@ -525,7 +525,7 @@ impl UserRepository for UsersRepo {
                 LOGIN_WALLET_FIELD_NAME,
                 wallet,
                 USERID_FIELD_NAME_PK,
-                LOGIN_WALLET_TABLE_NAME,
+                LOGIN_WALLET_TABLE_NAME.as_str(),
             )
             .await?;
         match res {
@@ -543,7 +543,7 @@ impl UserRepository for UsersRepo {
                         USERID_FIELD_NAME_PK,
                         &user_id,
                         LOGIN_EMAIL_FIELD_NAME,
-                        LOGIN_EMAIL_TABLE_NAME,
+                        LOGIN_EMAIL_TABLE_NAME.as_str(),
                     )
                     .await?;
                 if let Some(email) = email_op {
@@ -554,7 +554,7 @@ impl UserRepository for UsersRepo {
                         USERID_FIELD_NAME_PK,
                         &user_id,
                         LOGIN_DEVICE_FIELD_NAME,
-                        LOGIN_DEVICE_TABLE_NAME,
+                        LOGIN_DEVICE_TABLE_NAME.as_str(),
                     )
                     .await?;
                 if let Some(device) = device_op {
@@ -584,7 +584,7 @@ impl UserRepository for UsersRepo {
                 LOGIN_EMAIL_FIELD_NAME,
                 email,
                 PASSWORD_FIELD_NAME,
-                LOGIN_EMAIL_TABLE_NAME,
+                LOGIN_EMAIL_TABLE_NAME.as_str(),
             )
             .await?;
         match res {
@@ -604,7 +604,7 @@ impl UserRepository for UsersRepo {
                             LOGIN_EMAIL_FIELD_NAME,
                             email,
                             USERID_FIELD_NAME_PK,
-                            LOGIN_EMAIL_TABLE_NAME,
+                            LOGIN_EMAIL_TABLE_NAME.as_str(),
                         )
                         .await?;
                     let user_id = user_op.unwrap();
@@ -619,7 +619,7 @@ impl UserRepository for UsersRepo {
                             USERID_FIELD_NAME_PK,
                             &user_id,
                             LOGIN_DEVICE_FIELD_NAME,
-                            LOGIN_DEVICE_TABLE_NAME,
+                            LOGIN_DEVICE_TABLE_NAME.as_str(),
                         )
                         .await?;
 
@@ -632,7 +632,7 @@ impl UserRepository for UsersRepo {
                             USERID_FIELD_NAME_PK,
                             &user_id,
                             LOGIN_WALLET_FIELD_NAME,
-                            LOGIN_WALLET_TABLE_NAME,
+                            LOGIN_WALLET_TABLE_NAME.as_str(),
                         )
                         .await?;
                     if let Some(wallet) = wallet_op {
@@ -715,7 +715,7 @@ impl UserRepository for UsersRepo {
         let request = self
             .client
             .delete_item()
-            .table_name(USERS_TABLE_NAME)
+            .table_name(USERS_TABLE_NAME.as_str())
             .key(USERID_FIELD_NAME_PK, user_id_av);
 
         let results = request.send().await;

@@ -56,7 +56,7 @@ impl OwnerRepo {
         let request = self
             .client
             .query()
-            .table_name(OWNERS_TABLE_NAME)
+            .table_name(OWNERS_TABLE_NAME.clone())
             .index_name(index_name)
             .key_condition_expression(filter)
             .expression_attribute_values(label, av)
@@ -105,7 +105,7 @@ impl OwnerRepository for OwnerRepo {
         let request = self
             .client
             .put_item()
-            .table_name(OWNERS_TABLE_NAME)
+            .table_name(OWNERS_TABLE_NAME.clone())
             .item(OWNER_USER_ID_FIELD_PK, user_id_av)
             .item(OWNER_ASSET_ID_FIELD_PK, asset_id_av)
             .item(CREATIONTIME_FIELD_NAME, creation_time_av)
@@ -132,7 +132,7 @@ impl OwnerRepository for OwnerRepo {
         let results = self
             .client
             .scan()
-            .table_name(OWNERS_TABLE_NAME)
+            .table_name(OWNERS_TABLE_NAME.clone())
             .send()
             .await;
 
@@ -207,7 +207,7 @@ impl OwnerRepository for OwnerRepo {
         let request = self
             .client
             .get_item()
-            .table_name(OWNERS_TABLE_NAME)
+            .table_name(OWNERS_TABLE_NAME.clone())
             .key(OWNER_USER_ID_FIELD_PK, user_id_av.clone())
             .key(OWNER_ASSET_ID_FIELD_PK, asset_id_av.clone());
 
@@ -249,7 +249,7 @@ impl OwnerRepository for OwnerRepo {
         let request = self
             .client
             .update_item()
-            .table_name(OWNERS_TABLE_NAME)
+            .table_name(OWNERS_TABLE_NAME.clone())
             .key(OWNER_USER_ID_FIELD_PK, user_id_av)
             .key(OWNER_ASSET_ID_FIELD_PK, asset_id_av)
             .update_expression(update_express)

@@ -1,5 +1,8 @@
 extern crate zxcvbn;
 
+#[macro_use]
+extern crate lazy_static;
+
 pub mod errors;
 pub mod models;
 pub mod repositories;
@@ -8,7 +11,7 @@ pub mod services;
 use validator::ValidationError;
 use zxcvbn::zxcvbn;
 
-pub static SERVICE: &str = "users";
+pub const SERVICE: &str = "users";
 
 pub fn validate_password(password: &str) -> Result<(), ValidationError> {
     let op_estimate = zxcvbn(password, &[]);

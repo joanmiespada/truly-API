@@ -19,12 +19,12 @@ lib_video_objs = { git="https://github.com/joanmiespada/truly-shared" }
 lib_async_ops = { git="https://github.com/joanmiespada/truly-shared" }
 log = "0.4.20"
 chrono = {version="0.4.31", features = ["serde"] }
-serde = { version = "1.0.188", features = ["derive"] }
+serde = { version = "1.0.189", features = ["derive"] }
 serde_json = "1.0.107"
 rust-argon2 = "2.0.0"
 aws-config = "0.56.1"
 aws-sdk-dynamodb = "0.33.0"
-async-trait = "0.1.73"
+async-trait = "0.1.74"
 #tracing = { version = "0.1", features = ["log"] }
 validator = { version = "0.16", features = ["derive"] }
 http = "0.2.9"
@@ -37,8 +37,9 @@ aws-sdk-secretsmanager = "0.33.0"
 base64 = "0.21.4"
 uuid = { version = "1.4.1", features=["v4","fast-rng","macro-diagnostics","serde"]}
 maplit = "1.0.2"
-tokio = { version="1.32.0", features=["full"]}
+tokio = { version="1.33.0", features=["full"]}
 reqwest = {version = "0.11.22" ,features = ["json"]}
+lazy_static = "1.4.0"
 
 [target.aarch64-apple-darwin.dev-dependencies]
 env_logger = "0.10.0"
@@ -47,5 +48,5 @@ spectral = "0.6.0"
 #testcontainers = "0.14.0"
 testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack2"  }
 base64 = "0.21.4"
-tokio = { version="1.32.0", features=["full"]}
+tokio = { version="1.33.0", features=["full"]}
 

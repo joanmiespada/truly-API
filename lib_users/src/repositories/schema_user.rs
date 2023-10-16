@@ -7,25 +7,34 @@ use aws_sdk_dynamodb::types::{
 };
 use lib_config::{
     config::Config,
-    environment::{
-        ENV_VAR_ENVIRONMENT, ENV_VAR_PROJECT, ENV_VAR_PROJECT_LABEL, ENV_VAR_SERVICE_LABEL, PROD_ENV,
-    },
+    environment::PROD_ENV,
     result::ResultE,
     schema::Schema,
+    constants::{
+        VALUE_PROJECT, API_DOMAIN, TAG_PROJECT, TAG_SERVICE, TAG_ENVIRONMENT
+    }
 };
 
-pub const USERS_TABLE_NAME: &str = "truly_users";
+lazy_static! {
+    pub static ref USERS_TABLE_NAME: String = format!("{}_{}_{}_users", VALUE_PROJECT, API_DOMAIN, SERVICE);
+}
 pub const USERID_FIELD_NAME_PK: &str = "userID";
 
-pub const LOGIN_EMAIL_TABLE_NAME: &str = "truly_login_emails";
+lazy_static! {
+    pub static ref LOGIN_EMAIL_TABLE_NAME: String = format!("{}_{}_{}_login_emails", VALUE_PROJECT, API_DOMAIN, SERVICE);
+}
 pub const LOGIN_EMAIL_FIELD_NAME: &str = "email";
 pub const LOGIN_EMAIL_INDEX: &str = "index_email";
 
-pub const LOGIN_DEVICE_TABLE_NAME: &str = "truly_login_devices";
+lazy_static! {
+    pub static ref LOGIN_DEVICE_TABLE_NAME: String = format!("{}_{}_{}_login_devices", VALUE_PROJECT,API_DOMAIN, SERVICE);
+}
 pub const LOGIN_DEVICE_FIELD_NAME: &str = "device";
 pub const LOGIN_DEVICE_INDEX: &str = "index_device";
 
-pub const LOGIN_WALLET_TABLE_NAME: &str = "truly_login_wallet";
+lazy_static! {
+    pub static ref LOGIN_WALLET_TABLE_NAME: String = format!("{}_{}_{}_login_wallets", VALUE_PROJECT,API_DOMAIN, SERVICE);
+}
 pub const LOGIN_WALLET_FIELD_NAME: &str = "wallet";
 pub const LOGIN_WALLET_INDEX: &str = "index_wallet";
 
@@ -49,7 +58,7 @@ impl Schema for UserSchema {
 
         client
             .create_table()
-            .table_name(USERS_TABLE_NAME)
+            .table_name(USERS_TABLE_NAME.clone())
             .key_schema(pk)
             .attribute_definitions(user_id_ad)
             .billing_mode(BillingMode::PayPerRequest)
@@ -61,20 +70,20 @@ impl Schema for UserSchema {
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
+                    .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_PROJECT_LABEL.to_string()))
-                    .set_value(Some(ENV_VAR_PROJECT.to_string()))
+                    .set_key(Some(TAG_PROJECT.to_string()))
+                    .set_value(Some(VALUE_PROJECT.to_string()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_SERVICE_LABEL.to_string()))
-                    .set_value(Some(SERVICE.to_string()))
+                    .set_key(Some(TAG_SERVICE.to_string()))
+                    .set_value(Some(API_DOMAIN.to_string()))
                     .build(),
             )
             .deletion_protection_enabled(if config.env_vars().environment().unwrap() == PROD_ENV {
@@ -92,7 +101,7 @@ impl Schema for UserSchema {
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
         client
             .delete_table()
-            .table_name(USERS_TABLE_NAME)
+            .table_name(USERS_TABLE_NAME.clone())
             .send()
             .await?;
 
@@ -135,7 +144,7 @@ impl Schema for LoginDeviceSchema {
             .build();
         client
             .create_table()
-            .table_name(LOGIN_DEVICE_TABLE_NAME)
+            .table_name(LOGIN_DEVICE_TABLE_NAME.clone())
             .key_schema(device_pk)
             .global_secondary_indexes(second_index_by_device)
             .attribute_definitions(device_ad)
@@ -149,20 +158,20 @@ impl Schema for LoginDeviceSchema {
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
+                    .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_PROJECT_LABEL.to_string()))
-                    .set_value(Some(ENV_VAR_PROJECT.to_string()))
+                    .set_key(Some(TAG_PROJECT.to_string()))
+                    .set_value(Some(VALUE_PROJECT.to_string()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_SERVICE_LABEL.to_string()))
-                    .set_value(Some(SERVICE.to_string()))
+                    .set_key(Some(TAG_SERVICE.to_string()))
+                    .set_value(Some(API_DOMAIN.to_string()))
                     .build(),
             )
             .send()
@@ -176,7 +185,7 @@ impl Schema for LoginDeviceSchema {
 
         client
             .delete_table()
-            .table_name(LOGIN_DEVICE_TABLE_NAME)
+            .table_name(LOGIN_DEVICE_TABLE_NAME.clone())
             .send()
             .await?;
 
@@ -221,7 +230,7 @@ impl Schema for LoginEmailSchema {
             .build();
         client
             .create_table()
-            .table_name(LOGIN_EMAIL_TABLE_NAME)
+            .table_name(LOGIN_EMAIL_TABLE_NAME.clone())
             .key_schema(email_pk)
             .global_secondary_indexes(second_index_by_email)
             .attribute_definitions(email_ad)
@@ -235,20 +244,20 @@ impl Schema for LoginEmailSchema {
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
+                    .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_PROJECT_LABEL.to_string()))
-                    .set_value(Some(ENV_VAR_PROJECT.to_string()))
+                    .set_key(Some(TAG_PROJECT.to_string()))
+                    .set_value(Some(VALUE_PROJECT.to_string()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_SERVICE_LABEL.to_string()))
-                    .set_value(Some(SERVICE.to_string()))
+                    .set_key(Some(TAG_SERVICE.to_string()))
+                    .set_value(Some(API_DOMAIN.to_string()))
                     .build(),
             )
             .send()
@@ -262,7 +271,7 @@ impl Schema for LoginEmailSchema {
 
         client
             .delete_table()
-            .table_name(LOGIN_EMAIL_TABLE_NAME)
+            .table_name(LOGIN_EMAIL_TABLE_NAME.clone())
             .send()
             .await?;
 
@@ -305,7 +314,7 @@ impl Schema for LoginWalletSchema {
 
         client
             .create_table()
-            .table_name(LOGIN_WALLET_TABLE_NAME)
+            .table_name(LOGIN_WALLET_TABLE_NAME.clone())
             .key_schema(wallet_pk)
             .global_secondary_indexes(second_index_by_wallet)
             .attribute_definitions(wallet_ad)
@@ -319,20 +328,20 @@ impl Schema for LoginWalletSchema {
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
+                    .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_PROJECT_LABEL.to_string()))
-                    .set_value(Some(ENV_VAR_PROJECT.to_string()))
+                    .set_key(Some(TAG_PROJECT.to_string()))
+                    .set_value(Some(VALUE_PROJECT.to_string()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_SERVICE_LABEL.to_string()))
-                    .set_value(Some(SERVICE.to_string()))
+                    .set_key(Some(TAG_SERVICE.to_string()))
+                    .set_value(Some(API_DOMAIN.to_string()))
                     .build(),
             )
             .send()
@@ -345,7 +354,7 @@ impl Schema for LoginWalletSchema {
 
         client
             .delete_table()
-            .table_name(LOGIN_WALLET_TABLE_NAME)
+            .table_name(LOGIN_WALLET_TABLE_NAME.clone())
             .send()
             .await?;
 

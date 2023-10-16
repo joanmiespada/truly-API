@@ -1,4 +1,3 @@
-use crate::SERVICE;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{
     builders::StreamSpecificationBuilder, AttributeDefinition, BillingMode, GlobalSecondaryIndex,
@@ -7,25 +6,32 @@ use aws_sdk_dynamodb::types::{
 };
 use lib_config::{
     config::Config,
-    environment::{
-        ENV_VAR_ENVIRONMENT, ENV_VAR_PROJECT, ENV_VAR_PROJECT_LABEL, ENV_VAR_SERVICE_LABEL, PROD_ENV,
-    },
+    environment::PROD_ENV,
     result::ResultE,
     schema::Schema,
+    constants::{
+        VALUE_PROJECT, API_DOMAIN, TAG_PROJECT, TAG_SERVICE, TAG_ENVIRONMENT
+    }
 };
 
-pub const ASSETS_TABLE_NAME: &str = "truly_assets";
+lazy_static! {
+    pub static ref ASSETS_TABLE_NAME: String = format!("{}_{}_assets_assets", VALUE_PROJECT, API_DOMAIN );
+}
 pub const ASSETS_TABLE_INDEX_ID: &str = "assetId";
 pub const ASSET_ID_FIELD_PK: &str = "assetId";
 pub const URL_FIELD_NAME: &str = "uri";
 pub const URL_INDEX_NAME: &str = "url_index";
 
-pub const ASSET_TREE_TABLE_NAME: &str = "truly_assets_tree";
+lazy_static! {
+    pub static ref ASSET_TREE_TABLE_NAME: String = format!("{}_{}_assets_tree", VALUE_PROJECT, API_DOMAIN );
+}
 pub const ASSET_TREE_SON_ID_FIELD_PK: &str = "son_id";
 pub const ASSET_TREE_FATHER_ID_FIELD_PK: &str = "father_id";
 pub const ASSET_TREE_FATHER_INDEX: &str = "father_index";
 
-pub const SHORTER_TABLE_NAME: &str = "truly_assets_shorter";
+lazy_static! {
+    pub static ref SHORTER_TABLE_NAME: String = format!("{}_{}_assets_shorter", VALUE_PROJECT, API_DOMAIN );
+}
 pub const SHORTER_ASSET_ID_FIELD: &str = "asset_id";
 pub const SHORTER_FIELD_PK: &str = "shorter";
 pub const SHORTER_ASSET_INEX: &str = "shorter_index";
@@ -66,7 +72,7 @@ impl Schema for AssetSchema {
 
         client
             .create_table()
-            .table_name(ASSETS_TABLE_NAME)
+            .table_name(ASSETS_TABLE_NAME.clone())
             .key_schema(ks)
             .global_secondary_indexes(second_index)
             .attribute_definitions(asset_ad)
@@ -80,20 +86,20 @@ impl Schema for AssetSchema {
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
+                    .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_PROJECT_LABEL.to_string()))
-                    .set_value(Some(ENV_VAR_PROJECT.to_string()))
+                    .set_key(Some(TAG_PROJECT.to_string()))
+                    .set_value(Some(VALUE_PROJECT.to_string()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_SERVICE_LABEL.to_string()))
-                    .set_value(Some(SERVICE.to_string()))
+                    .set_key(Some(TAG_SERVICE.to_string()))
+                    .set_value(Some(API_DOMAIN.to_string()))
                     .build(),
             )
             .send()
@@ -104,7 +110,7 @@ impl Schema for AssetSchema {
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
         client
             .delete_table()
-            .table_name(ASSETS_TABLE_NAME)
+            .table_name(ASSETS_TABLE_NAME.clone())
             .send()
             .await?;
 
@@ -150,7 +156,7 @@ impl Schema for AssetTreeSchema {
 
         client
             .create_table()
-            .table_name(ASSET_TREE_TABLE_NAME)
+            .table_name(ASSET_TREE_TABLE_NAME.clone())
             .key_schema(ks1)
             .global_secondary_indexes(second_index)
             .attribute_definitions(ad1)
@@ -164,20 +170,20 @@ impl Schema for AssetTreeSchema {
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
+                    .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_PROJECT_LABEL.to_string()))
-                    .set_value(Some(ENV_VAR_PROJECT.to_string()))
+                    .set_key(Some(TAG_PROJECT.to_string()))
+                    .set_value(Some(VALUE_PROJECT.to_string()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_SERVICE_LABEL.to_string()))
-                    .set_value(Some(SERVICE.to_string()))
+                    .set_key(Some(TAG_SERVICE.to_string()))
+                    .set_value(Some(API_DOMAIN.to_string()))
                     .build(),
             )
             .send()
@@ -189,7 +195,7 @@ impl Schema for AssetTreeSchema {
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
         client
             .delete_table()
-            .table_name(ASSET_TREE_TABLE_NAME)
+            .table_name(ASSET_TREE_TABLE_NAME.clone())
             .send()
             .await?;
 
@@ -232,7 +238,7 @@ impl Schema for ShorterSchema {
 
         client
             .create_table()
-            .table_name(SHORTER_TABLE_NAME)
+            .table_name(SHORTER_TABLE_NAME.clone())
             .key_schema(ks)
             .global_secondary_indexes(second_index)
             .attribute_definitions(asset_ad)
@@ -246,20 +252,20 @@ impl Schema for ShorterSchema {
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_ENVIRONMENT.to_string()))
+                    .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_PROJECT_LABEL.to_string()))
-                    .set_value(Some(ENV_VAR_PROJECT.to_string()))
+                    .set_key(Some(TAG_PROJECT.to_string()))
+                    .set_value(Some(VALUE_PROJECT.to_string()))
                     .build(),
             )
             .tags(
                 Tag::builder()
-                    .set_key(Some(ENV_VAR_SERVICE_LABEL.to_string()))
-                    .set_value(Some(SERVICE.to_string()))
+                    .set_key(Some(TAG_SERVICE.to_string()))
+                    .set_value(Some(API_DOMAIN.to_string()))
                     .build(),
             )
             .deletion_protection_enabled(if config.env_vars().environment().unwrap() == PROD_ENV {
@@ -275,7 +281,7 @@ impl Schema for ShorterSchema {
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
         client
             .delete_table()
-            .table_name(SHORTER_TABLE_NAME)
+            .table_name(SHORTER_TABLE_NAME.clone())
             .send()
             .await?;
 

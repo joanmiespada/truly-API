@@ -5,7 +5,7 @@ use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
 //};
 use lib_config::config::Config;
 use lib_config::schema::Schema;
-use lib_ledger::repository::schema_ledger::LedgerSchema;
+//use lib_ledger::repository::schema_ledger::LedgerSchema;
 use lib_licenses::repositories::{
     schema_asset::{AssetAllSchema, ASSETS_TABLE_NAME}, schema_licenses::{LicenseSchema, LICENSES_TABLE_NAME}, schema_owners::{OwnerSchema, OWNERS_TABLE_NAME}, 
 };
@@ -17,9 +17,10 @@ pub async fn create_schemas(
     delete: bool,
     config: &Config,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let all_schemas = "all";
     let er = ResourceNotFoundException::builder().build();
-    match table_name.as_str() {
-        OWNERS_TABLE_NAME => {
+    match table_name {
+        x if x.as_str() == *OWNERS_TABLE_NAME => {
             if create {
                 OwnerSchema::create_schema(config).await?;
             } else if delete {
@@ -28,7 +29,7 @@ pub async fn create_schemas(
                 return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
             }
         }
-        ASSETS_TABLE_NAME => {
+        x if x.as_str() == *ASSETS_TABLE_NAME => {
             if create {
                 AssetAllSchema::create_schema(config).await?
             } else if delete {
@@ -64,7 +65,7 @@ pub async fn create_schemas(
         //         return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
         //     }
         // }
-        USERS_TABLE_NAME => {
+        x if x.as_str() == *USERS_TABLE_NAME => {
             if create {
                 UserAllSchema::create_schema(config).await?;
                 //schema_user::create_schema_users(&client).await?
@@ -93,7 +94,7 @@ pub async fn create_schemas(
         //         return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
         //     }
         // }
-        LICENSES_TABLE_NAME => {
+        x if x.as_str() == *LICENSES_TABLE_NAME => {
             if create {
                 LicenseSchema::create_schema(config).await?;
                 //schema_licenses::create_schema_licenses(&client).await?;
@@ -104,7 +105,8 @@ pub async fn create_schemas(
                 return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
             }
         }
-        "all" => {
+        x if x.as_str() == all_schemas => {
+        
             if create {
                 //BlockchainSchema::create_schema(config).await?;
                 //ContractSchema::create_schema(config).await?;
@@ -114,7 +116,7 @@ pub async fn create_schemas(
                 //BlockTxSchema::create_schema(&config).await?;
                 UserAllSchema::create_schema(config).await?;
                 LicenseSchema::create_schema(config).await?;
-                LedgerSchema::create_schema(config).await?
+                //LedgerSchema::create_schema(config).await?
             } else if delete {
                 //BlockchainSchema::delete_schema(config).await?;
                 //ContractSchema::delete_schema(config).await?;
@@ -124,7 +126,7 @@ pub async fn create_schemas(
                 //BlockTxSchema::delete_schema(&config).await?;
                 UserAllSchema::delete_schema(config).await?;
                 LicenseSchema::delete_schema(config).await?;
-                LedgerSchema::delete_schema(config).await?
+                //LedgerSchema::delete_schema(config).await?
             } else {
                 return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
             }

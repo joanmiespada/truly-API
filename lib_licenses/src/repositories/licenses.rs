@@ -65,7 +65,7 @@ impl LicenseRepo {
         let request = self
             .client
             .query()
-            .table_name(LICENSES_TABLE_NAME)
+            .table_name(LICENSES_TABLE_NAME.clone())
             .index_name(index_name)
             .key_condition_expression(filter)
             .expression_attribute_values(label, av)
@@ -114,7 +114,7 @@ impl LicenseRepo {
         let request = self
             .client
             .get_item()
-            .table_name(LICENSES_TABLE_NAME)
+            .table_name(LICENSES_TABLE_NAME.clone())
             .key(LICENSE_ID_FIELD_PK, license_id_av)
             .key(LICENSE_ASSET_ID_FIELD_PK, asset_id_av);
 
@@ -171,7 +171,7 @@ impl LicenseRepository for LicenseRepo {
         let request = self
             .client
             .put_item()
-            .table_name(LICENSES_TABLE_NAME)
+            .table_name(LICENSES_TABLE_NAME.clone())
             .item(LICENSE_ID_FIELD_PK, id_av)
             .item(CREATION_TIME_FIELD_NAME, creation_time_av)
             .item(LAST_UPDATE_TIME_FIELD_NAME, last_update_time_av)
@@ -270,7 +270,7 @@ impl LicenseRepository for LicenseRepo {
         let results = self
             .client
             .scan()
-            .table_name(LICENSES_TABLE_NAME)
+            .table_name(LICENSES_TABLE_NAME.clone())
             .send()
             .await;
 
@@ -307,7 +307,7 @@ impl LicenseRepository for LicenseRepo {
         let request = self
             .client
             .update_item()
-            .table_name(LICENSES_TABLE_NAME)
+            .table_name(LICENSES_TABLE_NAME.clone())
             .key(
                 LICENSE_ID_FIELD_PK,
                 AttributeValue::S(license.id().to_string()),
@@ -337,7 +337,7 @@ impl LicenseRepository for LicenseRepo {
         let request = self
             .client
             .delete_item()
-            .table_name(LICENSES_TABLE_NAME)
+            .table_name(LICENSES_TABLE_NAME.clone())
             .key(LICENSE_ID_FIELD_PK, id_av)
             .key(LICENSE_ASSET_ID_FIELD_PK, ass_av);
 
