@@ -1,15 +1,14 @@
-mod after_video;
+mod after_hash;
 
 use std::str::FromStr;
 
-use crate::my_lambda::after_video::store_after_video_process;
+use crate::my_lambda::after_hash::store_after_hash_process;
 use aws_lambda_events::sqs::SqsEventObj;
 use lambda_runtime::LambdaEvent;
 use lib_config::config::Config;
 use lib_licenses::services::assets::AssetService;
-use lib_video_objs::video::VideoResult;
+use lib_hash_objs::hash::HashResult;
 use serde_json::{Error, Value};
-use tracing::{error, info, instrument};
 
 #[derive(Debug)]
 pub struct ApiLambdaError(pub String);
@@ -48,18 +47,18 @@ pub async fn function_handler(
 
         res = res.replace("\\n", "");
         res = res.replace("\\\"", "\"");
-        let op: Result<VideoResult, Error> = serde_json::from_str(&res);
+        let op: Result<HashResult, Error> = serde_json::from_str(&res);
         match op {
             Err(e) => {
-                error!("error parsing sqs message!!!!");
-                error!("{}", e);
+                log::error!("error parsing sqs message!!!!");
+                log::error!("{}", e);
                 return Err(e.into());
             }
             Ok(data) => {
-                info!("message sqs parsed successfully");
+                log::info!("message sqs parsed successfully");
                 println!("{:?}", data);
 
-                store_after_video_process(&data, config, asset_service).await?;
+                store_after_hash_process(&data, config, asset_service).await?;
             }
         }
     }

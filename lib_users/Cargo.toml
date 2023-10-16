@@ -24,7 +24,7 @@ async-trait = "0.1.74"
 log = "0.4.20"
 tokio =  { version="1.33.0", features = ["macros"] }
 validator = { version = "0.16", features = ["derive"] }
-regex = "1.10.1"
+regex = "1.10.2"
 zxcvbn = "2.2.2"
 uuid = { version = "1.4.1", features=["v4","fast-rng","macro-diagnostics","serde"]}
 lazy_static = "1.4.0"

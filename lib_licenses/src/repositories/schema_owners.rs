@@ -1,7 +1,6 @@
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{
     builders::StreamSpecificationBuilder,
-    //builders::StreamSpecificationBuilder, StreamViewType,
     AttributeDefinition,
     BillingMode,
     GlobalSecondaryIndex,
@@ -11,14 +10,13 @@ use aws_sdk_dynamodb::types::{
     ProjectionType,
     ScalarAttributeType,
     StreamViewType,
-    TableStatus,
     Tag,
 };
 use lib_config::{
     config::Config,
     environment::PROD_ENV,
     result::ResultE,
-    schema::Schema,
+    schema::{Schema,schema_exists,wait_until_schema_is_active},
     constants::{
         VALUE_PROJECT, API_DOMAIN, TAG_PROJECT, TAG_SERVICE, TAG_ENVIRONMENT
     }
@@ -38,6 +36,13 @@ pub struct OwnerSchema;
 #[async_trait]
 impl Schema for OwnerSchema {
     async fn create_schema(config: &Config) -> ResultE<()> {
+
+        let exist = schema_exists(config, OWNERS_TABLE_NAME.as_str()).await?;
+        if exist{
+            return Ok(())
+        }
+
+
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
         let ad1 = AttributeDefinition::builder()
             .attribute_name(OWNER_USER_ID_FIELD_PK)
@@ -128,7 +133,7 @@ impl Schema for OwnerSchema {
             .send()
             .await?;
 
-        wait_until_table_is_active(&client, OWNERS_TABLE_NAME.as_str()).await?;
+        wait_until_schema_is_active(config, OWNERS_TABLE_NAME.as_str()).await?;
 
         Ok(())
     }
@@ -145,27 +150,4 @@ impl Schema for OwnerSchema {
     }
 }
 
-async fn wait_until_table_is_active(
-    client: &aws_sdk_dynamodb::Client,
-    table_name: &str,
-) -> ResultE<()> {
-    loop {
-        let resp = client
-            .describe_table()
-            .table_name(table_name)
-            .send()
-            .await?;
 
-        match resp.table {
-            Some(table) => match table.table_status {
-                Some(status) if status == TableStatus::Active => break,
-                _ => (),
-            },
-            None => (),
-        };
-
-        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-    }
-
-    Ok(())
-}

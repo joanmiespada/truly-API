@@ -9,7 +9,7 @@ use lib_config::{
     config::Config,
     environment::PROD_ENV,
     result::ResultE,
-    schema::Schema,
+    schema::{Schema, schema_exists, wait_until_schema_is_active},
     constants::{
         VALUE_PROJECT, API_DOMAIN, TAG_PROJECT, TAG_SERVICE, TAG_ENVIRONMENT
     }
@@ -43,6 +43,12 @@ pub struct UserSchema;
 #[async_trait]
 impl Schema for UserSchema {
     async fn create_schema(config: &Config) -> ResultE<()> {
+
+        let exist = schema_exists(config, USERS_TABLE_NAME.as_str()).await?;
+        if exist{
+            return Ok(())
+        }
+
         // main users' table
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
 
@@ -94,6 +100,7 @@ impl Schema for UserSchema {
             .send()
             .await?;
 
+        wait_until_schema_is_active(config, USERS_TABLE_NAME.as_str()).await?;
         Ok(())
     }
 
@@ -113,6 +120,11 @@ pub struct LoginDeviceSchema;
 #[async_trait]
 impl Schema for LoginDeviceSchema {
     async fn create_schema(config: &Config) -> ResultE<()> {
+        
+        let exist = schema_exists(config, LOGIN_DEVICE_TABLE_NAME.as_str()).await?;
+        if exist{
+            return Ok(())
+        }
         // main users' table
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
 
@@ -177,6 +189,7 @@ impl Schema for LoginDeviceSchema {
             .send()
             .await?;
 
+        wait_until_schema_is_active(config, LOGIN_DEVICE_TABLE_NAME.as_str()).await?;
         Ok(())
     }
 
@@ -197,6 +210,11 @@ pub struct LoginEmailSchema;
 #[async_trait]
 impl Schema for LoginEmailSchema {
     async fn create_schema(config: &Config) -> ResultE<()> {
+
+        let exist = schema_exists(config, LOGIN_EMAIL_TABLE_NAME.as_str()).await?;
+        if exist{
+            return Ok(())
+        }
         // main users' table
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
 
@@ -263,6 +281,7 @@ impl Schema for LoginEmailSchema {
             .send()
             .await?;
 
+        wait_until_schema_is_active(config, LOGIN_EMAIL_TABLE_NAME.as_str()).await?;
         Ok(())
     }
 
@@ -283,6 +302,12 @@ pub struct LoginWalletSchema;
 #[async_trait]
 impl Schema for LoginWalletSchema {
     async fn create_schema(config: &Config) -> ResultE<()> {
+        
+        let exist = schema_exists(config, LOGIN_WALLET_TABLE_NAME.as_str()).await?;
+        if exist{
+            return Ok(())
+        }
+
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
 
         let wallet_user_id_ad = AttributeDefinition::builder()
@@ -346,6 +371,7 @@ impl Schema for LoginWalletSchema {
             )
             .send()
             .await?;
+        wait_until_schema_is_active(config, LOGIN_WALLET_TABLE_NAME.as_str()).await?;
         Ok(())
     }
 
@@ -380,3 +406,7 @@ impl Schema for UserAllSchema {
         Ok(())
     }
 }
+
+
+
+

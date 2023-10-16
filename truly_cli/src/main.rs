@@ -31,7 +31,7 @@ struct NewUser {
 #[allow(unused_variables)]
 async fn command(
     Opt {
-        table,
+        service,
         create,
         delete,
         environment,
@@ -58,8 +58,8 @@ async fn command(
 
     let er = ResourceNotFoundException::builder().build();
 
-    if let Some(table_name) = table {
-        create_schemas(table_name.clone(), create, delete, &config).await?;
+    if let Some(service_name) = service {
+        create_schemas(service_name.clone(), create, delete, &config).await?;
     }
 
     if let Some(path) = store_secret {
@@ -110,8 +110,8 @@ async fn command(
     about = "Create and Destroy dependencies"
 )]
 pub struct Opt {
-    #[structopt(long = "table")]
-    pub table: Option<String>,
+    #[structopt(long = "service")]
+    pub service: Option<String>,
 
     #[structopt(long = "create")]
     pub create: bool,

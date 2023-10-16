@@ -13,6 +13,8 @@ tflint --version || exit 1
 #qldb --version || exit 1
 jq --version || exit 1
 
+source scripts.sh # load functions
+
 #check paramaters. They allow to skip some sections
 images_skip='false'
 secrets_skip='false'
@@ -62,22 +64,22 @@ account_id=$(aws sts get-caller-identity --query Account --profile $profile --ou
 lambdas='[
         {
             "name": "license_lambda",
-            "version": "0.0.13",
+            "version": "0.0.15",
             "path": "lambda_license/image/Dockerfile",
             "description": "License lambda: manage assets"
         },{
             "name": "admin_lambda",
-            "version": "0.0.9",
+            "version": "0.0.11",
             "path": "lambda_admin/image/Dockerfile",
             "description": "Admin lambda: manage operation with high privilegies"
         },{
             "name": "login_lambda",
-            "version": "0.0.12",
+            "version": "0.0.14",
             "path": "lambda_login/image/Dockerfile",
             "description": "Login lambda: manage login and signups"
         },{
             "name": "user_lambda",
-            "version": "0.0.9",
+            "version": "0.0.11",
             "path": "lambda_user/image/Dockerfile",
             "description": "User lambda: manage user crud ops"
         }
@@ -208,47 +210,25 @@ fi
 
 if [[ "$tables_skip" == 'false' ]]; then
 
-    table_names=("truly_users" "truly_owners" "truly_assets" "truly_licenses")
+    service_names=("users" "owners" "assets") 
 
-    tables_json=$(aws dynamodb list-tables --region $multi_region[1] --output json  --profile $profile | jq -r '.TableNames[]')
-    tables_array=("${(@f)tables_json}")
-    
-    table_exists() {
-        local table_to_check="$1"
-        shift
-        local -a existing_tables=("$@")
-
-        for existing_table in "${existing_tables[@]}"; do
-            if [[ "$table_to_check" == "$existing_table" ]]; then
-                return 0
-            fi
-        done
-        return 1
-    }
-
-    #tables=$(aws dynamodb list-tables --region $multi_region[1] --output json | jq '[.TableNames[]] | length' )
-    #if (( $tables[@] <= 0 )); then
-    for table in "${table_names[@]}"
+    for service in "${service_names[@]}"
     do
-        if ! table_exists "$table" "${tables_array[@]}"; then
-
-            echo "creating master tables at ${multi_region[1]}"
-            cargo run -p truly_cli -- --table $table --create --region $multi_region[1] --profile $profile || exit 1
-        else
-            echo "skipping master tables at ${multi_region[1]} because they already exist"
-        fi
+        echo "checking/creating master tables for $service at ${multi_region[1]}"
+        cargo run -p truly_cli -- --service $service --create --region $multi_region[1] --profile $profile
     done
 
     for region in "${multi_region[@]:1}"
     do
         echo "deployment table replicas at ${region}"
-        tables_json=$(aws dynamodb list-tables --region $region --output json  --profile $profile | jq -r '.TableNames[]' )
-        tables_array=("${(@f)tables_json}")
+        #tables_json=$(aws dynamodb list-tables --region $region --output json  --profile $profile | jq -r '.TableNames[]' )
+        #tables_array=("${(@f)tables_json}")
+        tables_json=$(aws dynamodb list-tables --region $multi_region[1] --output json  --profile $profile | jq -r '.TableNames[]' )
+        filtered_result=($(filter_tables_by_tags "$tables_json"))
 
 
-        for table in "${table_names[@]}"
+        for table in "${filtered_result[@]}"
         do
-            if ! table_exists "$table" "${tables_array[@]}"; then
 
                     res=$(echo "table name: ${table} source: ${multi_region[1]} replica at: ${region}..."
                     aws dynamodb update-table --table-name "${table}" --cli-input-json \
@@ -264,41 +244,11 @@ if [[ "$tables_skip" == 'false' ]]; then
                     }" \
                     --region=$multi_region[1] --profile $profile || exit 1)
                     echo "table $table has been replicated at ${region}"
-            else
-                echo "tables were already replicated at ${region}"
-            fi
         done
         
     done
 
-    table_names=($(aws dynamodb list-tables  --region $multi_region[1] --output json | jq -r '.TableNames[]' ))
-    for region in "${multi_region[@]:1}"
-    do
-        echo "deployment table replicas at ${region}"
-        tables=$(aws dynamodb list-tables  --region $region --output json | jq '[.TableNames[]] | length' )
-        if (( $tables[@] <= 0 )); then
-            #echo "creating replica tables..."
-            for t in "${table_names[@]}"
-            do
-                res=$(echo "table name: ${t} source: ${multi_region[1]} replica at: ${region} "
-                aws dynamodb update-table  --table-name "${t}" --cli-input-json \
-                "{
-                    \"ReplicaUpdates\":
-                    [
-                        {
-                            \"Create\": {
-                                \"RegionName\": \"${region}\"
-                            }
-                        }
-                    ]
-                }" \
-                --region=$multi_region[1] || exit 1)
-            done
-        else
-            echo "tables were already replicated at ${region}"
-        fi
-        
-    done
+    
 else
     echo "tables and master data skip"
 fi

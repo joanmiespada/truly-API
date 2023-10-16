@@ -8,7 +8,7 @@ use lib_config::{
     config::Config,
     environment::PROD_ENV,
     result::ResultE,
-    schema::Schema,
+    schema::{Schema,schema_exists,wait_until_schema_is_active},
     constants::{
         VALUE_PROJECT, API_DOMAIN, TAG_PROJECT, TAG_SERVICE, TAG_ENVIRONMENT
     }
@@ -40,6 +40,12 @@ pub struct AssetSchema;
 #[async_trait]
 impl Schema for AssetSchema {
     async fn create_schema(config: &Config) -> ResultE<()> {
+
+        let exist = schema_exists(config, ASSETS_TABLE_NAME.as_str()).await?;
+        if exist{
+            return Ok(())
+        }
+
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
         let asset_ad = AttributeDefinition::builder()
             .attribute_name(ASSET_ID_FIELD_PK)
@@ -104,6 +110,8 @@ impl Schema for AssetSchema {
             )
             .send()
             .await?;
+
+        wait_until_schema_is_active(config, ASSETS_TABLE_NAME.as_str()).await?;
         Ok(())
     }
     async fn delete_schema(config: &Config) -> ResultE<()> {
@@ -122,6 +130,10 @@ pub struct AssetTreeSchema;
 #[async_trait]
 impl Schema for AssetTreeSchema {
     async fn create_schema(config: &Config) -> ResultE<()> {
+        let exist = schema_exists(config, ASSET_TREE_TABLE_NAME.as_str()).await?;
+        if exist{
+            return Ok(())
+        }
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
         //async fn create_schema_assets_tree(client: &aws_sdk_dynamodb::Client) -> Result<(), Error> {
         let ad1 = AttributeDefinition::builder()
@@ -188,6 +200,8 @@ impl Schema for AssetTreeSchema {
             )
             .send()
             .await?;
+        
+        wait_until_schema_is_active(config, ASSET_TREE_TABLE_NAME.as_str()).await?;
 
         Ok(())
     }
@@ -206,6 +220,12 @@ pub struct ShorterSchema;
 #[async_trait]
 impl Schema for ShorterSchema {
     async fn create_schema(config: &Config) -> ResultE<()> {
+
+        let exist = schema_exists(config, SHORTER_TABLE_NAME.as_str()).await?;
+        if exist{
+            return Ok(())
+        }
+
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
         let asset_ad = AttributeDefinition::builder()
             .attribute_name(SHORTER_ASSET_ID_FIELD)
@@ -275,6 +295,8 @@ impl Schema for ShorterSchema {
             })
             .send()
             .await?;
+        
+        wait_until_schema_is_active(config, SHORTER_TABLE_NAME.as_str()).await?;
         Ok(())
     }
     async fn delete_schema(config: &Config) -> ResultE<()> {

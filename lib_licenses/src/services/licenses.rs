@@ -8,6 +8,8 @@ use uuid::Uuid;
 
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
+pub const SERVICE: &str= "licenses";
+
 #[async_trait]
 pub trait LicenseManipulation {
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<License>>;

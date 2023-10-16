@@ -86,7 +86,7 @@ paths:
 
   /api/asset:
     post:
-      operationId: "CreateUserAsset"
+      operationId: "CreateAsset"
       requestBody:
         required: true
         content:
@@ -96,36 +96,27 @@ paths:
                 url: 
                   type: string
                   description: Check rules at NewUserRequest object
-                hash:
+                source:
                   type: string
-                  description: Hash computed at origin
-                hashAlgorithm:
-                  type: string
-                  description: Algorithm used to compute hash
-                sourceType:
-                  type: string
-                  description: Identify the source of the call, use Others.
-                sourceDetails:
-                  type: string
-                  description: Add your own information as caller.
+                  description: Identify the source of the call, use Others (eg TrulyApi).
       responses:
         "201":
           description: "Asset have been created successfully."
       security:
         - BearerAuth: []
     
-  /api/hash:
+  /api/similar:
     post: 
-      operationId: "CreateHashesAsset"
+      operationId: "GetSimilarAssets"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               properties:
-                asset_id: 
+                url: 
                   type: string
-                  description: calculate hashes for this asset id
+                  description: "check if this url has other content similar"
       responses:
         "201":
           description: "Hashes have been calculated successfully."

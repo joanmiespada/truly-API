@@ -6,6 +6,7 @@ use uuid::Uuid;
 use validator::Validate;
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
+pub const SERVICE: &str= "owners";
 #[async_trait]
 pub trait OwnerManipulation {
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<Owner>>;

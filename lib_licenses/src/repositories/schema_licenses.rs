@@ -8,7 +8,7 @@ use lib_config::{
     config::Config,
     environment::PROD_ENV,
     result::ResultE,
-    schema::Schema,
+    schema::{Schema, schema_exists, wait_until_schema_is_active},
     constants::{
         VALUE_PROJECT, API_DOMAIN, TAG_PROJECT, TAG_SERVICE, TAG_ENVIRONMENT
     }
@@ -27,6 +27,12 @@ pub struct LicenseSchema;
 #[async_trait]
 impl Schema for LicenseSchema {
     async fn create_schema(config: &Config) -> ResultE<()> {
+
+        let exist = schema_exists(config, LICENSES_TABLE_NAME.as_str()).await?;
+        if exist{
+            return Ok(())
+        }
+
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
 
         let ad1 = AttributeDefinition::builder()
@@ -116,6 +122,8 @@ impl Schema for LicenseSchema {
             })
             .send()
             .await?;
+        
+        wait_until_schema_is_active(config, LICENSES_TABLE_NAME.as_str()).await?;
 
         Ok(())
     }
