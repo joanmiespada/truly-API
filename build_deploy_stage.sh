@@ -84,12 +84,12 @@ lambdas='[
             "description": "User lambda: manage user crud ops"
         },{
             "name": "after_hash_lambda",
-            "version": "0.0.0",
+            "version": "0.0.2",
             "path": "lambda_after_hash/image/Dockerfile",
             "description": "After hash lambda: manage asset state after hashes computation"
         },{
             "name": "error_lambda",
-            "version": "0.0.0",
+            "version": "0.0.2",
             "path": "lambda_error/image/Dockerfile",
             "description": "Error lambda: capture errors "
         }

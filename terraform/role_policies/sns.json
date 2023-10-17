@@ -4,7 +4,7 @@
         {
             "Effect": "Allow",
             "Action": [
-                "SNS:*"
+                "sns:*"
             ],
             "Resource": "arn:aws:sns:*:*:*"
         }
