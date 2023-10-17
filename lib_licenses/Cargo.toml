@@ -16,6 +16,7 @@ path="tests/lib.rs"
 [dependencies]
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
 lib_video_objs = { git="https://github.com/joanmiespada/truly-shared" }
+lib_hash_objs = { git="https://github.com/joanmiespada/truly-shared" }
 lib_async_ops = { git="https://github.com/joanmiespada/truly-shared" }
 log = "0.4.20"
 chrono = {version="0.4.31", features = ["serde"] }

@@ -38,6 +38,8 @@ pub struct Asset {
 
     source: Option<SourceType>,
     source_details: Option<String>,
+    
+    hash_process_status: Option<HashProcessStatus>,
 }
 
 impl fmt::Display for Asset {
@@ -68,6 +70,7 @@ impl Asset {
             video_process_status: None,
             source: None,
             source_details: None,
+            hash_process_status: None,
         }
     }
 
@@ -199,6 +202,12 @@ impl Asset {
             self. = val.clone()
         }
     */
+    pub fn hash_process_status(&self) -> &Option<HashProcessStatus> {
+        &self.hash_process_status
+    }
+    pub fn set_hash_process_status(&mut self, val: &Option<HashProcessStatus>) {
+        self.hash_process_status = val.clone()
+    }
 }
 
 impl Default for Asset {
@@ -261,6 +270,7 @@ impl AssetBuilder {
             video_process_status: None,
             source: None,
             source_details: None,
+            hash_process_status: None,
         }
     }
 }
@@ -361,6 +371,53 @@ impl FromStr for VideoLicensingStatus {
         }
     }
 }
+
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+pub enum HashProcessStatus {
+    NeverStarted,
+    Scheduled,
+    Started,
+    CompletedSuccessfully,
+    Error,
+}
+
+impl fmt::Display for HashProcessStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            HashProcessStatus::Scheduled => write!(f, "Scheduled"),
+            HashProcessStatus::Started => write!(f, "Started"),
+            HashProcessStatus::CompletedSuccessfully => write!(f, "Completed successfully"),
+            HashProcessStatus::Error => write!(f, "Error"),
+            HashProcessStatus::NeverStarted => write!(f, "Never started"),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct HashProcessStatusParseError;
+
+impl FromStr for HashProcessStatus {
+    type Err = HashProcessStatusParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Scheduled" => Ok(HashProcessStatus ::Scheduled),
+            "Started" => Ok(HashProcessStatus ::Started),
+            "Completed successfully" => Ok(HashProcessStatus ::CompletedSuccessfully),
+            "Error" => Ok(HashProcessStatus ::Error),
+            "Never started" => Ok(HashProcessStatus ::NeverStarted),
+            _ => Err(HashProcessStatusParseError),
+        }
+    }
+}
+
+impl fmt::Display for  HashProcessStatusParseError{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "error parsing HashProcessStatus  type")
+    }
+}
+
+
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub enum SourceType {

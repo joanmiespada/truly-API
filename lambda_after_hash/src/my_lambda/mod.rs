@@ -2,7 +2,7 @@ mod after_hash;
 
 use std::str::FromStr;
 
-use crate::my_lambda::after_hash::store_after_hash_process;
+use crate::my_lambda::after_hash::store_after_hash_process_successfully;
 use aws_lambda_events::sqs::SqsEventObj;
 use lambda_runtime::LambdaEvent;
 use lib_config::config::Config;
@@ -58,7 +58,7 @@ pub async fn function_handler(
                 log::info!("message sqs parsed successfully");
                 println!("{:?}", data);
 
-                store_after_hash_process(&data, config, asset_service).await?;
+                store_after_hash_process_successfully(&data, config, asset_service).await?;
             }
         }
     }

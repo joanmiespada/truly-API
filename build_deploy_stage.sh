@@ -82,6 +82,11 @@ lambdas='[
             "version": "0.0.11",
             "path": "lambda_user/image/Dockerfile",
             "description": "User lambda: manage user crud ops"
+        },{
+            "name": "after_hash_lambda",
+            "version": "0.0.0",
+            "path": "lambda_after_hash/image/Dockerfile",
+            "description": "After hash lambda: manage asset state after hashes computation"
         }
     ]'
 

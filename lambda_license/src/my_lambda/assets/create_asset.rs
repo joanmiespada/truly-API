@@ -2,7 +2,8 @@ use crate::my_lambda::{build_resp, build_resp_env};
 use lambda_http::RequestPayloadExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
-use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
+use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError, AssetAlreadyExistsError};
+use lib_licenses::models::asset::HashProcessStatus;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::services::video::{VideoService, VideoManipulation};
 use tracing::info;
@@ -37,6 +38,8 @@ pub async fn create_asset(
             return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
         } else if let Some(m) = e.downcast_ref::<AssetNoExistsError>() {
             return build_resp(m.to_string(), StatusCode::NO_CONTENT);
+        } else if let Some(m) = e.downcast_ref::<AssetAlreadyExistsError>() {
+            return build_resp(m.to_string(), StatusCode::NOT_ACCEPTABLE);
         } else if let Some(m) = e.downcast_ref::<ValidationError>() {
             return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
         } else {
@@ -52,6 +55,10 @@ pub async fn create_asset(
     video_service
         .compute_hash_and_similarities_async(&asset_id)
         .await?;
+
+    let mut ass = asset_service.get_by_id(&asset_id).await?;
+    ass.set_hash_process_status(&Some(HashProcessStatus::Started));
+    asset_service.update_full(&ass).await?;
 
     build_resp(asset_id.to_string(), StatusCode::OK)
 }

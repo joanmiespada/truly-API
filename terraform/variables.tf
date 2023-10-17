@@ -134,6 +134,9 @@ variable "ecr_login_lambda" {
 variable "ecr_user_lambda" {
   type=string 
 }
+variable "ecr_after_hash_lambda" {
+  type=string 
+}
 
 variable "hash_similar_in_topic_arn" {
   type = string

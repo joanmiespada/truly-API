@@ -137,3 +137,24 @@ module "lambda_licenses" {
   url_base_permanent_images = "https://cdn.${var.dns_prefix}.${var.dns_base}"
 
 }
+
+module "lambda_after_hash" {
+  source = "./lambda_after_hash"
+
+  service_name        = "after_hash"
+  common_tags         = local.common_tags
+  role                = aws_iam_role.truly_lambda_execution_role.arn
+  environment_flag = var.environment_flag
+  rust_log         = var.rust_log
+
+  rust_backtrace = var.rust_backtrace
+
+  aws_region              = var.aws_region
+  #api_stage_version       = var.api_stage_version
+  architectures           = var.architectures
+
+  ecr_image = var.ecr_after_hash_lambda
+
+  trace_level = var.trace_level
+
+}

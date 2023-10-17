@@ -1,4 +1,5 @@
-use crate::models::asset::{Asset, AssetStatus, SourceType};
+use crate::errors::asset::AssetAlreadyExistsError;
+use crate::models::asset::{Asset, AssetStatus, SourceType, HashProcessStatus};
 use crate::models::asset::{AssetEnhanced, VideoLicensingStatus};
 use crate::repositories::assets::{AssetRepo, AssetRepository};
 use crate::repositories::shorter::{ShorterRepo, ShorterRepository};
@@ -36,6 +37,7 @@ pub trait AssetManipulation {
     //     sts: MintingStatus,
     // ) -> ResultE<()>;
     async fn store_video_process(&self, video_res: &VideoResult) -> ResultE<()>;
+    async fn store_hash_process(&self, asset_id: Uuid, state: HashProcessStatus) -> ResultE<()>;
     async fn shorter_video_status(
         &self,
         id: &Uuid,
@@ -145,7 +147,8 @@ impl AssetManipulation for AssetService {
         let urll = url::Url::parse(new_intent_asset.as_str())?;
         let res_op = self.repository.get_by_url(&urll).await;
         if let Ok(_) = res_op {
-            return Err(format!("asset with url {} already exists", urll.to_string()).into());
+            return Err(AssetAlreadyExistsError(urll.to_string()).into());
+            //return Err(format!("asset with url {} already exists", urll.to_string()).into());
         }
 
         info!("asset fields validated");
@@ -307,6 +310,18 @@ impl AssetManipulation for AssetService {
                 original_asset.set_video_licensing_status(state);
             }
         }
+
+        self.repository.update(&original_asset).await?;
+
+        Ok(())
+    }
+
+
+    async fn store_hash_process(&self, asset_id: Uuid, state: HashProcessStatus) -> ResultE<()>
+    {
+        let mut original_asset = self.repository.get_by_id(&asset_id).await?;
+
+        original_asset.set_hash_process_status(&Some(state));
 
         self.repository.update(&original_asset).await?;
 

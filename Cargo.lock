@@ -1929,6 +1929,7 @@ dependencies = [
  "lazy_static",
  "lib_async_ops",
  "lib_config",
+ "lib_hash_objs",
  "lib_video_objs",
  "log",
  "maplit",

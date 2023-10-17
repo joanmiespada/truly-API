@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::errors::asset::{AssetDynamoDBError, AssetNoExistsError, AssetTreeError};
 use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
-use crate::models::asset::{Asset, AssetStatus, SourceType, VideoLicensingStatus};
+use crate::models::asset::{Asset, AssetStatus, SourceType, VideoLicensingStatus, HashProcessStatus};
 use crate::models::owner::Owner;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{AttributeValue, Put, Select, TransactWriteItem};
@@ -41,6 +41,8 @@ const SHORTER_FIELD_NAME: &str = "shorter";
 const VIDEO_LICENSING_FIELD_NAME: &str = "video_licensing";
 const VIDEO_LICENSING_STATUS_FIELD_NAME: &str = "video_licensing_status";
 const VIDEO_PROCESS_STATUS_FIELD_NAME: &str = "video_processing_status";
+
+const HASH_PROCESS_STATUS_FIELD_NAME: &str = "hash_process_status";
 
 const SOURCE_FIELD_NAME: &str = "source";
 const SOURCE_DETAILS_FIELD_NAME: &str = "source_details";
@@ -179,6 +181,10 @@ impl AssetRepo {
         if let Some(value) = asset.source_details() {
             let source_det_av = AttributeValue::S(value.to_string());
             items = items.item(SOURCE_DETAILS_FIELD_NAME, source_det_av);
+        }
+        if let Some(value) = asset.hash_process_status() {
+            let source_det_av = AttributeValue::S(value.to_string());
+            items = items.item(HASH_PROCESS_STATUS_FIELD_NAME, source_det_av);
         }
         Ok(items)
     }
@@ -821,4 +827,29 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
             }
         }
     }
+
+    let hash_process_status = doc.get(HASH_PROCESS_STATUS_FIELD_NAME);
+    match hash_process_status  {
+        None => asset.set_hash_process_status(&None),
+        Some(lati) => {
+            let val = lati.as_s().unwrap();
+            if val == NULLABLE {
+                asset.set_hash_process_status(&None)
+            } else {
+                let st_op = HashProcessStatus::from_str(val);
+                match st_op {
+                    Err(e) => {
+                        error!("hash process status parser error! {}", val);
+                        error!("{}", e);
+                        asset.set_hash_process_status(&None)
+                    }
+                    Ok(state) => asset.set_hash_process_status(&Some(state)),
+                }
+            }
+        }
+    
+        
+    }
+
+
 }
