@@ -42,8 +42,8 @@ done
 export ENVIRONMENT="stage"
 export TF_VAR_environment_flag=$ENVIRONMENT
 export RUST_LOG="info"
-export TF_VAR_telemtry=false
-export TF_VAR_telemetry_endpoint=""
+#export TF_VAR_telemtry=false
+#export TF_VAR_telemetry_endpoint=""
 export TF_VAR_rust_log="info"
 export TF_VAR_trace_level="info"
 export TF_VAR_rust_backtrace="full"
@@ -57,29 +57,29 @@ export AWS_PROFILE=$profile
 export TF_VAR_dns_base=$dns_domain
 dns_prefix="staging"
 export TF_VAR_dns_prefix=$dns_prefix
-export TF_VAR_hash_similar_in_topic_arn="arn:aws:sns:eu-west-1:172619864391:truly-matchapi-download-eu"
+#export TF_VAR_hash_similar_in_topic_arn="arn:aws:sns:eu-west-1:172619864391:truly-matchapi-download-eu"
 multi_region=("eu-west-1")
 account_id=$(aws sts get-caller-identity --query Account --profile $profile --output text)
 
 lambdas='[
         {
             "name": "license_lambda",
-            "version": "0.0.15",
+            "version": "0.0.16",
             "path": "lambda_license/image/Dockerfile",
             "description": "License lambda: manage assets"
         },{
             "name": "admin_lambda",
-            "version": "0.0.11",
+            "version": "0.0.12",
             "path": "lambda_admin/image/Dockerfile",
             "description": "Admin lambda: manage operation with high privilegies"
         },{
             "name": "login_lambda",
-            "version": "0.0.14",
+            "version": "0.0.15",
             "path": "lambda_login/image/Dockerfile",
             "description": "Login lambda: manage login and signups"
         },{
             "name": "user_lambda",
-            "version": "0.0.11",
+            "version": "0.0.16",
             "path": "lambda_user/image/Dockerfile",
             "description": "User lambda: manage user crud ops"
         },{
@@ -87,6 +87,11 @@ lambdas='[
             "version": "0.0.0",
             "path": "lambda_after_hash/image/Dockerfile",
             "description": "After hash lambda: manage asset state after hashes computation"
+        },{
+            "name": "error_lambda",
+            "version": "0.0.0",
+            "path": "lambda_error/image/Dockerfile",
+            "description": "Error lambda: capture errors "
         }
     ]'
 

@@ -47,7 +47,7 @@ variable "email" {
   
 }
 
-variable "video_out_topic_arn" {
+variable "video_error_topic_arn" {
   type = string
   
 }

@@ -1716,6 +1716,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "lambda_error"
+version = "0.0.1"
+dependencies = [
+ "aws-sdk-sqs",
+ "aws_lambda_events 0.11.1",
+ "lambda_http",
+ "lambda_runtime",
+ "lib_config",
+ "log",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+ "validator",
+]
+
+[[package]]
 name = "lambda_http"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

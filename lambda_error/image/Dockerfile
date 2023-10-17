@@ -22,18 +22,18 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 
 WORKDIR /tmp
 
-COPY lambda_after_hash/src /tmp/lambda_after_hash/src
-COPY lambda_after_hash/Cargo.toml /tmp/lambda_after_hash/Cargo.toml
+COPY lambda_error/src /tmp/lambda_error/src
+COPY lambda_error/Cargo.toml /tmp/lambda_error/Cargo.toml
 COPY lib_licenses /tmp/lib_licenses
 COPY lib_users /tmp/lib_users
 COPY lib_util_jwt /tmp/lib_util_jwt
 
 
-WORKDIR /tmp/lambda_after_hash
+WORKDIR /tmp/lambda_error
 
 RUN cargo build --release
 
-RUN strip /tmp/lambda_after_hash/target/release/lambda_after_hash
+RUN strip /tmp/lambda_error/target/release/lambda_error
 
 FROM public.ecr.aws/lambda/provided:al2 
 
@@ -43,6 +43,6 @@ RUN yum install -y \
 
 WORKDIR /var/task
 
-COPY --from=builder /tmp/lambda_after_hash/target/release/lambda_after_hash /var/runtime/bootstrap
+COPY --from=builder /tmp/lambda_error/target/release/lambda_error /var/runtime/bootstrap
 
 CMD ["bootstrap.function_handler"]

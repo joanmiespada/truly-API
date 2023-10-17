@@ -3,15 +3,15 @@ locals {
   #lambda_name_descriptor = "${var.common_tags.project}-${var.common_tags.service}-${var.common_tags.environment}-${var.aws_region}-${var.api_stage_version}-${var.service_name}"
   lambda_name_descriptor = "${var.common_tags.project}-${var.common_tags.service}-${var.common_tags.environment}-${var.aws_region}-${var.service_name}"
 }
-resource "aws_cloudwatch_log_group" "truly_lambda_after_hash_cloudwatch" {
+resource "aws_cloudwatch_log_group" "truly_lambda_error_cloudwatch" {
   name              = "/aws/lambda/${local.lambda_name_descriptor}" #${var.truly_lambda_user_function_name}-${local.region_prefix}"
-  retention_in_days = 1
+  retention_in_days = 5
 
   tags = merge(var.common_tags, { "logic" : "${var.service_name}" })
 }
 
 
-resource "aws_lambda_function" "truly_lambda_after_hash" {
+resource "aws_lambda_function" "truly_lambda_error" {
   function_name = local.lambda_name_descriptor
   architectures = var.architectures # ["arm64"]
   memory_size   = 512
@@ -49,8 +49,8 @@ resource "aws_lambda_function" "truly_lambda_after_hash" {
 }
 
 resource "aws_lambda_event_source_mapping" "truly_linking" {
-  event_source_arn = aws_sqs_queue.after_hash_queue.arn
+  event_source_arn = aws_sqs_queue.error_queue.arn
   enabled          = true
-  function_name    = aws_lambda_function.truly_lambda_after_hash.arn
+  function_name    = aws_lambda_function.truly_lambda_error.arn
   batch_size       = 1
 }

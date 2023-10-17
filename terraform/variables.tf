@@ -137,12 +137,15 @@ variable "ecr_user_lambda" {
 variable "ecr_after_hash_lambda" {
   type=string 
 }
-
-variable "hash_similar_in_topic_arn" {
-  type = string
-  description = "sns topic where the matchapi will be triggered"
-  
+variable "ecr_error_lambda" {
+  type=string 
 }
+
+#variable "hash_similar_in_topic_arn" {
+#  type = string
+#  description = "sns topic where the matchapi will be triggered"
+#  
+#}
 
 variable "trace_level" {
   type = string
