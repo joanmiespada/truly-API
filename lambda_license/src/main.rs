@@ -10,17 +10,18 @@ use lambda_http::service_fn;
 use lib_config::config::Config;
 use lib_config::logs::setup_log;
 use lib_config::traces::setup_tracing_level;
-use lib_licenses::repositories::licenses::LicenseRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
 use lib_licenses::services::video::VideoService;
-use lib_licenses::{repositories::assets::AssetRepo, services::licenses::LicenseService};
+use lib_licenses::repositories::assets::AssetRepo;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
 // use lib_ledger::repository::LedgerRepo;
 // use lib_ledger::service::LedgerService;
+use lib_licenses::repositories::subscription::SubscriptionRepo;
+use lib_licenses::services::subscription::SubscriptionService;
 use my_lambda::{error::ApiLambdaError, function_handler};
 
 mod my_lambda;
@@ -64,8 +65,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
 
     let video_service = VideoService::new(asset_service.to_owned(), config.to_owned());
 
-    let license_repo = LicenseRepo::new(&config);
-    let license_service = LicenseService::new(license_repo, asset_repo);
+    let subscription_repo = SubscriptionRepo::new(&config);
+    let subscription_service = SubscriptionService::new(subscription_repo);
+    //let license_repo = LicenseRepo::new(&config);
+    //let license_service = LicenseService::new(license_repo, asset_repo);
     
     // let ledger_repo = LedgerRepo::new(&config);
     // let ledger_service = LedgerService::new(ledger_repo);
@@ -80,8 +83,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
             &user_service,
             &video_service,
             //&tx_service,
-            &license_service,
+            //&license_service,
             //&ledger_service,
+            &subscription_service,
             event,
         )
     }))

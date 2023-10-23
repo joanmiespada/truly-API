@@ -7,6 +7,8 @@ locals {
     aws_apigatewayv2_route.truly_licenses_route_hash_by_id,
     aws_apigatewayv2_route.truly_licenses_route_similar,
     aws_apigatewayv2_route.truly_licenses_route_similar_by_id,
+    aws_apigatewayv2_route.truly_licenses_route_subscribe,
+    aws_apigatewayv2_route.truly_licenses_route_subscribe_confirmation,
     aws_apigatewayv2_route.truly_login_route,
     aws_apigatewayv2_route.truly_user_route,
     aws_apigatewayv2_route.truly_user_route_by_id
@@ -255,6 +257,30 @@ resource "aws_lambda_permission" "truly_licenses_permission_similar_by_id" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_similar_by_id.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_similar_by_id.route_key)[1]}"
 }
+resource "aws_apigatewayv2_route" "truly_licenses_route_subscribe" {
+  api_id    = aws_apigatewayv2_api.truly_api.id
+  route_key = "ANY /api/subscribe"
+  target    = "integrations/${aws_apigatewayv2_integration.truly_licenses_integration.id}"
+}
+
+resource "aws_lambda_permission" "truly_licenses_permission_subscribe" {
+  function_name = module.lambda_licenses.lambda.function_name
+  action        = "lambda:InvokeFunction"
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_subscribe.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_subscribe.route_key)[1]}"
+}
+resource "aws_apigatewayv2_route" "truly_licenses_route_subscribe_confirmation" {
+  api_id    = aws_apigatewayv2_api.truly_api.id
+  route_key = "ANY /api/subscribe/confirmation/{id}"
+  target    = "integrations/${aws_apigatewayv2_integration.truly_licenses_integration.id}"
+}
+
+resource "aws_lambda_permission" "truly_licenses_permission_subscribe_confirmation" {
+  function_name = module.lambda_licenses.lambda.function_name
+  action        = "lambda:InvokeFunction"
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.truly_api.execution_arn}/*/${split(" ", aws_apigatewayv2_route.truly_licenses_route_subscribe_confirmation.route_key)[0]}${split(" ", aws_apigatewayv2_route.truly_licenses_route_subscribe_confirmation.route_key)[1]}"
+}
 
 # resource "aws_apigatewayv2_route" "truly_licenses_route_nft" {
 #   api_id    = aws_apigatewayv2_api.truly_api.id
@@ -361,6 +387,8 @@ resource "aws_apigatewayv2_deployment" "truly_api_deployment" {
     aws_apigatewayv2_route.truly_licenses_route_asset_by_id,
     aws_apigatewayv2_route.truly_licenses_route_hash_by_id,
     aws_apigatewayv2_route.truly_licenses_route_similar_by_id,
+    aws_apigatewayv2_route.truly_licenses_route_subscribe,
+    aws_apigatewayv2_route.truly_licenses_route_subscribe_confirmation,
     # aws_apigatewayv2_route.truly_licenses_route_asset_by_shorter,
     # aws_apigatewayv2_route.truly_licenses_route_asset_by_shorter_id,
     # aws_apigatewayv2_route.truly_licenses_route_license,

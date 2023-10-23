@@ -2,17 +2,19 @@ mod assets;
 pub mod error;
 mod licenses;
 mod video;
+mod subscribe;
 
 use std::str::FromStr;
 
+use crate::my_lambda::subscribe::subscribe::{create_intent, confirm_subscription};
 use crate::my_lambda::assets::get_similar_assets::{
     get_similar_assets_by_id, get_similar_assets_by_url,
 };
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, STAGE_ENV};
-use lib_licenses::services::licenses::LicenseService;
 use lib_licenses::services::video::VideoService;
+use lib_licenses::services::subscription::SubscriptionService;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
 //use tracing::info;
@@ -40,9 +42,10 @@ pub async fn function_handler(
     config: &Config,
     asset_service: &AssetService,
     owners_service: &OwnerService,
-    _user_service: &UsersService,
+    user_service: &UsersService,
     video_service: &VideoService,
-    _license_service: &LicenseService,
+    //_license_service: &LicenseService,
+    subscription_service: &SubscriptionService,
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error + Send + Sync>> {
     log::info!("income new request");
@@ -72,6 +75,8 @@ pub async fn function_handler(
     router.insert("/api/hash", Some("88"))?;
     router.insert("/api/similar/:id", Some("99"))?;
     router.insert("/api/similar", Some("999"))?;
+    router.insert("/api/subscribe", Some("1000"))?;
+    router.insert("/api/subscribe/confirmation/:id", Some("1001"))?;
 
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
@@ -339,6 +344,39 @@ pub async fn function_handler(
                         video_service
                     )
                     .await;
+                }
+                
+                "1000" => {
+                    return create_intent(
+                        &req,
+                        &context,
+                        config,
+                        asset_service,
+                        video_service,
+                        user_service,
+                        subscription_service,
+                    )
+                    .await;
+                }
+
+                "1001" => {
+
+                    let id = matched.params.get("id").unwrap().to_string();
+                    if let Ok(asset_id) = Uuid::from_str(id.as_str()) {
+                        return confirm_subscription(
+                            &req,
+                            &context,
+                            config,
+                            subscription_service,
+                            asset_id
+                        )
+                        .await; 
+                    } else {
+                        build_resp(
+                            "id param must be UUID".to_string(),
+                            StatusCode::NOT_ACCEPTABLE,
+                        )
+                    }
                 }
 
                 &_ => build_resp(

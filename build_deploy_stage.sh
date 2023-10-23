@@ -64,32 +64,32 @@ account_id=$(aws sts get-caller-identity --query Account --profile $profile --ou
 lambdas='[
         {
             "name": "license_lambda",
-            "version": "0.0.16",
+            "version": "0.0.17",
             "path": "lambda_license/image/Dockerfile",
             "description": "License lambda: manage assets"
         },{
             "name": "admin_lambda",
-            "version": "0.0.12",
+            "version": "0.0.13",
             "path": "lambda_admin/image/Dockerfile",
             "description": "Admin lambda: manage operation with high privilegies"
         },{
             "name": "login_lambda",
-            "version": "0.0.15",
+            "version": "0.0.16",
             "path": "lambda_login/image/Dockerfile",
             "description": "Login lambda: manage login and signups"
         },{
             "name": "user_lambda",
-            "version": "0.0.16",
+            "version": "0.0.17",
             "path": "lambda_user/image/Dockerfile",
             "description": "User lambda: manage user crud ops"
         },{
             "name": "after_hash_lambda",
-            "version": "0.0.2",
+            "version": "0.0.3",
             "path": "lambda_after_hash/image/Dockerfile",
             "description": "After hash lambda: manage asset state after hashes computation"
         },{
             "name": "error_lambda",
-            "version": "0.0.2",
+            "version": "0.0.3",
             "path": "lambda_error/image/Dockerfile",
             "description": "Error lambda: capture errors "
         }

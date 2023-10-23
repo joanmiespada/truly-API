@@ -3,3 +3,4 @@ mod assets_test;
 mod fathers_sons_test;
 mod licenses_test;
 mod owners_test;
+mod subscription_test;

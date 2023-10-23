@@ -45,6 +45,7 @@ pub trait UserRepository {
     async fn get_by_device(&self, device: &String) -> ResultE<User>;
     async fn get_by_wallet_address(&self, wallet: &String) -> ResultE<User>;
     async fn get_by_email_and_password(&self, email: &String, password: &String) -> ResultE<User>;
+    async fn get_by_email(&self, email: &String) -> ResultE<User>;
     async fn get_all(&self, page_number: u32, page_size: u32) -> ResultE<Vec<User>>;
     async fn remove(&self, user_id: &String) -> ResultE<()>;
 }
@@ -86,7 +87,7 @@ impl UsersRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                log::error!("{}",mssag);
+                log::error!("{}", mssag);
                 return Err(UserDynamoDBError(e.to_string()).into());
             }
             Ok(items) => {
@@ -149,7 +150,7 @@ impl UsersRepo {
                     e
                 );
                 //tracing::error!(mssag);
-                log::error!("{}",mssag);
+                log::error!("{}", mssag);
                 return Err(UserDynamoDBError(e.to_string()).into());
             }
             Ok(items) => {
@@ -250,7 +251,7 @@ impl UsersRepo {
                 e
             );
             //tracing::error!(mssag);
-            log::error!("{}",mssag);
+            log::error!("{}", mssag);
             return Err(UserDynamoDBError(e.to_string()).into());
         }
         match results.unwrap().item {
@@ -279,7 +280,7 @@ impl UsersRepo {
                 LOGIN_DEVICE_TABLE_NAME.as_str(),
             )
             .await?;
-        if let Some(device)= device_op {
+        if let Some(device) = device_op {
             user.set_device(&device)
         }
         let wallet_op = self
@@ -334,7 +335,11 @@ impl UsersRepo {
 
             request = request.transact_items(
                 TransactWriteItem::builder()
-                    .put(device_fields.table_name(LOGIN_DEVICE_TABLE_NAME.as_str()).build())
+                    .put(
+                        device_fields
+                            .table_name(LOGIN_DEVICE_TABLE_NAME.as_str())
+                            .build(),
+                    )
                     .build(),
             );
         }
@@ -349,7 +354,11 @@ impl UsersRepo {
 
             request = request.transact_items(
                 TransactWriteItem::builder()
-                    .put(wallet_fields.table_name(LOGIN_WALLET_TABLE_NAME.as_str()).build())
+                    .put(
+                        wallet_fields
+                            .table_name(LOGIN_WALLET_TABLE_NAME.as_str())
+                            .build(),
+                    )
                     .build(),
             );
         }
@@ -388,7 +397,11 @@ impl UsersRepo {
 
             request = request.transact_items(
                 TransactWriteItem::builder()
-                    .put(email_fields.table_name(LOGIN_EMAIL_TABLE_NAME.as_str()).build())
+                    .put(
+                        email_fields
+                            .table_name(LOGIN_EMAIL_TABLE_NAME.as_str())
+                            .build(),
+                    )
                     .build(),
             );
         }
@@ -410,7 +423,7 @@ impl UserRepository for UsersRepo {
                     user.user_id().to_string()
                 );
                 //tracing::debug!(mssag);
-                log::debug!("{}",mssag);
+                log::debug!("{}", mssag);
 
                 Ok(())
             }
@@ -420,7 +433,7 @@ impl UserRepository for UsersRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e.to_string()
                 );
-                log::error!("{}",mssag);
+                log::error!("{}", mssag);
                 return Err(UserDynamoDBError(e.to_string()).into());
             }
         }
@@ -429,7 +442,12 @@ impl UserRepository for UsersRepo {
     async fn get_all(&self, _page_number: u32, _page_size: u32) -> ResultE<Vec<User>> {
         let mut usersqueried = Vec::new();
 
-        let results = self.client.scan().table_name(USERS_TABLE_NAME.as_str()).send().await;
+        let results = self
+            .client
+            .scan()
+            .table_name(USERS_TABLE_NAME.as_str())
+            .send()
+            .await;
 
         match results {
             Err(e) => {
@@ -497,7 +515,7 @@ impl UserRepository for UsersRepo {
                         LOGIN_WALLET_TABLE_NAME.as_str(),
                     )
                     .await?;
-                if let Some(wallet)= wallet_op {
+                if let Some(wallet) = wallet_op {
                     user.set_wallet_address(&wallet);
                 }
 
@@ -509,8 +527,8 @@ impl UserRepository for UsersRepo {
                         LOGIN_EMAIL_TABLE_NAME.as_str(),
                     )
                     .await?;
-                if let Some(email)= email_op {
-                     user.set_email(&email);
+                if let Some(email) = email_op {
+                    user.set_email(&email);
                 }
 
                 Ok(user)
@@ -647,6 +665,71 @@ impl UserRepository for UsersRepo {
         }
     }
 
+    async fn get_by_email(&self, email: &String) -> ResultE<User> {
+        if email.is_empty() {
+            return Err(UserParamNotAccepted("email".to_string()).into());
+        }
+
+        let res = self
+            .get_by_filter_index(
+                LOGIN_EMAIL_INDEX,
+                LOGIN_EMAIL_FIELD_NAME,
+                email,
+                PASSWORD_FIELD_NAME,
+                LOGIN_EMAIL_TABLE_NAME.as_str(),
+            )
+            .await?;
+        match res {
+            None => {
+                return Err(UserNoExistsError("no email found".to_string()).into());
+            }
+            Some(_) => {
+                let user_op = self
+                    .get_by_filter_index(
+                        LOGIN_EMAIL_INDEX,
+                        LOGIN_EMAIL_FIELD_NAME,
+                        email,
+                        USERID_FIELD_NAME_PK,
+                        LOGIN_EMAIL_TABLE_NAME.as_str(),
+                    )
+                    .await?;
+                let user_id = user_op.unwrap();
+                let res = self.get_by_id_hashmap(&user_id).await?;
+
+                let mut user = User::new();
+                mapping_from_doc_to_user(&res, &mut user);
+                user.set_email(email);
+
+                let device_op = self
+                    .get_by_filter_key(
+                        USERID_FIELD_NAME_PK,
+                        &user_id,
+                        LOGIN_DEVICE_FIELD_NAME,
+                        LOGIN_DEVICE_TABLE_NAME.as_str(),
+                    )
+                    .await?;
+
+                if let Some(device) = device_op {
+                    user.set_device(&device);
+                }
+
+                let wallet_op = self
+                    .get_by_filter_key(
+                        USERID_FIELD_NAME_PK,
+                        &user_id,
+                        LOGIN_WALLET_FIELD_NAME,
+                        LOGIN_WALLET_TABLE_NAME.as_str(),
+                    )
+                    .await?;
+                if let Some(wallet) = wallet_op {
+                    user.set_wallet_address(&wallet);
+                }
+
+                Ok(user)
+            }
+        }
+    }
+
     async fn update(&self, id: &String, user_new_data: &User) -> ResultE<()> {
         //self.check_duplicates(user).await?;
 
@@ -701,7 +784,7 @@ impl UserRepository for UsersRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e.to_string()
                 );
-                log::error!("{}",mssag);
+                log::error!("{}", mssag);
                 //error!(mssag);
                 //error!("{}", e);
                 return Err(UserDynamoDBError(e.to_string()).into());

@@ -14,6 +14,7 @@ pub trait UserManipulation {
     async fn get_by_device(&self, device: &String) -> ResultE<User>;
     async fn get_by_wallet(&self, wallet_address: &String) -> ResultE<User>;
     async fn get_by_email_and_password(&self, email: &String, password: &String) -> ResultE<User>;
+    async fn get_by_email(&self, email: &String) -> ResultE<User>;
     async fn add(&self, user: &mut User, password: &Option<String>) -> ResultE<String>;
     //async fn get_by_filter(&self, field: &String, value: &String) -> ResultE<Vec<User>>;
     async fn update(&self, id: &String, user: &UpdatableFildsUser) -> ResultE<()>;
@@ -85,6 +86,18 @@ impl UserManipulation for UsersService {
         let res = self
             .repository
             .get_by_email_and_password(email, password)
+            .await?;
+
+        //tracing::Span::current().record("success", &tracing::field::display(true));
+        Ok(res)
+    }
+    
+    async fn get_by_email(&self, email: &String) -> ResultE<User> {
+        //tracing::Span::current().record("email", &tracing::field::display(&email));
+
+        let res = self
+            .repository
+            .get_by_email(email)
             .await?;
 
         //tracing::Span::current().record("success", &tracing::field::display(true));
