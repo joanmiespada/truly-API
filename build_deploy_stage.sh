@@ -220,7 +220,7 @@ fi
 
 if [[ "$tables_skip" == 'false' ]]; then
 
-    service_names=("users" "owners" "assets") 
+    service_names=("users" "owners" "assets" "subscriptions") 
 
     for service in "${service_names[@]}"
     do

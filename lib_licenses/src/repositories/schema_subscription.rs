@@ -13,7 +13,7 @@ use lib_config::{
 };
 lazy_static! {
     pub static ref SUBSCRIPTION_TABLE_NAME: String =
-        format!("{}_{}_subscription", VALUE_PROJECT, API_DOMAIN);
+        format!("{}_{}_subscriptions", VALUE_PROJECT, API_DOMAIN);
 }
 
 pub const USER_ASSET_INDEX_ID: &str = "UserAssetSubscriptionIndex";

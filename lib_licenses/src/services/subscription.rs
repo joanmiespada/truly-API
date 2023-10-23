@@ -4,6 +4,8 @@ use crate::repositories::subscription::{SubscriptionRepo, SubscriptionRepository
 use lib_config::result::ResultE;
 use uuid::Uuid;
 
+pub const SERVICE: &str= "subscriptions";
+
 pub struct SubscriptionService {
     subscription_repo: SubscriptionRepo,
 }
