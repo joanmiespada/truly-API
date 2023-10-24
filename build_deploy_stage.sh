@@ -64,7 +64,7 @@ account_id=$(aws sts get-caller-identity --query Account --profile $profile --ou
 lambdas='[
         {
             "name": "license_lambda",
-            "version": "0.0.17",
+            "version": "0.0.18",
             "path": "lambda_license/image/Dockerfile",
             "description": "License lambda: manage assets"
         },{

@@ -1,34 +1,34 @@
 mod assets;
 pub mod error;
 mod licenses;
-mod video;
 mod subscribe;
+mod video;
 
 use std::str::FromStr;
 
-use crate::my_lambda::subscribe::subscribe::{create_intent, confirm_subscription};
+use crate::my_lambda::assets::get_asset::get_asset_by_url;
 use crate::my_lambda::assets::get_similar_assets::{
     get_similar_assets_by_id, get_similar_assets_by_url,
 };
+use crate::my_lambda::subscribe::subscribe::{confirm_subscription, create_intent};
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, STAGE_ENV};
-use lib_licenses::services::video::VideoService;
 use lib_licenses::services::subscription::SubscriptionService;
+use lib_licenses::services::video::VideoService;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
+use url::Url;
 //use tracing::info;
 
 use self::assets::create_asset::create_asset;
-use self::assets::get_asset::get_asset;
-use self::assets::get_my_asset::get_my_assets_all;
+use self::assets::get_asset::get_asset_by_id;
 use self::error::ApiLambdaError;
 use self::video::async_create_my_hash::async_create_my_hash_similars_sns;
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::owners::OwnerService;
 use matchit::Router;
 use uuid::Uuid;
-
 
 fn jwt_mandatory(req: &Request, config: &Config) -> Result<String, Response<String>> {
     match check_jwt_token_as_user_logged(&req, config) {
@@ -78,6 +78,10 @@ pub async fn function_handler(
     router.insert("/api/subscribe", Some("1000"))?;
     router.insert("/api/subscribe/confirmation/:id", Some("1001"))?;
 
+    let query_pairs: Vec<(String, String)> = req.uri().query()
+            .map(|v| url::form_urlencoded::parse(v.as_bytes()).into_owned().collect())
+            .unwrap_or_else(Vec::new);
+
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
             Err(_) => build_resp(
@@ -86,27 +90,63 @@ pub async fn function_handler(
             ),
             Ok(matched) => match matched.value.unwrap() {
                 "1" => {
-                    match jwt_mandatory(&req, config) {
-                        Err(e) => {
-                            return Ok(e);
-                        }
-                        Ok(user) => user_id = user,
-                    };
-                    get_my_assets_all(
-                        &req,
-                        &context,
-                        config,
-                        asset_service,
-                        owners_service,
-                        &user_id,
-                    )
-                    .await
+                    // match jwt_mandatory(&req, config) {
+                    //     Err(e) => {
+                    //         return Ok(e);
+                    //     }
+                    //     Ok(user) => user_id = user,
+                    // };
+                    // get_my_assets_all(
+                    //     &req,
+                    //     &context,
+                    //     config,
+                    //     asset_service,
+                    //     owners_service,
+                    //     &user_id,
+                    // )
+                    // .await
+
+                    // let id = matched.params.get("id").unwrap().to_string();
+                    // let url = Url::from_str(id.as_str())?;
+                    // get_asset_by_url(
+                    //     &req,
+                    //     &context,
+                    //     config,
+                    //     asset_service,
+                    //     owners_service,
+                    //     &url,
+                    // )
+                    // .await
+
+                    let id_opt = query_pairs
+                        .iter()
+                        .find(|(key, _)| key == "url")
+                        .map(|(_, value)| value.clone());
+
+                    if let Some(id) = id_opt {
+                        let url = Url::from_str(&id)?;
+                        get_asset_by_url(
+                            &req,
+                            &context,
+                            config,
+                            asset_service,
+                            &url,
+                        )
+                        .await
+                    } else {
+                        // Handle the case where the id parameter is not present in the query string
+                        // For instance, you can return an error response:
+                        build_resp(
+                            "url not found in query string".to_string(),
+                            StatusCode::BAD_REQUEST,
+                        )
+                    }
                 }
                 "2" => {
                     // public, not required jwt token
                     let id = matched.params.get("id").unwrap().to_string();
                     let asset_id = Uuid::from_str(id.as_str())?;
-                    return get_asset(
+                    return get_asset_by_id(
                         &req,
                         &context,
                         config,
@@ -211,11 +251,10 @@ pub async fn function_handler(
                         &context,
                         config,
                         asset_service,
-                        video_service
+                        video_service,
                     )
                     .await;
                 }
-                
 
                 _ => build_resp(
                     "GET method not allowed".to_string(),
@@ -232,17 +271,9 @@ pub async fn function_handler(
                 "1" => {
                     let ussrr = match jwt_mandatory(&req, config) {
                         Err(_) => None,
-                        Ok(user) => Some(user)
+                        Ok(user) => Some(user),
                     };
-                    create_asset(
-                        &req,
-                        &context,
-                        config,
-                        asset_service,
-                        video_service,
-                        ussrr
-                    )
-                    .await
+                    create_asset(&req, &context, config, asset_service, video_service, ussrr).await
                 }
 
                 // "11" => {
@@ -341,11 +372,11 @@ pub async fn function_handler(
                         &context,
                         config,
                         asset_service,
-                        video_service
+                        video_service,
                     )
                     .await;
                 }
-                
+
                 "1000" => {
                     return create_intent(
                         &req,
@@ -360,7 +391,6 @@ pub async fn function_handler(
                 }
 
                 "1001" => {
-
                     let id = matched.params.get("id").unwrap().to_string();
                     if let Ok(asset_id) = Uuid::from_str(id.as_str()) {
                         return confirm_subscription(
@@ -368,9 +398,9 @@ pub async fn function_handler(
                             &context,
                             config,
                             subscription_service,
-                            asset_id
+                            asset_id,
                         )
-                        .await; 
+                        .await;
                     } else {
                         build_resp(
                             "id param must be UUID".to_string(),
