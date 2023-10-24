@@ -11,16 +11,17 @@ output "video_in_topic" {
 output "video_out_topic" {
   value = aws_sns_topic.video_out_topic.arn
 }
-
 output "video_error_topic" {
   value = aws_sns_topic.video_error_topic.arn
 }
-
 output "api_domain_name_default" {
   value = aws_apigatewayv2_domain_name.truly_api_domain_name_default.domain_name
 }
 output "api_domain_name_truly_version" {
   value = aws_apigatewayv2_domain_name.truly_api_domain_name_version.domain_name
+}
+output "notify_new_similars_topic" {
+  value = aws_sns_topic.notify_new_similar_topic.arn
 }
 
 # output "api_gateway_url_localstack_1" {
