@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
+use lib_config::result::ResultE;
 use lib_video_objs::video::VideoProcessStatus;
 use log::{error, info};
 use url::Url;
@@ -49,7 +50,6 @@ const SOURCE_DETAILS_FIELD_NAME: &str = "source_details";
 
 static NULLABLE: &str = "__NULL__";
 
-type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
 #[async_trait]
 pub trait AssetRepository {

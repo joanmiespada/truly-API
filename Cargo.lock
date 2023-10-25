@@ -1942,6 +1942,7 @@ dependencies = [
  "aws-types",
  "base64",
  "chrono",
+ "derive_builder",
  "env_logger",
  "hex",
  "http",

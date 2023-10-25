@@ -4,7 +4,7 @@ use lambda_http::RequestPayloadExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
 use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
-use lib_licenses::errors::subscription::{SubscriptionError, self};
+use lib_licenses::errors::subscription::SubscriptionError;
 use lib_licenses::services::assets::{AssetManipulation, AssetService };
 use lib_licenses::services::video::VideoService;
 use lib_users::errors::users::UserNoExistsError;

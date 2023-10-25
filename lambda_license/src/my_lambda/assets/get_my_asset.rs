@@ -49,6 +49,7 @@ pub async fn get_my_asset(
 }
 
 //#[instrument]
+#[allow(dead_code)]
 pub async fn get_my_assets_all(
     _req: &Request,
     _c: &Context,
