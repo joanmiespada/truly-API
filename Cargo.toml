@@ -11,6 +11,7 @@ members = [
     "lambda_admin",
     "lambda_after_hash",
     "lambda_error",
+    "lambda_alert_similars",
     "truly_cli",
 ]
 

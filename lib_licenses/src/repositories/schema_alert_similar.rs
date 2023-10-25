@@ -12,18 +12,18 @@ use lib_config::{
     schema::{schema_exists, wait_until_schema_is_active, Schema},
 };
 lazy_static! {
-    pub static ref NOTIFICATIONS_TABLE_NAME: String =
-        format!("{}_{}_notifications", VALUE_PROJECT, API_DOMAIN);
+    pub static ref ALERT_SIMILARS_TABLE_NAME: String =
+        format!("{}_{}_alert_similars", VALUE_PROJECT, API_DOMAIN);
 }
 
-pub const NOTIFICATION_ID_FIELD_PK: &str = "notif_id";
+pub const ALERT_SIMILAR_ID_FIELD_PK: &str = "alert_id";
 
-pub struct NotificationSchema;
+pub struct AlertSimilarSchema;
 
 #[async_trait]
-impl Schema for NotificationSchema {
+impl Schema for AlertSimilarSchema {
     async fn create_schema(config: &Config) -> ResultE<()> {
-        let exist = schema_exists(config, NOTIFICATIONS_TABLE_NAME.as_str()).await?;
+        let exist = schema_exists(config, ALERT_SIMILARS_TABLE_NAME.as_str()).await?;
         if exist {
             return Ok(());
         }
@@ -31,18 +31,18 @@ impl Schema for NotificationSchema {
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
 
         let notification_pk_attr = AttributeDefinition::builder()
-            .attribute_name(NOTIFICATION_ID_FIELD_PK)
+            .attribute_name(ALERT_SIMILAR_ID_FIELD_PK)
             .attribute_type(ScalarAttributeType::S)
             .build();
 
         let key_schema = KeySchemaElement::builder()
-            .attribute_name(NOTIFICATION_ID_FIELD_PK)
+            .attribute_name(ALERT_SIMILAR_ID_FIELD_PK)
             .key_type(KeyType::Hash)
             .build();
 
         client
             .create_table()
-            .table_name(NOTIFICATIONS_TABLE_NAME.clone())
+            .table_name(ALERT_SIMILARS_TABLE_NAME.clone())
             .attribute_definitions(notification_pk_attr )
             .key_schema(key_schema)
             .billing_mode(BillingMode::PayPerRequest)
@@ -78,7 +78,7 @@ impl Schema for NotificationSchema {
             .send()
             .await?;
 
-        wait_until_schema_is_active(config, NOTIFICATIONS_TABLE_NAME.as_str()).await?;
+        wait_until_schema_is_active(config, ALERT_SIMILARS_TABLE_NAME.as_str()).await?;
 
         Ok(())
     }
@@ -87,7 +87,7 @@ impl Schema for NotificationSchema {
         let client = aws_sdk_dynamodb::Client::new(config.aws_config());
         client
             .delete_table()
-            .table_name(NOTIFICATIONS_TABLE_NAME.clone())
+            .table_name(ALERT_SIMILARS_TABLE_NAME.clone())
             .send()
             .await?;
 

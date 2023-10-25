@@ -2,12 +2,12 @@ use async_trait::async_trait;
 use aws_sdk_dynamodb::{Client, types::{AttributeValue,Put,TransactWriteItem}};
 use lib_config::config::Config;
 use uuid::Uuid;
-use crate::{models::notification::{Notification, NotificationBuilder}, errors::notifications::NotificationError};
+use crate::{models::alert_similar::{AlertSimilar, AlertSimilarBuilder}, errors::alert_similar::AlertSimilarError};
 use std::{collections::HashMap, str::FromStr};
 use lib_config::result::ResultE;
 use chrono::{DateTime, Utc, Local};
 
-use super::schema_notifications::{NOTIFICATIONS_TABLE_NAME, NOTIFICATION_ID_FIELD_PK};
+use super::schema_alert_similar::{ALERT_SIMILARS_TABLE_NAME, ALERT_SIMILAR_ID_FIELD_PK};
 
 pub const CREATION_TIME: &str = "creation_time";
 pub const SOURCE_TYPE: &str = "source_type";
@@ -24,35 +24,36 @@ pub const SIMILAR_FRAME_URL: &str = "similar_frame_url";
 
 
 #[async_trait]
-pub trait NotificationRepository{
-    async fn add(&self, notification: &Notification) -> ResultE<()>;
-    async fn get(&self, notification_id: Uuid ) -> ResultE<Option<Notification>>;
-    async fn update(&self, notification: &Notification) -> ResultE<()>;
+pub trait AlertSimilarRepository{
+    async fn add(&self, notification: &AlertSimilar) -> ResultE<()>;
+    async fn get(&self, notification_id: Uuid ) -> ResultE<Option<AlertSimilar>>;
+    async fn update(&self, notification: &AlertSimilar) -> ResultE<()>;
     async fn delete(&self, notification_id: Uuid) -> ResultE<()>;
+    async fn check_if_exists(&self, id:Uuid) -> ResultE<bool>;
 
 }
 
 
-pub struct NotificationRepo {
+pub struct AlertSimilarRepo {
     client: Client,
 }
 
-impl NotificationRepo {
+impl AlertSimilarRepo {
 
     pub fn new(conf: &Config) -> Self {
-        NotificationRepo{
+        AlertSimilarRepo{
             client: Client::new(conf.aws_config()),
         }
     }
 
-    async fn add_or_update(&self, notification: &Notification) -> ResultE<()> {
+    async fn add_or_update(&self, notification: &AlertSimilar) -> ResultE<()> {
         
         let id_av = AttributeValue::S(notification.id().to_string());
         let creation_time_av = AttributeValue::S(notification.creation_time().to_string());
         
         let mut items = Put::builder();
         
-        items = items.item(NOTIFICATION_ID_FIELD_PK, id_av);
+        items = items.item(ALERT_SIMILAR_ID_FIELD_PK, id_av);
         items = items.item(CREATION_TIME,creation_time_av);
 
         if let Some(source_type) = notification.source_type() {
@@ -76,7 +77,7 @@ impl NotificationRepo {
         }
 
         if let Some(origin_frame_second) = notification.origin_frame_second() {
-            let origin_frame_second_av = AttributeValue::S(origin_frame_second.to_string());
+            let origin_frame_second_av = AttributeValue::N(origin_frame_second.to_string());
             items = items.item(ORIGIN_FRAME_SECOND, origin_frame_second_av);
         }
 
@@ -96,7 +97,7 @@ impl NotificationRepo {
         }
 
         if let Some(similar_frame_second) = notification.similar_frame_second() {
-            let similar_frame_second_av = AttributeValue::S(similar_frame_second.to_string());
+            let similar_frame_second_av = AttributeValue::N(similar_frame_second.to_string());
             items = items.item(SIMILAR_FRAME_SECOND, similar_frame_second_av);
         }
 
@@ -112,7 +113,7 @@ impl NotificationRepo {
 
         let request = self.client.transact_write_items().transact_items(
             TransactWriteItem::builder()
-                .put(items.table_name(NOTIFICATIONS_TABLE_NAME.clone()).build())
+                .put(items.table_name(ALERT_SIMILARS_TABLE_NAME.clone()).build())
                 .build(),
         );
         
@@ -125,14 +126,14 @@ impl NotificationRepo {
                     e
                 );
                 log::error!("{}",mssag);
-                return Err( NotificationError::NotificationDynamoDBError(e.into()).into());
+                return Err( AlertSimilarError::AlertSimilarDynamoDBError(e.into()).into());
                 
             },
         }
     }
 
-    fn mapping_from_doc(doc: &HashMap<String, AttributeValue>, notification: &mut Notification) {
-        let _id = doc.get(NOTIFICATION_ID_FIELD_PK).unwrap();
+    fn mapping_from_doc(doc: &HashMap<String, AttributeValue>, notification: &mut AlertSimilar) {
+        let _id = doc.get(ALERT_SIMILAR_ID_FIELD_PK).unwrap();
         let notif_id = _id.as_s().unwrap();
         let notif_uuid = Uuid::from_str(notif_id).unwrap();
         notification.set_id(notif_uuid);
@@ -164,7 +165,7 @@ impl NotificationRepo {
         }
 
         if let Some(value) = doc.get(ORIGIN_FRAME_SECOND){
-            let val = value.as_s().unwrap();
+            let val = value.as_n().unwrap();
             let second = val.parse::<f64>().unwrap();
             notification.set_origin_frame_second(second);
         }
@@ -187,7 +188,7 @@ impl NotificationRepo {
         }
 
         if let Some(value) = doc.get(SIMILAR_FRAME_SECOND){
-            let val = value.as_s().unwrap();
+            let val = value.as_n().unwrap();
             let second = val.parse::<f64>().unwrap();
             notification.set_similar_frame_second(second);
         }
@@ -208,29 +209,38 @@ impl NotificationRepo {
 
 }
 #[async_trait]
-impl NotificationRepository for NotificationRepo {
-    async fn add(&self, notification: &Notification) -> ResultE<()> {
+impl AlertSimilarRepository for AlertSimilarRepo {
+    async fn add(&self, notification: &AlertSimilar) -> ResultE<()> {
+
+        if self.check_if_exists(notification.id().clone()).await? {
+            return Err(AlertSimilarError::AlertSimilarAlreadyExists(notification.id().clone()).into( ));
+        }
+
         self.add_or_update(notification).await
     }
 
-    async fn get(&self, notification_id: Uuid) -> ResultE<Option<Notification>> {
+    async fn get(&self, notification_id: Uuid) -> ResultE<Option<AlertSimilar>> {
 
         let id_av = AttributeValue::S(notification_id.to_string());
         let output = self.client.get_item()
-            .table_name(NOTIFICATIONS_TABLE_NAME.clone())
-            .key(NOTIFICATION_ID_FIELD_PK, id_av)
+            .table_name(ALERT_SIMILARS_TABLE_NAME.clone())
+            .key(ALERT_SIMILAR_ID_FIELD_PK, id_av)
             .send()
             .await?;
 
         if let Some(item) = output.item {
-            let mut notification = NotificationBuilder::default().build();
+            let mut notification = AlertSimilarBuilder::default().build()?;
             Self::mapping_from_doc(&item, &mut notification);
             return Ok(Some(notification));
         }
         Ok(None)
     }
 
-    async fn update(&self, notification: &Notification) -> ResultE<()> {
+    async fn update(&self, notification: &AlertSimilar) -> ResultE<()> {
+
+        if !self.check_if_exists(notification.id().clone()).await? {
+            return Err(AlertSimilarError::AlertSimilarNotFound(notification.id().clone()).into( ));
+        }
         self.add_or_update(notification).await
     }
 
@@ -238,12 +248,26 @@ impl NotificationRepository for NotificationRepo {
 
         let id_av = AttributeValue::S(notification_id.to_string());
         self.client.delete_item()
-            .table_name(NOTIFICATIONS_TABLE_NAME.clone())
-            .key(NOTIFICATION_ID_FIELD_PK, id_av)
+            .table_name(ALERT_SIMILARS_TABLE_NAME.clone())
+            .key(ALERT_SIMILAR_ID_FIELD_PK, id_av)
             .send()
             .await?;
 
         Ok(())
+    }
+
+    async fn check_if_exists(&self, id:Uuid) -> ResultE<bool> {
+        let id_av = AttributeValue::S(id.to_string());
+        let output = self.client.get_item()
+            .table_name(ALERT_SIMILARS_TABLE_NAME.clone())
+            .key(ALERT_SIMILAR_ID_FIELD_PK, id_av)
+            .send()
+            .await?;
+
+        if let Some(_item) = output.item {
+            return Ok(true);
+        }
+        Ok(false)
     }
 
 }

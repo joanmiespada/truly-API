@@ -4,4 +4,4 @@ pub mod owner;
 pub mod hash;
 pub mod video;
 pub mod subscription;
-pub mod notification;
+pub mod alert_similar;

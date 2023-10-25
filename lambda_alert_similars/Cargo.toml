@@ -1,17 +1,18 @@
 [package]
-name="lambda_error"
+name="lambda_alert_similar"
 version="0.0.1"
 edition = "2021"
 
 
 [[bin]]
-name="lambda_error"
+name="lambda_alert_similar"
 path="src/main.rs"
 
 
 [dependencies]
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
-#lib_licenses = { path = "../lib_licenses" }
+lib_hash_objs = { git="https://github.com/joanmiespada/truly-shared" }
+lib_licenses = { path = "../lib_licenses" }
 tower-http = { version="0.4.4", features=["full"]  }
 lambda_http = { version = "0.8", features = ["apigw_rest"]}
 lambda_runtime = "0.8"

@@ -24,5 +24,5 @@ tracing-subscriber = { version = "0.3.17", default-features = false, features = 
 tokio = { version = "1", features = ["full"] }
 validator = { version = "0.16", features = ["derive"] }
 aws-sdk-sqs = "0.33.0"
-uuid = { version = "1.4.1", features = ["v4","fast-rng",  "macro-diagnostics",  "serde"]}
+uuid = { version = "1.5.0", features = ["v4","fast-rng",  "macro-diagnostics",  "serde"]}
 log = "0.4.20"

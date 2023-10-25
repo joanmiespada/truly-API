@@ -23,7 +23,7 @@ async-trait = "0.1.74"
 validator = { version = "0.16", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 structopt = "0.3.26"
-uuid = { version = "1.4.1", features=["v4","fast-rng","macro-diagnostics","serde"]}
+uuid = { version = "1.5.0", features=["v4","fast-rng","macro-diagnostics","serde"]}
 url = {version="2.4.1", features=["serde"] }
 log = "0.4.20"
 
@@ -35,7 +35,7 @@ spectral = "0.6.0"
 testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack2"  }
 tokio = { version="1.33.0", features=["full"]}
 #ethers = "2.0.8"
-base64 = "0.21.4"
+base64 = "0.21.5"
 #ethers-solc = "2.0.8"
 
 
