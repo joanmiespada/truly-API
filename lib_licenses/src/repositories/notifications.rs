@@ -2,10 +2,10 @@ use async_trait::async_trait;
 use aws_sdk_dynamodb::{Client, types::{AttributeValue,Put,TransactWriteItem}};
 use lib_config::config::Config;
 use uuid::Uuid;
-use crate::models::notification::{Notification, NotificationBuilder};
+use crate::{models::notification::{Notification, NotificationBuilder}, errors::notifications::NotificationError};
 use std::{collections::HashMap, str::FromStr};
 use lib_config::result::ResultE;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, Local};
 
 use super::schema_notifications::{NOTIFICATIONS_TABLE_NAME, NOTIFICATION_ID_FIELD_PK};
 
@@ -118,7 +118,16 @@ impl NotificationRepo {
         
         match request.send().await {
             Ok(_) => Ok(()),
-            Err(e) => Err(e.into()),
+            Err(e) => {
+                    let mssag = format!(
+                    "Error at [{}] - {} ",
+                    Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
+                    e
+                );
+                log::error!("{}",mssag);
+                return Err( NotificationError::NotificationDynamoDBError(e.into()).into());
+                
+            },
         }
     }
 
