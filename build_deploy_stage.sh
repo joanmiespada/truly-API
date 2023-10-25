@@ -92,6 +92,11 @@ lambdas='[
             "version": "0.0.3",
             "path": "lambda_error/image/Dockerfile",
             "description": "Error lambda: capture errors "
+        },{
+            "name": "alert_similars_lambda",
+            "version": "0.0.0",
+            "path": "lambda_alert_simillars/image/Dockerfile",
+            "description": "Alert Similar lambda: get alerts from matchapi about new matches among assets"
         }
     ]'
 

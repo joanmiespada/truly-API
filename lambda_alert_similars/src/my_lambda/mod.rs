@@ -5,7 +5,7 @@ use lambda_runtime::LambdaEvent;
 use lib_config::config::Config;
 use lib_hash_objs::similar_alert::AlertExternalPayload;
 use serde_json::Value;
-use lib_licenses::{services::alert_similar::AlertSimilarService, repositories::alert_similar::AlertSimilarRepo};
+use lib_engage::{services::alert_similar::AlertSimilarService, repositories::alert_similar::AlertSimilarRepo};
 
 #[derive(Debug)]
 pub struct ApiLambdaError(pub String);

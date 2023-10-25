@@ -1725,8 +1725,8 @@ dependencies = [
  "lambda_http",
  "lambda_runtime",
  "lib_config",
+ "lib_engage",
  "lib_hash_objs",
- "lib_licenses",
  "log",
  "serde",
  "serde_json",
@@ -1934,6 +1934,43 @@ dependencies = [
  "tracing-opentelemetry",
  "tracing-subscriber",
  "url",
+]
+
+[[package]]
+name = "lib_engage"
+version = "0.0.1"
+dependencies = [
+ "async-trait",
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "aws-sdk-kms",
+ "aws-sdk-secretsmanager",
+ "aws-types",
+ "base64",
+ "chrono",
+ "derive_builder",
+ "env_logger",
+ "hex",
+ "http",
+ "http-serde",
+ "lazy_static",
+ "lib_async_ops",
+ "lib_config",
+ "lib_hash_objs",
+ "log",
+ "maplit",
+ "rand 0.8.5",
+ "reqwest",
+ "rust-argon2",
+ "serde",
+ "serde_json",
+ "spectral",
+ "testcontainers",
+ "thiserror",
+ "tokio",
+ "url",
+ "uuid",
+ "validator",
 ]
 
 [[package]]

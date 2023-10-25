@@ -4,6 +4,7 @@ resolver = "2"
 members = [
     "lib_users",
     "lib_licenses",
+    "lib_engage",
     "lib_util_jwt",
     "lambda_login",
     "lambda_user",

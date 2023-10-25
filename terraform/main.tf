@@ -126,7 +126,7 @@ module "lambda_licenses" {
   aws_region              = var.aws_region
   api_stage_version       = var.api_stage_version
   architectures           = var.architectures
-  hashes_similarities_arn = aws_sns_topic.video_in_topic.arn  #var.hash_similar_in_topic_arn #aws_sns_topic.hash_similar_in_topic.arn
+  hashes_similarities_arn = aws_sns_topic.video_in_topic.arn #var.hash_similar_in_topic_arn #aws_sns_topic.hash_similar_in_topic.arn
 
   matchapi_endpoint = var.matchapi_endpoint
 
@@ -149,8 +149,7 @@ module "lambda_after_hash" {
 
   rust_backtrace = var.rust_backtrace
 
-  aws_region = var.aws_region
-  #api_stage_version       = var.api_stage_version
+  aws_region    = var.aws_region
   architectures = var.architectures
 
   ecr_image = var.ecr_after_hash_lambda
@@ -173,14 +172,38 @@ module "lambda_error" {
 
   rust_backtrace = var.rust_backtrace
 
-  aws_region = var.aws_region
+  aws_region    = var.aws_region
   architectures = var.architectures
 
-  ecr_image = var.ecr_error_lambda
+  ecr_image = var.ecr_alert_similar_lambda
 
   trace_level = var.trace_level
 
-  email               = var.email
+  email = var.email
+
   video_error_topic_arn = aws_sns_topic.video_error_topic.arn
+
+}
+
+module "lambda_alert_similar" {
+  source = "./lambda_alert_similar"
+
+  service_name     = "alert_similar"
+  common_tags      = local.common_tags
+  role             = aws_iam_role.truly_lambda_execution_role.arn
+  environment_flag = var.environment_flag
+  rust_log         = var.rust_log
+
+  rust_backtrace = var.rust_backtrace
+
+  aws_region    = var.aws_region
+  architectures = var.architectures
+
+  ecr_image = var.ecr_after_hash_lambda
+
+  trace_level = var.trace_level
+
+  email                   = var.email
+  alert_similar_topic_arn = aws_sns_topic.notify_new_similar_topic.arn
 
 }

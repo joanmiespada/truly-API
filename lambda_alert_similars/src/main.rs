@@ -4,7 +4,7 @@ use lambda_runtime::{run, service_fn, Error};
 
 use lib_config::{config::Config, traces::setup_tracing_level, 
     logs::setup_log};
-use lib_licenses::{
+use lib_engage::{
     repositories::alert_similar::AlertSimilarRepo,
     services::alert_similar::AlertSimilarService
 };
