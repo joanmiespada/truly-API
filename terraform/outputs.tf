@@ -24,12 +24,8 @@ output "notify_new_similars_topic" {
   value = aws_sns_topic.notify_new_similar_topic.arn
 }
 
-# output "api_gateway_url_localstack_1" {
-#   description = "The URL of the deployed API Gateway on LocalStack option1"
-#   value       = "http://localhost:4566/restapis/${aws_apigatewayv2_api.truly_api.id}/${var.api_stage_version}/_user_request_/<path>"
-# }
-# output "api_gateway_url_localstack_2" {
-#   description = "The URL of the deployed API Gateway on LocalStack option2"
-#   value       = "http://${aws_apigatewayv2_api.truly_api.id}.execute-api.localhost.localstack.cloud:4566/${var.api_stage_version}/<path>"
-# }
+output "ses_email_ses_sender_domain" {
+  value = aws_ses_domain_identity.email_ses_sender_domain.domain
+}
+
 

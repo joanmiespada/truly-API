@@ -51,6 +51,8 @@ export TF_VAR_trace_log="cargo_lambda=info"
 export TF_VAR_jwt_token_time_exp_hours=8
 export TF_VAR_telemetry=false
 export TF_VAR_email="joanmi@espada.cat"
+hosted_zone_id="Z07710191JBEMS0WHKVOJ" #it must be create earlier.
+export TF_VAR_hosted_zone_id=$hosted_zone_id
 dns_domain="truly.video"
 profile="truly"
 export AWS_PROFILE=$profile
@@ -97,6 +99,11 @@ lambdas='[
             "version": "0.0.0",
             "path": "lambda_alert_simillars/image/Dockerfile",
             "description": "Alert Similar lambda: get alerts from matchapi about new matches among assets"
+        },{
+            "name": "notifications_lambda",
+            "version": "0.0.0",
+            "path": "lambda_notifications/image/Dockerfile",
+            "description": "Notifications lambda: send notifications "
         }
     ]'
 

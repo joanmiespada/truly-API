@@ -144,9 +144,17 @@ variable "ecr_error_lambda" {
 variable "ecr_alert_similar_lambda"{
   type=string
 }
+variable "ecr_notifications_lambda"{
+  type=string
+}
 
 
 variable "trace_level" {
   type = string
   description = "Error, info or warning. Tracing system"
+}
+
+variable "hosted_zone_id" {
+  type = string
+  description = "hosted zone id"
 }

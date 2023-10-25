@@ -199,11 +199,36 @@ module "lambda_alert_similar" {
   aws_region    = var.aws_region
   architectures = var.architectures
 
-  ecr_image = var.ecr_after_hash_lambda
+  ecr_image = var.ecr_alert_similar_lambda
 
   trace_level = var.trace_level
 
   email                   = var.email
   alert_similar_topic_arn = aws_sns_topic.notify_new_similar_topic.arn
+
+}
+
+module "lambda_notifications" {
+  source = "./lambda_notifications"
+
+  service_name     = "notifications"
+  common_tags      = local.common_tags
+  role             = aws_iam_role.truly_lambda_execution_role.arn
+  environment_flag = var.environment_flag
+  rust_log         = var.rust_log
+
+  rust_backtrace = var.rust_backtrace
+
+  aws_region    = var.aws_region
+  architectures = var.architectures
+
+  ecr_image = var.ecr_notifications_lambda
+
+  trace_level = var.trace_level
+
+  email                   = var.email
+
+  smtp_secret = aws_secretsmanager_secret.smtp_secret.arn
+  smtp_server = aws_ses_domain_identity.email_ses_sender_domain.domain
 
 }
