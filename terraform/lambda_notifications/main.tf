@@ -1,5 +1,5 @@
 locals {
-  region_prefix          = element(split("-", var.aws_region), 0)
+  region_prefix = element(split("-", var.aws_region), 0)
   #lambda_name_descriptor = "${var.common_tags.project}-${var.common_tags.service}-${var.common_tags.environment}-${var.aws_region}-${var.api_stage_version}-${var.service_name}"
   lambda_name_descriptor = "${var.common_tags.project}-${var.common_tags.service}-${var.common_tags.environment}-${var.aws_region}-${var.service_name}"
 }
@@ -27,18 +27,40 @@ resource "aws_lambda_function" "truly_lambda_notifications" {
 
   environment {
     variables = {
-      ENVIRONMENT    = var.environment_flag
-      RUST_LOG       = var.rust_log
-      RUST_BACKTRACE = var.rust_backtrace
-      TRACE_LEVEL    = var.trace_level
-      #TODO: add here: ENV VAR related to  SECRETMANAGER user
-      # add here smtp server
+      ENVIRONMENT         = var.environment_flag
+      RUST_LOG            = var.rust_log
+      RUST_BACKTRACE      = var.rust_backtrace
+      TRACE_LEVEL         = var.trace_level
+      SMTP_SECRET_MANAGER = var.smtp_secret
+      SMT_HOST            = var.smtp_server
     }
   }
 
   tags = merge(var.common_tags, { "logic" : "${var.service_name}" })
 
 }
+
+resource "aws_cloudwatch_event_rule" "every_hour" {
+  name                = "every-hour"
+  description         = "Trigger every hour"
+  schedule_expression = "cron(0 * * * ? *)"
+}
+
+resource "aws_lambda_permission" "allow_cloudwatch" {
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.truly_lambda_notifications.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.every_hour.arn
+}
+
+resource "aws_cloudwatch_event_target" "every_hour_target" {
+  rule      = aws_cloudwatch_event_rule.every_hour.name
+  target_id = "LambdaFunction"
+  arn       = aws_lambda_function.truly_lambda_notifications.arn
+}
+
+
 
 #TODO cloudwatch raise every 1h
 
