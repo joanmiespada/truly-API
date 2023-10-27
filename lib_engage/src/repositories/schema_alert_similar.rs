@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{
     builders::StreamSpecificationBuilder, AttributeDefinition, BillingMode,
     KeySchemaElement, KeyType, ScalarAttributeType, StreamViewType,
-    Tag,
+    Tag, LocalSecondaryIndex, Projection, ProjectionType,
 };
 use lib_config::{
     config::Config,
@@ -17,6 +17,8 @@ lazy_static! {
 }
 
 pub const ALERT_SIMILAR_ID_FIELD_PK: &str = "alert_id";
+pub const CREATION_TIME: &str = "creation_time";
+pub const TIME_INDEX_NAME: &str = "time_index";
 
 pub struct AlertSimilarSchema;
 
@@ -35,16 +37,38 @@ impl Schema for AlertSimilarSchema {
             .attribute_type(ScalarAttributeType::S)
             .build();
 
+        let creation_time_attr = AttributeDefinition::builder()
+            .attribute_name(CREATION_TIME)
+            .attribute_type(ScalarAttributeType::S)
+            .build();
+
         let key_schema = KeySchemaElement::builder()
             .attribute_name(ALERT_SIMILAR_ID_FIELD_PK)
             .key_type(KeyType::Hash)
+            .build();
+
+        let second_index = LocalSecondaryIndex::builder()
+            .index_name(TIME_INDEX_NAME)
+            .key_schema(
+                KeySchemaElement::builder()
+                    .attribute_name(CREATION_TIME)
+                    .key_type(KeyType::Hash)
+                    .build(),
+            )
+            .projection(
+                Projection::builder()
+                    .projection_type(ProjectionType::All)
+                    .build(),
+            )
             .build();
 
         client
             .create_table()
             .table_name(ALERT_SIMILARS_TABLE_NAME.clone())
             .attribute_definitions(notification_pk_attr )
+            .attribute_definitions(creation_time_attr )
             .key_schema(key_schema)
+            .local_secondary_indexes(second_index)
             .billing_mode(BillingMode::PayPerRequest)
             .stream_specification(
                 StreamSpecificationBuilder::default()

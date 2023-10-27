@@ -33,6 +33,7 @@ import{
 // this is for SES to send emails
 resource "aws_iam_user" "smtp_user" {
   name = "smtp_user"
+  tags = local.common_tags
 }
 
 resource "aws_iam_access_key" "smtp_user" {
@@ -74,10 +75,11 @@ resource "aws_iam_user_policy_attachment" "user-ses-policy-attach" {
 # }
 
 resource "aws_secretsmanager_secret" "smtp_secret" {
-  name = "SmtpUser"
+  name = "truly_api_smtp"
   depends_on = [
     aws_iam_user_policy_attachment.user-ses-policy-attach
   ]
+  tags = local.common_tags
 }
 
 resource "aws_secretsmanager_secret_version" "smtp_secret_version" {

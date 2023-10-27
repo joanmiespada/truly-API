@@ -3,8 +3,9 @@ use crate::my_lambda::{build_resp, build_resp_env};
 use lambda_http::RequestPayloadExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
+use lib_engage::repositories::subscription::SubscriptionRepo;
 use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError};
-use lib_licenses::errors::subscription::SubscriptionError;
+use lib_engage::errors::subscription::SubscriptionError;
 use lib_licenses::services::assets::{AssetManipulation, AssetService };
 use lib_licenses::services::video::VideoService;
 use lib_users::errors::users::UserNoExistsError;
@@ -14,7 +15,7 @@ use tracing::info;
 use url::Url;
 use validator::{ValidationError, Validate};
 use lib_users::services::users::{UsersService,UserManipulation};
-use lib_licenses::services::subscription::SubscriptionService;
+use lib_engage::services::subscription::SubscriptionService;
 
 
 #[derive(Debug, Serialize, Deserialize, Validate, Clone)]
@@ -34,7 +35,7 @@ pub async fn create_intent(
     asset_service: &AssetService,
     video_service: &VideoService,
     user_service: &UsersService,
-    subscription_service: &SubscriptionService,
+    subscription_service: &SubscriptionService<SubscriptionRepo>,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     let subscription_fields;
     match req.payload::<CreatableFildsSubscription>() {
@@ -126,7 +127,7 @@ pub async fn confirm_subscription(
     _req: &Request,
     _c: &Context,
     config: &Config,
-    subscription_service: &SubscriptionService,
+    subscription_service: &SubscriptionService<SubscriptionRepo>,
     id: uuid::Uuid,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
     

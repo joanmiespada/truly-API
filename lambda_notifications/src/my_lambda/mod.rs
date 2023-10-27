@@ -1,12 +1,18 @@
-mod similar_found;
-use crate::my_lambda::similar_found::store_similar_found_successfully;
-use aws_lambda_events::sqs::SqsEventObj;
+mod notificate;
+
+use aws_lambda_events::cloudwatch_events::CloudWatchEvent;
 use lambda_runtime::LambdaEvent;
 use lib_config::config::Config;
-use lib_hash_objs::similar_alert::AlertExternalPayload;
+use lib_licenses::services::assets::{AssetService,AssetManipulation};
+use lib_users::services::users::{UsersService, UserManipulation};
 use serde_json::Value;
-use lib_engage::{services::alert_similar::AlertSimilarService, repositories::alert_similar::AlertSimilarRepo};
+use std::{time::{Duration, SystemTime}, collections::HashMap};
+use lib_engage::{
+    repositories::{alert_similar::AlertSimilarRepo, subscription::SubscriptionRepo},
+    services::{alert_similar::AlertSimilarService, subscription::SubscriptionService}
+};
 
+use crate::my_lambda::notificate::send_notifications;
 #[derive(Debug)]
 pub struct ApiLambdaError(pub String);
 
@@ -18,77 +24,60 @@ impl std::fmt::Display for ApiLambdaError {
     }
 }
 
-/// This is the main body for the function.
-/// Write your code inside it.
-/// There are some code example in the following URLs:
-/// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
+
 //#[instrument]
 pub async fn function_handler(
-    //event: LambdaEvent<SqsEventObj<VideoResult>>,
-    event: LambdaEvent<SqsEventObj<Value>>,
+    _: LambdaEvent<CloudWatchEvent<Value>>,
     config: &Config,
-    notification_service: &AlertSimilarService<AlertSimilarRepo>,
+    alert_service: &AlertSimilarService<AlertSimilarRepo>,
+    subscription_service: &SubscriptionService<SubscriptionRepo>,
+    user_service: &UsersService,
+    asset_service: &AssetService,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
-    for sqs_record in &event.payload.records {
-        // Extract the SNS message from SQS message body
-        let sns_message_str: &str = match sqs_record.body.get("Message") {
-            Some(message) => message.as_str().unwrap_or_default(),
-            None => {
-                log::error!("Missing 'Message' attribute in SQS record.");
-                continue;
-            }
-        };
+    const ONE_HOUR_AND_HALF: Duration = Duration::from_secs(5400); //it must be little bit higher than the cronjob scheduled in terraform
 
-        // Deserialize the SNS message
-        match serde_json::from_str::<AlertExternalPayload>(sns_message_str) {
-            Err(e) => {
-                log::error!("Error parsing SNS message from SQS: {}", e);
-                continue;
-            },
-            Ok(data) => {
-                log::info!("Message from SNS parsed successfully");
-                log::info!("{:?}", data);
-                store_similar_found_successfully(&data, config, notification_service).await?;
-                // Process the parsed data as needed...
-            }
+    let mut buckets = HashMap::new();
+    //let buckets: Vec<FoundSimilarContent> = Vec::new();
+
+    let now = SystemTime::now();
+    let (alerts, _token) = alert_service.get_latests_alerts(now, ONE_HOUR_AND_HALF ,None, None ).await?;
+    
+    for alert in &alerts{
+
+        let asset_origen = asset_service.get_by_id( &alert.origin_asset_id().unwrap() ).await?;
+        let asset_similar = asset_service.get_by_id( &alert.similar_asset_id().unwrap() ).await?;
+
+        let subscriptions_origin = subscription_service.find_users_subscribed_to(asset_origen.id().to_owned()).await?;
+        for subscription in subscriptions_origin{
+
+            let user = user_service.get_by_id(&subscription).await?;
+            //buckets.entry(user.email().unwrap()).or_insert(Vec::new()).push(asset_origen.url().unwrap());
+            buckets.entry(user.email().clone() .unwrap() ).or_insert(HashMap::new()).entry(asset_origen.url().clone().unwrap()).or_insert(HashMap::new()).entry(asset_similar.url().clone().unwrap()).or_insert(alert.id().to_owned());
         }
+        
+        let subscriptions_similar = subscription_service.find_users_subscribed_to(asset_similar.id().to_owned()).await?;
+        for subscription in subscriptions_similar{
+
+            let user = user_service.get_by_id(&subscription).await?;
+            //buckets.entry(user.email().unwrap()).or_insert(Vec::new()).push(asset_similar.url().unwrap());
+             buckets.entry(user.email().clone().unwrap()).or_insert(HashMap::new()).entry(asset_similar.url().clone().unwrap()).or_insert(HashMap::new()).entry(asset_origen.url().clone().unwrap()).or_insert(alert.id().to_owned());
+
+        }
+        
     }
+
+    let op = send_notifications(&config, buckets).await;
+    if let Err(e) = op {
+        log::error!("Could not send email: {e:?}") 
+    }
+    
+    
+    for alert in alerts{
+        alert_service.delete(alert.id().to_owned()).await?;
+    }
+
+    
     Ok(())
-
-
-
-
-
-    // let aux = event.payload.records;
-    // for event in aux {
-    //     let sns_data = event.body;
-
-    //     let data_of = sns_data["Message"].to_owned();
-
-    //     let content_data = format!("{}", data_of);
-
-    //     let mut chars = content_data.chars();
-    //     chars.next();
-    //     chars.next_back();
-    //     let mut res = String::from_str(chars.as_str()).unwrap();
-
-    //     res = res.replace("\\n", "");
-    //     res = res.replace("\\\"", "\"");
-    //     let op: Result<HashResult, Error> = serde_json::from_str(&res);
-    //     match op {
-    //         Err(e) => {
-    //             log::error!("error parsing sqs message!!!!");
-    //             log::error!("{}", e);
-    //             return Err(e.into());
-    //         }
-    //         Ok(data) => {
-    //             log::info!("message sqs parsed successfully");
-    //             println!("{:?}", data);
-
-    //             store_after_hash_process_successfully(&data, config, asset_service).await?;
-    //         }
-    //     }
-    // }
-    // Ok(())
+    
 }

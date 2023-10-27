@@ -32,7 +32,7 @@ resource "aws_lambda_function" "truly_lambda_notifications" {
       RUST_BACKTRACE      = var.rust_backtrace
       TRACE_LEVEL         = var.trace_level
       SMTP_SECRET_MANAGER = var.smtp_secret
-      SMT_HOST            = var.smtp_server
+      SMTP_HOST            = var.smtp_server
     }
   }
 

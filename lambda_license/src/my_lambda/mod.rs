@@ -14,7 +14,8 @@ use crate::my_lambda::subscribe::subscribe::{confirm_subscription, create_intent
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, STAGE_ENV};
-use lib_licenses::services::subscription::SubscriptionService;
+use lib_engage::repositories::subscription::SubscriptionRepo;
+use lib_engage::services::subscription::SubscriptionService;
 use lib_licenses::services::video::VideoService;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
@@ -45,7 +46,7 @@ pub async fn function_handler(
     user_service: &UsersService,
     video_service: &VideoService,
     //_license_service: &LicenseService,
-    subscription_service: &SubscriptionService,
+    subscription_service: &SubscriptionService<SubscriptionRepo>,
     req: Request,
 ) -> Result<impl IntoResponse, Box<dyn std::error::Error + Send + Sync>> {
     log::info!("income new request");

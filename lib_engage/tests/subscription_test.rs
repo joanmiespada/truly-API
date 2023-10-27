@@ -3,10 +3,10 @@ use aws_sdk_dynamodb::Client;
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::schema::Schema;
-use lib_licenses::repositories::schema_subscription::SubscriptionSchema;
-use lib_licenses::repositories::subscription::SubscriptionRepo;
-use lib_licenses::services::subscription::SubscriptionService;
-use lib_licenses::models::subscription::ConfirmedStatus;
+use lib_engage::repositories::schema_subscription::SubscriptionSchema;
+use lib_engage::repositories::subscription::SubscriptionRepo;
+use lib_engage::services::subscription::SubscriptionService;
+use lib_engage::models::subscription::ConfirmedStatus;
 use uuid::Uuid;
 use spectral::prelude::*;
 use testcontainers::*;
@@ -156,20 +156,20 @@ async fn check_subscription_notify() {
     }
     let _ = service.intent("user4".to_string(), asset_id).await;
 
-    let search_op = service.find_asset_subscriptions(asset_id).await;
+    let search_op = service.find_users_subscribed_to(asset_id).await;
     assert_that!(search_op).is_ok();
 
     let subscriptions = search_op.unwrap(); 
     
     assert_eq!(subscriptions.len(), 3);
 
-    let search_op2 = service.find_user_subscriptions("user1".to_string()).await;
+    let search_op2 = service.find_assets_subscribed_to("user1".to_string()).await;
     assert_that!(search_op2).is_ok();
 
     let subscriptions2 = search_op2.unwrap();
     assert_eq!(subscriptions2.len(), 1);
 
-    let search_op3 = service.find_user_subscriptions("user4".to_string()).await;
+    let search_op3 = service.find_assets_subscribed_to("user4".to_string()).await;
     assert_that!(search_op3).is_ok();
 
     let subscriptions3 = search_op3.unwrap();

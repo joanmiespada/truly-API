@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use aws_sdk_dynamodb::types::Select;
+use lib_config::timing::{iso8601, from_iso8601};
 use uuid::Uuid;
 
 use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
@@ -9,7 +10,7 @@ use crate::models::owner::Owner;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::{types::AttributeValue, Client};
 use chrono::{
-    prelude::{DateTime, Utc},
+    prelude::Utc,
     Local,
 };
 use lib_config::config::Config;
@@ -272,15 +273,15 @@ impl OwnerRepository for OwnerRepo {
     }
 }
 
-fn iso8601(st: &DateTime<Utc>) -> String {
-    let dt: DateTime<Utc> = st.clone().into();
-    format!("{}", dt.format("%+"))
-}
+// fn iso8601(st: &DateTime<Utc>) -> String {
+//     let dt: DateTime<Utc> = st.clone().into();
+//     format!("{}", dt.format("%+"))
+// }
 
-fn from_iso8601(st: &String) -> DateTime<Utc> {
-    let aux = st.parse::<DateTime<Utc>>().unwrap();
-    aux
-}
+// fn from_iso8601(st: &String) -> DateTime<Utc> {
+//     let aux = st.parse::<DateTime<Utc>>().unwrap();
+//     aux
+// }
 pub fn mapping_from_doc_to_owner(doc: &HashMap<String, AttributeValue>, owner: &mut Owner) {
     let user_id = doc.get(OWNER_USER_ID_FIELD_PK).unwrap();
     let user_id = user_id.as_s().unwrap();

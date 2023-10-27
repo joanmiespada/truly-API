@@ -1,4 +1,5 @@
 use aws_sdk_dynamodb::types::Select;
+use lib_config::timing::{iso8601, from_iso8601};
 use std::collections::HashMap;
 use std::str::FromStr;
 use uuid::Uuid;
@@ -7,10 +8,7 @@ use crate::errors::license::{LicenseCreationError, LicenseDynamoDBError, License
 use crate::models::license::{License, LicenseStatus, Royalty};
 use async_trait::async_trait;
 use aws_sdk_dynamodb::{types::AttributeValue, Client};
-use chrono::{
-    prelude::{DateTime, Utc},
-    Local,
-};
+use chrono::Local;
 use lib_config::config::Config;
 
 use super::schema_licenses::{
@@ -302,7 +300,7 @@ impl LicenseRepository for LicenseRepo {
     }
 
     async fn update(&self, license: &License) -> ResultE<()> {
-        let last_update_time_av = AttributeValue::S(iso8601(*license.last_update_time()));
+        let last_update_time_av = AttributeValue::S(iso8601(license.last_update_time()));
 
         let request = self
             .client
@@ -357,15 +355,15 @@ impl LicenseRepository for LicenseRepo {
     }
 }
 
-fn iso8601(st: DateTime<Utc>) -> String {
-    let dt: DateTime<Utc> = st.into();
-    format!("{}", dt.format("%+"))
-}
+// fn iso8601(st: DateTime<Utc>) -> String {
+//     let dt: DateTime<Utc> = st.into();
+//     format!("{}", dt.format("%+"))
+// }
 
-fn from_iso8601(st: String) -> DateTime<Utc> {
-    let aux = st.parse::<DateTime<Utc>>().unwrap();
-    aux
-}
+// fn from_iso8601(st: String) -> DateTime<Utc> {
+//     let aux = st.parse::<DateTime<Utc>>().unwrap();
+//     aux
+// }
 
 fn mapping_from_attr_to_royalty(attr: &AttributeValue) -> Option<Royalty> {
     if let Ok(m) = attr.as_m() {
@@ -396,14 +394,14 @@ fn mapping_from_doc_to_license(doc: &HashMap<String, AttributeValue>, license: &
 
     if let Some(creation_time_attr) = doc.get(CREATION_TIME_FIELD_NAME) {
         if let Ok(creation_time) = creation_time_attr.as_s().as_ref() {
-            let dt = from_iso8601(creation_time.to_string());
+            let dt = from_iso8601(&creation_time.to_string());
             license.set_creation_time(dt);
         }
     }
 
     if let Some(last_update_time_attr) = doc.get(LAST_UPDATE_TIME_FIELD_NAME) {
         if let Ok(last_update_time) = last_update_time_attr.as_s().as_ref() {
-            let dt = from_iso8601(last_update_time.to_string());
+            let dt = from_iso8601(&last_update_time.to_string());
             license.set_last_update_time(dt);
         }
     }

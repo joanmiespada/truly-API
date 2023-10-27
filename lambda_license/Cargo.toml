@@ -12,6 +12,7 @@ lib_config = { git = "https://github.com/joanmiespada/truly-shared" }
 lib_async_ops = { git = "https://github.com/joanmiespada/truly-shared" }
 lib_users = { path = "../lib_users" }
 lib_licenses = { path = "../lib_licenses" }
+lib_engage = { path = "../lib_engage" }
 lib_util_jwt = { path = "../lib_util_jwt" }
 #lib_blockchain = { git="https://github.com/joanmiespada/truly-blockchains"}
 #lib_ledger = { path = "../lib_ledger" }
@@ -20,7 +21,7 @@ tower-http = { version = "0.4.4", features = ["full"] }
 lambda_http = { version = "0.8", features = ["apigw_rest"] }
 lambda_runtime = "0.8"
 aws_lambda_events = { version = "0.11.1", features = ["apigw", "alb"] }
-serde = { version = "1.0.189", features = ["derive"] }
+serde = { version = "1.0.190", features = ["derive"] }
 serde_json = "1.0.107"
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3.17", default-features = false, features = [
@@ -37,5 +38,5 @@ uuid = { version = "1.5.0", features = [
     "macro-diagnostics",
     "serde",
 ] }
-aws-sdk-sqs = "0.33.0"
+aws-sdk-sqs = "0.34.0"
 log = "0.4.20"

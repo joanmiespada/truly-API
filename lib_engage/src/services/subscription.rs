@@ -1,25 +1,25 @@
 use crate::errors::subscription::SubscriptionError;
 use crate::models::subscription::{ConfirmedStatus, Subscription};
-use crate::repositories::subscription::{SubscriptionRepo, SubscriptionRepository};
+use crate::repositories::subscription::SubscriptionRepository;
 use lib_config::result::ResultE;
 use uuid::Uuid;
 
 pub const SERVICE: &str= "subscriptions";
 
-pub struct SubscriptionService {
-    subscription_repo: SubscriptionRepo,
+pub struct SubscriptionService<T: SubscriptionRepository> {
+    subscription_repo: T ,
 }
 
-impl SubscriptionService {
-    pub fn new(subscription_repo: SubscriptionRepo) -> Self {
-        Self { subscription_repo }
+impl<T: SubscriptionRepository>  SubscriptionService<T> {
+    pub fn new(subscription_repo: T) -> Self {
+        SubscriptionService { subscription_repo }
     }
 
-    pub async fn find_user_subscriptions(&self, user_id: String) -> ResultE<Vec<Uuid>> {
+    pub async fn find_assets_subscribed_to(&self, user_id: String) -> ResultE<Vec<Uuid>> {
         self.subscription_repo.find_by_user(user_id).await
     }
     
-    pub async fn find_asset_subscriptions(&self, asset_id: Uuid) -> ResultE<Vec<String>> {
+    pub async fn find_users_subscribed_to(&self, asset_id: Uuid) -> ResultE<Vec<String>> {
         self.subscription_repo.find_by_asset(asset_id).await
     }
 

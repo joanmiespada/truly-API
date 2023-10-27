@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use lib_config::result::ResultE;
+use lib_config::timing::{from_iso8601, iso8601};
 use lib_video_objs::video::VideoProcessStatus;
 use log::{error, info};
 use url::Url;
@@ -14,10 +15,7 @@ use crate::models::owner::Owner;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{AttributeValue, Put, Select, TransactWriteItem};
 use aws_sdk_dynamodb::Client;
-use chrono::{
-    prelude::{DateTime, Utc},
-    Local,
-};
+use chrono::Local;
 use lib_config::config::Config;
 
 use super::owners::mapping_from_doc_to_owner;
@@ -618,15 +616,15 @@ impl AssetRepository for AssetRepo {
     }
 }
 
-fn iso8601(st: &DateTime<Utc>) -> String {
-    let dt: DateTime<Utc> = st.clone().into();
-    format!("{}", dt.format("%+"))
-}
+// fn iso8601(st: &DateTime<Utc>) -> String {
+//     let dt: DateTime<Utc> = st.clone().into();
+//     format!("{}", dt.format("%+"))
+// }
 
-fn from_iso8601(st: &String) -> DateTime<Utc> {
-    let aux = st.parse::<DateTime<Utc>>().unwrap();
-    aux
-}
+// fn from_iso8601(st: &String) -> DateTime<Utc> {
+//     let aux = st.parse::<DateTime<Utc>>().unwrap();
+//     aux
+// }
 fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut Asset) {
     let _id = doc.get(ASSET_ID_FIELD_PK).unwrap();
     let asset_id = _id.as_s().unwrap();

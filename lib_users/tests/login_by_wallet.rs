@@ -41,7 +41,7 @@ async fn login_user_wallet_test() -> Result<(), Box<dyn std::error::Error + Send
     let mut config = Config::new();
     config.setup().await;
     config.set_aws_config(&shared_config); //rewrite configuration to use our current testcontainer instead
-    config.load_secret(SECRETS_MANAGER_APP_KEYS).await;
+    config.load_secret(SECRETS_MANAGER_APP_KEYS.clone()).await;
 
     let creation = UserAllSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();

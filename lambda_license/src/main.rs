@@ -1,12 +1,4 @@
 use lambda_http::service_fn;
-// use lib_blockchain::blockchains::chain::CloneBoxNFTsRepository;
-// use lib_blockchain::blockchains::sui::SuiBlockChain;
-// use lib_blockchain::repositories::block_tx::BlockchainTxRepo;
-// use lib_blockchain::repositories::blockchain::BlockchainRepo;
-// use lib_blockchain::repositories::contract::ContractRepo;
-// use lib_blockchain::repositories::keypairs::KeyPairRepo;
-// use lib_blockchain::services::block_tx::BlockchainTxService;
-// use lib_blockchain::services::nfts::NFTsService;
 use lib_config::config::Config;
 use lib_config::logs::setup_log;
 use lib_config::traces::setup_tracing_level;
@@ -18,10 +10,8 @@ use lib_licenses::services::video::VideoService;
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
-// use lib_ledger::repository::LedgerRepo;
-// use lib_ledger::service::LedgerService;
-use lib_licenses::repositories::subscription::SubscriptionRepo;
-use lib_licenses::services::subscription::SubscriptionService;
+use lib_engage::repositories::subscription::SubscriptionRepo;
+use lib_engage::services::subscription::SubscriptionService;
 use my_lambda::{error::ApiLambdaError, function_handler};
 
 mod my_lambda;
@@ -40,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
 
     let asset_repo = AssetRepo::new(&config);
     let shorter_repo = ShorterRepo::new(&config);
-    let asset_service = AssetService::new(asset_repo.clone(), shorter_repo);
+    let asset_service = AssetService::new(asset_repo, shorter_repo);
 
     let owners_repo = OwnerRepo::new(&config);
     let owners_service = OwnerService::new(owners_repo);

@@ -1,3 +1,5 @@
+use std::time::{SystemTime, Duration};
+
 use crate::{models::alert_similar::{AlertSimilar, AlertSimilarBuilder}, repositories::alert_similar::AlertSimilarRepository};
 use chrono::Utc;
 use uuid::Uuid;
@@ -33,6 +35,12 @@ impl<T: AlertSimilarRepository> AlertSimilarService<T> {
 
     pub async fn delete(&self, notification_id: Uuid) -> ResultE<()> {
         self.repo.delete(notification_id).await
+    }
+    pub async fn get_latests_alerts(&self, starting_at: SystemTime, window:Duration, 
+        token: Option<String>, 
+        page_size: Option<i32>  ) -> ResultE<(Vec<AlertSimilar>,Option<String>)> {
+
+        self.repo.get_all_by_time( starting_at, window, token, page_size).await
     }
 
 }

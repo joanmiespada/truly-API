@@ -9,6 +9,7 @@ use std::fmt;
 pub struct AlertSimilar {
     id: Uuid,
     creation_time: DateTime<Utc>,
+    last_update_time: DateTime<Utc>,
     source_type: Option<String>,
     origin_hash_id: Option<Uuid>,
     origin_hash_type: Option<String>,
@@ -108,6 +109,14 @@ impl AlertSimilar {
     }
     pub fn set_origin_frame_url(&mut self, origin_frame_url: String) {
         self.origin_frame_url = Some(origin_frame_url);
+    }
+
+    pub fn last_update_time(&self) -> &DateTime<Utc> {
+        &self.last_update_time
+    }
+
+    pub fn set_last_update_time(&mut self, last_update_time: DateTime<Utc>) {
+        self.last_update_time = last_update_time;
     }
 
 }
