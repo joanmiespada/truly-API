@@ -253,29 +253,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "aws-sdk-cloudwatchevents"
-version = "0.34.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d719f23d038f0e871565ecadf1ff7981e10d849fc6e796baae63982b55a09c9b"
-dependencies = [
- "aws-credential-types",
- "aws-http",
- "aws-runtime",
- "aws-smithy-async",
- "aws-smithy-client",
- "aws-smithy-http",
- "aws-smithy-json",
- "aws-smithy-runtime",
- "aws-smithy-runtime-api",
- "aws-smithy-types",
- "aws-types",
- "bytes",
- "http",
- "regex",
- "tracing",
-]
-
-[[package]]
 name = "aws-sdk-dynamodb"
 version = "0.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1903,9 +1880,15 @@ dependencies = [
 name = "lambda_notifications"
 version = "0.0.1"
 dependencies = [
- "aws-sdk-cloudwatchevents",
+ "aws-sdk-dynamodb",
+ "aws-types",
  "aws_lambda_events 0.11.1",
+ "base64",
+ "chrono",
+ "env_logger",
+ "http",
  "lambda_http",
+ "lambda_notifications",
  "lambda_runtime",
  "lettre",
  "lib_config",
@@ -1915,6 +1898,8 @@ dependencies = [
  "log",
  "serde",
  "serde_json",
+ "spectral",
+ "testcontainers",
  "tokio",
  "tower-http",
  "tracing",

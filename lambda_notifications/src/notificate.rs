@@ -6,18 +6,12 @@ use lettre::{Message, SmtpTransport, Transport};
 use url::Url;
 use uuid::Uuid;
 
-// pub struct FoundSimilarContent{
-//     pub email: String,
-//     pub asset_subscribed: Url,
-//     pub asset_similars: Vec<Url>,
-// }
-
 pub type FoundSimilars= HashMap<std::string::String, HashMap<Url, HashMap<Url, Uuid>>>;
 
 
 //#[instrument]
 pub async fn send_notifications(
-    config: &Config,
+    conf: &Config,
     messages: FoundSimilars
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
@@ -56,9 +50,12 @@ pub async fn send_notifications(
             .unwrap();
 
 
-        let creds = Credentials::new("smtp_username".to_owned(), "smtp_password".to_owned());
+        let creds = Credentials::new(
+            conf.env_vars().smtp_user().unwrap(), // "smtp_username".to_owned(),
+            conf.env_vars().smtp_passw().unwrap() //"smtp_password".to_owned());
+        );
 
-        let smtp_host = config.env_vars().smtp_host().unwrap().to_owned();
+        let smtp_host = conf.env_vars().smtp_host().unwrap().to_owned();
         // Open a remote connection to gmail
         let mailer = SmtpTransport::relay(smtp_host.as_str())
             .unwrap()

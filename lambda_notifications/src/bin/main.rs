@@ -1,5 +1,5 @@
-// https://blog.logrocket.com/deploy-lambda-functions-rust/
 
+use lambda_notifications::function_handler;
 use lambda_runtime::{run, service_fn, Error};
 
 use lib_config::{config::Config, traces::setup_tracing_level, 
@@ -10,9 +10,7 @@ use lib_engage::{
 };
 use lib_licenses::{repositories::{assets::AssetRepo, shorter::ShorterRepo}, services::assets::AssetService};
 use lib_users::{repositories::users::UsersRepo, services::users::UsersService};
-use my_lambda::function_handler;
 
-mod my_lambda;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {

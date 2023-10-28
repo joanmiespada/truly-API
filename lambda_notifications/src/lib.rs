@@ -1,4 +1,4 @@
-mod notificate;
+pub mod notificate;
 
 use aws_lambda_events::cloudwatch_events::CloudWatchEvent;
 use lambda_runtime::LambdaEvent;
@@ -12,7 +12,9 @@ use lib_engage::{
     services::{alert_similar::AlertSimilarService, subscription::SubscriptionService}
 };
 
-use crate::my_lambda::notificate::send_notifications;
+use crate::notificate::send_notifications;
+
+
 #[derive(Debug)]
 pub struct ApiLambdaError(pub String);
 
