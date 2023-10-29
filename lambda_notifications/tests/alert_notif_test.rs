@@ -29,6 +29,7 @@ use lambda_notifications::function_handler;
 #[tokio::test]
 async fn check_asset_tree_father_son() {
     env::set_var("RUST_LOG", "debug");
+    env::set_var("AWS_REGION", "eu-central-1");
     env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
 
     env_logger::builder().is_test(true).init();
@@ -40,7 +41,9 @@ async fn check_asset_tree_father_son() {
     let shared_config = build_local_stack_connection(host_port).await;
 
     let mut config = lib_config::config::Config::new();
+    config.setup().await;
     config.set_aws_config(&shared_config);
+    
 
     let creation = AssetAllSchema::create_schema(&config).await;
     assert_that(&creation).is_ok();

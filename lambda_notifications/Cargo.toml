@@ -4,6 +4,7 @@ version="0.0.1"
 edition = "2021"
 
 [lib]
+name="lambda_notifications"
 path = "src/lib.rs"
 
 [[bin]]

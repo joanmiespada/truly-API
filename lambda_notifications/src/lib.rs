@@ -26,6 +26,7 @@ impl std::fmt::Display for ApiLambdaError {
     }
 }
 
+const ONE_HOUR_AND_HALF: Duration = Duration::from_secs(5400); //it must be little bit higher than the cronjob scheduled in terraform
 
 //#[instrument]
 pub async fn function_handler(
@@ -37,7 +38,6 @@ pub async fn function_handler(
     asset_service: &AssetService,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
-    const ONE_HOUR_AND_HALF: Duration = Duration::from_secs(5400); //it must be little bit higher than the cronjob scheduled in terraform
 
     let mut buckets = HashMap::new();
     //let buckets: Vec<FoundSimilarContent> = Vec::new();

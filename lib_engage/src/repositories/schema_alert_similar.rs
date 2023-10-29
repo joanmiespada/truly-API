@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{
     builders::StreamSpecificationBuilder, AttributeDefinition, BillingMode,
     KeySchemaElement, KeyType, ScalarAttributeType, StreamViewType,
-    Tag, LocalSecondaryIndex, Projection, ProjectionType,
+    Tag, Projection, ProjectionType, GlobalSecondaryIndex,
 };
 use lib_config::{
     config::Config,
@@ -42,12 +42,17 @@ impl Schema for AlertSimilarSchema {
             .attribute_type(ScalarAttributeType::S)
             .build();
 
-        let key_schema = KeySchemaElement::builder()
+        let key_schema1 = KeySchemaElement::builder()
             .attribute_name(ALERT_SIMILAR_ID_FIELD_PK)
             .key_type(KeyType::Hash)
             .build();
 
-        let second_index = LocalSecondaryIndex::builder()
+        // let key_schema2 = KeySchemaElement::builder()
+        //     .attribute_name(CREATION_TIME)
+        //     .key_type(KeyType::Range)
+        //     .build();
+
+        let second_index = GlobalSecondaryIndex::builder()
             .index_name(TIME_INDEX_NAME)
             .key_schema(
                 KeySchemaElement::builder()
@@ -67,8 +72,9 @@ impl Schema for AlertSimilarSchema {
             .table_name(ALERT_SIMILARS_TABLE_NAME.clone())
             .attribute_definitions(notification_pk_attr )
             .attribute_definitions(creation_time_attr )
-            .key_schema(key_schema)
-            .local_secondary_indexes(second_index)
+            .key_schema(key_schema1)
+            //.key_schema(key_schema2)
+            .global_secondary_indexes(second_index)
             .billing_mode(BillingMode::PayPerRequest)
             .stream_specification(
                 StreamSpecificationBuilder::default()
