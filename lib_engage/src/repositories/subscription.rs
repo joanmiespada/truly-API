@@ -24,8 +24,8 @@ pub const CONFIRMED_FIELD_NAME: &str = "confirmationStatus";
 
 #[async_trait]
 pub trait SubscriptionRepository {
-    async fn find_by_user(&self, user_id: String) -> ResultE<Vec<Uuid>>;
-    async fn find_by_asset(&self, asset_id: Uuid) -> ResultE<Vec<String>>;
+    async fn find_by_user(&self, user_id: String) -> ResultE<Vec<Subscription>>;
+    async fn find_by_asset(&self, asset_id: Uuid) -> ResultE<Vec<Subscription>>;
     async fn add(&self, subscription: Subscription) -> ResultE<Uuid>;
     async fn get_by_id(&self, id: Uuid) -> ResultE<Option<Subscription>>;
     async fn get_by_user_asset_id(
@@ -90,7 +90,7 @@ impl SubscriptionRepo {
 
 #[async_trait]
 impl SubscriptionRepository for SubscriptionRepo {
-    async fn find_by_user(&self, user_id: String) -> ResultE<Vec<Uuid>> {
+    async fn find_by_user(&self, user_id: String) -> ResultE<Vec<Subscription>> {
         let user_id_av = AttributeValue::S(user_id.to_string());
 
         let confirmed_status_av = AttributeValue::S( ConfirmedStatus::Enabled.to_string());
@@ -132,11 +132,14 @@ impl SubscriptionRepository for SubscriptionRepo {
                     Some(aux) => {
                         let mut subscriptions = Vec::new();
                         for item in aux {
-                            let doc = item.clone();
-                            let ass1_id = doc.get(ASSET_ID_FIELD).unwrap();
-                            let ass1_id1 = ass1_id.as_s().unwrap();
-                            let ass1_id1_1 = Uuid::from_str(ass1_id1).unwrap();
-                            subscriptions.push(ass1_id1_1);
+                            let subs = SubscriptionRepo::map(item.clone());  
+                            //let doc = item.clone();
+                            //let ass1_id = doc.get(ASSET_ID_FIELD).unwrap();
+                            //let ass1_id1 = ass1_id.as_s().unwrap();
+                            //let ass1_id1_1 = Uuid::from_str(ass1_id1).unwrap();
+                            
+                            subscriptions.push(subs);
+
                         }
                         Ok(subscriptions)
                     }
@@ -145,7 +148,7 @@ impl SubscriptionRepository for SubscriptionRepo {
         }
     }
 
-    async fn find_by_asset(&self, asset_id: Uuid) -> ResultE<Vec<String>> {
+    async fn find_by_asset(&self, asset_id: Uuid) -> ResultE<Vec<Subscription>> {
         let asset_id_av = AttributeValue::S(asset_id.to_string());
 
         let confirmed_status_av = AttributeValue::S( ConfirmedStatus::Enabled.to_string());
@@ -187,10 +190,11 @@ impl SubscriptionRepository for SubscriptionRepo {
                     Some(aux) => {
                         let mut subscriptions = Vec::new();
                         for item in aux {
-                            let doc = item.clone();
-                            let user_id = doc.get(USER_ID_FIELD).unwrap();
-                            let user_id1 = user_id.as_s().unwrap().clone();
-                            subscriptions.push(user_id1);
+                            let subs = SubscriptionRepo::map(item.clone());  
+                            //let doc = item.clone();
+                            //let user_id = doc.get(USER_ID_FIELD).unwrap();
+                            //let user_id1 = user_id.as_s().unwrap().clone();
+                            subscriptions.push(subs);
                         }
                         Ok(subscriptions)
                     }

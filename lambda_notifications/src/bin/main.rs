@@ -5,7 +5,7 @@ use lambda_runtime::{run, service_fn, Error};
 use lib_config::{config::Config, traces::setup_tracing_level, 
     logs::setup_log};
 use lib_engage::{
-    repositories::{alert_similar::AlertSimilarRepo, subscription::SubscriptionRepo},
+    repositories::{alert_similar::AlertSimilarRepo, subscription::SubscriptionRepo, sender::SenderEmailsRepo},
     services::{alert_similar::AlertSimilarService, subscription::SubscriptionService}
 };
 use lib_licenses::{repositories::{assets::AssetRepo, shorter::ShorterRepo}, services::assets::AssetService};
@@ -28,7 +28,8 @@ async fn main() -> Result<(), Error> {
     let alert_service = AlertSimilarService::new(alert_repo);
 
     let subscription_repo = SubscriptionRepo::new(&config);
-    let subscription_service = SubscriptionService::new(subscription_repo);
+    let sender_emails_repo = SenderEmailsRepo::new(&config);
+    let subscription_service = SubscriptionService::new(subscription_repo, sender_emails_repo );
 
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);
@@ -37,6 +38,8 @@ async fn main() -> Result<(), Error> {
     let shorter_repo = ShorterRepo::new(&config);
     let asset_service = AssetService::new(asset_repo, shorter_repo);
 
+    let aux =SenderEmailsRepo::new(&config);
+
     run(service_fn(|e| function_handler(
         e, 
         &config, 
@@ -44,5 +47,6 @@ async fn main() -> Result<(), Error> {
         &subscription_service,
         &user_service,
         &asset_service,
+        &aux
     ))).await
 }

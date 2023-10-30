@@ -2,6 +2,7 @@ use lambda_http::service_fn;
 use lib_config::config::Config;
 use lib_config::logs::setup_log;
 use lib_config::traces::setup_tracing_level;
+use lib_engage::repositories::sender::SenderEmailsRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::AssetService;
@@ -10,7 +11,7 @@ use lib_licenses::services::video::VideoService;
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
-use lib_engage::repositories::subscription::SubscriptionRepo;
+use lib_engage::repositories::{subscription::SubscriptionRepo, sender};
 use lib_engage::services::subscription::SubscriptionService;
 use my_lambda::{error::ApiLambdaError, function_handler};
 
@@ -35,33 +36,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let owners_repo = OwnerRepo::new(&config);
     let owners_service = OwnerService::new(owners_repo);
 
-    // let key_repo = KeyPairRepo::new(&config);
-    // let repo_tx = BlockchainTxRepo::new(&config);
-    // let tx_service = BlockchainTxService::new(repo_tx);
-    // let blockchains_repo = BlockchainRepo::new(&config);
-    // let contracts_repo = ContractRepo::new(&config);
-    // let blockchain = SuiBlockChain::new(&config, &contracts_repo, &blockchains_repo).await?;
-    // let blockchain_service = NFTsService::new(
-    //     blockchain.clone_box(),
-    //     key_repo,
-    //     asset_service.to_owned(),
-    //     owners_service.to_owned(),
-    //     tx_service.to_owned(),
-    //     config.to_owned(),
-    // );
-
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);
 
     let video_service = VideoService::new(asset_service.to_owned(), config.to_owned());
 
     let subscription_repo = SubscriptionRepo::new(&config);
-    let subscription_service = SubscriptionService::new(subscription_repo);
-    //let license_repo = LicenseRepo::new(&config);
-    //let license_service = LicenseService::new(license_repo, asset_repo);
+    let sender_repo = SenderEmailsRepo::new(&config);
+    let subscription_service = SubscriptionService::new(subscription_repo, sender_repo);
     
-    // let ledger_repo = LedgerRepo::new(&config);
-    // let ledger_service = LedgerService::new(ledger_repo);
 
     log::info!("bootstrapping dependencies: completed. Lambda ready.");
     let resp = lambda_http::run(service_fn(|event| {

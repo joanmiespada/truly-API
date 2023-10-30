@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use uuid::Uuid;
@@ -71,20 +72,34 @@ impl UserStatus {
     }
 }
 
-#[derive(Clone, Serialize, Validate, Deserialize, Debug)]
+impl Default for UserStatus{
+    fn default() -> Self {
+        UserStatus::Enabled
+    }
+}
+
+#[derive(Clone, Serialize, Validate, Deserialize, Debug, Default, Builder)]
 pub struct User {
     #[validate(length(max = 100))]
+    #[builder(default="Uuid::nil().to_string()")]
     user_id: String,
+    #[builder(default="Utc::now()")]
     creation_time: DateTime<Utc>,
+    #[builder(default="Utc::now()")]
     last_update_time: DateTime<Utc>,
     #[validate(email)]
+    #[builder(default)]
     email: Option<String>,
     //password: String, // don't use it here!
     #[validate(length(max = 100))]
+    #[builder(default)]
     device: Option<String>,
     #[validate(length(max = 100))]
+    #[builder(default)]
     wallet_address: Option<String>,
+    #[builder(default = "vec![UserRoles::Basic]")]
     roles: Vec<UserRoles>,
+    #[builder(default = "UserStatus::Enabled")]
     status: UserStatus,
 }
 

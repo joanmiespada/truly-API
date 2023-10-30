@@ -49,7 +49,7 @@ pub async fn create_intent(
             Some(payload) => subscription_fields = payload.clone(),
         },
     }
-    let asset_id;
+    let asset;
     let asset_op = asset_service.get_by_url(&subscription_fields.url).await;
     if let Err(e) = asset_op{
         if let Some(m) = e.downcast_ref::<AssetDynamoDBError>() {
@@ -57,7 +57,7 @@ pub async fn create_intent(
         } else if let Some(_) = e.downcast_ref::<AssetNoExistsError>() {
 
             create_asset(req, c, config, asset_service, video_service, None).await?;
-            asset_id = asset_service.get_by_url(&subscription_fields.url).await?.id().clone();
+            asset = asset_service.get_by_url(&subscription_fields.url).await?;
 
         } else if let Some(m) = e.downcast_ref::<ValidationError>() {
             return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
@@ -69,20 +69,21 @@ pub async fn create_intent(
             );
         }
     }else{
-        asset_id = asset_op.unwrap().id().clone();
+        asset = asset_op.unwrap();
     }
     
 
-    let user_id;
+    let user;
     let user_op = user_service.get_by_email(&subscription_fields.email).await;
     if let Err(e) = user_op{
         if let Some(m) = e.downcast_ref::<AssetDynamoDBError>() {
             return build_resp(m.to_string(), StatusCode::SERVICE_UNAVAILABLE);
         } else if let Some(_) = e.downcast_ref::<UserNoExistsError>() {
 
-            let mut user = User::new();
-            user.set_email(&subscription_fields.email);
-            user_id = user_service.add(&mut user, &None).await?;
+            let mut user1 = User::new();
+            user1.set_email(&subscription_fields.email);
+            let user_id = user_service.add(&mut user1, &None).await?;
+            user = user_service.get_by_id(&user_id).await?;
 
         } else if let Some(m) = e.downcast_ref::<ValidationError>() {
             return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
@@ -94,12 +95,12 @@ pub async fn create_intent(
             );
         }
     }else{
-        user_id = user_op.unwrap().user_id().clone();
+        user = user_op.unwrap();
     }
 
 
     info!("calling asset service: add");
-    let op1 = subscription_service.intent(user_id,asset_id).await;
+    let op1 = subscription_service.intent(user,asset).await;
 
     if let Err(e) = op1 {
         if let Some(err_m) = e.downcast_ref::<SubscriptionError>() {
@@ -119,6 +120,7 @@ pub async fn create_intent(
         }
     }
     let subscription_id = op1.unwrap().clone();
+
     build_resp(subscription_id .to_string(), StatusCode::OK)
 
 }
