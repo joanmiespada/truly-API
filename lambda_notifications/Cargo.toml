@@ -33,8 +33,8 @@ tokio = { version = "1", features = ["full"] }
 validator = { version = "0.16", features = ["derive"] }
 uuid = { version = "1.5.0", features = ["v4","fast-rng",  "macro-diagnostics",  "serde"]}
 log = "0.4.20"
-url = "2.4.1"
 lettre = "0.11.1"
+url = "2.4.1"
 
 [dev-dependencies]
 lambda_notifications = { path = "../lambda_notifications" }
@@ -47,3 +47,4 @@ base64 = "0.21.5"
 tokio = { version="1.33.0", features=["full"]}
 chrono = {version="0.4.31", features = ["serde"] }
 http = "0.2.9"
+rand = "0.8.5"

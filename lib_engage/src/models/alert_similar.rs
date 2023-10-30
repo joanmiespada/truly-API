@@ -7,19 +7,33 @@ use std::fmt;
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default, Builder)]
 pub struct AlertSimilar {
+    #[builder(default="Uuid::nil()")]
     id: Uuid,
+    #[builder(default="Utc::now()")]
     creation_time: DateTime<Utc>,
+    #[builder(default="Utc::now()")]
     last_update_time: DateTime<Utc>,
+    #[builder(default)]
     source_type: Option<String>,
+    #[builder(default)]
     origin_hash_id: Option<Uuid>,
+    #[builder(default)]
     origin_hash_type: Option<String>,
+    #[builder(default)]
     origin_frame_id: Option<Uuid>,
+    #[builder(default)]
     origin_frame_second: Option<f64>,
+    #[builder(default)]
     origin_frame_url: Option<String>,
+    #[builder(default)]
     origin_asset_id: Option<Uuid>,
+    #[builder(default)]
     similar_frame_id: Option<Uuid>,
+    #[builder(default)]
     similar_frame_second: Option<f64>,
+    #[builder(default)]
     similar_frame_url: Option<String>,
+    #[builder(default)]
     similar_asset_id: Option<Uuid>,
 }
 

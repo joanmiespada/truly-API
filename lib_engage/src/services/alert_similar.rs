@@ -20,6 +20,7 @@ impl<T: AlertSimilarRepository> AlertSimilarService<T> {
         let notification = notification_builder
             .id(new_id)
             .creation_time(Utc::now())
+            .last_update_time(Utc::now())
             .build()?;
         self.repo.add(&notification).await?;
         Ok(notification)
@@ -36,11 +37,19 @@ impl<T: AlertSimilarRepository> AlertSimilarService<T> {
     pub async fn delete(&self, notification_id: Uuid) -> ResultE<()> {
         self.repo.delete(notification_id).await
     }
-    pub async fn get_latests_alerts(&self, starting_at: SystemTime, window:Duration, 
+    pub async fn get_latests(&self, 
+        starting_at: SystemTime, 
+        window:Duration, 
         token: Option<String>, 
         page_size: Option<i32>  ) -> ResultE<(Vec<AlertSimilar>,Option<String>)> {
 
         self.repo.get_all_by_time( starting_at, window, token, page_size).await
+    }
+    pub async fn get_all(&self,  
+        token: Option<String>, 
+        page_size: Option<i32>  ) -> ResultE<(Vec<AlertSimilar>,Option<String>)> {
+
+        self.repo.get_all(token, page_size).await
     }
 
 }

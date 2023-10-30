@@ -33,6 +33,7 @@ pub trait AlertSimilarRepository{
     async fn delete(&self, alert_id: Uuid) -> ResultE<()>;
     async fn check_if_exists(&self, id:Uuid) -> ResultE<bool>;
     async fn get_all_by_time(&self, starting_at: SystemTime, window:Duration, token: Option<String>, limit: Option<i32> ) -> ResultE<(Vec<AlertSimilar>, Option<String> )>;
+    async fn get_all(&self, token: Option<String>, limit: Option<i32> ) -> ResultE<(Vec<AlertSimilar>, Option<String> )>;
 
 }
 
@@ -48,7 +49,7 @@ impl AlertSimilarRepo {
     pub fn new(conf: &Config) -> Self {
         AlertSimilarRepo{
             client: Client::new(conf.aws_config()),
-            default_page_size: 10,//conf.env_vars().default_page_size(),
+            default_page_size: conf.env_vars().default_page_size(),
             env_vars: conf.env_vars().clone(),
 
         }
@@ -216,11 +217,8 @@ impl AlertSimilarRepository for AlertSimilarRepo {
         let end_timestamp = end_time.duration_since(SystemTime::UNIX_EPOCH)?.as_secs();
         let start_timestamp_av = AttributeValue::S(start_timestamp.to_string());
         let end_timestamp_av = AttributeValue::S(end_timestamp.to_string());
-
-        let limit = match page_size{
-            None =>  self.default_page_size,
-            Some(v)=> v
-        };
+        
+        let limit = page_size.unwrap_or(self.default_page_size);
 
         let mut query_input = aws_sdk_dynamodb::operation::query::QueryInput::builder()
             .table_name(ALERT_SIMILARS_TABLE_NAME.as_str())
@@ -281,6 +279,59 @@ impl AlertSimilarRepository for AlertSimilarRepo {
 
     }
 
+    async fn get_all(&self, token: Option<String>, page_size: Option<i32> ) -> ResultE<(Vec<AlertSimilar>, Option<String> )>{
+
+        let limit = page_size.unwrap_or(self.default_page_size);
+
+        let mut scan_input = aws_sdk_dynamodb::operation::scan::ScanInput::builder()
+            .table_name(ALERT_SIMILARS_TABLE_NAME.as_str())
+            .limit(limit)
+            .select(aws_sdk_dynamodb::types::Select::AllAttributes);
+
+        if let Some(t) = token {
+
+            let maybe_decoded_map = pagination_decode_token::<AttributeValueWrapper>(&self.env_vars, Some(t))?;
+            if let Some(decoded_map) = maybe_decoded_map {
+                let converted_map: HashMap<_, AttributeValue> = decoded_map
+                    .into_iter()
+                    .map(|(key, wrapper)| (key, wrapper.get() ))
+                    .collect();
+                scan_input = scan_input.set_exclusive_start_key(Some(converted_map));
+            }
+        }
+
+        let response = scan_input.send_with(&self.client).await?;
+        
+
+        let alerts: Vec<AlertSimilar> = response.items().unwrap_or(&Vec::new())
+        .iter()
+        .map(|item|  mapping_from_doc(item).unwrap() ) // Assuming a 'from' implementation exists
+        .collect();
+
+        let next_token = if response.last_evaluated_key().is_some() {
+            let aux = response.last_evaluated_key();
+
+            match aux{
+                None=> None,
+                Some(value)=>{
+                    let converted_map: HashMap<String, AttributeValueWrapper> = value
+                    .into_iter()
+                    .map(|(key, att)| (key.clone() , AttributeValueWrapper::new(att ) ))
+                    .collect();
+            
+                    pagination_encode_token::<AttributeValueWrapper>( &self.env_vars, Some(converted_map) ) // You'd need a function to serialize the key into a token
+
+                }
+            }
+
+        } else {
+            None
+        };
+
+        Ok((alerts, next_token))
+
+
+    }
 }
 
 fn mapping_from_doc(doc: &HashMap<String, AttributeValue>) -> ResultE<AlertSimilar> {

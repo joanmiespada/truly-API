@@ -13,9 +13,9 @@ pub type FoundSimilars= HashMap<std::string::String, HashMap<Url, HashMap<Url, U
 pub async fn send_notifications(
     conf: &Config,
     messages: FoundSimilars
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<u32, Box<dyn std::error::Error + Send + Sync>> {
 
-
+    let mut res=0;
     for item in messages{
         let email = item.0;
         let asset_subscribed = item.1.keys().next().unwrap().to_owned();
@@ -72,9 +72,9 @@ pub async fn send_notifications(
                 log::error!("Could not send email: {e:?}")
             },
         }
-
+        res +=1;
     }
 
    
-    Ok(())
+    Ok(res)
 }

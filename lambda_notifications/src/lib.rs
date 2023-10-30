@@ -2,14 +2,16 @@ pub mod notificate;
 
 use aws_lambda_events::cloudwatch_events::CloudWatchEvent;
 use lambda_runtime::LambdaEvent;
-use lib_config::config::Config;
+use lib_config::{config::Config, result::ResultE};
 use lib_licenses::services::assets::{AssetService,AssetManipulation};
 use lib_users::services::users::{UsersService, UserManipulation};
 use serde_json::Value;
-use std::{time::{Duration, SystemTime}, collections::HashMap};
+use url::Url;
+use uuid::Uuid;
+use std::collections::HashMap;
 use lib_engage::{
     repositories::{alert_similar::AlertSimilarRepo, subscription::SubscriptionRepo},
-    services::{alert_similar::AlertSimilarService, subscription::SubscriptionService}
+    services::{alert_similar::AlertSimilarService, subscription::SubscriptionService}, models::alert_similar::AlertSimilar
 };
 
 use crate::notificate::send_notifications;
@@ -26,26 +28,46 @@ impl std::fmt::Display for ApiLambdaError {
     }
 }
 
-const ONE_HOUR_AND_HALF: Duration = Duration::from_secs(5400); //it must be little bit higher than the cronjob scheduled in terraform
 
-//#[instrument]
-pub async fn function_handler(
-    _: LambdaEvent<CloudWatchEvent<Value>>,
-    config: &Config,
+pub type Notificator = HashMap<String, HashMap<Url, HashMap<Url, Uuid>>>;
+
+
+pub async fn collect_alerts(
     alert_service: &AlertSimilarService<AlertSimilarRepo>,
+    page_size: Option<i32>,
+) -> ResultE<Vec<AlertSimilar>>{
+
+    let mut all_alerts = Vec::new();
+    let mut next_token: Option<String> = None;
+    
+    loop {
+        let (alerts, token) = alert_service.get_all(next_token, page_size).await?;
+        
+        if alerts.is_empty() {
+            break;
+        }
+        
+        all_alerts.extend(alerts.into_iter());
+        
+        match token {
+            Some(t) => next_token = Some(t),
+            None => break,
+        }
+    }
+    
+    Ok(all_alerts)
+
+}
+
+pub async fn create_notifications(
+    alerts : &Vec<AlertSimilar>,
     subscription_service: &SubscriptionService<SubscriptionRepo>,
     user_service: &UsersService,
     asset_service: &AssetService,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+) -> ResultE<Notificator>{
+    let mut buckets : Notificator = HashMap::new();
 
-
-    let mut buckets = HashMap::new();
-    //let buckets: Vec<FoundSimilarContent> = Vec::new();
-
-    let now = SystemTime::now();
-    let (alerts, _token) = alert_service.get_latests_alerts(now, ONE_HOUR_AND_HALF ,None, None ).await?;
-    
-    for alert in &alerts{
+    for alert in alerts{
 
         let asset_origen = asset_service.get_by_id( &alert.origin_asset_id().unwrap() ).await?;
         let asset_similar = asset_service.get_by_id( &alert.similar_asset_id().unwrap() ).await?;
@@ -68,17 +90,32 @@ pub async fn function_handler(
         }
         
     }
+    Ok(buckets) 
+    
+}
+
+//#[instrument]
+pub async fn function_handler(
+    _: LambdaEvent<CloudWatchEvent<Value>>,
+    config: &Config,
+    alert_service: &AlertSimilarService<AlertSimilarRepo>,
+    subscription_service: &SubscriptionService<SubscriptionRepo>,
+    user_service: &UsersService,
+    asset_service: &AssetService,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+
+    let alerts = collect_alerts(alert_service, None).await?;
+
+    let buckets = create_notifications (&alerts, subscription_service, user_service, asset_service).await?;
 
     let op = send_notifications(&config, buckets).await;
     if let Err(e) = op {
         log::error!("Could not send email: {e:?}") 
     }
     
-    
     for alert in alerts{
         alert_service.delete(alert.id().to_owned()).await?;
     }
-
     
     Ok(())
     

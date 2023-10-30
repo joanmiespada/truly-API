@@ -1896,6 +1896,7 @@ dependencies = [
  "lib_licenses",
  "lib_users",
  "log",
+ "rand 0.8.5",
  "serde",
  "serde_json",
  "spectral",
