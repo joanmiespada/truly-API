@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use aws_sdk_dynamodb::{Client, types::{AttributeValue,Put,TransactWriteItem}};
-use lib_config::{config::Config, timing::{from_iso8601, iso8601}, environment::EnvironmentVariables};
+use lib_config::{config::Config, timing::{from_iso8601, iso8601}};
 use uuid::Uuid;
 use crate::{models::alert_similar::{AlertSimilar, AlertSimilarBuilder}, errors::alert_similar::AlertSimilarError};
 use std::{collections::HashMap, str::FromStr, time::{SystemTime, Duration}};
@@ -32,16 +32,16 @@ pub trait AlertSimilarRepository{
     async fn update(&self, alert: &AlertSimilar) -> ResultE<()>;
     async fn delete(&self, alert_id: Uuid) -> ResultE<()>;
     async fn check_if_exists(&self, id:Uuid) -> ResultE<bool>;
-    async fn get_all_by_time(&self, starting_at: SystemTime, window:Duration, token: Option<String>, limit: Option<i32> ) -> ResultE<(Vec<AlertSimilar>, Option<String> )>;
-    async fn get_all(&self, token: Option<String>, limit: Option<i32> ) -> ResultE<(Vec<AlertSimilar>, Option<String> )>;
+    async fn get_all_by_time(&self, starting_at: SystemTime, window:Duration, token: Option<String>, limit: Option<u32> ) -> ResultE<(Vec<AlertSimilar>, Option<String> )>;
+    async fn get_all(&self, token: Option<String>, limit: Option<u32> ) -> ResultE<(Vec<AlertSimilar>, Option<String> )>;
 
 }
 
 
 pub struct AlertSimilarRepo {
     client: Client,
-    default_page_size: i32,
-    env_vars: EnvironmentVariables,
+    default_page_size: Option<u32>,
+    pagination_token: Option<String>
 }
 
 impl AlertSimilarRepo {
@@ -50,8 +50,7 @@ impl AlertSimilarRepo {
         AlertSimilarRepo{
             client: Client::new(conf.aws_config()),
             default_page_size: conf.env_vars().default_page_size(),
-            env_vars: conf.env_vars().clone(),
-
+            pagination_token: conf.env_vars().pagination_token_encoder()
         }
     }
 
@@ -208,7 +207,7 @@ impl AlertSimilarRepository for AlertSimilarRepo {
         }
         Ok(false)
     }
-    async fn get_all_by_time(&self, starting_at: SystemTime, window:Duration, token: Option<String>, page_size: Option<i32> ) -> ResultE<(Vec<AlertSimilar>, Option<String> )> {
+    async fn get_all_by_time(&self, starting_at: SystemTime, window:Duration, token: Option<String>, page_size: Option<u32> ) -> ResultE<(Vec<AlertSimilar>, Option<String> )> {
 
         let end_time = starting_at + window;
 
@@ -218,7 +217,7 @@ impl AlertSimilarRepository for AlertSimilarRepo {
         let start_timestamp_av = AttributeValue::S(start_timestamp.to_string());
         let end_timestamp_av = AttributeValue::S(end_timestamp.to_string());
         
-        let limit = page_size.unwrap_or(self.default_page_size);
+        let limit = page_size.unwrap_or(self.default_page_size.unwrap());
 
         let mut query_input = aws_sdk_dynamodb::operation::query::QueryInput::builder()
             .table_name(ALERT_SIMILARS_TABLE_NAME.as_str())
@@ -227,12 +226,12 @@ impl AlertSimilarRepository for AlertSimilarRepo {
             .expression_attribute_names("#creation_time".to_string(), CREATION_TIME.to_string() )
             .expression_attribute_values(":start_time".to_string(), start_timestamp_av)
             .expression_attribute_values(":end_time".to_string(), end_timestamp_av)
-            .limit(limit)
+            .limit(limit.try_into().unwrap() )
             .select(aws_sdk_dynamodb::types::Select::AllProjectedAttributes);
 
         if let Some(t) = token {
 
-            let maybe_decoded_map = pagination_decode_token::<AttributeValueWrapper>(&self.env_vars, Some(t))?;
+            let maybe_decoded_map = pagination_decode_token::<AttributeValueWrapper>(self.pagination_token.clone(), Some(t))?;
             if let Some(decoded_map) = maybe_decoded_map {
                 let converted_map: HashMap<_, AttributeValue> = decoded_map
                     .into_iter()
@@ -266,7 +265,7 @@ impl AlertSimilarRepository for AlertSimilarRepo {
                     .map(|(key, att)| (key.clone() , AttributeValueWrapper::new(att ) ))
                     .collect();
             
-                    pagination_encode_token::<AttributeValueWrapper>( &self.env_vars, Some(converted_map) ) // You'd need a function to serialize the key into a token
+                    pagination_encode_token::<AttributeValueWrapper>( self.pagination_token.clone(), Some(converted_map) ) // You'd need a function to serialize the key into a token
 
                 }
             }
@@ -279,18 +278,18 @@ impl AlertSimilarRepository for AlertSimilarRepo {
 
     }
 
-    async fn get_all(&self, token: Option<String>, page_size: Option<i32> ) -> ResultE<(Vec<AlertSimilar>, Option<String> )>{
+    async fn get_all(&self, token: Option<String>, page_size: Option<u32> ) -> ResultE<(Vec<AlertSimilar>, Option<String> )>{
 
-        let limit = page_size.unwrap_or(self.default_page_size);
+        let limit = page_size.unwrap_or(self.default_page_size.unwrap());
 
         let mut scan_input = aws_sdk_dynamodb::operation::scan::ScanInput::builder()
             .table_name(ALERT_SIMILARS_TABLE_NAME.as_str())
-            .limit(limit)
+            .limit(limit.try_into().unwrap() )
             .select(aws_sdk_dynamodb::types::Select::AllAttributes);
 
         if let Some(t) = token {
 
-            let maybe_decoded_map = pagination_decode_token::<AttributeValueWrapper>(&self.env_vars, Some(t))?;
+            let maybe_decoded_map = pagination_decode_token::<AttributeValueWrapper>(self.pagination_token.clone(), Some(t))?;
             if let Some(decoded_map) = maybe_decoded_map {
                 let converted_map: HashMap<_, AttributeValue> = decoded_map
                     .into_iter()
@@ -319,7 +318,7 @@ impl AlertSimilarRepository for AlertSimilarRepo {
                     .map(|(key, att)| (key.clone() , AttributeValueWrapper::new(att ) ))
                     .collect();
             
-                    pagination_encode_token::<AttributeValueWrapper>( &self.env_vars, Some(converted_map) ) // You'd need a function to serialize the key into a token
+                    pagination_encode_token::<AttributeValueWrapper>( self.pagination_token.clone(), Some(converted_map) ) 
 
                 }
             }

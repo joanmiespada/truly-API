@@ -41,13 +41,13 @@ impl<T: AlertSimilarRepository> AlertSimilarService<T> {
         starting_at: SystemTime, 
         window:Duration, 
         token: Option<String>, 
-        page_size: Option<i32>  ) -> ResultE<(Vec<AlertSimilar>,Option<String>)> {
+        page_size: Option<u32>  ) -> ResultE<(Vec<AlertSimilar>,Option<String>)> {
 
         self.repo.get_all_by_time( starting_at, window, token, page_size).await
     }
     pub async fn get_all(&self,  
         token: Option<String>, 
-        page_size: Option<i32>  ) -> ResultE<(Vec<AlertSimilar>,Option<String>)> {
+        page_size: Option<u32>  ) -> ResultE<(Vec<AlertSimilar>,Option<String>)> {
 
         self.repo.get_all(token, page_size).await
     }

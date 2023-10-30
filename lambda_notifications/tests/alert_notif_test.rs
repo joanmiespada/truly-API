@@ -108,13 +108,6 @@ fn generate_random_email() -> String {
     format!("{}@{}.com", local_part, domain)
 }
 
-fn generate_random_password(len: usize) -> String {
-    thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(len)
-        .map(char::from)
-        .collect()
-}
 
 async fn create_user(user_service: &UsersService) -> ResultE<User> {
     let mut new_user = User::new();
@@ -197,6 +190,7 @@ async fn check_asset_alerts_notifications() -> ResultE<()> {
     env::set_var("AWS_REGION", "eu-central-1");
     env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
     env::set_var("PAGINATION_TOKEN_ENCODER", "asdfghjkl");
+    env::set_var("DEFAULT_PAGE_SIZE", "25");
 
     env_logger::builder().is_test(true).init();
 
@@ -263,6 +257,17 @@ async fn check_asset_alerts_notifications() -> ResultE<()> {
     let notifis: Notificator = create_notifications(&alerts, &subscription_service, &user_service, &asset_service).await?;
 
     assert_eq!(notifis.len(), 3);
+
+    let check = notifis.get(&user1.email().clone().unwrap()).unwrap(); 
+    assert_eq!(check.len(), 1);
+    
+    let check = notifis.get(&user2.email().clone().unwrap()).unwrap(); 
+    assert_eq!(check.len(), 2);
+
+    let content1 = check.get( &asset1.url().clone().unwrap()).unwrap(); 
+    assert_eq!(content1.len(), 1);
+    let alert = content1.get(&asset2.url().clone().unwrap());
+    assert_ne!(alert, None );
     
     Ok(())
 }

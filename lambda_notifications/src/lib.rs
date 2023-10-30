@@ -34,7 +34,7 @@ pub type Notificator = HashMap<String, HashMap<Url, HashMap<Url, Uuid>>>;
 
 pub async fn collect_alerts(
     alert_service: &AlertSimilarService<AlertSimilarRepo>,
-    page_size: Option<i32>,
+    page_size: Option<u32>,
 ) -> ResultE<Vec<AlertSimilar>>{
 
     let mut all_alerts = Vec::new();

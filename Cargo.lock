@@ -794,9 +794,9 @@ dependencies = [
 
 [[package]]
 name = "brotli-decompressor"
-version = "2.5.0"
+version = "2.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da74e2b81409b1b743f8f0c62cc6254afefb8b8e50bbfe3735550f7aeefa3448"
+checksum = "4e2e4afe60d7dd600fdd3de8d0f08c2b7ec039712e3b6137ff98b7004e82de4f"
 dependencies = [
  "alloc-no-stdlib",
  "alloc-stdlib",
@@ -1998,7 +1998,7 @@ dependencies = [
 [[package]]
 name = "lib_async_ops"
 version = "0.0.2"
-source = "git+https://github.com/joanmiespada/truly-shared#4b583330a9bf98137c8c998994460d0f64e0ac59"
+source = "git+https://github.com/joanmiespada/truly-shared#8f6fe3591657353c3e7a95e53ab6768ae3d1f1d9"
 dependencies = [
  "aws-sdk-sns",
  "aws-sdk-sqs",
@@ -2015,8 +2015,8 @@ dependencies = [
 
 [[package]]
 name = "lib_config"
-version = "0.0.37"
-source = "git+https://github.com/joanmiespada/truly-shared#4b583330a9bf98137c8c998994460d0f64e0ac59"
+version = "0.0.39"
+source = "git+https://github.com/joanmiespada/truly-shared#8f6fe3591657353c3e7a95e53ab6768ae3d1f1d9"
 dependencies = [
  "async-trait",
  "aws-config",
@@ -2026,6 +2026,7 @@ dependencies = [
  "aws-types",
  "base64",
  "chrono",
+ "derive_builder",
  "dotenv",
  "env_logger",
  "envy",
@@ -2086,7 +2087,7 @@ dependencies = [
 [[package]]
 name = "lib_hash_objs"
 version = "0.0.3"
-source = "git+https://github.com/joanmiespada/truly-shared#4b583330a9bf98137c8c998994460d0f64e0ac59"
+source = "git+https://github.com/joanmiespada/truly-shared#8f6fe3591657353c3e7a95e53ab6768ae3d1f1d9"
 dependencies = [
  "async-trait",
  "base64",
@@ -2178,7 +2179,7 @@ dependencies = [
 [[package]]
 name = "lib_video_objs"
 version = "0.0.1"
-source = "git+https://github.com/joanmiespada/truly-shared#4b583330a9bf98137c8c998994460d0f64e0ac59"
+source = "git+https://github.com/joanmiespada/truly-shared#8f6fe3591657353c3e7a95e53ab6768ae3d1f1d9"
 dependencies = [
  "async-trait",
  "base64",
@@ -4270,18 +4271,18 @@ checksum = "66fee0b777b0f5ac1c69bb06d361268faafa61cd4682ae064a171c16c433e9e4"
 
 [[package]]
 name = "zerocopy"
-version = "0.7.18"
+version = "0.7.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ede7d7c7970ca2215b8c1ccf4d4f354c4733201dfaaba72d44ae5b37472e4901"
+checksum = "dd66a62464e3ffd4e37bd09950c2b9dd6c4f8767380fabba0d523f9a775bc85a"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.7.18"
+version = "0.7.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b27b1bb92570f989aac0ab7e9cbfbacdd65973f7ee920d9f0e71ebac878fd0b"
+checksum = "255c4596d41e6916ced49cfafea18727b24d67878fa180ddfd69b9df34fd1726"
 dependencies = [
  "proc-macro2",
  "quote",
