@@ -18,6 +18,8 @@ use lib_engage::models::alert_similar::AlertSimilarBuilder;
 use lib_engage::repositories::alert_similar::AlertSimilarRepo;
 use lib_engage::repositories::schema_alert_similar::AlertSimilarSchema;
 use lib_engage::repositories::schema_subscription::SubscriptionSchema;
+use lib_engage::repositories::sender::SMTP_TEST_SERVER;
+use lib_engage::repositories::sender::SenderEmailsRepo;
 use lib_engage::repositories::subscription::SubscriptionRepo;
 use lib_engage::services::alert_similar::AlertSimilarService;
 use lib_engage::services::subscription::SubscriptionService;
@@ -95,17 +97,22 @@ fn generate_random_url() -> String {
 }
 
 fn generate_random_email() -> String {
-    let local_part: String = thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(8)
-        .map(char::from)
-        .collect();
-    let domain: String = thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(5)
-        .map(char::from)
-        .collect();
-    format!("{}@{}.com", local_part, domain)
+    use rnglib::{RNG, Language};
+    let rng = RNG::try_from(&Language::Elven).unwrap();
+
+    // let local_part: String = thread_rng()
+    //     .sample_iter(&Alphanumeric)
+    //     .take(8)
+    //     .map(char::from)
+    //     .collect();
+    let first_name = rng.generate_name();
+    let last_name = rng.generate_name();
+    // let domain: String = thread_rng()
+    //     .sample_iter(&Alphanumeric)
+    //     .take(5)
+    //     .map(char::from)
+    //     .collect();
+    format!("{}.{}@example.com",first_name,last_name )
 }
 
 
@@ -155,7 +162,7 @@ async fn create_subscription(
     asset: &Asset,
 ) -> ResultE<()> {
     let id = subscription_service
-        .intent(user.user_id().clone(), asset.id().clone())
+        .intent(user.clone(), asset.clone())
         .await?;
     subscription_service.confirm(id).await?;
     Ok(())
@@ -191,6 +198,9 @@ async fn check_asset_alerts_notifications() -> ResultE<()> {
     env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
     env::set_var("PAGINATION_TOKEN_ENCODER", "asdfghjkl");
     env::set_var("DEFAULT_PAGE_SIZE", "25");
+    env::set_var("SMTP_HOST", SMTP_TEST_SERVER);
+    env::set_var("SMTP_USER", "test");
+    env::set_var("SMTP_PASSW", "test");
 
     env_logger::builder().is_test(true).init();
 
@@ -219,7 +229,8 @@ async fn check_asset_alerts_notifications() -> ResultE<()> {
     let alert_service = AlertSimilarService::new(alert_repo);
 
     let subscription_repo = SubscriptionRepo::new(&config);
-    let subscription_service = SubscriptionService::new(subscription_repo);
+    let send_repo = SenderEmailsRepo::new(&config);
+    let subscription_service = SubscriptionService::new(subscription_repo, send_repo);
 
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);

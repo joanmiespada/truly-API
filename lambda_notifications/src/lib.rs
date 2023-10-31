@@ -2,7 +2,7 @@ pub mod notificate;
 
 use aws_lambda_events::cloudwatch_events::CloudWatchEvent;
 use lambda_runtime::LambdaEvent;
-use lib_config::{config::Config, result::ResultE};
+use lib_config::result::ResultE;
 use lib_engage::{
     models::alert_similar::AlertSimilar,
     repositories::{alert_similar::AlertSimilarRepo, subscription::SubscriptionRepo, sender::SenderEmailsRepo},
@@ -109,7 +109,6 @@ pub async fn create_notifications(
 //#[instrument]
 pub async fn function_handler(
     _: LambdaEvent<CloudWatchEvent<Value>>,
-    config: &Config,
     alert_service: &AlertSimilarService<AlertSimilarRepo>,
     subscription_service: &SubscriptionService<SubscriptionRepo>,
     user_service: &UsersService,
@@ -121,7 +120,7 @@ pub async fn function_handler(
     let buckets =
         create_notifications(&alerts, subscription_service, user_service, asset_service).await?;
 
-    let op = send_notifications(&config, buckets, sender_emails_repo).await;
+    let op = send_notifications( buckets, sender_emails_repo).await;
     if let Err(e) = op {
         log::error!("Could not send email: {e:?}")
     }

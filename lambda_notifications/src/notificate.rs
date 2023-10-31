@@ -1,12 +1,10 @@
 use crate::Notificator;
-use lib_config::config::Config;
 use lib_engage::repositories::sender::SenderEmailsRepo;
 use url::Url;
 use uuid::Uuid;
 
 //#[instrument]
 pub async fn send_notifications(
-    conf: &Config,
     messages: Notificator,
     sender_emails_repo: &SenderEmailsRepo
 ) -> Result<u32, Box<dyn std::error::Error + Send + Sync>> {
@@ -19,18 +17,17 @@ pub async fn send_notifications(
             .values()
             .next()
             .unwrap()
-            //.iter()
-            //.map(|(asset, uuid)| (asset.to_owned(), *uuid ))
-            //.collect::<Vec<(Url , Uuid)>>();
-            .keys()
-            .map(|asset| asset.to_owned())
-            .collect::<Vec<Url>>();
+            .iter()
+            .map(|(asset, uuid)| (asset.to_owned(), *uuid ))
+            .collect::<Vec<(Url , Uuid)>>();
+            //.keys()
+            //.map(|asset| asset.to_owned())
+            //.collect::<Vec<Url>>();
 
         let _ =sender_emails_repo.send_new_similar_content_found(
             email,
             asset_subscribed,
             asset_similars,
-            None,
          ).await;
         
         res += 1;

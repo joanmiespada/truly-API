@@ -44,9 +44,7 @@ impl<T: SubscriptionRepository>  SubscriptionService<T> {
             let subscription = Subscription::new(user.user_id().clone(), asset.id().clone(), ConfirmedStatus::Disabled);
             let op =self.subscription_repo.add(subscription.clone()).await;
 
-            if let Ok(id) = op {
-                let mut subscription = subscription.clone();
-                subscription.id = id;
+            if let Ok(_) = op {
                 self.sender_emails_repo.send_intent(user, asset, subscription).await?;
             } 
 

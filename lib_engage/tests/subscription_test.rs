@@ -1,16 +1,18 @@
 use std::env;
+use std::str::FromStr;
 use aws_sdk_dynamodb::Client;
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::result::ResultE;
 use lib_config::schema::Schema;
 use lib_engage::repositories::schema_subscription::SubscriptionSchema;
-use lib_engage::repositories::sender::SenderEmailsRepo;
+use lib_engage::repositories::sender::{SenderEmailsRepo, SMTP_TEST_SERVER};
 use lib_engage::repositories::subscription::SubscriptionRepo;
 use lib_engage::services::subscription::SubscriptionService;
 use lib_engage::models::subscription::ConfirmedStatus;
 use lib_licenses::models::asset::AssetBuilder;
-use lib_users::models::user::{User, UserBuilder};
+use lib_users::models::user::UserBuilder;
+use url::Url;
 use uuid::Uuid;
 use spectral::prelude::*;
 use testcontainers::*;
@@ -141,6 +143,10 @@ async fn check_subscription_notify() ->ResultE<()> {
     env::set_var("RUST_LOG", "debug");
     env::set_var("AWS_REGION", "eu-central-1");
     env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
+    env::set_var("SMTP_HOST", SMTP_TEST_SERVER);
+    env::set_var("SMTP_USER", "test");
+    env::set_var("SMTP_PASSW", "test");
+
     env_logger::builder().is_test(true).init();
 
     let docker = clients::Cli::default();
@@ -164,14 +170,17 @@ async fn check_subscription_notify() ->ResultE<()> {
     let user_names = vec!["user1".to_string(), "user2".to_string(), "user3".to_string()];
     let users: Result<Vec<_>, _> = user_names
         .into_iter()
-        .map(|user_id| UserBuilder::default().user_id(user_id).build())
+        .map(|user_id| UserBuilder::default()
+                                .user_id(user_id.clone())
+                                .email(Some(format!("{}@example.com",user_id)))
+                                .build()
+            )
         .collect();
     let users = users?;
 
 
     let asset_id = Uuid::new_v4();
-    let asset = AssetBuilder::new().id(asset_id).build();
-
+    let asset = AssetBuilder::new().id(asset_id).url( Url::from_str("http://test1.test")? ) .build();
 
 
     let mut intents = vec![];
@@ -182,7 +191,7 @@ async fn check_subscription_notify() ->ResultE<()> {
     for intent in intents{
         service.confirm(intent).await.unwrap();
     }
-    let user4= UserBuilder::default().user_id("user4".to_string()).build()?;
+    let user4= UserBuilder::default().user_id("user4".to_string()).email(Some("user4@example.com".to_string())).build()?;
     let _ = service.intent(user4, asset).await;
 
     let search_op = service.find_users_subscribed_to(asset_id).await;

@@ -3,14 +3,13 @@ use uuid::Uuid;
 
 //#[instrument]
 pub fn get_similar_content_found_message(
-    subscription_id: Option<Uuid>,
     email: String,
     asset_subscribed: Url,
-    asset_similars: Vec<Url>,
+    asset_similars: Vec<(Url,Uuid)>,
 ) -> (String, String, String) {
     let asset_similars_text = asset_similars
         .iter()
-        .map(|asset| format!(" - {}\n", asset))
+        .map(| (asset, _subscription)| format!(" - {}\n", asset))
         .collect::<String>();
 
     let subject = "Truly.video new videos found".to_string();
@@ -40,7 +39,7 @@ Joan from truly.video
 
     let asset_similars_html = asset_similars
         .iter()
-        .map(|asset| format!("<li>{}</li>", asset))
+        .map(| (asset, subscription)| format!("<li><a href='{asset}'>{asset}</a> &nbsp; <a href='{uns}'>Unsubscribe</a></li>", asset=asset, uns= format!("https://truly.video/unsubscribe?subscription={}", subscription) ))
         .collect::<String>();
 
     let body_html = format!(

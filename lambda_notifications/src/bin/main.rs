@@ -42,7 +42,6 @@ async fn main() -> Result<(), Error> {
 
     run(service_fn(|e| function_handler(
         e, 
-        &config, 
         &alert_service, 
         &subscription_service,
         &user_service,

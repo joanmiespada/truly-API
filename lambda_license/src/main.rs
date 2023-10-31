@@ -11,7 +11,7 @@ use lib_licenses::services::video::VideoService;
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
-use lib_engage::repositories::{subscription::SubscriptionRepo, sender};
+use lib_engage::repositories::subscription::SubscriptionRepo;
 use lib_engage::services::subscription::SubscriptionService;
 use my_lambda::{error::ApiLambdaError, function_handler};
 

@@ -1,17 +1,17 @@
-use crate::errors::subscription;
 use crate::models::subscription::Subscription;
 use crate::template::intent::get_intent_message;
 use crate::template::new_content_found::get_similar_content_found_message;
-use lettre::message::{header, MultiPart, SinglePart};
+use lettre::message::{header, MultiPart, SinglePart, Mailbox};
 use lettre::transport::smtp::authentication::Credentials;
-use lettre::{Message, SmtpTransport, Transport};
+use lettre::{Message, SmtpTransport, Transport, Address};
 use lib_config::config::Config;
 use lib_config::result::ResultE;
-use lib_licenses::errors::asset;
 use lib_licenses::models::asset::Asset;
 use lib_users::models::user::User;
 use url::Url;
 use uuid::Uuid;
+
+pub const SMTP_TEST_SERVER: &str = "test.test.test";
 
 pub struct SenderEmailsRepo {
     smtp_host: String,
@@ -35,12 +35,25 @@ impl SenderEmailsRepo {
         body_flat_text: String,
         body_html: String,
     ) -> ResultE<()> {
-        let to = format!("{} <{}>", email, email);
 
-        let message = Message::builder()
+        let from = "Joan <joan@mail1.truly.video>".parse()?;
+
+        //let to_op = format!("{} <{}>", email, email);
+
+        let to = match email.parse::<Address>() {
+            Ok(address) => Mailbox::from(address),
+            Err(e) => {
+                log::error!("Could not parse email: {:?}", e);
+                return Err(Box::new(e));
+            }
+        };
+
+
+
+        let message_op = Message::builder()
             // Addresses can be specified by the tuple (email, alias)
-            .to(to.parse()?)
-            .from("Joan <joan@mail1.truly.video>".parse()?)
+            .to(to)
+            .from(from)
             .subject(subject)
             .multipart(
                 MultiPart::related()
@@ -54,15 +67,25 @@ impl SenderEmailsRepo {
                             .header(header::ContentType::TEXT_PLAIN)
                             .body(body_flat_text),
                     ),
-            )
-            .unwrap();
+            );
+        if let Err(e) = message_op {
+                log::error!("Could not create email: {:?}", e);
+                return Err(Box::new(e));
+        }
+
+        let message = message_op.unwrap();
 
         let creds = Credentials::new(
-            self.smtp_user.clone(),//conf.env_vars().smtp_user().unwrap(),
-            self.smtp_passw.clone()//conf.env_vars().smtp_passw().unwrap(),
+            self.smtp_user.clone(),
+            self.smtp_passw.clone()
         );
 
-        let smtp_host = self.smtp_host.clone(); //conf.env_vars().smtp_host().unwrap().to_owned();
+        let smtp_host = self.smtp_host.clone(); 
+
+        if smtp_host == SMTP_TEST_SERVER {
+            log::info!("Email sent to: {}", email);
+            return Ok(());
+        }
 
         let mailer = SmtpTransport::relay(smtp_host.as_str())?
             .credentials(creds)
@@ -103,11 +126,9 @@ impl SenderEmailsRepo {
         &self,
         email: String,
         asset_subscribed: Url,
-        asset_similars: Vec<Url>,
-        subscription_id: Option<Uuid>,
+        asset_similars: Vec<(Url, Uuid)>,
     ) -> ResultE<()> {
         let (subject, body_flat_text, body_html) = get_similar_content_found_message(
-            subscription_id,
             email.clone(),
             asset_subscribed,
             asset_similars,
