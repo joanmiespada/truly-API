@@ -158,3 +158,18 @@ variable "hosted_zone_id" {
   type = string
   description = "hosted zone id"
 }
+
+variable "email_server" {
+  type = string
+  description = "email server for sending emails"
+}
+
+variable "ses_from_email" {
+  type = string
+  description = "email from account for sending emails" 
+}
+
+variable "ses_domain" {
+  type = string
+  description = "domina from where are sending emails" 
+}

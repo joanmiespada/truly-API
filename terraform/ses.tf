@@ -1,7 +1,7 @@
 
 //This is for SQS subscriptions for debuging purposes
 resource "aws_ses_email_identity" "email_ses_sender" {
-  email = var.email
+  email = var.ses_from_email
 }
 
 // TO enable SES requieres DKIM authentication, so it's outside of this terraform. 
@@ -21,7 +21,7 @@ resource "aws_ses_email_identity" "email_ses_sender" {
 
 
 resource "aws_ses_domain_identity" "email_ses_sender_domain" {
-  domain = "mail1.truly.video"
+  domain = var.ses_domain
 }
 
 # import{

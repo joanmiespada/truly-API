@@ -10,7 +10,7 @@
 aws --version || exit 1
 terraform --version || exit 1
 tflint --version || exit 1
-#qldb --version || exit 1
+git --version || exit 1
 jq --version || exit 1
 
 source scripts.sh # load functions
@@ -20,6 +20,7 @@ images_skip='false'
 secrets_skip='false'
 tables_skip='false'
 terraform_skip='false'
+git_skip='false'
 for arg in "$@"
 do
     case $arg in
@@ -34,6 +35,9 @@ do
             ;;
         "--terraform_skip")
             terraform_skip='true'
+            ;;
+        "--git_skip")
+            git_skip='true'
             ;;
     esac
 done
@@ -59,8 +63,15 @@ export AWS_PROFILE=$profile
 export TF_VAR_dns_base=$dns_domain
 dns_prefix="staging"
 export TF_VAR_dns_prefix=$dns_prefix
-#export TF_VAR_hash_similar_in_topic_arn="arn:aws:sns:eu-west-1:172619864391:truly-matchapi-download-eu"
+export ses_dns_domain="mail1.${dns_domain}"
+export TF_VAR_ses_domain=$ses_dns_domain
+export TF_VAR_ses_from_email="joan@$ses_dns_domain"
+
 multi_region=("eu-west-1")
+
+declare -A map_email_servers
+map_email_servers["eu-west-1"]=email-smtp.eu-west-1.amazonaws.com
+
 account_id=$(aws sts get-caller-identity --query Account --profile $profile --output text)
 
 lambdas='[
@@ -107,9 +118,13 @@ lambdas='[
         }
     ]'
 
+if [[ "$git_skip" == 'false' ]]; then
+    git add .
+    git commit -m "stage deploy"
+    git push
+fi
+
 if [[ "$images_skip" == 'false' ]]; then
-
-
 
     echo $lambdas | jq -c '.[]' | while read -r lambda; do
         lambda_name=$(echo $lambda | jq -r '.name')
@@ -297,6 +312,7 @@ if [[ "$terraform_skip" == 'false' ]]; then
         export TF_VAR_dns_prefix="${letters}-${dns_prefix}"
         export TF_VAR_kms_id_cypher_all_secret_keys=$mapKeys[$region]
         export TF_VAR_matchapi_endpoint=$mathchapi
+        export TF_VAR_email_server=$map_email_servers[$region]
 
         cmd="ecrs=(\"\${(k)map_lambda_repos_${reg}[@]}\")"
         eval "$cmd"
