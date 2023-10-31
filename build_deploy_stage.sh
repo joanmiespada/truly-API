@@ -70,7 +70,7 @@ export TF_VAR_ses_from_email="joan@$ses_dns_domain"
 multi_region=("eu-west-1")
 
 declare -A map_email_servers
-map_email_servers["eu-west-1"]=email-smtp.eu-west-1.amazonaws.com
+map_email_servers["eu-west-1"]="email-smtp.eu-west-1.amazonaws.com"
 
 account_id=$(aws sts get-caller-identity --query Account --profile $profile --output text)
 
@@ -312,7 +312,8 @@ if [[ "$terraform_skip" == 'false' ]]; then
         export TF_VAR_dns_prefix="${letters}-${dns_prefix}"
         export TF_VAR_kms_id_cypher_all_secret_keys=$mapKeys[$region]
         export TF_VAR_matchapi_endpoint=$mathchapi
-        export TF_VAR_email_server=$map_email_servers[$region]
+        echo "exporting email server for ${map_email_servers[$region]}..."
+        export TF_VAR_email_server=${map_email_servers[$region]}
 
         cmd="ecrs=(\"\${(k)map_lambda_repos_${reg}[@]}\")"
         eval "$cmd"
