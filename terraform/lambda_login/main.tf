@@ -4,7 +4,7 @@ locals {
 }
 
 resource "aws_cloudwatch_log_group" "truly_lambda_login_cloudwatch" {
-  name              = "/aws/lambda/${local.lambda_name_descriptor}" #"/aws/lambda/${var.truly_lambda_login_function_name}-${local.region_prefix}"
+  name              = "/aws/lambda/${local.lambda_name_descriptor}" 
   retention_in_days = 1
 
   tags = merge(var.common_tags, { "logic" : "${var.service_name}" })
@@ -12,8 +12,8 @@ resource "aws_cloudwatch_log_group" "truly_lambda_login_cloudwatch" {
 
 
 resource "aws_lambda_function" "truly_lambda_login" {
-  function_name = local.lambda_name_descriptor #var.truly_lambda_login_function_name
-  architectures = var.architectures            # [ "arm64" ]
+  function_name = local.lambda_name_descriptor 
+  architectures = var.architectures            
   memory_size   = 512
   timeout       = 30
   package_type  = "Image"
@@ -34,14 +34,9 @@ resource "aws_lambda_function" "truly_lambda_login" {
     }
   }
 
-  # depends_on = [
-  #   var.resource_logs,     //aws_iam_role_policy_attachment.truly_lambda_logs,
-  #   var.resource_dynamodb, //aws_iam_role_policy_attachment.truly_lambda_dynamodb,
-  #   var.resource_xray,     //aws_iam_role_policy_attachment.truly_lambda_XRAY,
-  #   var.resource_secretsman,
-  #   aws_cloudwatch_log_group.truly_lambda_login_cloudwatch,
-  #   var.rust_backtrace
-  # ]
+  depends_on = [
+     aws_cloudwatch_log_group.truly_lambda_login_cloudwatch,
+  ]
 
   tags = merge(var.common_tags, { "logic" : "${var.service_name}" })
 

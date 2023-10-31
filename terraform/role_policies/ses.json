@@ -6,7 +6,7 @@
             "Action": [
                 "ses:*"
             ],
-            "Resource": "arn:aws:ses:*:*:*"
+            "Resource": "*"
         }
     ]
 }

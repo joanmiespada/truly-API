@@ -5,20 +5,15 @@ variable "lambda_admin_file" {
   default = "lambda_admin/bootstrap.zip"
 }
 
-# variable "truly_lambda_admin_function_name" {
-#   default = "truly_admin"
-#   type    = string
-# }
-
 variable "service_name" {
   type    = string
 }
 
 variable "common_tags" { }
-variable "resource_logs" {}
-variable "resource_dynamodb" {}
-variable "resource_xray" {}
-variable "resource_secretsman" {}
+# variable "resource_logs" {}
+# variable "resource_dynamodb" {}
+# variable "resource_xray" {}
+# variable "resource_secretsman" {}
 
 variable "role" {}
 

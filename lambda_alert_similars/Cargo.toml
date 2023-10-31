@@ -1,11 +1,11 @@
 [package]
-name="lambda_alert_similar"
+name="lambda_alert_similars"
 version="0.0.1"
 edition = "2021"
 
 
 [[bin]]
-name="lambda_alert_similar"
+name="lambda_alert_similars"
 path="src/main.rs"
 
 

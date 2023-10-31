@@ -45,10 +45,10 @@ module "lambda_login" {
   source                   = "./lambda_login"
   service_name             = "login"
   common_tags              = local.common_tags
-  resource_logs            = aws_iam_role_policy_attachment.truly_lambda_logs
-  resource_xray            = aws_iam_role_policy_attachment.truly_lambda_XRAY
-  resource_dynamodb        = aws_iam_role_policy_attachment.truly_lambda_dynamodb
-  resource_secretsman      = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
+  # resource_logs            = aws_iam_role_policy_attachment.truly_lambda_logs
+  # resource_xray            = aws_iam_role_policy_attachment.truly_lambda_XRAY
+  # resource_dynamodb        = aws_iam_role_policy_attachment.truly_lambda_dynamodb
+  # resource_secretsman      = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
   role                     = aws_iam_role.truly_lambda_execution_role.arn
   jwt_token_time_exp_hours = var.jwt_token_time_exp_hours
   environment_flag         = var.environment_flag
@@ -68,10 +68,10 @@ module "lambda_user" {
 
   service_name        = "user"
   common_tags         = local.common_tags
-  resource_logs       = aws_iam_role_policy_attachment.truly_lambda_logs
-  resource_xray       = aws_iam_role_policy_attachment.truly_lambda_XRAY
-  resource_dynamodb   = aws_iam_role_policy_attachment.truly_lambda_dynamodb
-  resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
+  # resource_logs       = aws_iam_role_policy_attachment.truly_lambda_logs
+  # resource_xray       = aws_iam_role_policy_attachment.truly_lambda_XRAY
+  # resource_dynamodb   = aws_iam_role_policy_attachment.truly_lambda_dynamodb
+  # resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
   role                = aws_iam_role.truly_lambda_execution_role.arn
 
   environment_flag = var.environment_flag
@@ -91,10 +91,10 @@ module "lambda_admin" {
 
   service_name        = "admin"
   common_tags         = local.common_tags
-  resource_logs       = aws_iam_role_policy_attachment.truly_lambda_logs
-  resource_xray       = aws_iam_role_policy_attachment.truly_lambda_XRAY
-  resource_dynamodb   = aws_iam_role_policy_attachment.truly_lambda_dynamodb
-  resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
+  # resource_logs       = aws_iam_role_policy_attachment.truly_lambda_logs
+  # resource_xray       = aws_iam_role_policy_attachment.truly_lambda_XRAY
+  # resource_dynamodb   = aws_iam_role_policy_attachment.truly_lambda_dynamodb
+  # resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
   role                = aws_iam_role.truly_lambda_execution_role.arn
 
   environment_flag = var.environment_flag
@@ -121,12 +121,10 @@ module "lambda_licenses" {
 
   rust_backtrace = var.rust_backtrace
 
-  #video_in_topic    = aws_sns_topic.video_in_topic.arn
-  #video_out_topic   = aws_sns_topic.video_out_topic.arn
   aws_region              = var.aws_region
   api_stage_version       = var.api_stage_version
   architectures           = var.architectures
-  hashes_similarities_arn = aws_sns_topic.video_in_topic.arn #var.hash_similar_in_topic_arn #aws_sns_topic.hash_similar_in_topic.arn
+  hashes_similarities_arn = aws_sns_topic.video_in_topic.arn 
 
   matchapi_endpoint = var.matchapi_endpoint
 
@@ -175,7 +173,7 @@ module "lambda_error" {
   aws_region    = var.aws_region
   architectures = var.architectures
 
-  ecr_image = var.ecr_alert_similar_lambda
+  ecr_image = var.ecr_error_lambda
 
   trace_level = var.trace_level
 
@@ -199,7 +197,7 @@ module "lambda_alert_similar" {
   aws_region    = var.aws_region
   architectures = var.architectures
 
-  ecr_image = var.ecr_alert_similar_lambda
+  ecr_image = var.ecr_alert_similars_lambda
 
   trace_level = var.trace_level
 

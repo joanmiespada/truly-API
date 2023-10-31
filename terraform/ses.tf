@@ -21,13 +21,13 @@ resource "aws_ses_email_identity" "email_ses_sender" {
 
 
 resource "aws_ses_domain_identity" "email_ses_sender_domain" {
-  domain = ""
+  domain = "mail1.truly.video"
 }
 
-import{
-  to = aws_ses_domain_identity.email_ses_sender_domain
-  id = "mail1.truly.video"
-}
+# import{
+#   to = aws_ses_domain_identity.email_ses_sender_domain
+#   id = "mail1.truly.video"
+# }
 
 
 // this is for SES to send emails
@@ -46,6 +46,7 @@ resource "aws_iam_access_key" "smtp_user" {
 #     resources = ["*"]
 #   }
 # }
+
 resource "aws_iam_policy" "truly_lambda_SES_policy" {
   name        = "truly_lambda_SES_policy-${local.region_prefix}"
   path        = "/"
@@ -57,7 +58,7 @@ resource "aws_iam_policy" "truly_lambda_SES_policy" {
 resource "aws_iam_policy" "ses_sender" {
   name        = "ses_sender"
   description = "Allows sending of e-mails via Simple Email Service"
-  policy = aws_iam_policy.truly_lambda_SES_policy.arn
+  policy      = aws_iam_policy.truly_lambda_SES_policy.policy
   # policy      = data.aws_iam_policy_document.ses_sender.json
 }
 

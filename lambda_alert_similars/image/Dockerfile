@@ -25,6 +25,7 @@ WORKDIR /tmp
 COPY lambda_alert_similars/src /tmp/lambda_alert_similars/src
 COPY lambda_alert_similars/Cargo.toml /tmp/lambda_alert_similars/Cargo.toml
 COPY lib_licenses /tmp/lib_licenses
+COPY lib_engage /tmp/lib_engage
 COPY lib_users /tmp/lib_users
 COPY lib_util_jwt /tmp/lib_util_jwt
 

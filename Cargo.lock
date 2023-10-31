@@ -1870,7 +1870,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "lambda_alert_similar"
+name = "lambda_alert_similars"
 version = "0.0.1"
 dependencies = [
  "aws-sdk-sqs",

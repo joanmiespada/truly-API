@@ -4,10 +4,10 @@ variable "service_name" {
 }
 
 variable "common_tags" { }
-variable "resource_logs" {}
-variable "resource_dynamodb" {}
-variable "resource_xray" {}
-variable "resource_secretsman" {}
+# variable "resource_logs" {}
+# variable "resource_dynamodb" {}
+# variable "resource_xray" {}
+# variable "resource_secretsman" {}
 
 variable "role" {}
 

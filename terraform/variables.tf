@@ -141,7 +141,7 @@ variable "ecr_error_lambda" {
   type=string 
 }
 
-variable "ecr_alert_similar_lambda"{
+variable "ecr_alert_similars_lambda"{
   type=string
 }
 variable "ecr_notifications_lambda"{
