@@ -42,9 +42,9 @@ locals {
 }
 
 module "lambda_login" {
-  source                   = "./lambda_login"
-  service_name             = "login"
-  common_tags              = local.common_tags
+  source       = "./lambda_login"
+  service_name = "login"
+  common_tags  = local.common_tags
   # resource_logs            = aws_iam_role_policy_attachment.truly_lambda_logs
   # resource_xray            = aws_iam_role_policy_attachment.truly_lambda_XRAY
   # resource_dynamodb        = aws_iam_role_policy_attachment.truly_lambda_dynamodb
@@ -66,13 +66,13 @@ module "lambda_login" {
 module "lambda_user" {
   source = "./lambda_user"
 
-  service_name        = "user"
-  common_tags         = local.common_tags
+  service_name = "user"
+  common_tags  = local.common_tags
   # resource_logs       = aws_iam_role_policy_attachment.truly_lambda_logs
   # resource_xray       = aws_iam_role_policy_attachment.truly_lambda_XRAY
   # resource_dynamodb   = aws_iam_role_policy_attachment.truly_lambda_dynamodb
   # resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
-  role                = aws_iam_role.truly_lambda_execution_role.arn
+  role = aws_iam_role.truly_lambda_execution_role.arn
 
   environment_flag = var.environment_flag
   trace_log        = var.trace_log
@@ -89,13 +89,13 @@ module "lambda_user" {
 module "lambda_admin" {
   source = "./lambda_admin"
 
-  service_name        = "admin"
-  common_tags         = local.common_tags
+  service_name = "admin"
+  common_tags  = local.common_tags
   # resource_logs       = aws_iam_role_policy_attachment.truly_lambda_logs
   # resource_xray       = aws_iam_role_policy_attachment.truly_lambda_XRAY
   # resource_dynamodb   = aws_iam_role_policy_attachment.truly_lambda_dynamodb
   # resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
-  role                = aws_iam_role.truly_lambda_execution_role.arn
+  role = aws_iam_role.truly_lambda_execution_role.arn
 
   environment_flag = var.environment_flag
   trace_log        = var.trace_log
@@ -124,7 +124,7 @@ module "lambda_licenses" {
   aws_region              = var.aws_region
   api_stage_version       = var.api_stage_version
   architectures           = var.architectures
-  hashes_similarities_arn = aws_sns_topic.video_in_topic.arn 
+  hashes_similarities_arn = aws_sns_topic.video_in_topic.arn
 
   matchapi_endpoint = var.matchapi_endpoint
 
@@ -224,9 +224,9 @@ module "lambda_notifications" {
 
   trace_level = var.trace_level
 
-  email                   = var.email
+  email = var.email
 
-  smtp_secret = aws_secretsmanager_secret.smtp_secret.arn
+  smtp_secret = "" #aws_secretsmanager_secret.smtp_secret.arn
   smtp_server = var.email_server
 
 }
