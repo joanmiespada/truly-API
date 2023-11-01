@@ -155,3 +155,34 @@ pub async fn confirm_subscription(
     build_resp("".to_string(), StatusCode::OK)
 
 }
+
+pub async fn remove_subscription(
+    _req: &Request,
+    _c: &Context,
+    config: &Config,
+    subscription_service: &SubscriptionService<SubscriptionRepo>,
+    id: uuid::Uuid,
+) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
+    
+    let op1 = subscription_service.delete(id).await;
+
+    if let Err(e) = op1 {
+        if let Some(err_m) = e.downcast_ref::<SubscriptionError>() {
+
+            match err_m {
+                SubscriptionError::SubscriptionDynamoDBError(_) => return build_resp(e.to_string(), StatusCode::SERVICE_UNAVAILABLE),
+                SubscriptionError::SubscriptionIDNotFound(_) => return build_resp(e.to_string(), StatusCode::NOT_FOUND),
+                _ => return build_resp(e.to_string(), StatusCode::NOT_ACCEPTABLE)
+            }
+        } else {
+            return build_resp_env(
+                &config.env_vars().environment().unwrap(),
+                e,
+                StatusCode::INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    build_resp("".to_string(), StatusCode::OK)
+
+}

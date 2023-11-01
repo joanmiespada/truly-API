@@ -10,7 +10,7 @@ use crate::my_lambda::assets::get_asset::get_asset_by_url;
 use crate::my_lambda::assets::get_similar_assets::{
     get_similar_assets_by_id, get_similar_assets_by_url,
 };
-use crate::my_lambda::subscribe::subscribe::{confirm_subscription, create_intent};
+use crate::my_lambda::subscribe::subscribe::{confirm_subscription, create_intent, remove_subscription};
 use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, STAGE_ENV};
@@ -78,6 +78,7 @@ pub async fn function_handler(
     router.insert("/api/similar", Some("999"))?;
     router.insert("/api/subscribe", Some("1000"))?;
     router.insert("/api/subscribe/confirmation/:id", Some("1001"))?;
+    router.insert("/api/subscribe/remove/:id", Some("1002"))?;
 
     let query_pairs: Vec<(String, String)> = req.uri().query()
             .map(|v| url::form_urlencoded::parse(v.as_bytes()).into_owned().collect())
@@ -393,13 +394,13 @@ pub async fn function_handler(
 
                 "1001" => {
                     let id = matched.params.get("id").unwrap().to_string();
-                    if let Ok(asset_id) = Uuid::from_str(id.as_str()) {
+                    if let Ok(subscription_id) = Uuid::from_str(id.as_str()) {
                         return confirm_subscription(
                             &req,
                             &context,
                             config,
                             subscription_service,
-                            asset_id,
+                            subscription_id,
                         )
                         .await;
                     } else {
@@ -410,6 +411,24 @@ pub async fn function_handler(
                     }
                 }
 
+                "1002" => {
+                    let id = matched.params.get("id").unwrap().to_string();
+                    if let Ok(subscription_id) = Uuid::from_str(id.as_str()) {
+                        return remove_subscription(
+                            &req,
+                            &context,
+                            config,
+                            subscription_service,
+                            subscription_id,
+                        )
+                        .await;
+                    } else {
+                        build_resp(
+                            "id param must be UUID".to_string(),
+                            StatusCode::NOT_ACCEPTABLE,
+                        )
+                    }
+                }
                 &_ => build_resp(
                     "POST method not allowed".to_string(),
                     StatusCode::METHOD_NOT_ALLOWED,
