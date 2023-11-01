@@ -226,7 +226,7 @@ module "lambda_notifications" {
 
   email = var.email
 
-  smtp_secret_manager_arn = "" #aws_secretsmanager_secret.smtp_secret.arn
+  smtp_secret_manager_arn = aws_secretsmanager_secret.smtp_secret.arn
   smtp_server = var.email_server
 
 }
