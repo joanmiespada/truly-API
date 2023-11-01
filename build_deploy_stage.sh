@@ -335,6 +335,7 @@ if [[ "$terraform_skip" == 'false' ]]; then
         terraform plan -out=plan.tfplan || exit 1
         echo "Applying infrastructure for ${region}..."
         terraform apply --auto-approve plan.tfplan || exit 1
+        rm plan.tfplan
     done
     cd ..
 else
