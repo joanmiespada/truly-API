@@ -47,13 +47,13 @@ resource "aws_ses_domain_identity" "email_ses_sender_domain" {
 #   }
 # }
 
-# resource "aws_iam_policy" "truly_lambda_SES_policy" {
-#   name        = "truly_lambda_SES_policy-${local.region_prefix}"
-#   path        = "/"
-#   description = "IAM policy for SES from a lambda within truly api"
+resource "aws_iam_policy" "truly_lambda_SES_policy" {
+  name        = "truly_lambda_SES_policy-${local.region_prefix}"
+  path        = "/"
+  description = "IAM policy for SES from a lambda within truly api"
 
-#   policy = file("./role_policies/ses.json")
-# }
+  policy = file("./role_policies/ses.json")
+}
 
 # resource "aws_iam_policy" "ses_sender" {
 #   name        = "ses_sender"

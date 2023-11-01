@@ -47,7 +47,7 @@ variable "email" {
   
 }
 
-variable "smtp_secret" {
+variable "smtp_secret_manager_arn" {
   type = string
   
 }
