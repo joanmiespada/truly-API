@@ -84,7 +84,7 @@ impl ShorterRepository for ShorterRepo {
 
         let request = self.client.transact_write_items().transact_items(
             TransactWriteItem::builder()
-                .put(items.table_name(SHORTER_TABLE_NAME.clone()).build())
+                .put(items.table_name(SHORTER_TABLE_NAME.clone()).build().unwrap())
                 .build(),
         );
 

@@ -38,20 +38,20 @@ impl Schema for LicenseSchema {
         let ad1 = AttributeDefinition::builder()
             .attribute_name(LICENSE_ID_FIELD_PK)
             .attribute_type(ScalarAttributeType::S)
-            .build();
+            .build().unwrap();
         let ad2 = AttributeDefinition::builder()
             .attribute_name(LICENSE_ASSET_ID_FIELD_PK)
             .attribute_type(ScalarAttributeType::S)
-            .build();
+            .build().unwrap();
 
         let ks1 = KeySchemaElement::builder()
             .attribute_name(LICENSE_ID_FIELD_PK)
             .key_type(KeyType::Hash)
-            .build();
+            .build().unwrap();
         let ks2 = KeySchemaElement::builder()
             .attribute_name(LICENSE_ASSET_ID_FIELD_PK)
             .key_type(KeyType::Range)
-            .build();
+            .build().unwrap();
 
         let second_index_by_asset = GlobalSecondaryIndex::builder()
             .index_name(LICENSES_ASSET_ID_INDEX)
@@ -59,28 +59,28 @@ impl Schema for LicenseSchema {
                 KeySchemaElement::builder()
                     .attribute_name(LICENSE_ASSET_ID_FIELD_PK)
                     .key_type(KeyType::Hash)
-                    .build(),
+                    .build().unwrap(),
             )
             .projection(
                 Projection::builder()
                     .projection_type(ProjectionType::All)
                     .build(),
             )
-            .build();
+            .build().unwrap();
         let third_index_by_asset = GlobalSecondaryIndex::builder()
             .index_name(LICENSES_LICENSE_ID_INDEX)
             .key_schema(
                 KeySchemaElement::builder()
                     .attribute_name(LICENSE_ID_FIELD_PK)
                     .key_type(KeyType::Hash)
-                    .build(),
+                    .build().unwrap(),
             )
             .projection(
                 Projection::builder()
                     .projection_type(ProjectionType::All)
                     .build(),
             )
-            .build();
+            .build().unwrap();
         client
             .create_table()
             .table_name(LICENSES_TABLE_NAME.clone())
@@ -95,25 +95,25 @@ impl Schema for LicenseSchema {
                 StreamSpecificationBuilder::default()
                     .stream_enabled(true)
                     .stream_view_type(StreamViewType::NewAndOldImages)
-                    .build(),
+                    .build().unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
-                    .build(),
+                    .build().unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_PROJECT.to_string()))
                     .set_value(Some(VALUE_PROJECT.to_string()))
-                    .build(),
+                    .build().unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_SERVICE.to_string()))
                     .set_value(Some(API_DOMAIN.to_string()))
-                    .build(),
+                    .build().unwrap(),
             )
             .deletion_protection_enabled(if config.env_vars().environment().unwrap() == PROD_ENV {
                 true

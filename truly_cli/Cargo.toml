@@ -15,11 +15,11 @@ lib_users = { path = "../lib_users" }
 env_logger = "0.10.0"
 chrono = {version="0.4.31", features = ["serde"] }
 serde = { version = "1.0.190", features = ["derive"] }
-serde_json = "1.0.107"
-aws-config = "0.56.1"
-aws-sdk-dynamodb = "0.34.0"
-aws-sdk-secretsmanager = "0.34.0"
-aws-sdk-kms = "0.34.0"
+serde_json = "1.0.108"
+aws-config = "0.57.1"
+aws-sdk-dynamodb = "0.35.0"
+aws-sdk-secretsmanager = "0.35.0"
+aws-sdk-kms = "0.35.0"
 async-trait = "0.1.74"
 validator = { version = "0.16", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
@@ -30,7 +30,7 @@ log = "0.4.20"
 
 [target.aarch64-apple-darwin.dev-dependencies]
 env_logger = "0.10.0"
-aws-types = "0.56.1"
+aws-types = "0.57.1"
 spectral = "0.6.0"
 #testcontainers = "0.14.0"
 testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack2"  }

@@ -10,7 +10,9 @@ use uuid::Uuid;
 
 use crate::errors::asset::{AssetDynamoDBError, AssetNoExistsError, AssetTreeError};
 use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
-use crate::models::asset::{Asset, AssetStatus, SourceType, VideoLicensingStatus, HashProcessStatus};
+use crate::models::asset::{
+    Asset, AssetStatus, HashProcessStatus, SourceType, VideoLicensingStatus,
+};
 use crate::models::owner::Owner;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::types::{AttributeValue, Put, Select, TransactWriteItem};
@@ -47,7 +49,6 @@ const SOURCE_FIELD_NAME: &str = "source";
 const SOURCE_DETAILS_FIELD_NAME: &str = "source_details";
 
 static NULLABLE: &str = "__NULL__";
-
 
 #[async_trait]
 pub trait AssetRepository {
@@ -95,7 +96,7 @@ impl AssetRepo {
                     e
                 );
                 //tracing::error!(mssag);
-                log::error!("{}", mssag );
+                log::error!("{}", mssag);
                 return Err(AssetDynamoDBError(e.to_string()).into());
             }
             Ok(_) => {}
@@ -116,7 +117,6 @@ impl AssetRepo {
         let update_time_av = AttributeValue::S(iso8601(asset.last_update_time()));
         let status_av = AttributeValue::S(asset.state().to_string());
 
-
         let mut items = Put::builder();
         items = items
             .item(ASSET_ID_FIELD_PK, asset_id_av.clone())
@@ -129,9 +129,9 @@ impl AssetRepo {
             let hash_av = AttributeValue::S(hash.to_string());
             items = items.item(HASH_FIELD_NAME, hash_av);
         }
-        if let Some(hash_algo) = asset.hash_algorithm(){
+        if let Some(hash_algo) = asset.hash_algorithm() {
             let hash_algo_av = AttributeValue::S(hash_algo.to_string());
-            items = items.item( HASH_ALGORITHM_FIELD_NAME, hash_algo_av);
+            items = items.item(HASH_ALGORITHM_FIELD_NAME, hash_algo_av);
         }
         if let Some(value) = asset.longitude() {
             let longitude_av = AttributeValue::S(value.to_string());
@@ -191,12 +191,11 @@ impl AssetRepo {
 #[async_trait]
 impl AssetRepository for AssetRepo {
     async fn add(&self, asset: &Asset, user_d: &Option<String>) -> ResultE<Uuid> {
+        let user_id: String;
 
-        let user_id:String;
-
-        match user_d{
-            None => user_id= Uuid::nil().to_string(),
-            Some(value)=> user_id= value.clone()
+        match user_d {
+            None => user_id = Uuid::nil().to_string(),
+            Some(value) => user_id = value.clone(),
         }
 
         let asset_id_av = AttributeValue::S(asset.id().to_string());
@@ -210,7 +209,7 @@ impl AssetRepository for AssetRepo {
             .transact_write_items()
             .transact_items(
                 TransactWriteItem::builder()
-                    .put(items.table_name(ASSETS_TABLE_NAME.clone()).build())
+                    .put(items.table_name(ASSETS_TABLE_NAME.clone()).build().unwrap())
                     .build(),
             )
             .transact_items(
@@ -220,7 +219,8 @@ impl AssetRepository for AssetRepo {
                             .item(OWNER_USER_ID_FIELD_PK, user_id_av.clone())
                             .item(OWNER_ASSET_ID_FIELD_PK, asset_id_av.clone())
                             .table_name(OWNERS_TABLE_NAME.clone())
-                            .build(),
+                            .build()
+                            .unwrap(),
                     )
                     .build(),
             );
@@ -237,7 +237,8 @@ impl AssetRepository for AssetRepo {
                                 .item(ASSET_TREE_FATHER_ID_FIELD_PK, father_id_av)
                                 .item(ASSET_TREE_SON_ID_FIELD_PK, asset_id_av)
                                 .table_name(ASSET_TREE_TABLE_NAME.clone())
-                                .build(),
+                                .build()
+                                .unwrap(),
                         )
                         .build(),
                 );
@@ -253,7 +254,7 @@ impl AssetRepository for AssetRepo {
                     user_id,
                     asset.id().to_string()
                 );
-                info!("{}",mssag);
+                info!("{}", mssag);
 
                 return Ok(asset.id().clone());
             }
@@ -263,7 +264,7 @@ impl AssetRepository for AssetRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-                error!("{}",mssag);
+                error!("{}", mssag);
                 return Err(AssetDynamoDBError(e.to_string()).into());
             }
         }
@@ -287,7 +288,7 @@ impl AssetRepository for AssetRepo {
                     e
                 );
                 //tracing::error!(mssag);
-                log::error!("{}",mssag);
+                log::error!("{}", mssag);
                 return Err(AssetDynamoDBError(e.to_string()).into());
             }
             Ok(result) => {
@@ -353,27 +354,20 @@ impl AssetRepository for AssetRepo {
                     e
                 );
                 //tracing::error!(mssag);
-                log::error!("{}",mssag);
+                log::error!("{}", mssag);
                 return Err(AssetTreeError(e.to_string()).into());
             }
             Ok(data) => {
-                let op_items = data.items();
-                match op_items {
-                    None => {
-                        return Err(AssetNoExistsError("url doesn't exist".to_string()).into());
-                    }
-                    Some(aux) => {
-                        if aux.len() == 0 {
-                            return Err(AssetNoExistsError("url doesn't exist".to_string()).into());
-                        } else {
-                            let doc = aux[0].clone();
-                            let ass1_id = doc.get(ASSET_ID_FIELD_PK).unwrap();
-                            let ass1_id1 = ass1_id.as_s().unwrap();
-                            let ass1_id1_1 = Uuid::from_str(ass1_id1).unwrap();
-                            let res = self.get_by_id(&ass1_id1_1).await?;
-                            Ok(res)
-                        }
-                    }
+                let aux = data.items();
+                if aux.len() == 0 {
+                    return Err(AssetNoExistsError("url doesn't exist".to_string()).into());
+                } else {
+                    let doc = aux[0].clone();
+                    let ass1_id = doc.get(ASSET_ID_FIELD_PK).unwrap();
+                    let ass1_id1 = ass1_id.as_s().unwrap();
+                    let ass1_id1_1 = Uuid::from_str(ass1_id1).unwrap();
+                    let res = self.get_by_id(&ass1_id1_1).await?;
+                    Ok(res)
                 }
             }
         }
@@ -384,7 +378,7 @@ impl AssetRepository for AssetRepo {
 
         let request = self.client.transact_write_items().transact_items(
             TransactWriteItem::builder()
-                .put(items.table_name(ASSETS_TABLE_NAME.clone()).build())
+                .put(items.table_name(ASSETS_TABLE_NAME.clone()).build().unwrap())
                 .build(),
         );
 
@@ -396,7 +390,7 @@ impl AssetRepository for AssetRepo {
                     asset.id().to_string()
                 );
                 //tracing::debug!(mssag);
-                log::debug!("{}",mssag);
+                log::debug!("{}", mssag);
 
                 Ok(())
             }
@@ -407,7 +401,7 @@ impl AssetRepository for AssetRepo {
                     e.to_string()
                 );
                 //tracing::error!(mssag);
-                log::error!("{}",mssag);
+                log::error!("{}", mssag);
                 return Err(AssetDynamoDBError(e.to_string()).into());
             }
         }
@@ -440,23 +434,16 @@ impl AssetRepository for AssetRepo {
                     e
                 );
                 //tracing::error!(mssag);
-                log::error!("{}",mssag);
+                log::error!("{}", mssag);
                 return Err(AssetTreeError(e.to_string()).into());
             }
             Ok(data) => {
-                let op_items = data.items();
-                match op_items {
-                    None => {
-                        return Err(AssetTreeError("id doesn't exist".to_string()).into());
-                    }
-                    Some(aux) => {
-                        for doc in aux {
-                            let ass1_id = doc.get(ASSET_TREE_SON_ID_FIELD_PK).unwrap();
-                            let ass1_id1 = ass1_id.as_s().unwrap();
-                            let ass1_id1_1 = Uuid::from_str(ass1_id1).unwrap();
-                            queried.push(ass1_id1_1.clone());
-                        }
-                    }
+                let aux = data.items();
+                for doc in aux {
+                    let ass1_id = doc.get(ASSET_TREE_SON_ID_FIELD_PK).unwrap();
+                    let ass1_id1 = ass1_id.as_s().unwrap();
+                    let ass1_id1_1 = Uuid::from_str(ass1_id1).unwrap();
+                    queried.push(ass1_id1_1.clone());
                 }
             }
         }
@@ -491,22 +478,15 @@ impl AssetRepository for AssetRepo {
                     e
                 );
                 //tracing::error!(mssag);
-                log::error!("{}",mssag);
+                log::error!("{}", mssag);
                 return Err(OwnerDynamoDBError(e.to_string()).into());
             }
             Ok(data) => {
-                let op_items = data.items();
-                match op_items {
-                    None => {
-                        return Err(OwnerNoExistsError("id doesn't exist".to_string()).into());
-                    }
-                    Some(aux) => {
-                        for doc in aux {
-                            let mut own = Owner::new();
-                            mapping_from_doc_to_owner(&doc, &mut own);
-                            assets_list.push(own.clone());
-                        }
-                    }
+                let aux = data.items();
+                for doc in aux {
+                    let mut own = Owner::new();
+                    mapping_from_doc_to_owner(&doc, &mut own);
+                    assets_list.push(own.clone());
                 }
             }
         }
@@ -547,7 +527,7 @@ impl AssetRepository for AssetRepo {
                     e
                 );
                 //tracing::error!(mssag);
-                log::error!("{}",mssag);
+                log::error!("{}", mssag);
                 return Err(OwnerDynamoDBError(e.to_string()).into());
             }
             Ok(_) => {}
@@ -591,7 +571,7 @@ impl AssetRepository for AssetRepo {
                     e
                 );
                 //tracing::error!(mssag);
-                log::error!("{}",mssag);
+                log::error!("{}", mssag);
                 return Err(OwnerDynamoDBError(e.to_string()).into());
             }
             Ok(_) => {}
@@ -636,7 +616,7 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
     let url = Url::parse(asset_url).unwrap();
     asset.set_url(&Some(url));
 
-    if let Some(hash) = doc.get(HASH_FIELD_NAME){
+    if let Some(hash) = doc.get(HASH_FIELD_NAME) {
         let asset_hash = hash.as_s().unwrap();
         asset.set_hash(&Some(asset_hash.to_string()));
     }
@@ -827,7 +807,7 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
     }
 
     let hash_process_status = doc.get(HASH_PROCESS_STATUS_FIELD_NAME);
-    match hash_process_status  {
+    match hash_process_status {
         None => asset.set_hash_process_status(&None),
         Some(lati) => {
             let val = lati.as_s().unwrap();
@@ -845,9 +825,5 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
                 }
             }
         }
-    
-        
     }
-
-
 }

@@ -35,22 +35,22 @@ impl Schema for AlertSimilarSchema {
         let notification_pk_attr = AttributeDefinition::builder()
             .attribute_name(ALERT_SIMILAR_ID_FIELD_PK)
             .attribute_type(ScalarAttributeType::S)
-            .build();
+            .build().unwrap();
 
         let creation_time_attr = AttributeDefinition::builder()
             .attribute_name(CREATION_TIME)
             .attribute_type(ScalarAttributeType::S)
-            .build();
+            .build().unwrap();
 
         let key_schema1 = KeySchemaElement::builder()
             .attribute_name(ALERT_SIMILAR_ID_FIELD_PK)
             .key_type(KeyType::Hash)
-            .build();
+            .build().unwrap();
 
         // let key_schema2 = KeySchemaElement::builder()
         //     .attribute_name(CREATION_TIME)
         //     .key_type(KeyType::Range)
-        //     .build();
+        //     .build().unwrap();
 
         let second_index = GlobalSecondaryIndex::builder()
             .index_name(TIME_INDEX_NAME)
@@ -58,14 +58,14 @@ impl Schema for AlertSimilarSchema {
                 KeySchemaElement::builder()
                     .attribute_name(CREATION_TIME)
                     .key_type(KeyType::Hash)
-                    .build(),
+                    .build().unwrap(),
             )
             .projection(
                 Projection::builder()
                     .projection_type(ProjectionType::All)
                     .build(),
             )
-            .build();
+            .build().unwrap();
 
         client
             .create_table()
@@ -80,25 +80,25 @@ impl Schema for AlertSimilarSchema {
                 StreamSpecificationBuilder::default()
                     .stream_enabled(true)
                     .stream_view_type(StreamViewType::NewAndOldImages)
-                    .build(),
+                    .build().unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
-                    .build(),
+                    .build().unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_PROJECT.to_string()))
                     .set_value(Some(VALUE_PROJECT.to_string()))
-                    .build(),
+                    .build().unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_SERVICE.to_string()))
                     .set_value(Some(API_DOMAIN.to_string()))
-                    .build(),
+                    .build().unwrap(),
             )
             .deletion_protection_enabled(if config.env_vars().environment().unwrap() == PROD_ENV {
                 true

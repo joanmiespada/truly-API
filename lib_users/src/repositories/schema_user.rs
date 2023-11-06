@@ -55,12 +55,14 @@ impl Schema for UserSchema {
         let user_id_ad = AttributeDefinition::builder()
             .attribute_name(USERID_FIELD_NAME_PK)
             .attribute_type(ScalarAttributeType::S)
-            .build();
+            .build()
+            .unwrap();
 
         let pk = KeySchemaElement::builder()
             .attribute_name(USERID_FIELD_NAME_PK)
             .key_type(KeyType::Hash)
-            .build();
+            .build()
+            .unwrap();
 
         client
             .create_table()
@@ -72,25 +74,29 @@ impl Schema for UserSchema {
                 StreamSpecificationBuilder::default()
                     .stream_enabled(true)
                     .stream_view_type(StreamViewType::NewAndOldImages)
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_PROJECT.to_string()))
                     .set_value(Some(VALUE_PROJECT.to_string()))
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_SERVICE.to_string()))
                     .set_value(Some(API_DOMAIN.to_string()))
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .deletion_protection_enabled(if config.env_vars().environment().unwrap() == PROD_ENV {
                 true
@@ -131,29 +137,34 @@ impl Schema for LoginDeviceSchema {
         let device_user_id_ad = AttributeDefinition::builder()
             .attribute_name(USERID_FIELD_NAME_PK)
             .attribute_type(ScalarAttributeType::S)
-            .build();
+            .build()
+            .unwrap();
         let device_ad = AttributeDefinition::builder()
             .attribute_name(LOGIN_DEVICE_FIELD_NAME)
             .attribute_type(ScalarAttributeType::S)
-            .build();
+            .build()
+            .unwrap();
         let device_pk = KeySchemaElement::builder()
             .attribute_name(USERID_FIELD_NAME_PK)
             .key_type(KeyType::Hash)
-            .build();
+            .build()
+            .unwrap();
         let second_index_by_device = GlobalSecondaryIndex::builder()
             .index_name(LOGIN_DEVICE_INDEX)
             .key_schema(
                 KeySchemaElement::builder()
                     .attribute_name(LOGIN_DEVICE_FIELD_NAME)
                     .key_type(KeyType::Hash)
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .projection(
                 Projection::builder()
                     .projection_type(ProjectionType::KeysOnly)
                     .build(),
             )
-            .build();
+            .build()
+            .unwrap();
         client
             .create_table()
             .table_name(LOGIN_DEVICE_TABLE_NAME.clone())
@@ -166,25 +177,29 @@ impl Schema for LoginDeviceSchema {
                 StreamSpecificationBuilder::default()
                     .stream_enabled(true)
                     .stream_view_type(StreamViewType::NewAndOldImages)
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_PROJECT.to_string()))
                     .set_value(Some(VALUE_PROJECT.to_string()))
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_SERVICE.to_string()))
                     .set_value(Some(API_DOMAIN.to_string()))
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .send()
             .await?;
@@ -223,29 +238,34 @@ impl Schema for LoginEmailSchema {
         let email_user_id_ad = AttributeDefinition::builder()
             .attribute_name(USERID_FIELD_NAME_PK)
             .attribute_type(ScalarAttributeType::S)
-            .build();
+            .build()
+            .unwrap();
         let email_ad = AttributeDefinition::builder()
             .attribute_name(LOGIN_EMAIL_FIELD_NAME)
             .attribute_type(ScalarAttributeType::S)
-            .build();
+            .build()
+            .unwrap();
         let email_pk = KeySchemaElement::builder()
             .attribute_name(USERID_FIELD_NAME_PK)
             .key_type(KeyType::Hash)
-            .build();
+            .build()
+            .unwrap();
         let second_index_by_email = GlobalSecondaryIndex::builder()
             .index_name(LOGIN_EMAIL_INDEX)
             .key_schema(
                 KeySchemaElement::builder()
                     .attribute_name(LOGIN_EMAIL_FIELD_NAME)
                     .key_type(KeyType::Hash)
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .projection(
                 Projection::builder()
                     .projection_type(ProjectionType::All)
                     .build(),
             )
-            .build();
+            .build()
+            .unwrap();
         client
             .create_table()
             .table_name(LOGIN_EMAIL_TABLE_NAME.clone())
@@ -258,25 +278,29 @@ impl Schema for LoginEmailSchema {
                 StreamSpecificationBuilder::default()
                     .stream_enabled(true)
                     .stream_view_type(StreamViewType::NewAndOldImages)
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_PROJECT.to_string()))
                     .set_value(Some(VALUE_PROJECT.to_string()))
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_SERVICE.to_string()))
                     .set_value(Some(API_DOMAIN.to_string()))
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .send()
             .await?;
@@ -313,29 +337,34 @@ impl Schema for LoginWalletSchema {
         let wallet_user_id_ad = AttributeDefinition::builder()
             .attribute_name(USERID_FIELD_NAME_PK)
             .attribute_type(ScalarAttributeType::S)
-            .build();
+            .build()
+            .unwrap();
         let wallet_ad = AttributeDefinition::builder()
             .attribute_name(LOGIN_WALLET_FIELD_NAME)
             .attribute_type(ScalarAttributeType::S)
-            .build();
+            .build()
+            .unwrap();
         let wallet_pk = KeySchemaElement::builder()
             .attribute_name(USERID_FIELD_NAME_PK)
             .key_type(KeyType::Hash)
-            .build();
+            .build()
+            .unwrap();
         let second_index_by_wallet = GlobalSecondaryIndex::builder()
             .index_name(LOGIN_WALLET_INDEX)
             .key_schema(
                 KeySchemaElement::builder()
                     .attribute_name(LOGIN_WALLET_FIELD_NAME)
                     .key_type(KeyType::Hash)
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .projection(
                 Projection::builder()
                     .projection_type(ProjectionType::KeysOnly)
                     .build(),
             )
-            .build();
+            .build()
+            .unwrap();
 
         client
             .create_table()
@@ -349,25 +378,29 @@ impl Schema for LoginWalletSchema {
                 StreamSpecificationBuilder::default()
                     .stream_enabled(true)
                     .stream_view_type(StreamViewType::NewAndOldImages)
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_PROJECT.to_string()))
                     .set_value(Some(VALUE_PROJECT.to_string()))
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_SERVICE.to_string()))
                     .set_value(Some(API_DOMAIN.to_string()))
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .send()
             .await?;

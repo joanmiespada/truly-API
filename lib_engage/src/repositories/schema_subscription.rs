@@ -37,32 +37,36 @@ impl Schema for SubscriptionSchema {
         let subscription_pk_attr = AttributeDefinition::builder()
             .attribute_name(SUBSCRIPTION_ID_FIELD_PK)
             .attribute_type(ScalarAttributeType::S)
-            .build();
+            .build()
+            .unwrap();
 
         let user_id_attr = AttributeDefinition::builder()
             .attribute_name(USER_ID_FIELD)
             .attribute_type(ScalarAttributeType::S)
-            .build();
+            .build()
+            .unwrap();
 
         let asset_id_attr = AttributeDefinition::builder()
-            .attribute_name( ASSET_ID_FIELD)
+            .attribute_name(ASSET_ID_FIELD)
             .attribute_type(ScalarAttributeType::S)
-            .build();
+            .build()
+            .unwrap();
 
         // let subscription_id_attr = AttributeDefinition::builder()
         //     .attribute_name(SUBSCRIPTION_ID_FIELD)
         //     .attribute_type(ScalarAttributeType::S)
-        //     .build();
+        //     .build().unwrap();
 
         let key_schema = KeySchemaElement::builder()
             .attribute_name(SUBSCRIPTION_ID_FIELD_PK)
             .key_type(KeyType::Hash)
-            .build();
+            .build()
+            .unwrap();
 
         // let sort_key = KeySchemaElement::builder()
         //     .attribute_name(SUBSCRIPTION_ID_FIELD)
         //     .key_type(KeyType::Range)
-        //     .build();
+        //     .build().unwrap();
 
         let gsi1 = GlobalSecondaryIndex::builder()
             .index_name(USER_ASSET_INDEX_ID)
@@ -70,20 +74,23 @@ impl Schema for SubscriptionSchema {
                 KeySchemaElement::builder()
                     .attribute_name(USER_ID_FIELD)
                     .key_type(KeyType::Hash)
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .key_schema(
                 KeySchemaElement::builder()
-                    .attribute_name(ASSET_ID_FIELD )
+                    .attribute_name(ASSET_ID_FIELD)
                     .key_type(KeyType::Range)
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .projection(
                 Projection::builder()
                     .projection_type(ProjectionType::All)
                     .build(),
             )
-            .build();
+            .build()
+            .unwrap();
 
         let gsi2 = GlobalSecondaryIndex::builder()
             .index_name(ASSET_USER_INDEX_ID)
@@ -91,35 +98,37 @@ impl Schema for SubscriptionSchema {
                 KeySchemaElement::builder()
                     .attribute_name(ASSET_ID_FIELD)
                     .key_type(KeyType::Hash)
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .key_schema(
                 KeySchemaElement::builder()
-                    .attribute_name(USER_ID_FIELD )
+                    .attribute_name(USER_ID_FIELD)
                     .key_type(KeyType::Range)
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .projection(
                 Projection::builder()
                     .projection_type(ProjectionType::All)
                     .build(),
             )
-            .build();
+            .build()
+            .unwrap();
         // let gsi2 = GlobalSecondaryIndex::builder()
         //     .index_name(SUBSCRIPTION_INDEX_ID)
         //     .key_schema(
         //         KeySchemaElement::builder()
         //             .attribute_name(SUBSCRIPTION_ID_FIELD)
         //             .key_type(KeyType::Hash)
-        //             .build(),
+        //             .build().unwrap(),
         //     )
         //     .projection(
         //         Projection::builder()
         //             .projection_type(ProjectionType::All)
-        //             .build(),
+        //             .build().unwrap(),
         //     )
-        //     .build();
-        
+        //     .build().unwrap();
 
         client
             .create_table()
@@ -127,7 +136,7 @@ impl Schema for SubscriptionSchema {
             .attribute_definitions(user_id_attr)
             .attribute_definitions(asset_id_attr)
             //.attribute_definitions(subscription_id_attr)
-            .attribute_definitions(subscription_pk_attr )
+            .attribute_definitions(subscription_pk_attr)
             .key_schema(key_schema)
             //.key_schema(sort_key)
             .global_secondary_indexes(gsi1)
@@ -137,25 +146,29 @@ impl Schema for SubscriptionSchema {
                 StreamSpecificationBuilder::default()
                     .stream_enabled(true)
                     .stream_view_type(StreamViewType::NewAndOldImages)
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_ENVIRONMENT.to_string()))
                     .set_value(Some(config.env_vars().environment().unwrap()))
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_PROJECT.to_string()))
                     .set_value(Some(VALUE_PROJECT.to_string()))
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .tags(
                 Tag::builder()
                     .set_key(Some(TAG_SERVICE.to_string()))
                     .set_value(Some(API_DOMAIN.to_string()))
-                    .build(),
+                    .build()
+                    .unwrap(),
             )
             .deletion_protection_enabled(if config.env_vars().environment().unwrap() == PROD_ENV {
                 true

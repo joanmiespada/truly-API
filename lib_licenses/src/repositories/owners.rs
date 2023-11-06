@@ -2,17 +2,14 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use aws_sdk_dynamodb::types::Select;
-use lib_config::timing::{iso8601, from_iso8601};
+use lib_config::timing::{from_iso8601, iso8601};
 use uuid::Uuid;
 
 use crate::errors::owner::{OwnerDynamoDBError, OwnerNoExistsError};
 use crate::models::owner::Owner;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::{types::AttributeValue, Client};
-use chrono::{
-    prelude::Utc,
-    Local,
-};
+use chrono::{prelude::Utc, Local};
 use lib_config::config::Config;
 
 use super::schema_owners::{
@@ -75,18 +72,11 @@ impl OwnerRepo {
                 return Err(OwnerDynamoDBError(e.to_string()).into());
             }
             Ok(data) => {
-                let op_items = data.items();
-                match op_items {
-                    None => {
-                        return Err(OwnerNoExistsError("id doesn't exist".to_string()).into());
-                    }
-                    Some(aux) => {
-                        for doc in aux {
-                            let mut owner = Owner::new();
-                            mapping_from_doc_to_owner(doc, &mut owner);
-                            queried.push(owner.clone());
-                        }
-                    }
+                let items = data.items();
+                for doc in items {
+                    let mut owner = Owner::new();
+                    mapping_from_doc_to_owner(doc, &mut owner);
+                    queried.push(owner.clone());
                 }
             }
         }

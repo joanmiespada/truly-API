@@ -13,8 +13,8 @@ use std::str::FromStr;
 use uuid::Uuid;
 
 use super::schema_subscription::{
-    ASSET_ID_FIELD, SUBSCRIPTION_ID_FIELD_PK, SUBSCRIPTION_TABLE_NAME, USER_ASSET_INDEX_ID,
-    USER_ID_FIELD, ASSET_USER_INDEX_ID,
+    ASSET_ID_FIELD, ASSET_USER_INDEX_ID, SUBSCRIPTION_ID_FIELD_PK, SUBSCRIPTION_TABLE_NAME,
+    USER_ASSET_INDEX_ID, USER_ID_FIELD,
 };
 type ResultE<T> = std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
@@ -93,7 +93,7 @@ impl SubscriptionRepository for SubscriptionRepo {
     async fn find_by_user(&self, user_id: String) -> ResultE<Vec<Subscription>> {
         let user_id_av = AttributeValue::S(user_id.to_string());
 
-        let confirmed_status_av = AttributeValue::S( ConfirmedStatus::Enabled.to_string());
+        let confirmed_status_av = AttributeValue::S(ConfirmedStatus::Enabled.to_string());
 
         let request = self
             .client
@@ -103,7 +103,10 @@ impl SubscriptionRepository for SubscriptionRepo {
             .key_condition_expression("#user_attr = :user_id")
             .filter_expression("#status_attr = :status_val")
             .expression_attribute_names("#user_attr".to_string(), USER_ID_FIELD.to_string())
-            .expression_attribute_names("#status_attr".to_string(), CONFIRMED_FIELD_NAME.to_string())
+            .expression_attribute_names(
+                "#status_attr".to_string(),
+                CONFIRMED_FIELD_NAME.to_string(),
+            )
             .expression_attribute_values(":user_id", user_id_av)
             .expression_attribute_values(":status_val", confirmed_status_av)
             .select(Select::AllProjectedAttributes);
@@ -121,29 +124,15 @@ impl SubscriptionRepository for SubscriptionRepo {
                 return Err(SubscriptionError::SubscriptionDynamoDBError(e.into()).into());
             }
             Ok(data) => {
-                let op_items = data.items();
-                match op_items {
-                    None => {
-                        return Err(SubscriptionError::UserNotFound(
-                            "user doesn't exist".to_string(),
-                        )
-                        .into());
-                    }
-                    Some(aux) => {
-                        let mut subscriptions = Vec::new();
-                        for item in aux {
-                            let subs = SubscriptionRepo::map(item.clone());  
-                            //let doc = item.clone();
-                            //let ass1_id = doc.get(ASSET_ID_FIELD).unwrap();
-                            //let ass1_id1 = ass1_id.as_s().unwrap();
-                            //let ass1_id1_1 = Uuid::from_str(ass1_id1).unwrap();
-                            
-                            subscriptions.push(subs);
+                let aux = data.items();
 
-                        }
-                        Ok(subscriptions)
-                    }
+                let mut subscriptions = Vec::new();
+                for item in aux {
+                    let subs = SubscriptionRepo::map(item.clone());
+
+                    subscriptions.push(subs);
                 }
+                Ok(subscriptions)
             }
         }
     }
@@ -151,7 +140,7 @@ impl SubscriptionRepository for SubscriptionRepo {
     async fn find_by_asset(&self, asset_id: Uuid) -> ResultE<Vec<Subscription>> {
         let asset_id_av = AttributeValue::S(asset_id.to_string());
 
-        let confirmed_status_av = AttributeValue::S( ConfirmedStatus::Enabled.to_string());
+        let confirmed_status_av = AttributeValue::S(ConfirmedStatus::Enabled.to_string());
 
         let request = self
             .client
@@ -161,7 +150,10 @@ impl SubscriptionRepository for SubscriptionRepo {
             .key_condition_expression("#asset_attr = :asset_id")
             .filter_expression("#status_attr = :status_val")
             .expression_attribute_names("#asset_attr".to_string(), ASSET_ID_FIELD.to_string())
-            .expression_attribute_names("#status_attr".to_string(), CONFIRMED_FIELD_NAME.to_string())
+            .expression_attribute_names(
+                "#status_attr".to_string(),
+                CONFIRMED_FIELD_NAME.to_string(),
+            )
             .expression_attribute_values(":asset_id", asset_id_av)
             .expression_attribute_values(":status_val", confirmed_status_av)
             .select(Select::AllProjectedAttributes);
@@ -179,26 +171,17 @@ impl SubscriptionRepository for SubscriptionRepo {
                 return Err(SubscriptionError::SubscriptionDynamoDBError(e.into()).into());
             }
             Ok(data) => {
-                let op_items = data.items();
-                match op_items {
-                    None => {
-                        return Err(SubscriptionError::UserNotFound(
-                            "user doesn't exist".to_string(),
-                        )
-                        .into());
-                    }
-                    Some(aux) => {
-                        let mut subscriptions = Vec::new();
-                        for item in aux {
-                            let subs = SubscriptionRepo::map(item.clone());  
-                            //let doc = item.clone();
-                            //let user_id = doc.get(USER_ID_FIELD).unwrap();
-                            //let user_id1 = user_id.as_s().unwrap().clone();
-                            subscriptions.push(subs);
-                        }
-                        Ok(subscriptions)
-                    }
+                let aux = data.items();
+
+                let mut subscriptions = Vec::new();
+                for item in aux {
+                    let subs = SubscriptionRepo::map(item.clone());
+                    //let doc = item.clone();
+                    //let user_id = doc.get(USER_ID_FIELD).unwrap();
+                    //let user_id1 = user_id.as_s().unwrap().clone();
+                    subscriptions.push(subs);
                 }
+                Ok(subscriptions)
             }
         }
     }
@@ -365,15 +348,12 @@ impl SubscriptionRepository for SubscriptionRepo {
             return Err(SubscriptionError::SubscriptionDynamoDBError(e.into()).into());
         }
 
-        match results.unwrap().items() {
-            None => Err(SubscriptionError::SubscriptionNotFound(asset_id, user_id).into()),
-            Some(aux) => {
-                if aux.len() == 0 {
-                    Ok(None)
-                } else {
-                    Ok(Some(SubscriptionRepo::map(aux[0].clone())))
-                }
-            }
+        let aux = results.unwrap();
+        let aux2 = aux.items();
+        if aux2.len() == 0 {
+            Ok(None)
+        } else {
+            Ok(Some(SubscriptionRepo::map(aux2[0].clone())))
         }
     }
 

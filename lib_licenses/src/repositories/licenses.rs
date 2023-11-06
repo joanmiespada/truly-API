@@ -1,5 +1,5 @@
 use aws_sdk_dynamodb::types::Select;
-use lib_config::timing::{iso8601, from_iso8601};
+use lib_config::timing::{from_iso8601, iso8601};
 use std::collections::HashMap;
 use std::str::FromStr;
 use uuid::Uuid;
@@ -82,18 +82,11 @@ impl LicenseRepo {
                 return Err(LicenseCreationError(e.to_string()).into());
             }
             Ok(data) => {
-                let op_items = data.items();
-                match op_items {
-                    None => {
-                        return Err(LicenseNotFoundError("License not found".to_string()).into());
-                    }
-                    Some(aux) => {
-                        for doc in aux {
-                            let mut license = License::new();
-                            mapping_from_doc_to_license(doc, &mut license);
-                            queried.push(license.clone());
-                        }
-                    }
+                let items = data.items();
+                for doc in items {
+                    let mut license = License::new();
+                    mapping_from_doc_to_license(doc, &mut license);
+                    queried.push(license.clone());
                 }
             }
         }
@@ -124,8 +117,8 @@ impl LicenseRepo {
                     Local::now().format("%m-%d-%Y %H:%M:%S").to_string(),
                     e
                 );
-               // tracing::error!(mssag);
-                log::error!("{}", mssag );
+                // tracing::error!(mssag);
+                log::error!("{}", mssag);
                 return Err(LicenseDynamoDBError(e.to_string()).into());
             }
             Ok(res) => match res.item {
@@ -195,7 +188,7 @@ impl LicenseRepository for LicenseRepo {
             Err(e) => {
                 let message = format!("Error creating license: {}", e);
                 //tracing::error!("{}", message);
-                log::error!("{}", message );
+                log::error!("{}", message);
                 Err(LicenseDynamoDBError(message).into())
             }
         }
@@ -280,7 +273,7 @@ impl LicenseRepository for LicenseRepo {
                     e
                 );
                 //tracing::error!(mssag);
-                log::error!("{}", mssag );
+                log::error!("{}", mssag);
                 return Err(LicenseDynamoDBError(e.to_string()).into());
             }
             Ok(result) => {
@@ -322,7 +315,7 @@ impl LicenseRepository for LicenseRepo {
                     e
                 );
                 //tracing::error!(message);
-                log::error!("{}", message );
+                log::error!("{}", message);
                 return Err(LicenseCreationError(e.to_string()).into());
             }
         }
@@ -348,7 +341,7 @@ impl LicenseRepository for LicenseRepo {
                     e
                 );
                 //tracing::error!(message);
-                log::error!("{}", message );
+                log::error!("{}", message);
                 return Err(LicenseCreationError(e.to_string()).into());
             }
         }

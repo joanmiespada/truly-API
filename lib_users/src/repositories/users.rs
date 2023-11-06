@@ -154,32 +154,25 @@ impl UsersRepo {
                 return Err(UserDynamoDBError(e.to_string()).into());
             }
             Ok(items) => {
-                let doc_op = items.items();
-                match doc_op {
-                    None => Ok(None),
-                    Some(docs) => {
-                        if docs.len() == 0 {
-                            Ok(None)
-                        } else {
-                            //for doc in docus {
-                            //let _user_id = doc.get(USERID_FIELD_NAME_PK).unwrap();
-                            let doc = docs[0].clone();
-                            let data = doc.get(return_field); //USERID_FIELD_NAME).unwrap();
-                            match data {
-                                None => Ok(None),
-                                Some(value) => {
-                                    let val = value.as_s().unwrap();
-                                    Ok(Some(val.clone()))
-                                }
-                            }
+                let docs = items.items();
+
+                if docs.len() == 0 {
+                    Ok(None)
+                } else {
+                    //for doc in docus {
+                    //let _user_id = doc.get(USERID_FIELD_NAME_PK).unwrap();
+                    let doc = docs[0].clone();
+                    let data = doc.get(return_field); //USERID_FIELD_NAME).unwrap();
+                    match data {
+                        None => Ok(None),
+                        Some(value) => {
+                            let val = value.as_s().unwrap();
+                            Ok(Some(val.clone()))
                         }
                     }
                 }
-                //usersqueried.push(user_id.clone());
-                //}
             }
         }
-        //Ok(usersqueried)
     }
 
     async fn check_duplicates(&self, user: &User) -> ResultE<bool> {
@@ -321,7 +314,12 @@ impl UsersRepo {
 
         request = request.transact_items(
             TransactWriteItem::builder()
-                .put(user_fields.table_name(USERS_TABLE_NAME.as_str()).build())
+                .put(
+                    user_fields
+                        .table_name(USERS_TABLE_NAME.as_str())
+                        .build()
+                        .unwrap(),
+                )
                 .build(),
         );
 
@@ -337,8 +335,9 @@ impl UsersRepo {
                 TransactWriteItem::builder()
                     .put(
                         device_fields
-                            .table_name(LOGIN_DEVICE_TABLE_NAME.as_str())
-                            .build(),
+                            .table_name(LOGIN_DEVICE_TABLE_NAME.clone())
+                            .build()
+                            .unwrap(),
                     )
                     .build(),
             );
@@ -356,8 +355,9 @@ impl UsersRepo {
                 TransactWriteItem::builder()
                     .put(
                         wallet_fields
-                            .table_name(LOGIN_WALLET_TABLE_NAME.as_str())
-                            .build(),
+                            .table_name(LOGIN_WALLET_TABLE_NAME.clone())
+                            .build()
+                            .unwrap(),
                     )
                     .build(),
             );
@@ -399,8 +399,9 @@ impl UsersRepo {
                 TransactWriteItem::builder()
                     .put(
                         email_fields
-                            .table_name(LOGIN_EMAIL_TABLE_NAME.as_str())
-                            .build(),
+                            .table_name(LOGIN_EMAIL_TABLE_NAME.clone())
+                            .build()
+                            .unwrap(),
                     )
                     .build(),
             );

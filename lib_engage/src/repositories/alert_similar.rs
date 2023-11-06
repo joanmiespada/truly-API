@@ -123,7 +123,7 @@ impl AlertSimilarRepo {
 
         let request = self.client.transact_write_items().transact_items(
             TransactWriteItem::builder()
-                .put(items.table_name(ALERT_SIMILARS_TABLE_NAME.clone()).build())
+                .put(items.table_name(ALERT_SIMILARS_TABLE_NAME.clone()).build().unwrap())
                 .build(),
         );
         
@@ -249,7 +249,7 @@ impl AlertSimilarRepository for AlertSimilarRepo {
         let response = query_input.send_with(&self.client).await?;
         
 
-        let alerts: Vec<AlertSimilar> = response.items().unwrap_or(&Vec::new())
+        let alerts: Vec<AlertSimilar> = response.items() //.unwrap_or(&Vec::new())
         .iter()
         .map(|item|  mapping_from_doc(item).unwrap() ) // Assuming a 'from' implementation exists
         .collect();
@@ -302,7 +302,7 @@ impl AlertSimilarRepository for AlertSimilarRepo {
         let response = scan_input.send_with(&self.client).await?;
         
 
-        let alerts: Vec<AlertSimilar> = response.items().unwrap_or(&Vec::new())
+        let alerts: Vec<AlertSimilar> = response.items() //.unwrap_or(&Vec::new())
         .iter()
         .map(|item|  mapping_from_doc(item).unwrap() ) // Assuming a 'from' implementation exists
         .collect();

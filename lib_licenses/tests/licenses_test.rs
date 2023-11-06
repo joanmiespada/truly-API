@@ -44,7 +44,7 @@ async fn creation_table() {
     let req = client.list_tables().limit(10);
     let list_tables_result = req.send().await.unwrap();
 
-    assert_eq!(list_tables_result.table_names().unwrap().len(), 1);
+    assert_eq!(list_tables_result.table_names().len(), 1);
 }
 
 #[tokio::test]

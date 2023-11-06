@@ -1,9 +1,8 @@
 locals {
-  #region_prefix          = element(split("-", var.aws_region), 0)
   lambda_name_descriptor = "${var.common_tags.project}-${var.common_tags.service}-${var.common_tags.environment}-${var.aws_region}-${var.api_stage_version}-${var.service_name}"
 }
 resource "aws_cloudwatch_log_group" "truly_lambda_licenses_cloudwatch" {
-  name              = "/aws/lambda/${local.lambda_name_descriptor}" #${var.truly_lambda_licenses_function_name}-${local.region_prefix}"
+  name              = "/aws/lambda/${local.lambda_name_descriptor}" 
   retention_in_days = 1
 
   tags = merge(var.common_tags, { "logic" : var.service_name })
@@ -11,7 +10,7 @@ resource "aws_cloudwatch_log_group" "truly_lambda_licenses_cloudwatch" {
 
 
 resource "aws_lambda_function" "truly_lambda_licenses" {
-  function_name = local.lambda_name_descriptor # var.truly_lambda_licenses_function_name
+  function_name = local.lambda_name_descriptor 
   architectures = var.architectures
   memory_size   = 512
   timeout       = 30
@@ -45,15 +44,7 @@ resource "aws_lambda_function" "truly_lambda_licenses" {
   }
 
   depends_on = [
-    # var.resource_logs,
-    # var.resource_dynamodb,
-    # var.resource_xray,
-    # var.resource_secretsman,
-    # var.resource_kms,
-    # var.resource_sqs,
-    # var.resource_sns,
     aws_cloudwatch_log_group.truly_lambda_licenses_cloudwatch,
-    #var.rust_backtrace
   ]
 
   tags = merge(var.common_tags, { "logic" : var.service_name })

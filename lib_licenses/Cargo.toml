@@ -21,10 +21,10 @@ lib_async_ops = { git="https://github.com/joanmiespada/truly-shared" }
 log = "0.4.20"
 chrono = {version="0.4.31", features = ["serde"] }
 serde = { version = "1.0.190", features = ["derive"] }
-serde_json = "1.0.107"
+serde_json = "1.0.108"
 rust-argon2 = "2.0.0"
-aws-config = "0.56.1"
-aws-sdk-dynamodb = "0.34.0"
+aws-config = "0.57.1"
+aws-sdk-dynamodb = "0.35.0"
 async-trait = "0.1.74"
 #tracing = { version = "0.1", features = ["log"] }
 validator = { version = "0.16", features = ["derive"] }
@@ -33,8 +33,8 @@ http-serde = "1.1.3"
 url = {version="2.4.1", features=["serde"] }
 hex = "0.4.3"
 rand = "0.8.5"
-aws-sdk-kms = "0.34.0"
-aws-sdk-secretsmanager = "0.34.0"
+aws-sdk-kms = "0.35.0"
+aws-sdk-secretsmanager = "0.35.0"
 base64 = "0.21.5"
 uuid = { version = "1.5.0", features=["v4","fast-rng","macro-diagnostics","serde"]}
 maplit = "1.0.2"
@@ -46,7 +46,7 @@ derive_builder = "0.12.0"
 
 [target.aarch64-apple-darwin.dev-dependencies]
 env_logger = "0.10.0"
-aws-types = "0.56.1"
+aws-types = "0.57.1"
 spectral = "0.6.0"
 #testcontainers = "0.14.0"
 testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack2"  }
