@@ -96,8 +96,4 @@ variable "smtp_from" {
   type = string
 }
 
-variable "smtp_server" {
-  type = string
-}
-
 

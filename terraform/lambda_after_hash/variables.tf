@@ -59,11 +59,3 @@ variable "smtp_server" {
 variable "smtp_from" {
   type = string
 }
-
-variable "smtp_server" {
-  type = string
-}
-
-variable "smtp_from" {
-  type = string
-}
