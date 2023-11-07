@@ -79,42 +79,42 @@ account_id=$(aws sts get-caller-identity --query Account --profile $profile --ou
 lambdas='[
         {
             "name": "license_lambda",
-            "version": "0.0.0",
+            "version": "0.0.1",
             "path": "lambda_license/image/Dockerfile",
             "description": "License lambda: manage assets"
         },{
             "name": "admin_lambda",
-            "version": "0.0.0",
+            "version": "0.0.1",
             "path": "lambda_admin/image/Dockerfile",
             "description": "Admin lambda: manage operation with high privilegies"
         },{
             "name": "login_lambda",
-            "version": "0.0.0",
+            "version": "0.0.1",
             "path": "lambda_login/image/Dockerfile",
             "description": "Login lambda: manage login and signups"
         },{
             "name": "user_lambda",
-            "version": "0.0.0",
+            "version": "0.0.1",
             "path": "lambda_user/image/Dockerfile",
             "description": "User lambda: manage user crud ops"
         },{
             "name": "after_hash_lambda",
-            "version": "0.0.0",
+            "version": "0.0.1",
             "path": "lambda_after_hash/image/Dockerfile",
             "description": "After hash lambda: manage asset state after hashes computation"
         },{
             "name": "error_lambda",
-            "version": "0.0.0",
+            "version": "0.0.1",
             "path": "lambda_error/image/Dockerfile",
             "description": "Error lambda: capture errors "
         },{
             "name": "alert_similars_lambda",
-            "version": "0.0.0",
+            "version": "0.0.1",
             "path": "lambda_alert_similars/image/Dockerfile",
             "description": "Alert Similar lambda: get alerts from matchapi about new matches among assets"
         },{
             "name": "notifications_lambda",
-            "version": "0.0.0",
+            "version": "0.0.1",
             "path": "lambda_notifications/image/Dockerfile",
             "description": "Notifications lambda: send notifications "
         }
@@ -147,19 +147,19 @@ if [[ "$images_skip" == 'false' ]]; then
             if ! aws ecr describe-repositories --region $region --profile $profile --repository-names $repo_name &> /dev/null; then
                 echo "Repository $repo_name doesn't exist in $region. Creating..."
                 res=$(aws ecr create-repository --repository-name $repo_name --region $region --profile $profile || exit 1)
-                #imageVersion="0.0.0"
+                #imageVersion="0.0.1"
             # else
             #     # Get the latest image tag
             #     latest_image=$(aws ecr list-images --region $region --profile $profile --repository-name $repo_name | jq -r '.imageIds | sort_by(.imagePushedAt) | .[-1].imageTag' || exit 1)
             #     if [ "$latest_image" != "null" ] && [ -n "$latest_image" ]; then
             #         echo "Latest image in the $repo_name repository in $region is: $latest_image"
-            #         # Extract the version portion, e.g., "lambda_login:0.0.0" -> "0.0.0"
+            #         # Extract the version portion, e.g., "lambda_login:0.0.0" -> "0.0.1"
             #         latest_version="${latest_image#*:}"
             #         # Increment the version
             #         imageVersion=$(increment_version $latest_version)
             #     else
             #         echo "No images found in the $repo_name repository in $region"
-            #         imageVersion="0.0.0"
+            #         imageVersion="0.0.1"
             #     fi
             fi
 
