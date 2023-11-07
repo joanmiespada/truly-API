@@ -42,13 +42,9 @@ locals {
 }
 
 module "lambda_login" {
-  source       = "./lambda_login"
-  service_name = "login"
-  common_tags  = local.common_tags
-  # resource_logs            = aws_iam_role_policy_attachment.truly_lambda_logs
-  # resource_xray            = aws_iam_role_policy_attachment.truly_lambda_XRAY
-  # resource_dynamodb        = aws_iam_role_policy_attachment.truly_lambda_dynamodb
-  # resource_secretsman      = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
+  source                   = "./lambda_login"
+  service_name             = "login"
+  common_tags              = local.common_tags
   role                     = aws_iam_role.truly_lambda_execution_role.arn
   jwt_token_time_exp_hours = var.jwt_token_time_exp_hours
   environment_flag         = var.environment_flag
@@ -60,6 +56,8 @@ module "lambda_login" {
   architectures            = var.architectures
   ecr_image                = var.ecr_login_lambda
   trace_level              = var.trace_level
+  smtp_server              = var.email_server
+  smtp_from                = var.email
 
 }
 
@@ -68,11 +66,7 @@ module "lambda_user" {
 
   service_name = "user"
   common_tags  = local.common_tags
-  # resource_logs       = aws_iam_role_policy_attachment.truly_lambda_logs
-  # resource_xray       = aws_iam_role_policy_attachment.truly_lambda_XRAY
-  # resource_dynamodb   = aws_iam_role_policy_attachment.truly_lambda_dynamodb
-  # resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
-  role = aws_iam_role.truly_lambda_execution_role.arn
+  role         = aws_iam_role.truly_lambda_execution_role.arn
 
   environment_flag = var.environment_flag
   trace_log        = var.trace_log
@@ -84,6 +78,8 @@ module "lambda_user" {
   architectures     = var.architectures
   ecr_image         = var.ecr_user_lambda
   trace_level       = var.trace_level
+  smtp_server       = var.email_server
+  smtp_from         = var.email
 }
 
 module "lambda_admin" {
@@ -91,11 +87,7 @@ module "lambda_admin" {
 
   service_name = "admin"
   common_tags  = local.common_tags
-  # resource_logs       = aws_iam_role_policy_attachment.truly_lambda_logs
-  # resource_xray       = aws_iam_role_policy_attachment.truly_lambda_XRAY
-  # resource_dynamodb   = aws_iam_role_policy_attachment.truly_lambda_dynamodb
-  # resource_secretsman = aws_iam_role_policy_attachment.truly_lambda_SECRETSMAN
-  role = aws_iam_role.truly_lambda_execution_role.arn
+  role         = aws_iam_role.truly_lambda_execution_role.arn
 
   environment_flag = var.environment_flag
   trace_log        = var.trace_log
@@ -107,6 +99,8 @@ module "lambda_admin" {
   architectures     = var.architectures
   ecr_image         = var.ecr_admin_lambda
   trace_level       = var.trace_level
+  smtp_server       = var.email_server
+  smtp_from         = var.email
 }
 
 module "lambda_licenses" {
@@ -135,6 +129,8 @@ module "lambda_licenses" {
   url_base_permanent_images = "https://cdn.${var.dns_prefix}.${var.dns_base}"
 
   smtp_server = var.email_server
+  smtp_from   = var.email
+
 
 }
 
@@ -158,6 +154,8 @@ module "lambda_after_hash" {
 
   email               = var.email
   video_out_topic_arn = aws_sns_topic.video_out_topic.arn
+  smtp_server         = var.email_server
+  smtp_from           = var.email
 
 }
 
@@ -182,6 +180,8 @@ module "lambda_error" {
   email = var.email
 
   video_error_topic_arn = aws_sns_topic.video_error_topic.arn
+  smtp_server           = var.email_server
+  smtp_from             = var.email
 
 }
 
@@ -206,6 +206,10 @@ module "lambda_alert_similar" {
   email                   = var.email
   alert_similar_topic_arn = aws_sns_topic.notify_new_similar_topic.arn
 
+  smtp_server = var.email_server
+  smtp_from   = var.email
+
+
 }
 
 module "lambda_notifications" {
@@ -229,6 +233,7 @@ module "lambda_notifications" {
   email = var.email
 
   smtp_secret_manager_arn = aws_secretsmanager_secret.smtp_secret.arn
-  smtp_server = var.email_server
+  smtp_server             = var.email_server
+  smtp_from               = var.email
 
 }

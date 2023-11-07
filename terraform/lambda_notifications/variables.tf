@@ -53,5 +53,8 @@ variable "smtp_secret_manager_arn" {
 }
 variable "smtp_server" {
   type = string
-  
+}
+
+variable "smtp_from" {
+  type = string
 }

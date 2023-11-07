@@ -2082,7 +2082,7 @@ dependencies = [
 [[package]]
 name = "lib_async_ops"
 version = "0.0.2"
-source = "git+https://github.com/joanmiespada/truly-shared#0c663ab9e34caac60f8ad7fd0f5341ea476ee5c2"
+source = "git+https://github.com/joanmiespada/truly-shared#c67077e7b9b42f368406a5dc427680b3b0f7df68"
 dependencies = [
  "aws-sdk-sns",
  "aws-sdk-sqs",
@@ -2099,8 +2099,8 @@ dependencies = [
 
 [[package]]
 name = "lib_config"
-version = "0.0.41"
-source = "git+https://github.com/joanmiespada/truly-shared#0c663ab9e34caac60f8ad7fd0f5341ea476ee5c2"
+version = "0.0.42"
+source = "git+https://github.com/joanmiespada/truly-shared#c67077e7b9b42f368406a5dc427680b3b0f7df68"
 dependencies = [
  "async-trait",
  "aws-config",
@@ -2174,7 +2174,7 @@ dependencies = [
 [[package]]
 name = "lib_hash_objs"
 version = "0.0.3"
-source = "git+https://github.com/joanmiespada/truly-shared#0c663ab9e34caac60f8ad7fd0f5341ea476ee5c2"
+source = "git+https://github.com/joanmiespada/truly-shared#c67077e7b9b42f368406a5dc427680b3b0f7df68"
 dependencies = [
  "async-trait",
  "base64",
@@ -2267,7 +2267,7 @@ dependencies = [
 [[package]]
 name = "lib_video_objs"
 version = "0.0.1"
-source = "git+https://github.com/joanmiespada/truly-shared#0c663ab9e34caac60f8ad7fd0f5341ea476ee5c2"
+source = "git+https://github.com/joanmiespada/truly-shared#c67077e7b9b42f368406a5dc427680b3b0f7df68"
 dependencies = [
  "async-trait",
  "base64",

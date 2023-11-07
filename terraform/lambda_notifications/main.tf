@@ -32,6 +32,7 @@ resource "aws_lambda_function" "truly_lambda_notifications" {
       TRACE_LEVEL         = var.trace_level
       SMTP_SECRET_MANAGER = var.smtp_secret_manager_arn
       SMTP_HOST            = var.smtp_server
+      SMTP_FROM_EMAIL      = var.smtp_from
     }
   }
 

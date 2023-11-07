@@ -31,6 +31,8 @@ resource "aws_lambda_function" "truly_lambda_user" {
       RUST_BACKTRACE = var.rust_backtrace
       API_STAGE      = var.api_stage_version
       TRACE_LEVEL    = var.trace_level
+      SMTP_HOST            = var.smtp_server
+      SMTP_FROM_EMAIL      = var.smtp_from
     }
   }
 

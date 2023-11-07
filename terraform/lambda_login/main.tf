@@ -4,7 +4,7 @@ locals {
 }
 
 resource "aws_cloudwatch_log_group" "truly_lambda_login_cloudwatch" {
-  name              = "/aws/lambda/${local.lambda_name_descriptor}" 
+  name              = "/aws/lambda/${local.lambda_name_descriptor}"
   retention_in_days = 1
 
   tags = merge(var.common_tags, { "logic" : "${var.service_name}" })
@@ -12,8 +12,8 @@ resource "aws_cloudwatch_log_group" "truly_lambda_login_cloudwatch" {
 
 
 resource "aws_lambda_function" "truly_lambda_login" {
-  function_name = local.lambda_name_descriptor 
-  architectures = var.architectures            
+  function_name = local.lambda_name_descriptor
+  architectures = var.architectures
   memory_size   = 512
   timeout       = 30
   package_type  = "Image"
@@ -25,17 +25,19 @@ resource "aws_lambda_function" "truly_lambda_login" {
 
   environment {
     variables = {
-      ENVIRONMENT              = "${var.environment_flag}"
-      RUST_LOG                 = "${var.rust_log}"
-      JWT_TOKEN_TIME_EXP_HOURS = "${var.jwt_token_time_exp_hours}"
-      RUST_BACKTRACE           = "${var.rust_backtrace}"
-      API_STAGE                = "${var.api_stage_version}"
+      ENVIRONMENT              = var.environment_flag
+      RUST_LOG                 = var.rust_log
+      JWT_TOKEN_TIME_EXP_HOURS = var.jwt_token_time_exp_hours
+      RUST_BACKTRACE           = var.rust_backtrace
+      API_STAGE                = var.api_stage_version
       TRACE_LEVEL              = var.trace_level
+      SMTP_HOST                = var.smtp_server
+      SMTP_FROM_EMAIL          = var.smtp_from
     }
   }
 
   depends_on = [
-     aws_cloudwatch_log_group.truly_lambda_login_cloudwatch,
+    aws_cloudwatch_log_group.truly_lambda_login_cloudwatch,
   ]
 
   tags = merge(var.common_tags, { "logic" : "${var.service_name}" })

@@ -41,3 +41,10 @@ variable "trace_level" {
   type=string
 }
 
+variable "smtp_server" {
+  type = string
+}
+
+variable "smtp_from" {
+  type = string
+}

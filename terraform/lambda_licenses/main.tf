@@ -24,16 +24,17 @@ resource "aws_lambda_function" "truly_lambda_licenses" {
 
   environment {
     variables = {
-      ENVIRONMENT = var.environment_flag
-      RUST_LOG    = var.rust_log
-      KMS_KEY_ID  = var.kms_cypher_owner
-      RUST_BACKTRACE = var.rust_backtrace
-      API_STAGE = var.api_stage_version
+      ENVIRONMENT                   = var.environment_flag
+      RUST_LOG                      = var.rust_log
+      KMS_KEY_ID                    = var.kms_cypher_owner
+      RUST_BACKTRACE                = var.rust_backtrace
+      API_STAGE                     = var.api_stage_version
       HASHES_SIMILAR_VIDEO_IN_TOPIC = var.hashes_similarities_arn
       MATCHAPI_ENDPOINT             = var.matchapi_endpoint
       TRACE_LEVEL                   = var.trace_level
       URL_BASE_PERMANENT_IMAGES     = var.url_base_permanent_images
       SMTP_HOST                     = var.smtp_server
+      SMTP_FROM_EMAIL               = var.smtp_from
     }
   }
 

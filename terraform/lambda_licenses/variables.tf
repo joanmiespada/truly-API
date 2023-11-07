@@ -92,3 +92,12 @@ variable "smtp_server" {
   description = "email server for sending emails"
 }
 
+variable "smtp_from" {
+  type = string
+}
+
+variable "smtp_server" {
+  type = string
+}
+
+

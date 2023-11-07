@@ -51,3 +51,11 @@ variable "video_error_topic_arn" {
   type = string
   
 }
+
+variable "smtp_server" {
+  type = string
+}
+
+variable "smtp_from" {
+  type = string
+}
