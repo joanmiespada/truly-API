@@ -14,7 +14,7 @@ path="tests/lib.rs"
 [dependencies]
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
 chrono = {version="0.4.31", features = ["serde"] }
-serde = { version = "1.0.190", features = ["derive"] }
+serde = { version = "1.0.192", features = ["derive"] }
 serde_json = "1.0.108"
 rust-argon2 = "2.0.0"
 aws-config = "0.57.1"

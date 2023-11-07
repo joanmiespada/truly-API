@@ -14,7 +14,7 @@ lib_users = { path = "../lib_users" }
 #lib_ledger = { path = "../deprecate/lib_ledger"}
 env_logger = "0.10.0"
 chrono = {version="0.4.31", features = ["serde"] }
-serde = { version = "1.0.190", features = ["derive"] }
+serde = { version = "1.0.192", features = ["derive"] }
 serde_json = "1.0.108"
 aws-config = "0.57.1"
 aws-sdk-dynamodb = "0.35.0"
