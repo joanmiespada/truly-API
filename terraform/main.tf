@@ -134,6 +134,8 @@ module "lambda_licenses" {
 
   url_base_permanent_images = "https://cdn.${var.dns_prefix}.${var.dns_base}"
 
+  smtp_server = var.email_server
+
 }
 
 module "lambda_after_hash" {

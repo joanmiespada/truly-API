@@ -86,3 +86,9 @@ variable "trace_level" {
 variable "url_base_permanent_images" {
   type=string
 }
+
+variable "smtp_server" {
+  type = string
+  description = "email server for sending emails"
+}
+
