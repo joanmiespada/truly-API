@@ -24,6 +24,7 @@ WORKDIR /tmp
 
 COPY lambda_login/src /tmp/lambda_login/src
 COPY lambda_login/Cargo.toml /tmp/lambda_login/Cargo.toml
+COPY Cargo.lock /tmp/lambda_login/Cargo.lock
 COPY lib_licenses /tmp/lib_licenses
 COPY lib_users /tmp/lib_users
 COPY lib_util_jwt /tmp/lib_util_jwt

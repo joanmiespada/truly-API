@@ -24,6 +24,7 @@ WORKDIR /tmp
 
 COPY lambda_notifications/src /tmp/lambda_notifications/src
 COPY lambda_notifications/Cargo.toml /tmp/lambda_notifications/Cargo.toml
+COPY Cargo.lock /tmp/lambda_notifications/Cargo.lock
 COPY lib_licenses /tmp/lib_licenses
 COPY lib_engage /tmp/lib_engage
 COPY lib_users /tmp/lib_users

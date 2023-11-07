@@ -24,6 +24,7 @@ WORKDIR /tmp
 
 COPY lambda_license/src /tmp/lambda_license/src
 COPY lambda_license/Cargo.toml /tmp/lambda_license/Cargo.toml
+COPY Cargo.lock /tmp/lambda_license/Cargo.lock
 COPY lib_licenses /tmp/lib_licenses
 COPY lib_engage /tmp/lib_engage
 COPY lib_users /tmp/lib_users
