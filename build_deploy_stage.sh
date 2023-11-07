@@ -233,6 +233,7 @@ fi
 if [[ "$secrets_skip" == 'false' ]]; then
     for region in "${multi_region[@]}"
     do
+        #manual secrets are here, automatic secrets are in terraform.
         cargo run -p truly_cli -- --store_secret ./truly_cli/res/secrets_prod_stage.json --create --region $region --profile $profile # || exit 1
 
         if [ $? -eq 0 ]; then

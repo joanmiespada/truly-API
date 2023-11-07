@@ -3,7 +3,7 @@ use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
 //use blockchains::manage_blockchains;
 //use contracts::manage_contracts;
 //use ledger::manage_ledger;
-use lib_config::config::Config;
+use lib_config::{config::Config, secrets::SECRETS_MANAGER_APP_KEYS};
 
 use schemas::create_schemas;
 use secrets::create_secrets;
@@ -63,7 +63,7 @@ async fn command(
     }
 
     if let Some(path) = store_secret {
-        create_secrets(create, delete, path, &config).await?;
+        create_secrets(create, delete, SECRETS_MANAGER_APP_KEYS.to_string()  , path, &config).await?;
     }
 
     if let Some(email) = adminuser {

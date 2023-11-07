@@ -11,6 +11,7 @@ use lib_config::infra::create_secret_manager_with_values;
 pub async fn create_secrets(
     create: bool,
     delete: bool,
+    secret_id: String,
     secrets_json_path: String,
     config: &Config,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -24,7 +25,7 @@ pub async fn create_secrets(
 
         buf_reader.read_to_string(&mut contents)?;
 
-        if let Err(e) = create_secret_manager_with_values(&contents, config).await {
+        if let Err(e) = create_secret_manager_with_values(&contents, &secret_id, config).await {
             error!("{}", e);
         }
         
