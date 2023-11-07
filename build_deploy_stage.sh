@@ -15,6 +15,10 @@ jq --version || exit 1
 
 source scripts.sh # load functions
 
+typeset -A build_specific_lambda
+source lambdas.sh # load lambdas
+lambdas_to_build=($(echo $lambdas | jq -r '.[].name'))
+
 #check paramaters. They allow to skip some sections
 images_skip='false'
 secrets_skip='false'
@@ -38,6 +42,12 @@ do
             ;;
         "--git_skip")
             git_skip='true'
+            ;;
+        "--lambdas")
+            shift
+            lambdas_to_build=("$@")
+            parse_lambda_names
+            break # No need to parse further arguments as they are treated as lambda names
             ;;
     esac
 done
@@ -76,49 +86,8 @@ map_email_servers=(
 
 account_id=$(aws sts get-caller-identity --query Account --profile $profile --output text)
 
-lambdas='[
-        {
-            "name": "license_lambda",
-            "version": "0.0.1",
-            "path": "lambda_license/image/Dockerfile",
-            "description": "License lambda: manage assets"
-        },{
-            "name": "admin_lambda",
-            "version": "0.0.1",
-            "path": "lambda_admin/image/Dockerfile",
-            "description": "Admin lambda: manage operation with high privilegies"
-        },{
-            "name": "login_lambda",
-            "version": "0.0.1",
-            "path": "lambda_login/image/Dockerfile",
-            "description": "Login lambda: manage login and signups"
-        },{
-            "name": "user_lambda",
-            "version": "0.0.1",
-            "path": "lambda_user/image/Dockerfile",
-            "description": "User lambda: manage user crud ops"
-        },{
-            "name": "after_hash_lambda",
-            "version": "0.0.1",
-            "path": "lambda_after_hash/image/Dockerfile",
-            "description": "After hash lambda: manage asset state after hashes computation"
-        },{
-            "name": "error_lambda",
-            "version": "0.0.1",
-            "path": "lambda_error/image/Dockerfile",
-            "description": "Error lambda: capture errors "
-        },{
-            "name": "alert_similars_lambda",
-            "version": "0.0.1",
-            "path": "lambda_alert_similars/image/Dockerfile",
-            "description": "Alert Similar lambda: get alerts from matchapi about new matches among assets"
-        },{
-            "name": "notifications_lambda",
-            "version": "0.0.1",
-            "path": "lambda_notifications/image/Dockerfile",
-            "description": "Notifications lambda: send notifications "
-        }
-    ]'
+
+
 
 if [[ "$git_skip" == 'false' ]]; then
     git add .
@@ -129,48 +98,43 @@ fi
 if [[ "$images_skip" == 'false' ]]; then
 
     echo $lambdas | jq -c '.[]' | while read -r lambda; do
-        lambda_name=$(echo $lambda | jq -r '.name')
+        lambda_name=$(echo $lambda | jq -r '.name')    
         imageVersion=$(echo $lambda | jq -r '.version')
-        #imageVersion="latest"
         docker_path=$(echo $lambda | jq -r '.path')
         repo_name="$lambda_name-$ENVIRONMENT"
 
-        echo "Building $lambda_name..."
-        docker build --platform=linux/arm64  -t $lambda_name:$imageVersion -f $docker_path . || exit 1
-        #docker build --platform=linux/arm64  -t $lambda_name:latest -f $docker_path . || exit 1
+        if [[ -n "${build_specific_lambda[$lambda_name]}" || ${#build_specific_lambda} -eq 0 ]]; then
 
-        for region in "${multi_region[@]}"
-        do
-            reg=${region//-/_}
-            eval "declare -A map_lambda_repos_${reg}"
-            # Check if ECR repository exists
-            if ! aws ecr describe-repositories --region $region --profile $profile --repository-names $repo_name &> /dev/null; then
-                echo "Repository $repo_name doesn't exist in $region. Creating..."
-                res=$(aws ecr create-repository --repository-name $repo_name --region $region --profile $profile || exit 1)
-                #imageVersion="0.0.1"
-            # else
-            #     # Get the latest image tag
-            #     latest_image=$(aws ecr list-images --region $region --profile $profile --repository-name $repo_name | jq -r '.imageIds | sort_by(.imagePushedAt) | .[-1].imageTag' || exit 1)
-            #     if [ "$latest_image" != "null" ] && [ -n "$latest_image" ]; then
-            #         echo "Latest image in the $repo_name repository in $region is: $latest_image"
-            #         # Extract the version portion, e.g., "lambda_login:0.0.0" -> "0.0.1"
-            #         latest_version="${latest_image#*:}"
-            #         # Increment the version
-            #         imageVersion=$(increment_version $latest_version)
-            #     else
-            #         echo "No images found in the $repo_name repository in $region"
-            #         imageVersion="0.0.1"
-            #     fi
-            fi
 
-            repo_url="$account_id.dkr.ecr.$region.amazonaws.com/$repo_name"
-            aws ecr get-login-password --region $region --profile $profile  | docker login --username AWS --password-stdin $repo_url || exit 1
-            docker tag $lambda_name:$imageVersion $repo_url:$imageVersion  || exit 1
-            #docker tag $lambda_name:latest $repo_url:$imageVersion  || exit 1
-            docker push $repo_url:$imageVersion  || exit 1
-            eval "map_lambda_repos_${reg}[$lambda_name]=${repo_url}:${imageVersion}"
-            
-        done
+            echo "Building $lambda_name..."
+            docker build --platform=linux/arm64  -t $lambda_name:$imageVersion -f $docker_path . || exit 1
+
+            for region in "${multi_region[@]}"
+            do
+                reg=${region//-/_}
+                eval "declare -A map_lambda_repos_${reg}"
+                # Check if ECR repository exists
+                if ! aws ecr describe-repositories --region $region --profile $profile --repository-names $repo_name &> /dev/null; then
+                    echo "Repository $repo_name doesn't exist in $region. Creating..."
+                    res=$(aws ecr create-repository --repository-name $repo_name --region $region --profile $profile || exit 1)
+                fi
+                repo_url="$account_id.dkr.ecr.$region.amazonaws.com/$repo_name"
+                aws ecr get-login-password --region $region --profile $profile  | docker login --username AWS --password-stdin $repo_url || exit 1
+                docker tag $lambda_name:$imageVersion $repo_url:$imageVersion  || exit 1
+                docker push $repo_url:$imageVersion  || exit 1
+                eval "map_lambda_repos_${reg}[$lambda_name]=${repo_url}:${imageVersion}"
+                
+            done
+
+        else
+            for region in "${multi_region[@]}"
+            do
+                reg=${region//-/_}
+                eval "declare -A map_lambda_repos_${reg}"
+                repo_url="$account_id.dkr.ecr.$region.amazonaws.com/$repo_name"
+                eval "map_lambda_repos_${reg}[$lambda_name]=${repo_url}:${imageVersion}"
+            done
+        fi
     done
 else
     echo 'skipping lambdas compilation, reusing current images already pushed'
