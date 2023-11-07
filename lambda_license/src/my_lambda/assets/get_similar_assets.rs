@@ -7,7 +7,7 @@ use lib_licenses::{
     services::assets::{AssetManipulation, AssetService},
 };
 use serde_json::json;
-use tracing::info;
+use log::info;
 use url::Url;
 use uuid::Uuid;
 use validator::ValidationError;

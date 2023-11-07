@@ -14,12 +14,13 @@ pub struct CreateShorterAsync {
     pub asset_id: Uuid,
 }
 
-#[tracing::instrument]
+//#[tracing::instrument]
+#[allow(dead_code)]
 pub async fn async_create_my_shorter_sns(
     req: &Request,
     _c: &Context,
-    config: &Config,
-    asset_service: &AssetService,
+    _config: &Config,
+    _asset_service: &AssetService,
     video_service: &VideoService,
     user_id: &String,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {

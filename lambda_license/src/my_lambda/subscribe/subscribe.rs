@@ -11,7 +11,7 @@ use lib_licenses::services::video::VideoService;
 use lib_users::errors::users::UserNoExistsError;
 use lib_users::models::user::User;
 use serde::{Deserialize,Serialize};
-use tracing::info;
+use log::info;
 use url::Url;
 use validator::{ValidationError, Validate};
 use lib_users::services::users::{UsersService,UserManipulation};

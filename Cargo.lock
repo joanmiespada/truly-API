@@ -1819,8 +1819,6 @@ dependencies = [
  "serde_json",
  "tokio",
  "tower-http",
- "tracing",
- "tracing-subscriber",
  "validator",
 ]
 
@@ -1840,8 +1838,6 @@ dependencies = [
  "serde_json",
  "tokio",
  "tower-http",
- "tracing",
- "tracing-subscriber",
  "uuid",
  "validator",
 ]
@@ -1862,8 +1858,6 @@ dependencies = [
  "serde_json",
  "tokio",
  "tower-http",
- "tracing",
- "tracing-subscriber",
  "uuid",
  "validator",
 ]
@@ -1882,8 +1876,6 @@ dependencies = [
  "serde_json",
  "tokio",
  "tower-http",
- "tracing",
- "tracing-subscriber",
  "uuid",
  "validator",
 ]
@@ -1932,8 +1924,6 @@ dependencies = [
  "serde_json",
  "tokio",
  "tower-http",
- "tracing",
- "tracing-subscriber",
  "url",
  "uuid",
  "validator",
@@ -1954,8 +1944,6 @@ dependencies = [
  "serde_json",
  "tokio",
  "tower-http",
- "tracing",
- "tracing-subscriber",
  "validator",
 ]
 
@@ -1987,8 +1975,6 @@ dependencies = [
  "testcontainers",
  "tokio",
  "tower-http",
- "tracing",
- "tracing-subscriber",
  "url",
  "uuid",
  "validator",
@@ -2043,8 +2029,6 @@ dependencies = [
  "serde_json",
  "tokio",
  "tower-http",
- "tracing",
- "tracing-subscriber",
  "validator",
 ]
 

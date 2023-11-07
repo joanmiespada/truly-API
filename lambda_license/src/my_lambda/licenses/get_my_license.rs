@@ -11,7 +11,7 @@ use lib_licenses::{
     services::assets::{AssetManipulation, AssetService},
 };
 use serde_json::json;
-use tracing::log::error;
+use log::error;
 use uuid::Uuid;
 use validator::ValidationError;
 

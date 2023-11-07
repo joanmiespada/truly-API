@@ -3,7 +3,7 @@ use lib_config::config::Config;
 use lib_users::models::user::UserRoles;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::{get_header_jwt, JWTSecurityError};
-use tracing::info;
+use log::info;
 
 use self::error::ApiLambdaAdminUserError;
 use self::get_user_by_id::get_user_by_id;
@@ -117,7 +117,7 @@ pub async fn function_handler(
         ),
     }
 }
-#[tracing::instrument]
+//#[tracing::instrument]
 fn build_resp(
     msg: String,
     status_code: StatusCode,

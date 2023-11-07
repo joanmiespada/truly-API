@@ -6,7 +6,6 @@ use lib_licenses::errors::asset::{AssetDynamoDBError, AssetNoExistsError, AssetA
 use lib_licenses::models::asset::HashProcessStatus;
 use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableFildsAsset};
 use lib_licenses::services::video::{VideoService, VideoManipulation};
-use tracing::info;
 use validator::ValidationError;
 
 //#[instrument]
@@ -30,7 +29,7 @@ pub async fn create_asset(
             Some(payload) => asset_fields = payload.clone(),
         },
     }
-    info!("calling asset service: add");
+    log::info!("calling asset service: add");
     let op1 = asset_service.add(&asset_fields, &user_id).await;
 
     if let Err(e) = op1 {

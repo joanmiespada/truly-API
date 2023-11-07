@@ -7,7 +7,7 @@ use lib_licenses::errors::license::LicenseDynamoDBError;
 use lib_licenses::errors::owner::OwnerNoExistsError;
 use lib_licenses::models::license::CreatableFildsLicense;
 use lib_licenses::services::licenses::{LicenseManipulation, LicenseService};
-use tracing::info;
+use log::info;
 use validator::ValidationError;
 
 //#[instrument]
