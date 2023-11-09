@@ -7,10 +7,6 @@ edition = "2021"
 name="lib_users"
 crate-type=["lib"]
 
-[[test]]
-name="integration"
-path="tests/lib.rs"
-
 [dependencies]
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
 chrono = {version="0.4.31", features = ["serde"] }

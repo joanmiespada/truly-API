@@ -113,6 +113,8 @@ impl SenderEmailsRepo {
         subscription: Subscription,
     ) -> ResultE<()> {
 
+        log::info!("Sending intent email to: {}", user);
+
         let email = user.email().clone().unwrap();
         let url = asset.url().clone().unwrap();
 

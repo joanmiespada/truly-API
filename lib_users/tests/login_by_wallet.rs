@@ -1,3 +1,5 @@
+mod common;
+
 use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::infra::build_local_stack_connection;
 use lib_config::schema::Schema;
@@ -10,6 +12,9 @@ use lib_users::services::users::{UserManipulation, UsersService};
 use spectral::{assert_that, result::ResultAssertions};
 use std::env;
 use testcontainers::*;
+
+use crate::common::create_secrets;
+
 
 #[tokio::test]
 async fn login_user_wallet_test() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -63,22 +68,4 @@ async fn login_user_wallet_test() -> Result<(), Box<dyn std::error::Error + Send
     Ok(())
 }
 
-pub async fn create_secrets(
-    client: &aws_sdk_secretsmanager::Client,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let secrets_json = r#"
-    {
-        "HMAC_SECRET" : "localtest_hmac_fgsdfg3rterfr2345weg@#$%WFRsdf",
-        "JWT_TOKEN_BASE": "localtest_jwt_fdgsdfg@#$%Sdfgsdfg@#$3"
-    }
-    "#;
 
-    client
-        .create_secret()
-        .name(SECRETS_MANAGER_APP_KEYS.to_string())
-        .secret_string(secrets_json)
-        .send()
-        .await?;
-
-    Ok(())
-}

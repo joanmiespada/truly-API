@@ -1,3 +1,5 @@
+mod common;
+
 use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::infra::build_local_stack_connection;
 use lib_config::schema::Schema;
@@ -10,6 +12,8 @@ use lib_users::services::users::{UpdatableFildsUser, UserManipulation, UsersServ
 use spectral::{assert_that, result::ResultAssertions};
 use std::env;
 use testcontainers::*;
+
+use crate::common::create_secrets;
 
 #[tokio::test]
 async fn update_user_test() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -111,7 +115,7 @@ async fn update_user_test() -> Result<(), Box<dyn std::error::Error + Send + Syn
         *user_db.wallet_address().clone().unwrap()
     );
 
-    assert_eq!( *user_db2.status(), UserStatus::Disabled );
+    assert_eq!(*user_db2.status(), UserStatus::Disabled);
 
     Ok(())
 }
@@ -179,26 +183,6 @@ async fn update_password_user_test() -> Result<(), Box<dyn std::error::Error + S
 
     let res3 = user_service.login(&None, &None, &email, &password).await;
     assert_that(&res3).is_err();
-
-    Ok(())
-}
-
-pub async fn create_secrets(
-    client: &aws_sdk_secretsmanager::Client,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let secrets_json = r#"
-    {
-        "HMAC_SECRET" : "localtest_hmac_fgsdfg3rterfr2345weg@#$%WFRsdf",
-        "JWT_TOKEN_BASE": "localtest_jwt_fdgsdfg@#$%Sdfgsdfg@#$3"
-    }
-    "#;
-
-    client
-        .create_secret()
-        .name(SECRETS_MANAGER_APP_KEYS.to_string())
-        .secret_string(secrets_json)
-        .send()
-        .await?;
 
     Ok(())
 }

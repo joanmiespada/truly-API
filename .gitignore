@@ -15,4 +15,5 @@ sui.log.*
 qwdata
 grafana-storage
 terraform.tfstate*
+/terraform/plan.tfplan
 

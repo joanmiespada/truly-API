@@ -1,7 +1,8 @@
+use std::fmt;
+
 use chrono::{DateTime, Utc};
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-use std::fmt;
 use uuid::Uuid;
 use validator::Validate;
 
@@ -180,6 +181,27 @@ impl User {
     }
     pub fn set_status(&mut self, val: &UserStatus) {
         self.status = val.clone()
+    }
+}
+
+impl fmt::Display for User {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "User {{\n")?;
+        write!(f, "  User ID: {},\n", self.user_id)?;
+        write!(f, "  Creation Time: {},\n", self.creation_time)?;
+        write!(f, "  Last Update Time: {},\n", self.last_update_time)?;
+        if let Some(ref email) = self.email {
+            write!(f, "  Email: {},\n", email)?;
+        }
+        if let Some(ref device) = self.device {
+            write!(f, "  Device: {},\n", device)?;
+        }
+        if let Some(ref wallet_address) = self.wallet_address {
+            write!(f, "  Wallet Address: {},\n", wallet_address)?;
+        }
+        write!(f, "  Roles: {:?},\n", self.roles)?;
+        write!(f, "  Status: {}\n", self.status)?;
+        write!(f, "}}")
     }
 }
 
