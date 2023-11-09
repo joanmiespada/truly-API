@@ -47,6 +47,7 @@ pub async fn create_intent(
             Some(payload) => subscription_fields = payload.clone(),
         },
     }
+    log::info!("subscription_fields: {:?}", subscription_fields);
     let asset;
     let asset_op = asset_service.get_by_url(&subscription_fields.url).await;
     if let Err(e) = asset_op {
@@ -66,6 +67,7 @@ pub async fn create_intent(
         }
     } else {
         asset = asset_op.unwrap();
+        log::info!("asset found!: {:?}", asset);
     }
 
     let user;
@@ -78,6 +80,7 @@ pub async fn create_intent(
             user1.set_email(&subscription_fields.email);
             let user_id = user_service.add(&mut user1, &None).await?;
             user = user_service.get_by_id(&user_id).await?;
+            log::info!("user not found, but created successfully: {:?}", user);
         //} else if let Some(_) = e.downcast_ref::<UserAlreadyExistsError>() {
         } else if let Some(m) = e.downcast_ref::<ValidationError>() {
             return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
@@ -90,9 +93,10 @@ pub async fn create_intent(
         }
     } else {
         user = user_op.unwrap();
+        log::info!("user found!: {:?}", user);
     }
 
-    info!("calling asset service: add");
+    info!("calling subscription service: intent");
     let op1 = subscription_service.intent(user, asset).await;
 
     if let Err(e) = op1 {
@@ -115,6 +119,7 @@ pub async fn create_intent(
         }
     }
     let subscription_id = op1.unwrap().clone();
+    log::info!("subscription_id completed successfully: {}", subscription_id.to_string());
 
     build_resp(subscription_id.to_string(), StatusCode::OK)
 }
