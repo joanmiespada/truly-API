@@ -57,7 +57,7 @@ impl<T: SubscriptionRepository>  SubscriptionService<T> {
     }
 
     pub async fn delete(&self, id: Uuid) -> ResultE<()> {
-        self.subscription_repo.delete(id).await
+         self.subscription_repo.delete(id).await
     }
 
     pub async fn confirm(&self, id: Uuid) -> ResultE<()> {
@@ -71,6 +71,22 @@ impl<T: SubscriptionRepository>  SubscriptionService<T> {
                 }
 
                 subs.confirmed = ConfirmedStatus::Enabled;
+                self.subscription_repo.update(subs).await
+            }
+        }
+    }
+
+    pub async fn unconfirm(&self, id: Uuid) -> ResultE<()> {
+        let aux = self.subscription_repo.get_by_id(id).await?;
+
+        match aux {
+            None => return Err(Box::new(SubscriptionError::SubscriptionIDNotFound(id))),
+            Some(mut subs) => {
+                if subs.confirmed == ConfirmedStatus::Disabled {
+                    return Ok(());
+                }
+
+                subs.confirmed = ConfirmedStatus::Disabled;
                 self.subscription_repo.update(subs).await
             }
         }

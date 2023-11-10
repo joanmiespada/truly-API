@@ -1,6 +1,7 @@
 use lambda_http::RequestExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
+use lib_config::result::ResultE;
 use lib_users::services::users::{UserManipulation, UsersService};
 use serde_json::json;
 //use tracing::instrument;
@@ -17,7 +18,7 @@ pub async fn get_users(
     _c: &Context,
     _config: &Config,
     user_service: &UsersService,
-) -> Result<Response<String>, Box<dyn std::error::Error>> {
+) -> ResultE<Response<String>> {
     let page_number;
     //let page_size = PAGESIZE_MIN;
     match req.query_string_parameters().all("pageNumber") {

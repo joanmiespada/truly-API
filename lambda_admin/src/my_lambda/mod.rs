@@ -1,11 +1,9 @@
-use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt, Response};
+use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt};
 use lib_config::config::Config;
-use lib_users::models::user::UserRoles;
+use lib_config::result::ResultE;
 use lib_users::services::users::UsersService;
-use lib_util_jwt::jwt::{get_header_jwt, JWTSecurityError};
-use log::info;
-
-use self::error::ApiLambdaAdminUserError;
+use lib_util_jwt::build::build_resp;
+use lib_util_jwt::jwt::check_jwt_token_as_admin;
 use self::get_user_by_id::get_user_by_id;
 use self::get_users::get_users;
 use self::password_update_user::password_update_user;
@@ -25,7 +23,7 @@ pub async fn function_handler(
     config: &Config,
     user_service: &UsersService,
     req: Request,
-) -> Result<impl IntoResponse, Box<dyn std::error::Error>> {
+) -> ResultE<impl IntoResponse> {
     let context = req.lambda_context();
     //let query_string = req.query_string_parameters().to_owned();
     //request.uri().path()
@@ -117,48 +115,5 @@ pub async fn function_handler(
         ),
     }
 }
-//#[tracing::instrument]
-fn build_resp(
-    msg: String,
-    status_code: StatusCode,
-) -> Result<Response<String>, Box<dyn std::error::Error>> {
-    //} Response<Body> {
-    let res = Response::builder()
-        .status(status_code)
-        .header("content-type", "text/json")
-        .body(msg);
-    //.map_err(Box::new)?;
-    match res {
-        Err(e) => Err(ApiLambdaAdminUserError { 0: e.to_string() }.into()),
-        Ok(resp) => Ok(resp),
-    }
-    //Ok(res)
-}
 
-fn check_jwt_token_as_admin(req: &Request, config: &Config) -> Result<bool, JWTSecurityError> {
-    let auth_flag;
-    let req_headers = req.headers();
 
-    let jwt_secret = config.env_vars().jwt_token_base().unwrap();
-    let claim_ops = get_header_jwt(req_headers, &jwt_secret);
-    match claim_ops {
-        Ok(clm) => {
-            info!("{}", clm.to_string());
-            let matches = clm
-                .roles
-                .into_iter()
-                .map(|i| UserRoles::deserialize(i.as_str()).unwrap())
-                .filter(|i| i.is_admin())
-                .count();
-            if matches == 0 {
-                auth_flag = false;
-            } else {
-                auth_flag = true;
-            }
-        }
-        Err(e) => {
-            return Err(e);
-        }
-    }
-    Ok(auth_flag)
-}

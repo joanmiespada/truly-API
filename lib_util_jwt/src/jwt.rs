@@ -3,6 +3,9 @@ use http::{HeaderMap, HeaderValue};
 
 use chrono::Utc;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+use lambda_http::Request;
+use lib_config::config::Config;
+use lib_users::models::user::UserRoles;
 use serde::{Deserialize, Serialize};
 
 pub const BEARER: &str = "Bearer ";
@@ -111,4 +114,32 @@ pub fn get_header_jwt(
             "jwt error: no auth header field present".to_string(),
         )),
     }
+}
+
+pub fn check_jwt_token_as_admin(req: &Request, config: &Config) -> Result<bool, JWTSecurityError> {
+    let auth_flag;
+    let req_headers = req.headers();
+
+    let jwt_secret = config.env_vars().jwt_token_base().unwrap();
+    let claim_ops = get_header_jwt(req_headers, &jwt_secret);
+    match claim_ops {
+        Ok(clm) => {
+            log::info!("{}", clm.to_string());
+            let matches = clm
+                .roles
+                .into_iter()
+                .map(|i| UserRoles::deserialize(i.as_str()).unwrap())
+                .filter(|i| i.is_admin())
+                .count();
+            if matches == 0 {
+                auth_flag = false;
+            } else {
+                auth_flag = true;
+            }
+        }
+        Err(e) => {
+            return Err(e);
+        }
+    }
+    Ok(auth_flag)
 }

@@ -17,16 +17,6 @@ use uuid::Uuid;
 
 use crate::notificate::send_notifications;
 
-#[derive(Debug)]
-pub struct ApiLambdaError(pub String);
-
-impl std::error::Error for ApiLambdaError {}
-
-impl std::fmt::Display for ApiLambdaError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "api lambda error: {}", self.0)
-    }
-}
 
 pub type Similars = HashMap<Url, Uuid>;
 pub type Subscription = HashMap<Url, Similars>;

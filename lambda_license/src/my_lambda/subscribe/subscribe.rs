@@ -1,5 +1,5 @@
 use crate::my_lambda::assets::create_asset::create_asset;
-use crate::my_lambda::{build_resp, build_resp_env};
+use lib_util_jwt::build::{build_resp, build_resp_env};
 use lambda_http::RequestPayloadExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
@@ -164,7 +164,7 @@ pub async fn remove_subscription(
     subscription_service: &SubscriptionService<SubscriptionRepo>,
     id: uuid::Uuid,
 ) -> Result<Response<String>, Box<dyn std::error::Error + Send + Sync>> {
-    let op1 = subscription_service.delete(id).await;
+    let op1 = subscription_service.unconfirm(id).await;
 
     if let Err(e) = op1 {
         if let Some(err_m) = e.downcast_ref::<SubscriptionError>() {

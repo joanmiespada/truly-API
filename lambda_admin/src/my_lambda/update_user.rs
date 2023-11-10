@@ -1,6 +1,7 @@
 use lambda_http::RequestPayloadExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
+use lib_config::result::ResultE;
 use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError};
 use lib_users::services::users::{UpdatableFildsUser, UserManipulation, UsersService};
 use serde::{Deserialize, Serialize};
@@ -23,7 +24,7 @@ pub async fn update_user(
     _config: &Config,
     user_service: &UsersService,
     id: &String,
-) -> Result<Response<String>, Box<dyn std::error::Error>> {
+) -> ResultE<Response<String>> {
     let user_fields;
     match req.payload::<UpdateUser>() {
         Err(e) => {

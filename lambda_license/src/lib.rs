@@ -9,6 +9,7 @@ use lib_engage::{
 };
 use lib_licenses::services::{assets::AssetService, owners::OwnerService, video::VideoService};
 use lib_users::services::users::UsersService;
+use lib_util_jwt::build::{build_resp, jwt_mandatory};
 use matchit::Router;
 use url::Url;
 use uuid::Uuid;
@@ -19,7 +20,6 @@ use crate::my_lambda::{
         get_asset::{get_asset_by_id, get_asset_by_url},
         get_similar_assets::{get_similar_assets_by_id, get_similar_assets_by_url},
     },
-    build_resp, jwt_mandatory,
     subscribe::subscribe::{confirm_subscription, create_intent, remove_subscription},
     video::async_create_my_hash::async_create_my_hash_similars_sns,
 };

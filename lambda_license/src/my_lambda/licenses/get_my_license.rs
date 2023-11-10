@@ -15,7 +15,7 @@ use log::error;
 use uuid::Uuid;
 use validator::ValidationError;
 
-use crate::my_lambda::{build_resp, build_resp_env, build_resp_no_cache};
+use lib_util_jwt::build::{build_resp, build_resp_env, build_resp_no_cache};
 
 //#[instrument]
 #[allow(dead_code)]

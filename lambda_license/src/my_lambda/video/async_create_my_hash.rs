@@ -3,11 +3,10 @@ use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
 use lib_licenses::services::assets::AssetService;
 use lib_licenses::services::video::{VideoManipulation, VideoService};
+use lib_util_jwt::build::build_resp;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
-
-use crate::my_lambda::build_resp;
 
 #[derive(Debug, Serialize, Validate, Deserialize, Clone, Copy)]
 pub struct CreateHashSimilarsAsync {

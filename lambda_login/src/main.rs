@@ -4,16 +4,13 @@ use lib_config::{config::Config, traces::setup_tracing_level,
     logs::setup_log};
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
-use my_lambda::{function_handler, ApiLambdaError};
+use lib_util_jwt::error::ApiLambdaError;
+use my_lambda::function_handler;
 
 mod my_lambda;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-
-    //for (key, value) in env::vars() {
-    //    println!("{}: {}", key, value);
-    //}
 
     setup_log();
 

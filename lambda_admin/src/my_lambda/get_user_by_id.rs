@@ -1,5 +1,6 @@
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
+use lib_config::result::ResultE;
 use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError};
 use lib_users::services::users::{UserManipulation, UsersService};
 use serde_json::json;
@@ -14,7 +15,7 @@ pub async fn get_user_by_id(
     _config: &Config,
     user_service: &UsersService,
     id: &String,
-) -> Result<Response<String>, Box<dyn std::error::Error>> {
+) -> ResultE<Response<String>> {
     let op_res = user_service.get_by_id(id).await;
     match op_res {
         Ok(user) => build_resp(json!(user).to_string(), StatusCode::OK),

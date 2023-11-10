@@ -1,4 +1,4 @@
-use crate::my_lambda::{build_resp, build_resp_env};
+use lib_util_jwt::build::{build_resp, build_resp_env };
 use lambda_http::RequestPayloadExt;
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;

@@ -1,5 +1,6 @@
 use lambda_http::{http::StatusCode, lambda_runtime::Context, Request, Response};
 use lib_config::config::Config;
+use lib_config::result::ResultE;
 use lib_users::errors::users::{UserDynamoDBError, UserNoExistsError};
 use lib_users::services::users::{PromoteUser, UserManipulation, UsersService};
 
@@ -13,7 +14,7 @@ pub async fn promote_user(
     config: &Config,
     user_service: &UsersService,
     id: &String,
-) -> Result<Response<String>, Box<dyn std::error::Error>> {
+) -> ResultE<Response<String>> {
     downgrade_upgrade_user(req, c, config, user_service, id, &PromoteUser::Upgrade).await
 }
 
@@ -24,7 +25,7 @@ pub async fn downgrade_user(
     config: &Config,
     user_service: &UsersService,
     id: &String,
-) -> Result<Response<String>, Box<dyn std::error::Error>> {
+) -> ResultE<Response<String>> {
     downgrade_upgrade_user(req, c, config, user_service, id, &PromoteUser::Downgrade).await
 }
 
@@ -36,7 +37,7 @@ async fn downgrade_upgrade_user(
     user_service: &UsersService,
     id: &String,
     grade: &PromoteUser,
-) -> Result<Response<String>, Box<dyn std::error::Error>> {
+) -> ResultE<Response<String>> {
     let op_res = user_service.promote_user_to(id, grade).await;
     match op_res {
         Err(e) => {

@@ -1,4 +1,3 @@
-// https://blog.logrocket.com/deploy-lambda-functions-rust/
 
 use lambda_runtime::{run, service_fn, Error};
 

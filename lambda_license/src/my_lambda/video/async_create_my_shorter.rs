@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
 
-use crate::my_lambda::build_resp;
+use lib_util_jwt::build::build_resp;
 
 #[derive(Debug, Serialize, Deserialize, Clone, Validate)]
 pub struct CreateShorterAsync {
