@@ -91,8 +91,12 @@ account_id=$(aws sts get-caller-identity --query Account --profile $profile --ou
 
 if [[ "$git_skip" == 'false' ]]; then
     git add .
-    git commit -m "stage deploy"
-    git push
+    if git diff --staged --quiet; then
+        echo "No changes to commit."
+    else
+        git commit -m "deploying to $ENVIRONMENT"
+        git push
+    fi
 fi
 
 if [[ "$images_skip" == 'false' ]]; then
