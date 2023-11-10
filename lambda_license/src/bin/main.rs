@@ -1,4 +1,6 @@
 use lambda_http::service_fn;
+use lambda_license::function_handler;
+use lambda_license::my_lambda::error::ApiLambdaError;
 use lib_config::config::Config;
 use lib_config::logs::setup_log;
 use lib_config::traces::setup_tracing_level;
@@ -13,9 +15,7 @@ use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
 use lib_engage::repositories::subscription::SubscriptionRepo;
 use lib_engage::services::subscription::SubscriptionService;
-use my_lambda::{error::ApiLambdaError, function_handler};
 
-mod my_lambda;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
@@ -52,12 +52,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
             &config,
             &asset_service,
             &owners_service,
-            //&blockchain_service,
             &user_service,
             &video_service,
-            //&tx_service,
-            //&license_service,
-            //&ledger_service,
             &subscription_service,
             event,
         )

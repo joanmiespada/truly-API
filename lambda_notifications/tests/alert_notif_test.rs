@@ -6,7 +6,6 @@ use http::{HeaderMap, HeaderValue};
 use lambda_notifications::Notificator;
 use lambda_notifications::collect_alerts;
 use lambda_notifications::create_notifications;
-//use lambda_notifications::function_handler;
 use lambda_runtime::Context;
 use lambda_runtime::LambdaEvent;
 use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
@@ -24,7 +23,6 @@ use lib_engage::repositories::subscription::SubscriptionRepo;
 use lib_engage::services::alert_similar::AlertSimilarService;
 use lib_engage::services::subscription::SubscriptionService;
 use lib_licenses::models::asset::Asset;
-use lib_licenses::models::asset::SourceType;
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::schema_asset::AssetAllSchema;
 use lib_licenses::repositories::schema_owners::OwnerSchema;
@@ -39,8 +37,8 @@ use lib_users::repositories::schema_user::UserAllSchema;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UserManipulation;
 use lib_users::services::users::UsersService;
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
+use lib_util_jwt::randoms::generate_random_email;
+use lib_util_jwt::randoms::generate_random_url;
 use spectral::prelude::*;
 use testcontainers::*;
 
@@ -82,39 +80,6 @@ fn _payload_lambda_event() -> LambdaEvent<CloudWatchEvent> {
     aux
 }
 
-fn generate_random_path(len: usize) -> String {
-    thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(len)
-        .map(char::from)
-        .collect::<String>()
-}
-
-fn generate_random_url() -> String {
-    let random_path = generate_random_path(10);
-    let random_id = generate_random_path(5);
-    format!("https://example.com/{}/{}", random_path, random_id)
-}
-
-fn generate_random_email() -> String {
-    use rnglib::{RNG, Language};
-    let rng = RNG::try_from(&Language::Elven).unwrap();
-
-    // let local_part: String = thread_rng()
-    //     .sample_iter(&Alphanumeric)
-    //     .take(8)
-    //     .map(char::from)
-    //     .collect();
-    let first_name = rng.generate_name();
-    let last_name = rng.generate_name();
-    // let domain: String = thread_rng()
-    //     .sample_iter(&Alphanumeric)
-    //     .take(5)
-    //     .map(char::from)
-    //     .collect();
-    format!("{}.{}@example.com",first_name,last_name )
-}
-
 
 async fn create_user(user_service: &UsersService) -> ResultE<User> {
     let mut new_user = User::new();
@@ -141,7 +106,7 @@ async fn create_asset(asset_service: &AssetService, user: &Option<User>) -> Resu
         .longitude(None)
         .father(None)
         .source_details(None)
-        //.source(SourceType::Others)
+        .source(None)
         .source(None)
         .build()?;
 

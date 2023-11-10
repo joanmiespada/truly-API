@@ -125,9 +125,11 @@ impl UsersRepo {
         //let mut usersqueried = Vec::new();
         let value_av = AttributeValue::S(search_value.to_string());
 
-        let mut filter = "".to_string();
-        filter.push_str(search_field);
-        filter.push_str(" = :value");
+        //let mut filter = "".to_string();
+        //filter.push_str(search_field);
+        //filter.push_str(" = :value");
+
+        let filter = format!("{} = :value", search_field);
 
         let request = self
             .client
@@ -676,7 +678,7 @@ impl UserRepository for UsersRepo {
                 LOGIN_EMAIL_INDEX,
                 LOGIN_EMAIL_FIELD_NAME,
                 email,
-                PASSWORD_FIELD_NAME,
+                LOGIN_EMAIL_FIELD_NAME,//PASSWORD_FIELD_NAME,
                 LOGIN_EMAIL_TABLE_NAME.as_str(),
             )
             .await?;

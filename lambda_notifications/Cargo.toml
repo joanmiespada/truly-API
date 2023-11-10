@@ -11,11 +11,6 @@ path = "src/lib.rs"
 name="lambda_notifications"
 path="src/bin/main.rs"
 
-[[test]]
-name="integration"
-path="tests/lib.rs"
-
-
 [dependencies]
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
 lib_engage = { path = "../lib_engage" }
@@ -38,6 +33,7 @@ url = "2.4.1"
 
 [dev-dependencies]
 lambda_notifications = { path = "../lambda_notifications" }
+lib_util_jwt = { path = "../lib_util_jwt" }
 aws-sdk-dynamodb = "0.35.0"
 env_logger = "0.10.0"
 aws-types = "0.57.1"
@@ -47,5 +43,3 @@ base64 = "0.21.5"
 tokio = { version="1.33.0", features=["full"]}
 chrono = {version="0.4.31", features = ["serde"] }
 http = "0.2.9"
-rand = "0.8.5"
-random_name_generator = "0.3.6"
