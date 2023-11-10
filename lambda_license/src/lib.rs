@@ -2,18 +2,27 @@ pub mod my_lambda;
 
 use std::str::FromStr;
 
+use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt};
 use lib_config::config::Config;
-use lib_engage::{services::subscription::SubscriptionService, repositories::subscription::SubscriptionRepo};
+use lib_engage::{
+    repositories::subscription::SubscriptionRepo, services::subscription::SubscriptionService,
+};
 use lib_licenses::services::{assets::AssetService, owners::OwnerService, video::VideoService};
 use lib_users::services::users::UsersService;
-use lambda_http::{http::Method, http::StatusCode, IntoResponse, Request, RequestExt};
 use matchit::Router;
 use url::Url;
 use uuid::Uuid;
 
-use crate::my_lambda::{build_resp, assets::{get_asset::{get_asset_by_url, get_asset_by_id}, get_similar_assets::{get_similar_assets_by_id, get_similar_assets_by_url}, create_asset::create_asset}, jwt_mandatory, video::async_create_my_hash::async_create_my_hash_similars_sns, subscribe::subscribe::{create_intent, confirm_subscription, remove_subscription}};
-
-
+use crate::my_lambda::{
+    assets::{
+        create_asset::create_asset,
+        get_asset::{get_asset_by_id, get_asset_by_url},
+        get_similar_assets::{get_similar_assets_by_id, get_similar_assets_by_url},
+    },
+    build_resp, jwt_mandatory,
+    subscribe::subscribe::{confirm_subscription, create_intent, remove_subscription},
+    video::async_create_my_hash::async_create_my_hash_similars_sns,
+};
 
 //#[tracing::instrument]
 pub async fn function_handler(
@@ -38,11 +47,17 @@ pub async fn function_handler(
     router.insert("/api/similar", Some("999"))?;
     router.insert("/api/subscribe", Some("1000"))?;
     router.insert("/api/subscribe/confirmation/:id", Some("1001"))?;
-    router.insert("/api/subscribe/remove/:id", Some("1002"))?;
+    router.insert("/api/subscribe/:id", Some("1002"))?;
 
-    let query_pairs: Vec<(String, String)> = req.uri().query()
-            .map(|v| url::form_urlencoded::parse(v.as_bytes()).into_owned().collect())
-            .unwrap_or_else(Vec::new);
+    let query_pairs: Vec<(String, String)> = req
+        .uri()
+        .query()
+        .map(|v| {
+            url::form_urlencoded::parse(v.as_bytes())
+                .into_owned()
+                .collect()
+        })
+        .unwrap_or_else(Vec::new);
 
     match req.method() {
         &Method::GET => match router.at(req.uri().path()) {
@@ -52,7 +67,6 @@ pub async fn function_handler(
             ),
             Ok(matched) => match matched.value.unwrap() {
                 "1" => {
-
                     let id_opt = query_pairs
                         .iter()
                         .find(|(key, _)| key == "url")
@@ -60,14 +74,7 @@ pub async fn function_handler(
 
                     if let Some(id) = id_opt {
                         let url = Url::from_str(&id)?;
-                        get_asset_by_url(
-                            &req,
-                            &context,
-                            config,
-                            asset_service,
-                            &url,
-                        )
-                        .await
+                        get_asset_by_url(&req, &context, config, asset_service, &url).await
                     } else {
                         // Handle the case where the id parameter is not present in the query string
                         // For instance, you can return an error response:
@@ -91,7 +98,7 @@ pub async fn function_handler(
                     )
                     .await;
                 }
-                
+
                 "99" => {
                     let id = matched.params.get("id").unwrap().to_string();
 
@@ -144,7 +151,7 @@ pub async fn function_handler(
                     };
                     create_asset(&req, &context, config, asset_service, video_service, ussrr).await
                 }
-                
+
                 "88" => {
                     match jwt_mandatory(&req, config) {
                         Err(e) => {
@@ -207,6 +214,19 @@ pub async fn function_handler(
                     }
                 }
 
+                &_ => build_resp(
+                    "POST method not allowed here".to_string(),
+                    StatusCode::METHOD_NOT_ALLOWED,
+                ),
+            },
+        },
+
+        &Method::DELETE => match router.at(req.uri().path()) {
+            Err(_) => build_resp(
+                "method not allowed *".to_string(),
+                StatusCode::METHOD_NOT_ALLOWED,
+            ),
+            Ok(matched) => match matched.value.unwrap() {
                 "1002" => {
                     let id = matched.params.get("id").unwrap().to_string();
                     if let Ok(subscription_id) = Uuid::from_str(id.as_str()) {
@@ -226,15 +246,15 @@ pub async fn function_handler(
                     }
                 }
                 &_ => build_resp(
-                    "POST method not allowed".to_string(),
+                    "DELETE method not allowed here".to_string(),
                     StatusCode::METHOD_NOT_ALLOWED,
                 ),
             },
         },
+
         _ => build_resp(
             "http verb doesn't use it here".to_string(),
             StatusCode::METHOD_NOT_ALLOWED,
         ),
     }
 }
-
