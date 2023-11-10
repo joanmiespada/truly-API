@@ -7,7 +7,7 @@ use lib_config::{
     schema::Schema,
 };
 use lib_licenses::{
-    models::asset::{Asset, SourceType},
+    models::asset::Asset,
     repositories::{
         assets::AssetRepo, schema_asset::AssetAllSchema, schema_owners::OwnerSchema,
         shorter::ShorterRepo,
@@ -106,7 +106,7 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
                     longitude: None,
                     latitude: None,
                     father: None,
-                    source: SourceType::Others,
+                    source: None, //SourceType::Others,
                     source_details: None,
                 };
             }
@@ -121,7 +121,7 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
                     longitude: None,
                     latitude: None,
                     father: father_id,
-                    source: SourceType::Others,
+                    source:  None, //SourceType::Others,
                     source_details: None,
                 };
             }

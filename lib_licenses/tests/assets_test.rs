@@ -6,7 +6,7 @@ use aws_sdk_dynamodb::Client;
 use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::schema::Schema;
-use lib_licenses::models::asset::{AssetStatus, SourceType};
+use lib_licenses::models::asset::AssetStatus;
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::schema_asset::AssetAllSchema;
 use lib_licenses::repositories::schema_owners::OwnerSchema;
@@ -87,7 +87,7 @@ async fn add_assets() {
         longitude: None,
         latitude: None,
         father: None,
-        source: SourceType::Others,
+        source: None,  // SourceType::Others,
         source_details: None,
     };
 
@@ -234,7 +234,7 @@ async fn check_ownership() {
                 longitude: None,
                 latitude: None,
                 father: None,
-                source: SourceType::Others,
+                source: None, //SourceType::Others,
                 source_details: None,
             };
 
@@ -313,7 +313,7 @@ async fn check_asset_tree_father_son() {
                 longitude: None,
                 latitude: None,
                 father: user.1 .1,
-                source: SourceType::Others,
+                source: None, //SourceType::Others,
                 source_details: None,
             };
 

@@ -86,7 +86,7 @@ pub struct CreatableFildsAsset {
 
     pub father: Option<Uuid>,
 
-    pub source: SourceType,
+    pub source: Option<SourceType>,
     #[validate(length(max = 1000))]
     pub source_details: Option<String>,
 }
@@ -172,6 +172,8 @@ impl AssetManipulation for AssetService {
         asset.set_latitude(&creation_asset.latitude);
 
         asset.set_father(&creation_asset.father);
+
+        asset.set_source(&creation_asset.source);
 
         info!("attaching new asset to repository");
         let res = self.repository.add(&asset, user_id).await?;

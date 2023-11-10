@@ -141,7 +141,8 @@ async fn create_asset(asset_service: &AssetService, user: &Option<User>) -> Resu
         .longitude(None)
         .father(None)
         .source_details(None)
-        .source(SourceType::Others)
+        //.source(SourceType::Others)
+        .source(None)
         .build()?;
 
     let us = match user {

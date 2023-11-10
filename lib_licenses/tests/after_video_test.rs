@@ -6,7 +6,7 @@ use lib_config::config::Config;
 use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::infra::build_local_stack_connection;
 use lib_config::schema::Schema;
-use lib_licenses::models::asset::{SourceType, VideoLicensingStatus};
+use lib_licenses::models::asset::VideoLicensingStatus;
 use lib_licenses::repositories::assets::AssetRepo;
 use lib_licenses::repositories::schema_asset::AssetAllSchema;
 use lib_licenses::repositories::schema_owners::OwnerSchema;
@@ -63,7 +63,7 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
         hash: Some("hash_f1".to_string()),
         hash_algorithm: Some("MD5".to_string()),
         father: None,
-        source: SourceType::Others,
+        source: None, // Some(SourceType::Others),
         source_details: None,
     };
     let shorter_id = "0".to_string();

@@ -56,6 +56,7 @@ pub async fn create_intent(
         } else if let Some(_) = e.downcast_ref::<AssetNoExistsError>() {
             create_asset(req, c, config, asset_service, video_service, None).await?;
             asset = asset_service.get_by_url(&subscription_fields.url).await?;
+            log::info!("asset not found, but created successfully: {:?}", asset);
         } else if let Some(m) = e.downcast_ref::<ValidationError>() {
             return build_resp(m.to_string(), StatusCode::BAD_REQUEST);
         } else {
