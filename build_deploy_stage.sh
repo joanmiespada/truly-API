@@ -1,5 +1,5 @@
 #!/bin/zsh
-set -x
+# set -x #debug mode
 
 # example: running the command first time to create everything from scratch at localstack:
 # $ ./build_deploy_stage.sh
@@ -94,8 +94,7 @@ if [[ "$images_skip" == 'false' ]]; then
 
     cat "$FILE" | jq -c '.[]' | while read -r lambda; do
         lambda_name=$(echo $lambda | jq -r '.name')    
-        imageVersion=$(echo $lambda | jq -r '.version')
-        docker_path=$(echo $lambda | jq -r '.path')
+        #imageVersion=$(echo $lambda | jq -r '.version')
         repo_name="$lambda_name-$ENVIRONMENT"
 
         if [[ -n "${build_specific_lambda[$lambda_name]}" || ${#build_specific_lambda} -eq 0 ]]; then
@@ -105,9 +104,11 @@ if [[ "$images_skip" == 'false' ]]; then
             update_lambda_versions "$lambda_name"
 
             # Re-fetch the updated version
-            imageVersion=$(echo $lambdas | jq -r --arg NAME "$lambda_name" '.[] | select(.name == $NAME) | .version')
+            imageVersion=$(jq -r --arg NAME "$lambda_name" '.[] | select(.name == $NAME) | .version' "$FILE")
+
 
             echo "Building $lambda_name..."
+            docker_path=$(echo $lambda | jq -r '.path')
             docker build --platform=linux/arm64  -t $lambda_name:$imageVersion -f $docker_path . || exit 1
 
             for region in "${multi_region[@]}"
