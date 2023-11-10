@@ -1,4 +1,5 @@
 #!/bin/zsh
+set -x
 
 # example: running the command first time to create everything from scratch at localstack:
 # $ ./build_deploy_stage.sh
@@ -15,9 +16,12 @@ jq --version || exit 1
 
 source scripts.sh # load functions
 
+FILE="lambdas.json"
 typeset -A build_specific_lambda
 source lambdas.sh # load lambdas
+#echo $lambdas
 lambdas_to_build=($(echo $lambdas | jq -r '.[].name'))
+#echo $lambdas_to_build
 
 #check paramaters. They allow to skip some sections
 images_skip='false'
@@ -86,22 +90,9 @@ map_email_servers=(
 
 account_id=$(aws sts get-caller-identity --query Account --profile $profile --output text)
 
-
-
-
-if [[ "$git_skip" == 'false' ]]; then
-    git add .
-    if git diff --staged --quiet; then
-        echo "No changes to commit."
-    else
-        git commit -m "deploying to $ENVIRONMENT"
-        git push
-    fi
-fi
-
 if [[ "$images_skip" == 'false' ]]; then
 
-    echo $lambdas | jq -c '.[]' | while read -r lambda; do
+    cat "$FILE" | jq -c '.[]' | while read -r lambda; do
         lambda_name=$(echo $lambda | jq -r '.name')    
         imageVersion=$(echo $lambda | jq -r '.version')
         docker_path=$(echo $lambda | jq -r '.path')
@@ -109,6 +100,12 @@ if [[ "$images_skip" == 'false' ]]; then
 
         if [[ -n "${build_specific_lambda[$lambda_name]}" || ${#build_specific_lambda} -eq 0 ]]; then
 
+            # Update the lambda version before building
+            echo "Updating version for lambda: $lambda_name"
+            update_lambda_versions "$lambda_name"
+
+            # Re-fetch the updated version
+            imageVersion=$(echo $lambdas | jq -r --arg NAME "$lambda_name" '.[] | select(.name == $NAME) | .version')
 
             echo "Building $lambda_name..."
             docker build --platform=linux/arm64  -t $lambda_name:$imageVersion -f $docker_path . || exit 1
@@ -159,6 +156,15 @@ else
     done
 fi
 
+if [[ "$git_skip" == 'false' ]]; then
+    git add .
+    if git diff --staged --quiet; then
+        echo "No changes to commit."
+    else
+        git commit -m "deploying to $ENVIRONMENT"
+        git push
+    fi
+fi
 
 echo 'running hard pre-requisits: keys and secrets'
 declare -A mapKeys
