@@ -37,7 +37,7 @@
   },
   {
     "name": "alert_similars_lambda",
-    "version": "0.0.12",
+    "version": "0.0.13",
     "path": "lambda_alert_similars/image/Dockerfile",
     "description": "Alert Similar lambda: get alerts from matchapi about new matches among assets"
   },

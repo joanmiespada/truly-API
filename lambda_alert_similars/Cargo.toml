@@ -6,7 +6,10 @@ edition = "2021"
 
 [[bin]]
 name="lambda_alert_similars"
-path="src/main.rs"
+path="src/bin/main.rs"
+
+[lib]
+path = "src/lib.rs"
 
 
 [dependencies]
@@ -26,3 +29,19 @@ validator = { version = "0.16", features = ["derive"] }
 aws-sdk-sqs = "0.35.0"
 uuid = { version = "1.5.0", features = ["v4","fast-rng",  "macro-diagnostics",  "serde"]}
 log = "0.4.20"
+
+[dev-dependencies]
+lambda_alert_similars = { path = "../lambda_alert_similars" }
+lib_async_ops = { git = "https://github.com/joanmiespada/truly-shared" }
+lib_util_jwt = { path = "../lib_util_jwt" }
+aws-sdk-dynamodb = "0.35.0"
+env_logger = "0.10.0"
+aws-types = "0.57.1"
+spectral = "0.6.0"
+testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack2"  }
+base64 = "0.21.5"
+tokio = { version="1.33.0", features=["full"]}
+chrono = {version="0.4.31", features = ["serde"] }
+http = "0.2.9"
+rand = "0.8.5"
+random_name_generator = "0.3.6"

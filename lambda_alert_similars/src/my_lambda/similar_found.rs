@@ -1,13 +1,13 @@
 use lib_config::config::Config;
 use lib_hash_objs::similar_alert::AlertExternalPayload;
-use lib_engage::{services::alert_similar::AlertSimilarService, repositories::alert_similar::AlertSimilarRepo, models::alert_similar::AlertSimilarBuilder};
+use lib_engage::{services::alert_similar::AlertSimilarService, repositories::alert_similar::AlertSimilarRepo, models::alert_similar::{AlertSimilarBuilder, AlertSimilar}};
 
 //#[instrument]
 pub async fn store_similar_found_successfully(
     data: &AlertExternalPayload,
     _config: &Config,
     notification_service: &AlertSimilarService<AlertSimilarRepo>,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<AlertSimilar, Box<dyn std::error::Error + Send + Sync>> {
 
     let mut notif_build = AlertSimilarBuilder::default();
     notif_build
@@ -23,16 +23,9 @@ pub async fn store_similar_found_successfully(
         .similar_frame_url(data.similar_frame_url.clone())
         .similar_asset_id(data.similar_asset_id.clone());
 
-    let op_res = notification_service.add(&mut notif_build).await;
-
-    match op_res {
-        Err(e) => {
-            log::error!("{}", e.to_string());
-        }
-        Ok(_) => {
-            log::info!("sucessfully stored");
-            log::info!("{:?}", data);
-        }
-    };
-    Ok(())
+    let op_res = notification_service.add(&mut notif_build).await?;
+    log::info!("Successfully stored");
+    log::info!("{:?}", data);
+    Ok(op_res)
+    
 }
