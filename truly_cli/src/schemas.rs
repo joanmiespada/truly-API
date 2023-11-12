@@ -1,6 +1,7 @@
 use aws_sdk_dynamodb::types::error::ResourceNotFoundException;
 use lib_config::config::Config;
 use lib_config::schema::Schema;
+use lib_engage::repositories::schema_alert_similar::AlertSimilarSchema;
 use lib_licenses::repositories::{
     schema_asset::AssetAllSchema, schema_licenses::LicenseSchema, schema_owners::OwnerSchema,
 };
@@ -10,6 +11,7 @@ use lib_licenses::{
     services::owners::SERVICE as OWNER_SERVICE,
 };
 use lib_engage::services::subscription::SERVICE as SUBSCRIPTION_SERVICE;
+use lib_engage::services::alert_similar::SERVICE as ALERT_SIMILAR_SERVICE;
 use lib_users::repositories::schema_user::UserAllSchema;
 use lib_users::SERVICE as USER_SERVICE;
 
@@ -76,6 +78,16 @@ pub async fn create_schemas(
                 return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
             }
         }
+        
+        ALERT_SIMILAR_SERVICE => {
+            if create {
+                AlertSimilarSchema::create_schema(config).await?;
+            } else if delete {
+                AlertSimilarSchema::delete_schema(config).await?;
+            } else {
+                return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
+            }
+        }
         "all" => {
             if create {
                 OwnerSchema::create_schema(config).await?;
@@ -83,12 +95,14 @@ pub async fn create_schemas(
                 UserAllSchema::create_schema(config).await?;
                 LicenseSchema::create_schema(config).await?;
                 SubscriptionSchema::create_schema(config).await?;
+                AlertSimilarSchema::create_schema(config).await?;
             } else if delete {
                 OwnerSchema::delete_schema(config).await?;
                 AssetAllSchema::delete_schema(config).await?;
                 UserAllSchema::delete_schema(config).await?;
                 LicenseSchema::delete_schema(config).await?;
                 SubscriptionSchema::delete_schema(config).await?;
+                AlertSimilarSchema::delete_schema(config).await?;
             } else {
                 return Err(aws_sdk_dynamodb::Error::ResourceNotFoundException(er).into());
             }

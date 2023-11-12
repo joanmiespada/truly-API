@@ -5,6 +5,8 @@ use chrono::Utc;
 use uuid::Uuid;
 use lib_config::result::ResultE;
 
+pub const SERVICE: &str= "alert_similars";
+
 pub struct AlertSimilarService<T: AlertSimilarRepository> {
     repo: T,
 }

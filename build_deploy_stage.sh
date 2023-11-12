@@ -224,13 +224,13 @@ fi
 
 if [[ "$tables_skip" == 'false' ]]; then
 
-    service_names=("users" "owners" "assets" "subscriptions") 
-
-    for service in "${service_names[@]}"
-    do
-        echo "checking/creating master tables for $service at ${multi_region[1]}"
-        cargo run -p truly_cli -- --service $service --create --region $multi_region[1] --profile $profile
-    done
+    #service_names=("users" "owners" "assets" "subscriptions" "alert_similars") 
+    #for service in "${service_names[@]}"
+    #do
+    #    echo "checking/creating master tables for $service at ${multi_region[1]}"
+    #    cargo run -p truly_cli -- --service $service --create --region $multi_region[1] --profile $profile
+    #done
+    cargo run -p truly_cli -- --service all --create --region $multi_region[1] --profile $profile
 
     for region in "${multi_region[@]:1}"
     do
