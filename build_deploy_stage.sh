@@ -94,7 +94,6 @@ if [[ "$images_skip" == 'false' ]]; then
 
     cat "$FILE" | jq -c '.[]' | while read -r lambda; do
         lambda_name=$(echo $lambda | jq -r '.name')    
-        #imageVersion=$(echo $lambda | jq -r '.version')
         repo_name="$lambda_name-$ENVIRONMENT"
 
         if [[ -n "${build_specific_lambda[$lambda_name]}" || ${#build_specific_lambda} -eq 0 ]]; then
@@ -129,6 +128,7 @@ if [[ "$images_skip" == 'false' ]]; then
             done
 
         else
+            imageVersion=$(echo $lambda | jq -r '.version')
             for region in "${multi_region[@]}"
             do
                 reg=${region//-/_}
@@ -144,7 +144,6 @@ else
     echo $lambdas | jq -c '.[]' | while read -r lambda; do
         lambda_name=$(echo $lambda | jq -r '.name')
         imageVersion=$(echo $lambda | jq -r '.version')
-        docker_path=$(echo $lambda | jq -r '.path')
         repo_name="$lambda_name-$ENVIRONMENT"
 
         for region in "${multi_region[@]}"
