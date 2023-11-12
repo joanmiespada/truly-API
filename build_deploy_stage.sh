@@ -224,22 +224,19 @@ fi
 
 if [[ "$tables_skip" == 'false' ]]; then
 
-    #service_names=("users" "owners" "assets" "subscriptions" "alert_similars") 
-    #for service in "${service_names[@]}"
-    #do
-    #    echo "checking/creating master tables for $service at ${multi_region[1]}"
-    #    cargo run -p truly_cli -- --service $service --create --region $multi_region[1] --profile $profile
-    #done
-    cargo run -p truly_cli -- --service all --create --region $multi_region[1] --profile $profile
+    service_names=("users" "owners" "assets" "subscriptions" "alert_similars") 
+    for service in "${service_names[@]}"
+    do
+        echo "create if not exist master tables for $service at ${multi_region[1]}"
+        cargo run -p truly_cli -- --service $service --create --region $multi_region[1] --profile $profile
+    done
+    #cargo run -p truly_cli -- --service all --create --region $multi_region[1] --profile $profile
 
     for region in "${multi_region[@]:1}"
     do
         echo "deployment table replicas at ${region}"
-        #tables_json=$(aws dynamodb list-tables --region $region --output json  --profile $profile | jq -r '.TableNames[]' )
-        #tables_array=("${(@f)tables_json}")
         tables_json=$(aws dynamodb list-tables --region $multi_region[1] --output json  --profile $profile | jq -r '.TableNames[]' )
         filtered_result=($(filter_tables_by_tags "$tables_json"))
-
 
         for table in "${filtered_result[@]}"
         do
