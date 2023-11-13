@@ -32,6 +32,7 @@ resource "aws_lambda_function" "truly_lambda_alert_similar" {
       TRACE_LEVEL     = var.trace_level
       SMTP_HOST       = var.smtp_server
       SMTP_FROM_EMAIL = var.smtp_from
+      TEST1 = "deleteme"
     }
   }
 
@@ -39,9 +40,9 @@ resource "aws_lambda_function" "truly_lambda_alert_similar" {
 
 }
 
-resource "aws_lambda_event_source_mapping" "truly_linking" {
+resource "aws_lambda_event_source_mapping" "truly_similar_alert_linking" {
   event_source_arn = aws_sqs_queue.alert_similar_queue.arn
   enabled          = true
   function_name    = aws_lambda_function.truly_lambda_alert_similar.arn
-  batch_size       = 1
+  batch_size       = 10
 }

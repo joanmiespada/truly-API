@@ -43,7 +43,7 @@ resource "aws_lambda_function" "truly_lambda_after_hash" {
 
 }
 
-resource "aws_lambda_event_source_mapping" "truly_linking" {
+resource "aws_lambda_event_source_mapping" "truly_after_hash_linking" {
   event_source_arn = aws_sqs_queue.after_hash_queue.arn
   enabled          = true
   function_name    = aws_lambda_function.truly_lambda_after_hash.arn

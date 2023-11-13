@@ -1,5 +1,4 @@
 locals {
-  
   tags = merge(var.common_tags, { "logic" : "${var.service_name}" })
 }
 
@@ -19,10 +18,6 @@ resource "aws_sqs_queue" "alert_similar_queue" {
 
 resource "aws_sqs_queue" "alert_similar_queue_deadletter" {
   name = "${local.lambda_name_descriptor}-dead_letter" 
-  # redrive_allow_policy = jsonencode({
-  #   redrivePermission = "byQueue",
-  #   sourceQueueArns   = [aws_sqs_queue.after_video_queue.arn]
-  # })
   tags = local.tags
 }
 
@@ -56,5 +51,27 @@ resource "aws_sns_topic_subscription" "alert_similar_topic_subscription" {
   endpoint  = aws_sqs_queue.alert_similar_queue.arn
 }
 
-
+resource "aws_sqs_queue_policy" "download_queue_policy" {
+  queue_url = aws_sqs_queue.alert_similar_queue.id
+  policy    = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "sqspolicy",
+  "Statement": [
+    {
+      "Sid": "First",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "sqs:SendMessage",
+      "Resource": "${aws_sqs_queue.alert_similar_queue.arn}",
+      "Condition": {
+        "ArnEquals": {
+          "aws:SourceArn": "${var.alert_similar_topic_arn}"
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
 

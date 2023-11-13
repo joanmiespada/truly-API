@@ -56,5 +56,29 @@ resource "aws_sns_topic_subscription" "after_hash_topic_subscription" {
   endpoint  = aws_sqs_queue.after_hash_queue.arn
 }
 
+resource "aws_sqs_queue_policy" "download_queue_policy" {
+  queue_url = aws_sqs_queue.after_hash_queue.id
+  policy    = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "sqspolicy",
+  "Statement": [
+    {
+      "Sid": "First",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "sqs:SendMessage",
+      "Resource": "${aws_sqs_queue.after_hash_queue.arn}",
+      "Condition": {
+        "ArnEquals": {
+          "aws:SourceArn": "${var.video_out_topic_arn}"
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
 
 
