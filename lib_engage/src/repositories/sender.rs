@@ -1,9 +1,9 @@
 use crate::models::subscription::Subscription;
 use crate::template::intent::get_intent_message;
 use crate::template::new_content_found::get_similar_content_found_message;
-use lettre::message::{header, MultiPart, SinglePart, Mailbox};
+use lettre::message::{Mailbox, MultiPart};
 use lettre::transport::smtp::authentication::Credentials;
-use lettre::{Message, SmtpTransport, Transport, Address};
+use lettre::{Address, Message, SmtpTransport, Transport};
 use lib_config::config::Config;
 use lib_config::result::ResultE;
 use lib_licenses::models::asset::Asset;
@@ -35,7 +35,6 @@ impl SenderEmailsRepo {
         body_flat_text: String,
         body_html: String,
     ) -> ResultE<()> {
-
         let from = "Joan <joan@mail1.truly.video>".parse()?;
 
         //let to_op = format!("{} <{}>", email, email);
@@ -48,39 +47,22 @@ impl SenderEmailsRepo {
             }
         };
 
-
-
         let message_op = Message::builder()
             // Addresses can be specified by the tuple (email, alias)
             .to(to)
             .from(from)
             .subject(subject)
-            .multipart(
-                MultiPart::related()
-                    .singlepart(
-                        SinglePart::builder()
-                            .header(header::ContentType::TEXT_HTML)
-                            .body(body_html),
-                    )
-                    .singlepart(
-                        SinglePart::builder()
-                            .header(header::ContentType::TEXT_PLAIN)
-                            .body(body_flat_text),
-                    ),
-            );
+            .multipart(MultiPart::alternative_plain_html(body_flat_text, body_html));
         if let Err(e) = message_op {
-                log::error!("Could not create email: {:?}", e);
-                return Err(Box::new(e));
+            log::error!("Could not create email: {:?}", e);
+            return Err(Box::new(e));
         }
 
         let message = message_op.unwrap();
 
-        let creds = Credentials::new(
-            self.smtp_user.clone(),
-            self.smtp_passw.clone()
-        );
+        let creds = Credentials::new(self.smtp_user.clone(), self.smtp_passw.clone());
 
-        let smtp_host = self.smtp_host.clone(); 
+        let smtp_host = self.smtp_host.clone();
 
         if smtp_host == SMTP_TEST_SERVER {
             log::info!("Email sent to: {}", email);
@@ -108,20 +90,19 @@ impl SenderEmailsRepo {
     //#[instrument]
     pub async fn send_intent(
         &self,
-        user: User, 
+        user: User,
         asset: Asset,
         subscription: Subscription,
     ) -> ResultE<()> {
-
         log::info!("Sending intent email to: {}", user);
 
         let email = user.email().clone().unwrap();
         let url = asset.url().clone().unwrap();
 
         let (subject, body_flat_text, body_html) =
-            get_intent_message( email.clone(), url, subscription.id);
+            get_intent_message(email.clone(), url, subscription.id);
 
-        self.send( email, subject, body_flat_text, body_html).await
+        self.send(email, subject, body_flat_text, body_html).await
     }
 
     pub async fn send_new_similar_content_found(
@@ -130,12 +111,9 @@ impl SenderEmailsRepo {
         asset_subscribed: Url,
         asset_similars: Vec<(Url, Uuid)>,
     ) -> ResultE<()> {
-        let (subject, body_flat_text, body_html) = get_similar_content_found_message(
-            email.clone(),
-            asset_subscribed,
-            asset_similars,
-        );
+        let (subject, body_flat_text, body_html) =
+            get_similar_content_found_message(email.clone(), asset_subscribed, asset_similars);
 
-        self.send( email, subject, body_flat_text, body_html).await
+        self.send(email, subject, body_flat_text, body_html).await
     }
 }

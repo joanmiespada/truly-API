@@ -16,19 +16,19 @@ pub fn get_similar_content_found_message(
 
     let body_flat_text = format!(
         r#"
-Hi {email},
+        Hi {email},
 
-We have found similar videos to your video: {asset_subscribed}
-Please review: 
+        We have found similar videos to your video: {asset_subscribed}
+        Please review: 
 
-{asset_similars}
+        {asset_similars}
 
-If you've got any doubts, please, don't hesitate to contact us by our Discord channel: https://disboard.org/server/1164515811390664735 
-We really appreciate your feedback.
+        If you've got any doubts, please, don't hesitate to contact us by our Discord channel: https://disboard.org/server/1164515811390664735 
+        We really appreciate your feedback.
 
 
-Joan from truly.video
-"#,
+        Joan from truly.video
+        "#,
         email = email,
         asset_subscribed = asset_subscribed,
         asset_similars = asset_similars_text,
@@ -39,24 +39,26 @@ Joan from truly.video
 
     let asset_similars_html = asset_similars
         .iter()
-        .map(| (asset, subscription)| format!("<li><a href='{asset}'>{asset}</a> &nbsp; <a href='{uns}'>Unsubscribe</a></li>", asset=asset, uns= format!("https://truly.video/unsubscribe?subscription={}", subscription) ))
+        .map(| (asset, subscription)| format!("<li><a href='{asset}'>{asset}</a> &nbsp; <a href='{uns}'>Unsubscribe</a></li>", asset=asset, uns= format!("https://www.truly.video/notifications/unsubscribe/{}", subscription) ))
         .collect::<String>();
 
     let body_html = format!(
         r#"
-<p>Hi {email}</p>,
+        <html><head></head><body>
+        <p>Hi {email}</p>,
 
-<p>We have found similar videos to your video subscription: {asset_subscribed}.</p>
-<p>Please review: </p>
-<ul>
-{asset_similars}
-</ul>
-<p>If you've got any doubts, please, don't hesitate to contact us by our Discord channel: <a href="https://disboard.org/server/1164515811390664735">Discord channel</a>. 
-We really appreciate your feedback.</p>
+        <p>We have found similar videos to your video subscription: {asset_subscribed}.</p>
+        <p>Please review: </p>
+        <ul>
+        {asset_similars}
+        </ul>
+        <p>If you've got any doubts, please, don't hesitate to contact us by our Discord channel: <a href="https://disboard.org/server/1164515811390664735">Discord channel</a>. 
+        We really appreciate your feedback.</p>
 
 
-Joan from truly.video
-"#,
+        <p>Joan from truly.video</p>
+        </body></html>
+        "#,
         email = email,
         asset_subscribed = asset_subscribed,
         asset_similars = asset_similars_html

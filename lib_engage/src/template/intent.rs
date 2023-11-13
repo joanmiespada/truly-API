@@ -15,9 +15,9 @@ pub fn get_intent_message(
         Hi {email},
         
         You've subscribed to get notified when a similar video to {asset_url} could be found!
-        Please click on the following link to confirm your email subscription: https://www.truly.video/notifications/subscribe?subscription_id={subscription_id}
+        Please click on the following link to confirm your email subscription: https://www.truly.video/notifications/subscribe/{subscription_id}
         
-        You can unsubscribe at any time by clicking on the following link: https://www.truly.video/notifications/unsubscribe?subscription_id={subscription_id}
+        You can unsubscribe at any time by clicking on the following link: https://www.truly.video/notifications/unsubscribe/{subscription_id}
 
         If you've got any doubts, please, don't hesitate to contact us by our Discord channel: https://disboard.org/server/1164515811390664735 
         We really appreciate your feedback.
@@ -31,29 +31,29 @@ pub fn get_intent_message(
 
     let body_html = format!(
         r#"
-<html>
-    <head></head>
-    <body>
-        <p>Hi {email},</p>
-        
-        <p>You've subscribed to get notified when a similar video to <a href="{asset_url}">{asset_url}</a> could be found!</p>
-        <p>Please click on the following link to confirm your email subscription: 
-           <a href="https://www.truly.video/notifications/subscribe?subscription_id={subscription_id}">Confirm Subscription</a>
-        </p>
+        <html>
+            <head></head>
+            <body>
+                <p>Hi {email},</p>
+                
+                <p>You've subscribed to get notified when a similar video to <a href="{asset_url}">{asset_url}</a> could be found!</p>
+                <p>Please click on the following link to confirm your email subscription: 
+                <a href="https://www.truly.video/notifications/subscribe/{subscription_id}">Confirm Subscription</a>
+                </p>
 
-        <p>You can unsubscribe at any time by clicking on the following link: 
-           <a href="https://www.truly.video/notifications/unsubscribe?subscription_id={subscription_id}">Unsubscribe</a>
-        </p>
+                <p>You can unsubscribe at any time by clicking on the following link: 
+                <a href="https://www.truly.video/notifications/unsubscribe/{subscription_id}">Unsubscribe</a>
+                </p>
 
-        <p>If you have any doubts, please, don't hesitate to contact us via our 
-           <a href="https://disboard.org/server/1164515811390664735">Discord channel</a>. 
-           We really appreciate your feedback.
-        </p>
+                <p>If you have any doubts, please, don't hesitate to contact us via our 
+                <a href="https://disboard.org/server/1164515811390664735">Discord channel</a>. 
+                We really appreciate your feedback.
+                </p>
 
-        <p>Joan from truly.video</p>
-    </body>
-</html>
-"#,
+                <p>Joan from truly.video</p>
+            </body>
+        </html>
+        "#,
         email = email,
         asset_url = asset,
         subscription_id = subscription_id
