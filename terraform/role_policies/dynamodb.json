@@ -9,6 +9,7 @@
      "dynamodb:Scan",
      "dynamodb:BatchWriteItem",
      "dynamodb:PutItem",
+     "dynamodb:DeleteItem",
      "dynamodb:UpdateItem",
      "dynamodb:CreateTable", 
      "dynamodb:DescribeTable", 

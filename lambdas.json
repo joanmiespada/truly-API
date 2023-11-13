@@ -43,7 +43,7 @@
   },
   {
     "name": "notifications_lambda",
-    "version": "0.0.12",
+    "version": "0.0.14",
     "path": "lambda_notifications/image/Dockerfile",
     "description": "Notifications lambda: send notifications "
   }
