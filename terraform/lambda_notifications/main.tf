@@ -31,8 +31,9 @@ resource "aws_lambda_function" "truly_lambda_notifications" {
       RUST_BACKTRACE      = var.rust_backtrace
       TRACE_LEVEL         = var.trace_level
       SMTP_SECRET_MANAGER = var.smtp_secret_manager_arn
-      SMTP_HOST            = var.smtp_server
-      SMTP_FROM_EMAIL      = var.smtp_from
+      SMTP_HOST           = var.smtp_server
+      SMTP_FROM_EMAIL     = var.smtp_from
+      DEFAULT_PAGE_SIZE   = 100
     }
   }
 
@@ -43,7 +44,8 @@ resource "aws_lambda_function" "truly_lambda_notifications" {
 resource "aws_cloudwatch_event_rule" "every_hour" {
   name                = "every-hour"
   description         = "Trigger every hour"
-  schedule_expression = "cron(0 * * * ? *)"
+  #schedule_expression = "cron(0 * * * ? *)" # every hour
+  schedule_expression = "cron(* * * * ? *)" # every minute
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch" {

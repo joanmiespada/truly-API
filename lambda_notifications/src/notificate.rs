@@ -24,11 +24,16 @@ pub async fn send_notifications(
             //.map(|asset| asset.to_owned())
             //.collect::<Vec<Url>>();
 
-        let _ =sender_emails_repo.send_new_similar_content_found(
+        let op =sender_emails_repo.send_new_similar_content_found(
             email,
             asset_subscribed,
             asset_similars,
          ).await;
+
+         if let Err(sent) =op {
+                log::error!("Error: Could not send email: {sent:?}");
+                continue;
+         }
         
         res += 1;
     }
