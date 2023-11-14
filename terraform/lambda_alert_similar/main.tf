@@ -32,7 +32,6 @@ resource "aws_lambda_function" "truly_lambda_alert_similar" {
       TRACE_LEVEL     = var.trace_level
       SMTP_HOST       = var.smtp_server
       SMTP_FROM_EMAIL = var.smtp_from
-      TEST1 = "deleteme"
     }
   }
 

@@ -44,8 +44,8 @@ resource "aws_lambda_function" "truly_lambda_notifications" {
 resource "aws_cloudwatch_event_rule" "every_hour" {
   name                = "every-hour"
   description         = "Trigger every hour"
-  schedule_expression = "cron(0 * * * ? *)" # every hour
-  #schedule_expression = "cron(* * * * ? *)" # every minute, for testing purposes
+  #schedule_expression = "cron(0 * * * ? *)" # every hour
+  schedule_expression = "cron(* * * * ? *)" # every minute, for testing purposes
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch" {
