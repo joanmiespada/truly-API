@@ -1884,6 +1884,7 @@ dependencies = [
  "lambda_http",
  "lambda_runtime",
  "lib_config",
+ "lib_licenses",
  "log",
  "serde",
  "serde_json",

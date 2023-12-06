@@ -22,10 +22,6 @@ pub struct Asset {
     #[validate(length(max = 1000))]
     hash_algorithm: Option<String>,
 
-    //#[validate(length( max=1000))]
-    //last_minted_tx: Option<String>,
-    //mint_status: MintingStatus,
-
     counter: Option<u64>,
     shorter: Option<String>,
 
@@ -38,8 +34,10 @@ pub struct Asset {
 
     source: Option<SourceType>,
     source_details: Option<String>,
-    
+
     hash_process_status: Option<HashProcessStatus>,
+    hash_process_error_message: Option<String>,
+    hash_process_error_stage: Option<String>,
 }
 
 impl fmt::Display for Asset {
@@ -60,8 +58,6 @@ impl Asset {
             hash_algorithm: None,
             latitude: None,
             longitude: None,
-            //last_minted_tx: None,
-            //mint_status: MintingStatus::NeverMinted,
             shorter: None,
             counter: None,
             father: None,
@@ -71,6 +67,8 @@ impl Asset {
             source: None,
             source_details: None,
             hash_process_status: None,
+            hash_process_error_message: None,
+            hash_process_error_stage: None,
         }
     }
 
@@ -132,19 +130,6 @@ impl Asset {
         self.latitude = val.clone()
     }
 
-    // pub fn minted_tx(&self) -> &Option<String> {
-    //     &self.last_minted_tx
-    // }
-    // pub fn set_minted_tx(&mut self, val: &Option<String>) {
-    //     self.last_minted_tx = val.clone()
-    // }
-    // pub fn mint_status(&self) -> &MintingStatus {
-    //     &self.mint_status
-    // }
-    // pub fn set_minted_status(&mut self, val: MintingStatus) {
-    //     self.mint_status = val.clone()
-    // }
-
     pub fn shorter(&self) -> &Option<String> {
         &self.shorter
     }
@@ -194,6 +179,25 @@ impl Asset {
     pub fn set_source_details(&mut self, val: &Option<String>) {
         self.source_details = val.clone()
     }
+    pub fn hash_process_status(&self) -> &Option<HashProcessStatus> {
+        &self.hash_process_status
+    }
+    pub fn set_hash_process_status(&mut self, val: &Option<HashProcessStatus>) {
+        self.hash_process_status = val.clone()
+    }
+    pub fn hash_process_error_stage(&self) -> &Option<String> {
+        &self.hash_process_error_stage
+    }
+    pub fn set_hash_process_error_stage(&mut self, val: &Option<String>) {
+        self.hash_process_error_stage = val.clone()
+    }
+
+    pub fn hash_process_error_message(&self) -> &Option<String> {
+        &self.hash_process_error_message
+    }
+    pub fn set_hash_process_error_message(&mut self, val: &Option<String>) {
+        self.hash_process_error_message = val.clone()
+    }
     /*
         pub fn (&self) -> &Option<> {
             &self.
@@ -202,12 +206,6 @@ impl Asset {
             self. = val.clone()
         }
     */
-    pub fn hash_process_status(&self) -> &Option<HashProcessStatus> {
-        &self.hash_process_status
-    }
-    pub fn set_hash_process_status(&mut self, val: &Option<HashProcessStatus>) {
-        self.hash_process_status = val.clone()
-    }
 }
 
 impl Default for Asset {
@@ -260,8 +258,6 @@ impl AssetBuilder {
             hash_algorithm: self.hash_algorithm.clone(),
             latitude: None,
             longitude: None,
-            //last_minted_tx: None,
-            //mint_status: MintingStatus::NeverMinted,
             shorter: None,
             counter: None,
             father: None,
@@ -271,6 +267,8 @@ impl AssetBuilder {
             source: None,
             source_details: None,
             hash_process_status: None,
+            hash_process_error_message: None,
+            hash_process_error_stage: None,
         }
     }
 }
@@ -327,8 +325,6 @@ impl fmt::Display for ParseAssetStatusError {
         write!(f, "error parsing asset status type")
     }
 }
-
-
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub enum VideoLicensingStatus {
@@ -401,23 +397,21 @@ impl FromStr for HashProcessStatus {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "Scheduled" => Ok(HashProcessStatus ::Scheduled),
-            "Started" => Ok(HashProcessStatus ::Started),
-            "Completed successfully" => Ok(HashProcessStatus ::CompletedSuccessfully),
-            "Error" => Ok(HashProcessStatus ::Error),
-            "Never started" => Ok(HashProcessStatus ::NeverStarted),
+            "Scheduled" => Ok(HashProcessStatus::Scheduled),
+            "Started" => Ok(HashProcessStatus::Started),
+            "Completed successfully" => Ok(HashProcessStatus::CompletedSuccessfully),
+            "Error" => Ok(HashProcessStatus::Error),
+            "Never started" => Ok(HashProcessStatus::NeverStarted),
             _ => Err(HashProcessStatusParseError),
         }
     }
 }
 
-impl fmt::Display for  HashProcessStatusParseError{
+impl fmt::Display for HashProcessStatusParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "error parsing HashProcessStatus  type")
     }
 }
-
-
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub enum SourceType {
@@ -456,5 +450,3 @@ impl fmt::Display for ParseSourceTypeError {
         write!(f, "error parsing source type")
     }
 }
-
-

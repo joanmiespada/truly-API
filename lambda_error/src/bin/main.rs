@@ -1,12 +1,11 @@
 
+use lambda_error::function_handler;
 use lambda_runtime::{run, service_fn, Error};
 
 use lib_config::{config::Config, traces::setup_tracing_level, 
     logs::setup_log};
+use lib_licenses::{repositories::{assets::AssetRepo, shorter::ShorterRepo}, services::assets::AssetService};
 
-use my_lambda::function_handler;
-
-mod my_lambda;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -20,9 +19,14 @@ async fn main() -> Result<(), Error> {
     
     log::info!("bootstrapping dependencies...");
 
+    let asset_repo = AssetRepo::new(&config);
+    let shorter_repo = ShorterRepo::new(&config);
+    let asset_service = AssetService::new(asset_repo, shorter_repo);
+
 
     run(service_fn(|e| function_handler(
         e, 
-        &config, 
+        &config,
+        &asset_service, 
     ))).await
 }

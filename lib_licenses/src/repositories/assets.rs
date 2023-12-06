@@ -34,8 +34,6 @@ const HASH_FIELD_NAME: &str = "hash_uri";
 const HASH_ALGORITHM_FIELD_NAME: &str = "hash_algorithm";
 const LATITUDE_FIELD_NAME: &str = "latitude";
 const LONGITUDE_FIELD_NAME: &str = "longitude";
-//const MINTED_FIELD_NAME: &str = "minted";
-//const MINTED_STATUS_FIELD_NAME: &str = "minting_status";
 
 const COUNTER_FIELD_NAME: &str = "global_counter";
 const SHORTER_FIELD_NAME: &str = "shorter";
@@ -44,6 +42,8 @@ const VIDEO_LICENSING_STATUS_FIELD_NAME: &str = "video_licensing_status";
 const VIDEO_PROCESS_STATUS_FIELD_NAME: &str = "video_processing_status";
 
 const HASH_PROCESS_STATUS_FIELD_NAME: &str = "hash_process_status";
+const HASH_PROCESS_STATUS_ERROR_STAGE_FIELD: &str = "hash_process_status_error_stage";
+const HASH_PROCESS_STATUS_ERROR_MESSAGE_FIELD: &str = "hash_process_status_error_message";
 
 const SOURCE_FIELD_NAME: &str = "source";
 const SOURCE_DETAILS_FIELD_NAME: &str = "source_details";
@@ -154,20 +154,10 @@ impl AssetRepo {
             let video_licensing_error_av = AttributeValue::S(value.to_string());
             items = items.item(VIDEO_LICENSING_FIELD_NAME, video_licensing_error_av);
         }
-        // if let Some(value) = asset.minted_tx() {
-        //     let minted_tx_av = AttributeValue::S(value.clone());
-        //     items = items.item(MINTED_FIELD_NAME, minted_tx_av);
-        // }
         items = items.item(
             VIDEO_LICENSING_STATUS_FIELD_NAME,
             AttributeValue::S(asset.video_licensing_status().to_string()),
         );
-
-        // items = items.item(
-        //     MINTED_STATUS_FIELD_NAME,
-        //     AttributeValue::S(asset.mint_status().to_string()),
-        // );
-
         if let Some(value) = asset.video_process_status() {
             let video_process_status_av = AttributeValue::S(value.to_string());
             items = items.item(VIDEO_PROCESS_STATUS_FIELD_NAME, video_process_status_av);
@@ -184,6 +174,15 @@ impl AssetRepo {
             let source_det_av = AttributeValue::S(value.to_string());
             items = items.item(HASH_PROCESS_STATUS_FIELD_NAME, source_det_av);
         }
+        if let Some(value) = asset.hash_process_error_stage() {
+            let source_det_av = AttributeValue::S(value.to_string());
+            items = items.item(HASH_PROCESS_STATUS_ERROR_STAGE_FIELD, source_det_av);
+        }
+        if let Some(value) = asset.hash_process_error_message() {
+            let source_det_av = AttributeValue::S(value.to_string());
+            items = items.item(HASH_PROCESS_STATUS_ERROR_MESSAGE_FIELD, source_det_av);
+        }
+
         Ok(items)
     }
 }
@@ -579,7 +578,6 @@ impl AssetRepository for AssetRepo {
 
         match results.unwrap().item {
             None => {
-                //return Err(FatherNoExistsError(son_id.to_string()).into());
                 Ok(None)
             }
             Some(aux) => {
@@ -587,24 +585,13 @@ impl AssetRepository for AssetRepo {
                 let asset_id = _id.as_s().unwrap();
                 let father_uuid = Uuid::from_str(asset_id).unwrap();
                 Ok(Some(father_uuid))
-                //let res = self._get_by_id(&father_uuid).await?;
-                //let mut asset = Asset::new();
-                //mapping_from_doc_to_asset(&res, &mut asset);
-                //Ok(Some(asset))
+
             }
         }
     }
 }
 
-// fn iso8601(st: &DateTime<Utc>) -> String {
-//     let dt: DateTime<Utc> = st.clone().into();
-//     format!("{}", dt.format("%+"))
-// }
 
-// fn from_iso8601(st: &String) -> DateTime<Utc> {
-//     let aux = st.parse::<DateTime<Utc>>().unwrap();
-//     aux
-// }
 fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut Asset) {
     let _id = doc.get(ASSET_ID_FIELD_PK).unwrap();
     let asset_id = _id.as_s().unwrap();
@@ -675,22 +662,6 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
             }
         }
     }
-
-    // let tx_minted = doc.get(MINTED_FIELD_NAME);
-    // match tx_minted {
-    //     None => asset.set_minted_tx(&None),
-    //     Some(lati) => {
-    //         let val = lati.as_s().unwrap();
-    //         if val == NULLABLE {
-    //             asset.set_minted_tx(&None)
-    //         } else {
-    //             asset.set_minted_tx(&Some(val.clone()))
-    //         }
-    //     }
-    // }
-
-    //let minted_status = doc.get(MINTED_STATUS_FIELD_NAME).unwrap().as_s().unwrap();
-    //asset.set_minted_status(MintingStatus::from_str(minted_status).unwrap());
 
     let status_t = doc.get(STATUS_FIELD_NAME).unwrap().as_s().unwrap();
     let aux = AssetStatus::from_str(status_t).unwrap();
@@ -826,4 +797,31 @@ fn mapping_from_doc_to_asset(doc: &HashMap<String, AttributeValue>, asset: &mut 
             }
         }
     }
+
+    let hash_process_status_error_stage = doc.get(HASH_PROCESS_STATUS_ERROR_STAGE_FIELD);
+    match hash_process_status_error_stage {
+        None => asset.set_hash_process_error_stage(&None),
+        Some(lati) => {
+            let val = lati.as_s().unwrap();
+            if val == NULLABLE {
+                asset.set_hash_process_error_stage(&None)
+            } else {
+                asset.set_hash_process_error_stage(&Some(val.to_owned()));
+            }
+        }
+    }
+
+    let hash_process_status_error_message = doc.get(HASH_PROCESS_STATUS_ERROR_MESSAGE_FIELD);
+    match hash_process_status_error_message {
+        None => asset.set_hash_process_error_message(&None),
+        Some(lati) => {
+            let val = lati.as_s().unwrap();
+            if val == NULLABLE {
+                asset.set_hash_process_error_message(&None)
+            } else {
+                asset.set_hash_process_error_message(&Some(val.to_owned()));
+            }
+        }
+    }
+
 }

@@ -3,15 +3,18 @@ name="lambda_error"
 version="0.0.1"
 edition = "2021"
 
+[lib]
+name = "lambda_error"
+path = "src/lib.rs"
 
 [[bin]]
 name="lambda_error"
-path="src/main.rs"
+path="src/bin/main.rs"
 
 
 [dependencies]
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
-#lib_licenses = { path = "../lib_licenses" }
+lib_licenses = { path = "../lib_licenses" }
 tower-http = { version="0.4.4", features=["full"]  }
 lambda_http = { version = "0.8", features = ["apigw_rest"]}
 lambda_runtime = "0.8"

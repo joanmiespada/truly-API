@@ -18,8 +18,6 @@ lib_users = { path = "../lib_users" }
 lib_licenses = { path = "../lib_licenses" }
 lib_engage = { path = "../lib_engage" }
 lib_util_jwt = { path = "../lib_util_jwt" }
-#lib_blockchain = { git="https://github.com/joanmiespada/truly-blockchains"}
-#lib_ledger = { path = "../lib_ledger" }
 chrono = { version = "0.4.31", features = ["serde"] }
 tower-http = { version = "0.4.4", features = ["full"] }
 lambda_http = { version = "0.8", features = ["apigw_rest"] }
