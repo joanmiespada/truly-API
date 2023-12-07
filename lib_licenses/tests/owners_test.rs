@@ -8,7 +8,6 @@ use lib_licenses::models::owner::Owner;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::repositories::schema_owners::OwnerSchema;
 use lib_licenses::services::owners::{OwnerManipulation, OwnerService};
-use spectral::prelude::*;
 use testcontainers::*;
 use uuid::Uuid;
 
@@ -29,7 +28,7 @@ async fn creation_table() {
     conf.set_aws_config(&shared_config);
 
     let creation = OwnerSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let client = Client::new(&shared_config);
     let req = client.list_tables().limit(10);
@@ -57,7 +56,7 @@ async fn add_owners() {
     conf.set_aws_config(&shared_config);
 
     let creation = OwnerSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let repo = OwnerRepo::new(&conf);
     let service = OwnerService::new(repo);
@@ -75,24 +74,24 @@ async fn add_owners() {
 
         let new_op = service.add(&mut as1).await;
 
-        assert_that!(&new_op).is_ok();
+        assert!(new_op.is_ok());
     }
     let mut res_op = service.get_by_user(&"user1".to_string()).await;
-    assert_that!(&res_op).is_ok();
+    assert!(res_op.is_ok());
     let mut res = res_op.unwrap();
     assert_eq!(res.len(), 2);
     res_op = service.get_by_user(&"user2".to_string()).await;
-    assert_that!(&res_op).is_ok();
+    assert!(res_op.is_ok());
     res = res_op.unwrap();
     assert_eq!(res.len(), 1);
 
     let mut res_op2 = service.get_by_asset(&asset1).await;
-    assert_that!(&res_op2).is_ok();
+    assert!(res_op2.is_ok());
     let mut res2 = res_op2.unwrap();
     assert_eq!("user1", res2.user_id());
 
     res_op2 = service.get_by_asset(&asset3).await;
-    assert_that!(&res_op2).is_ok();
+    assert!(res_op2.is_ok());
     res2 = res_op2.unwrap();
     assert_eq!("user2", res2.user_id());
 }

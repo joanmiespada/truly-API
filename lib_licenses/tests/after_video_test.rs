@@ -15,7 +15,6 @@ use lib_licenses::services::assets::{AssetManipulation, AssetService, CreatableF
 use lib_licenses::services::video::{VideoManipulation, VideoService};
 use lib_video_objs::shorter::CreateShorter;
 use lib_video_objs::video::{VideoProcessStatus, VideoResult};
-use spectral::prelude::*;
 use testcontainers::*;
 use url::Url;
 use uuid::Uuid;
@@ -43,9 +42,9 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     conf.refresh_env_vars();
 
     let creation = AssetAllSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
     let creation = OwnerSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let repo_assets = AssetRepo::new(&conf);
     let repo_shorters = ShorterRepo::new(&conf);
@@ -69,7 +68,7 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     let shorter_id = "0".to_string();
 
     let asset_original_op = service.add(&creation_asset, &Some(user_id.clone())).await;
-    assert_that!(&asset_original_op).is_ok();
+    assert!(asset_original_op.is_ok());
     let asset_original = asset_original_op.unwrap();
 
     let shorter = CreateShorter {
@@ -84,7 +83,7 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     let post_request_op = video_service
         .shorter_video_async(&asset_original, &user_id)
         .await;
-    assert_that!(&post_request_op).is_ok();
+    assert!(post_request_op.is_ok());
 
     //simulate response after posting the request:
     let mut video_res = VideoResult {
@@ -109,10 +108,10 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     };
 
     let new_op = service.store_video_process(&video_res).await;
-    assert_that!(&new_op).is_ok();
+    assert!(new_op.is_ok());
 
     let mut old_asset_op = service.get_by_id(&asset_original).await;
-    assert_that!(&old_asset_op).is_ok();
+    assert!(old_asset_op.is_ok());
     let mut old_asset_father = old_asset_op.unwrap();
     assert_eq!(
         old_asset_father.video_process_status().clone().unwrap(),
@@ -141,10 +140,10 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     };
 
     let new_op = service.store_video_process(&video_res).await;
-    assert_that!(&new_op).is_ok();
+    assert!(new_op.is_ok());
 
     old_asset_op = service.get_by_id(&asset_original).await;
-    assert_that!(&old_asset_op).is_ok();
+    assert!(old_asset_op.is_ok());
     old_asset_father = old_asset_op.unwrap();
     assert_eq!(
         old_asset_father.video_process_status().clone().unwrap(),
@@ -173,12 +172,12 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     };
 
     let new_op = service.store_video_process(&video_res).await;
-    assert_that!(&new_op).is_ok();
+    assert!(new_op.is_ok());
 
     let new_asset_op = service
         .get_by_id(&video_res.video_licensed_asset_id.unwrap())
         .await;
-    assert_that!(&new_asset_op).is_ok();
+    assert!(new_asset_op.is_ok());
 
     let new_asset_son = new_asset_op.unwrap();
 
@@ -197,7 +196,7 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     );
 
     old_asset_op = service.get_by_id(&asset_original).await;
-    assert_that!(&old_asset_op).is_ok();
+    assert!(old_asset_op.is_ok());
     old_asset_father = old_asset_op.unwrap();
 
     assert_eq!(

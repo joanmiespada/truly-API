@@ -40,7 +40,6 @@ use lib_users::services::users::UserManipulation;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::randoms::generate_random_email;
 use lib_util_jwt::randoms::generate_random_url;
-use spectral::prelude::*;
 use testcontainers::*;
 
 fn _payload_lambda_event() -> LambdaEvent<CloudWatchEvent> {
@@ -182,15 +181,15 @@ async fn check_asset_alerts_notifications() -> ResultE<()> {
     config.set_aws_config(&shared_config);
 
     let creation = AssetAllSchema::create_schema(&config).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
     let creation = OwnerSchema::create_schema(&config).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
     let creation = SubscriptionSchema::create_schema(&config).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
     let creation = UserAllSchema::create_schema(&config).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
     let creation = AlertSimilarSchema::create_schema(&config).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let alert_repo = AlertSimilarRepo::new(&config);
     let alert_service = AlertSimilarService::new(alert_repo);

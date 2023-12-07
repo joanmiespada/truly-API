@@ -14,7 +14,6 @@ use lib_licenses::repositories::shorter::ShorterRepo;
 use lib_licenses::services::assets::{
     AssetManipulation, AssetService, CreatableFildsAsset, UpdatableFildsAsset,
 };
-use spectral::prelude::*;
 use testcontainers::*;
 use url::Url;
 
@@ -38,9 +37,9 @@ async fn creation_table() {
     conf.set_aws_config(&shared_config);
 
     let creation = AssetAllSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
     let creation = OwnerSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let client = Client::new(&shared_config);
 
@@ -71,9 +70,9 @@ async fn add_assets() {
     //conf.set_aws_config(&shared_config);
 
     let creation = AssetAllSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
     let creation = OwnerSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let repo_assets = AssetRepo::new(&conf);
     let repo_shorters = ShorterRepo::new(&conf);
@@ -94,11 +93,11 @@ async fn add_assets() {
     let user = String::from_str("user1").unwrap();
 
     let new_op = service.add(&as1, &Some(user)).await;
-    assert_that!(&new_op).is_ok();
+    assert!(new_op.is_ok());
     let new_id = new_op.unwrap();
 
     let get_op = service.get_by_id(&new_id).await;
-    assert_that!(&get_op).is_ok();
+    assert!(get_op.is_ok());
 
     let aass11 = get_op.unwrap();
     let url = aass11.url().clone().unwrap();
@@ -110,10 +109,10 @@ async fn add_assets() {
     };
 
     let upd_op = service.update(aass11.id(), &up_as).await;
-    assert_that!(&upd_op).is_ok();
+    assert!(upd_op.is_ok());
 
     let get2_op = service.get_by_id(&new_id).await;
-    assert_that!(&get2_op).is_ok();
+    assert!(get2_op.is_ok());
     let ass3 = get2_op.unwrap();
     assert_eq!(*ass3.state(), AssetStatus::Disabled);
 }
@@ -204,17 +203,17 @@ async fn check_ownership() {
     let shared_config = build_local_stack_connection(host_port).await;
 
     // let mut creation = create_schema_assets_all(&client).await;
-    // assert_that(&creation).is_ok();
+    // assert!(creation.is_ok());
     // creation = create_schema_owners(&client).await;
-    // assert_that(&creation).is_ok();
+    // assert!(creation.is_ok());
 
     let mut conf = lib_config::config::Config::new();
     conf.set_aws_config(&shared_config);
 
     let creation = AssetAllSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
     let creation = OwnerSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let repo_assets = AssetRepo::new(&conf);
     let repo_shorters = ShorterRepo::new(&conf);
@@ -239,7 +238,7 @@ async fn check_ownership() {
             };
 
             let new_op = service.add(&mut as1, &Some(username.clone())).await;
-            assert_that!(&new_op).is_ok();
+            assert!(new_op.is_ok());
 
             let new_id = new_op.unwrap().clone();
             println!(
@@ -266,11 +265,11 @@ async fn check_ownership() {
     let mut test1212 = list_of_ids.iter().next().unwrap();
     let asset1 = service.get_by_user_asset_id(test1212.0, test1212.1).await;
 
-    assert_that(&asset1).is_ok();
+    assert!(asset1.is_ok());
 
     test1212 = list_of_ids.iter().next().unwrap();
     let ass = service.get_by_id(test1212.0).await;
-    assert_that(&ass).is_ok();
+    assert!(ass.is_ok());
 }
 
 #[tokio::test]
@@ -283,17 +282,17 @@ async fn check_asset_tree_father_son() {
     let shared_config = build_local_stack_connection(host_port).await;
 
     // let mut creation = create_schema_assets_all(&client).await;
-    // assert_that(&creation).is_ok();
+    // assert!(creation.is_ok());
     // creation = create_schema_owners(&client).await;
-    // assert_that(&creation).is_ok();
+    // assert!(creation.is_ok());
 
     let mut conf = lib_config::config::Config::new();
     conf.set_aws_config(&shared_config);
 
     let creation = AssetAllSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
     let creation = OwnerSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let repo_assets = AssetRepo::new(&conf);
     let repo_shorters = ShorterRepo::new(&conf);
@@ -318,7 +317,7 @@ async fn check_asset_tree_father_son() {
             };
 
             let new_op = service.add(&mut as1, &Some(username.clone())).await;
-            assert_that!(&new_op).is_ok();
+            assert!(new_op.is_ok());
 
             let new_id = new_op.unwrap().clone();
             let father = match user.1 .1 {

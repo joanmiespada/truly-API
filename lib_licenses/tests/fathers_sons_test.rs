@@ -14,7 +14,6 @@ use lib_licenses::{
     },
     services::assets::{AssetManipulation, AssetService, CreatableFildsAsset},
 };
-use spectral::{assert_that, result::ResultAssertions};
 use testcontainers::*;
 use url::Url;
 
@@ -81,9 +80,9 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
     conf.set_aws_config(&shared_config);
 
     let creation = AssetAllSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
     let creation = OwnerSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let repo_assets = AssetRepo::new(&conf);
     let repo_shorters = ShorterRepo::new(&conf);
@@ -128,7 +127,7 @@ async fn check_asset_sons() -> Result<(), Box<dyn std::error::Error + Send + Syn
         }
 
         let new_op = service.add(&mut as1, &Some(username)).await;
-        assert_that!(&new_op).is_ok();
+        assert!(new_op.is_ok());
 
         let new_id = new_op.unwrap();
         list_of_ids.push(new_id);

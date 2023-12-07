@@ -9,7 +9,6 @@ use lib_users::repositories::schema_user::UserAllSchema;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::login::LoginOps;
 use lib_users::services::users::{UpdatableFildsUser, UserManipulation, UsersService};
-use spectral::{assert_that, result::ResultAssertions};
 use std::env;
 use testcontainers::*;
 
@@ -40,7 +39,7 @@ async fn login_user_email_password_test() -> Result<(), Box<dyn std::error::Erro
 
     let secrets_client = aws_sdk_secretsmanager::Client::new(&shared_config);
     let creation2 = create_secrets(&secrets_client).await;
-    assert_that(&creation2).is_ok();
+    assert!(&creation2.is_ok());
 
     let mut config = Config::new();
     config.setup().await;
@@ -48,7 +47,7 @@ async fn login_user_email_password_test() -> Result<(), Box<dyn std::error::Erro
     config.load_secret(SECRETS_MANAGER_APP_KEYS.clone()).await;
 
     let creation = UserAllSchema::create_schema(&config).await;
-    assert_that(&creation).is_ok();
+    assert!(&creation.is_ok());
 
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);
@@ -75,7 +74,7 @@ async fn login_user_email_password_test() -> Result<(), Box<dyn std::error::Erro
     user_service.update(&new_id, &update_fields).await?;
 
     let fail = user_service.login(&None, &None, &email, &password).await;
-    assert_that(&fail).is_err();
+    assert!(fail.is_err());
 
     Ok(())
 }

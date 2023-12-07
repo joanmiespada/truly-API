@@ -9,7 +9,6 @@ use lib_users::repositories::schema_user::UserAllSchema;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::login::LoginOps;
 use lib_users::services::users::{UpdatableFildsUser, UserManipulation, UsersService};
-use spectral::{assert_that, result::ResultAssertions};
 use std::env;
 use testcontainers::*;
 
@@ -40,7 +39,7 @@ async fn update_user_test() -> Result<(), Box<dyn std::error::Error + Send + Syn
 
     let secrets_client = aws_sdk_secretsmanager::Client::new(&shared_config);
     let creation2 = create_secrets(&secrets_client).await;
-    assert_that(&creation2).is_ok();
+    assert!(creation2.is_ok());
 
     let mut config = Config::new();
     config.setup().await;
@@ -48,7 +47,7 @@ async fn update_user_test() -> Result<(), Box<dyn std::error::Error + Send + Syn
     config.load_secret(SECRETS_MANAGER_APP_KEYS.clone()).await;
 
     let creation = UserAllSchema::create_schema(&config).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);
@@ -145,7 +144,7 @@ async fn update_password_user_test() -> Result<(), Box<dyn std::error::Error + S
 
     let secrets_client = aws_sdk_secretsmanager::Client::new(&shared_config);
     let creation2 = create_secrets(&secrets_client).await;
-    assert_that(&creation2).is_ok();
+    assert!(creation2.is_ok());
 
     let mut config = Config::new();
     config.setup().await;
@@ -153,7 +152,7 @@ async fn update_password_user_test() -> Result<(), Box<dyn std::error::Error + S
     config.load_secret(SECRETS_MANAGER_APP_KEYS.clone()).await;
 
     let creation = UserAllSchema::create_schema(&config).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);
@@ -169,7 +168,7 @@ async fn update_password_user_test() -> Result<(), Box<dyn std::error::Error + S
     let new_id = user_service.add(&mut new_user, &password).await?;
 
     let res = user_service.login(&None, &None, &email, &password).await;
-    assert_that(&res).is_ok();
+    assert!(res.is_ok());
 
     let new_password = Some("123456789aA$%^@2asdSDasd".to_string());
     user_service
@@ -179,10 +178,10 @@ async fn update_password_user_test() -> Result<(), Box<dyn std::error::Error + S
     let res2 = user_service
         .login(&None, &None, &email, &new_password)
         .await;
-    assert_that(&res2).is_ok();
+    assert!(res2.is_ok());
 
     let res3 = user_service.login(&None, &None, &email, &password).await;
-    assert_that(&res3).is_err();
+    assert!(res3.is_err());
 
     Ok(())
 }

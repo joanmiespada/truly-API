@@ -8,7 +8,6 @@ use lib_engage::repositories::schema_alert_similar::AlertSimilarSchema;
 use lib_engage::repositories::sender::SMTP_TEST_SERVER;
 use lib_engage::services::alert_similar::AlertSimilarService;
 use lib_hash_objs::similar_alert::AlertExternalPayload;
-use spectral::prelude::*;
 use testcontainers::*;
 use lambda_alert_similars::my_lambda::similar_found::store_similar_found_successfully;
 
@@ -38,7 +37,7 @@ async fn create_alert_test() -> ResultE<()> {
     config.set_aws_config(&shared_config);
 
     let creation = AlertSimilarSchema::create_schema(&config).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let notification_repo = AlertSimilarRepo::new(&config);
     let notification_service = AlertSimilarService::new(notification_repo);
@@ -64,7 +63,7 @@ async fn create_alert_test() -> ResultE<()> {
     )
     .await;
 
-    assert_that!(aux).is_ok();
+    assert!(aux.is_ok());
 
     Ok(())
 }

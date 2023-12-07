@@ -10,7 +10,6 @@ use lib_engage::repositories::subscription::SubscriptionRepo;
 use lib_engage::services::subscription::SubscriptionService;
 use lib_licenses::models::asset::AssetBuilder;
 use lib_users::models::user::UserBuilder;
-use spectral::prelude::*;
 use std::env;
 use std::str::FromStr;
 use testcontainers::*;
@@ -37,7 +36,7 @@ async fn creation_subscription_table() {
     conf.set_aws_config(&shared_config);
 
     let creation = SubscriptionSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let client = Client::new(&shared_config);
     let req = client.list_tables().limit(10);
@@ -67,7 +66,7 @@ async fn add_and_retrieve_subscription() -> ResultE<()> {
     conf.set_aws_config(&shared_config);
 
     let creation = SubscriptionSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let repo = SubscriptionRepo::new(&conf);
     let repo_emails = SenderEmailsRepo::new(&conf);
@@ -86,10 +85,10 @@ async fn add_and_retrieve_subscription() -> ResultE<()> {
         .build();
 
     let new_sub_id_op = service.intent(user.clone(), asset.clone()).await;
-    assert_that(&new_sub_id_op).is_ok();
+    assert!(new_sub_id_op.is_ok());
 
     let new_sub_id_op2 = service.intent(user, asset).await;
-    assert_that(&new_sub_id_op2).is_ok();
+    assert!(new_sub_id_op2.is_ok());
 
     let new_sub_id = new_sub_id_op.unwrap();
 
@@ -121,7 +120,7 @@ async fn check_subscription_existence() -> ResultE<()> {
     conf.set_aws_config(&shared_config);
 
     let creation = SubscriptionSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let repo = SubscriptionRepo::new(&conf);
     let repo_emails = SenderEmailsRepo::new(&conf);
@@ -148,10 +147,10 @@ async fn check_subscription_existence() -> ResultE<()> {
     assert_eq!(exists.unwrap(), subs_id);
 
     let confirm_op = service.confirm(subs_id.clone()).await;
-    assert_that!(confirm_op).is_ok();
+    assert!(confirm_op.is_ok());
 
     let confirm_op = service.confirm(subs_id.clone()).await;
-    assert_that!(confirm_op).is_ok();
+    assert!(confirm_op.is_ok());
 
     let asset_id2 = Uuid::new_v4();
     let asset2 = AssetBuilder::new()
@@ -162,9 +161,9 @@ async fn check_subscription_existence() -> ResultE<()> {
     let subs_id2 = service.intent(user, asset2).await.unwrap();
 
     let delete_op = service.delete(subs_id).await;
-    assert_that!(delete_op).is_ok();
+    assert!(delete_op.is_ok());
     let delete_op = service.delete(subs_id2).await;
-    assert_that!(delete_op).is_ok();
+    assert!(delete_op.is_ok());
     Ok(())
 }
 
@@ -190,7 +189,7 @@ async fn check_subscription_notify() -> ResultE<()> {
     conf.set_aws_config(&shared_config);
 
     let creation = SubscriptionSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let repo = SubscriptionRepo::new(&conf);
     let repo_emails = SenderEmailsRepo::new(&conf);
@@ -233,20 +232,20 @@ async fn check_subscription_notify() -> ResultE<()> {
     let _ = service.intent(user4, asset).await;
 
     let search_op = service.find_users_subscribed_to(asset_id).await;
-    assert_that!(search_op).is_ok();
+    assert!(search_op.is_ok());
 
     let subscriptions = search_op.unwrap();
 
     assert_eq!(subscriptions.len(), 3);
 
     let search_op2 = service.find_assets_subscribed_to("user1".to_string()).await;
-    assert_that!(search_op2).is_ok();
+    assert!(search_op2.is_ok());
 
     let subscriptions2 = search_op2.unwrap();
     assert_eq!(subscriptions2.len(), 1);
 
     let search_op3 = service.find_assets_subscribed_to("user4".to_string()).await;
-    assert_that!(search_op3).is_ok();
+    assert!(search_op3.is_ok());
 
     let subscriptions3 = search_op3.unwrap();
     assert_eq!(subscriptions3.len(), 0);

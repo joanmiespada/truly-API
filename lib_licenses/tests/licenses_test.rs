@@ -13,7 +13,6 @@ use lib_licenses::repositories::schema_owners::OwnerSchema;
 use lib_licenses::services::licenses::{LicenseManipulation, LicenseService};
 use rand::seq::SliceRandom;
 use rand::Rng;
-use spectral::prelude::*;
 use std::env;
 use testcontainers::*;
 use url::Url;
@@ -38,7 +37,7 @@ async fn creation_table() {
     conf.set_aws_config(&shared_config);
     //let creation = create_schema_licenses(&client).await;
     let creation = LicenseSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let client = Client::new(&shared_config);
     let req = client.list_tables().limit(10);
@@ -66,11 +65,11 @@ async fn run_licenses() -> ResultE<()> {
     conf.set_aws_config(&shared_config);
 
     let creation = OwnerSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
     let creation = AssetAllSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
     let creation = LicenseSchema::create_schema(&conf).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let repo = LicenseRepo::new(&conf);
     let ass_repo = AssetRepo::new(&conf);
@@ -107,33 +106,33 @@ async fn run_licenses() -> ResultE<()> {
     let total_len = licenses.len();
     for license in licenses.iter_mut() {
         let new_op = service.create(&license, &None).await;
-        assert_that!(&new_op).is_ok();
+        assert!(new_op.is_ok());
     }
 
     let res_op = service.get_all(0, 10).await;
-    assert_that!(&res_op).is_ok();
+    assert!(res_op.is_ok());
     let res = res_op.unwrap();
     assert_eq!(res.len(), total_len);
 
     for license in res.iter() {
         let new_op = service.get_by_id(license.id(), license.asset_id()).await;
 
-        assert_that!(&new_op).is_ok();
+        assert!(new_op.is_ok());
         let lic = new_op.ok().unwrap().unwrap();
         assert_eq!(lic, *license)
     }
 
     let search_op = service.get_by_asset(&asset_id2).await;
-    assert_that!(&search_op).is_ok();
+    assert!(search_op.is_ok());
     assert_eq!(search_op.unwrap().len(), 2);
 
     let search_op2 = service.get_by_license(res.first().unwrap().id()).await;
-    assert_that!(&search_op2).is_ok();
+    assert!(search_op2.is_ok());
     assert_eq!(search_op2.unwrap().unwrap(), *res.first().unwrap());
 
     let target = res.first().unwrap().clone();
     let search_op3 = service.delete(&target).await;
-    assert_that!(&search_op3).is_ok();
+    assert!(search_op3.is_ok());
     let after_del_op = service.get_all(0, 10).await;
     let after_del = after_del_op.unwrap();
     assert_eq!(after_del.len(), total_len - 1);

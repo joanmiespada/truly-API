@@ -7,7 +7,6 @@ use lib_users::repositories::schema_user::UserAllSchema;
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::login::LoginOps;
 use lib_users::services::users::{UserManipulation, UsersService};
-use spectral::{assert_that, result::ResultAssertions};
 use std::env;
 use testcontainers::*;
 
@@ -33,7 +32,7 @@ async fn login_user_device_test() -> Result<(), Box<dyn std::error::Error + Send
     config.set_aws_config(&shared_config); //rewrite configuration to use our current testcontainer instead
 
     let creation = UserAllSchema::create_schema(&config).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let user_repo = UsersRepo::new(&config);
     let user_service = UsersService::new(user_repo);

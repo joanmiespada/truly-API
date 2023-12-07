@@ -21,7 +21,6 @@ use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
 use lib_util_jwt::randoms::{generate_random_email, generate_random_url};
 use serde_json::json;
-use spectral::prelude::*;
 use testcontainers::*;
 use lambda_http::{Request, Body, http::HeaderValue, http::Method, Context };
 
@@ -74,13 +73,13 @@ async fn create_intent_test() -> ResultE<()> {
     config.refresh_env_vars();
 
     let creation = AssetAllSchema::create_schema(&config).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
     let creation = OwnerSchema::create_schema(&config).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
     let creation = SubscriptionSchema::create_schema(&config).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
     let creation = UserAllSchema::create_schema(&config).await;
-    assert_that(&creation).is_ok();
+    assert!(creation.is_ok());
 
     let subscription_repo = SubscriptionRepo::new(&config);
     let send_repo = SenderEmailsRepo::new(&config);
@@ -111,7 +110,7 @@ async fn create_intent_test() -> ResultE<()> {
     )
     .await;
 
-    assert_that!(aux).is_ok();
+    assert!(aux.is_ok());
 
 
     let req = mock_request(email, generate_random_url());
@@ -127,7 +126,7 @@ async fn create_intent_test() -> ResultE<()> {
     )
     .await;
 
-    assert_that!(aux).is_ok();
+    assert!(aux.is_ok());
 
 
 
