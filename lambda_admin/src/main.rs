@@ -1,5 +1,6 @@
 use lambda_http::service_fn;
-use lib_config::{config::Config, logs::setup_log, traces::setup_tracing_level};
+use lib_config::{config::Config, logs::setup_log, //traces::setup_tracing_level
+};
 use lib_users::repositories::users::UsersRepo;
 use lib_users::services::users::UsersService;
 use my_lambda::{error::ApiLambdaAdminUserError, function_handler};
@@ -14,7 +15,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut config = Config::new();
     config.setup_with_secrets().await;
 
-    setup_tracing_level(config.env_vars());
+    //setup_tracing_level(config.env_vars());
 
     log::info!("Bootstrapping dependencies...");
 

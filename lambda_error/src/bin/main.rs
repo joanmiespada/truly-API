@@ -2,7 +2,7 @@
 use lambda_error::function_handler;
 use lambda_runtime::{run, service_fn, Error};
 
-use lib_config::{config::Config, traces::setup_tracing_level, 
+use lib_config::{config::Config, //traces::setup_tracing_level, 
     logs::setup_log};
 use lib_licenses::{repositories::{assets::AssetRepo, shorter::ShorterRepo}, services::assets::AssetService};
 
@@ -15,7 +15,7 @@ async fn main() -> Result<(), Error> {
     let mut config = Config::new();
     config.setup_with_secrets().await;
     
-    setup_tracing_level(config.env_vars());
+    //setup_tracing_level(config.env_vars());
     
     log::info!("bootstrapping dependencies...");
 

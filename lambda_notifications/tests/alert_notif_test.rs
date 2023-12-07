@@ -1,8 +1,9 @@
 use std::env;
 
 use aws_lambda_events::cloudwatch_events::CloudWatchEvent;
+use aws_lambda_events::http::HeaderMap;
+use aws_lambda_events::http::HeaderValue;
 use chrono::Utc;
-use http::{HeaderMap, HeaderValue};
 use lambda_notifications::Notificator;
 use lambda_notifications::collect_alerts;
 use lambda_notifications::create_notifications;

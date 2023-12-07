@@ -11,11 +11,11 @@ crate-type=["lib"]
 [dependencies]
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
 lib_users = { path = "../lib_users" }
-serde = { version = "1.0.192", features = ["derive"] }
+serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"
 chrono = "0.4.31"
-jsonwebtoken = "9.1.0"
-http = "0.2.9"
+jsonwebtoken = "9.2.0"
+#http = "1.0.0"
 log = "0.4.20"
 lambda_http = { version = "0.8", features = ["apigw_rest"] }
 rand = "0.8.5"

@@ -3,7 +3,7 @@ use lambda_license::function_handler;
 use lambda_license::my_lambda::error::ApiLambdaError;
 use lib_config::config::Config;
 use lib_config::logs::setup_log;
-use lib_config::traces::setup_tracing_level;
+//use lib_config::traces::setup_tracing_level;
 use lib_engage::repositories::sender::SenderEmailsRepo;
 use lib_licenses::repositories::owners::OwnerRepo;
 use lib_licenses::repositories::shorter::ShorterRepo;
@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     let mut config = Config::new();
     config.setup_with_secrets().await;
 
-    setup_tracing_level(config.env_vars());
+    //setup_tracing_level(config.env_vars());
 
     log::info!("bootstrapping dependencies...");
 

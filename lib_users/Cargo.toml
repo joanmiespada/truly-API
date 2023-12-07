@@ -10,30 +10,30 @@ crate-type=["lib"]
 [dependencies]
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
 chrono = {version="0.4.31", features = ["serde"] }
-serde = { version = "1.0.192", features = ["derive"] }
+serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"
 rust-argon2 = "2.0.0"
-aws-config = "0.57.1"
-aws-sdk-dynamodb = "0.35.0"
+aws-config = "1.0.3"
+aws-sdk-dynamodb = "1.4.0"
 async-trait = "0.1.74"
 #tracing = { version = "0.1", features = ["log"] }
 log = "0.4.20"
-tokio =  { version="1.33.0", features = ["macros"] }
+tokio =  { version="1.34.0", features = ["macros"] }
 validator = { version = "0.16", features = ["derive"] }
 regex = "1.10.2"
 zxcvbn = "2.2.2"
-uuid = { version = "1.5.0", features=["v4","fast-rng","macro-diagnostics","serde"]}
+uuid = { version = "1.6.1", features=["v4","fast-rng","macro-diagnostics","serde"]}
 lazy_static = "1.4.0"
 derive_builder = "0.12.0"
 
 
 #[dev-dependencies]
 [target.aarch64-apple-darwin.dev-dependencies]
-env_logger = "0.10.0"
-aws-types = "0.57.1"
+env_logger = "0.10.1"
+aws-types = "1.0.3"
 spectral = "0.6.0"
 #testcontainers = "0.14.0"
 testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack2"  }
-tokio = { version="1.33.0", features=["full"]}
-aws-sdk-secretsmanager = "0.35.0"
+tokio = { version="1.34.0", features=["full"]}
+aws-sdk-secretsmanager = "1.4.0"
 
