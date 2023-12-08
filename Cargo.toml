@@ -6,6 +6,7 @@ members = [
     "lib_licenses",
     "lib_engage",
     "lib_util_jwt",
+    "lib_video_apis",
     "lambda_login",
     "lambda_user",
     "lambda_license",

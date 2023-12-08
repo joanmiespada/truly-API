@@ -2042,7 +2042,7 @@ dependencies = [
 [[package]]
 name = "lib_async_ops"
 version = "0.0.3"
-source = "git+https://github.com/joanmiespada/truly-shared#5d2e1c97dbe665152f414f24b224e97795eb742f"
+source = "git+https://github.com/joanmiespada/truly-shared#c8076ad14bb558dc4c9cf27391ab2d842d713015"
 dependencies = [
  "aws-sdk-sns",
  "aws-sdk-sqs",
@@ -2059,8 +2059,8 @@ dependencies = [
 
 [[package]]
 name = "lib_config"
-version = "0.0.43"
-source = "git+https://github.com/joanmiespada/truly-shared#5d2e1c97dbe665152f414f24b224e97795eb742f"
+version = "0.0.44"
+source = "git+https://github.com/joanmiespada/truly-shared#c8076ad14bb558dc4c9cf27391ab2d842d713015"
 dependencies = [
  "async-trait",
  "aws-config",
@@ -2126,7 +2126,7 @@ dependencies = [
 [[package]]
 name = "lib_hash_objs"
 version = "0.0.4"
-source = "git+https://github.com/joanmiespada/truly-shared#5d2e1c97dbe665152f414f24b224e97795eb742f"
+source = "git+https://github.com/joanmiespada/truly-shared#c8076ad14bb558dc4c9cf27391ab2d842d713015"
 dependencies = [
  "async-trait",
  "base64 0.21.5",
@@ -2220,9 +2220,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "lib_video_apis"
+version = "0.0.1"
+dependencies = [
+ "chrono",
+ "jsonwebtoken",
+ "lambda_http",
+ "lib_config",
+ "log",
+ "rand",
+ "random_name_generator",
+ "reqwest",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "lib_video_objs"
 version = "0.0.2"
-source = "git+https://github.com/joanmiespada/truly-shared#5d2e1c97dbe665152f414f24b224e97795eb742f"
+source = "git+https://github.com/joanmiespada/truly-shared#c8076ad14bb558dc4c9cf27391ab2d842d713015"
 dependencies = [
  "async-trait",
  "base64 0.21.5",
@@ -3605,9 +3621,9 @@ dependencies = [
 
 [[package]]
 name = "try-lock"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3528ecfd12c466c6f163363caf2d02a71161dd5e1cc6ae7b34207ea2d42d81ed"
+checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "typenum"

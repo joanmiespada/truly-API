@@ -1,16 +1,15 @@
 [package]
-name="lib_util_jwt"
+name="lib_video_apis"
 version="0.0.1"
 edition = "2021"
 
 [lib]
-name="lib_util_jwt"
+name="lib_video_apis"
 crate-type=["lib"]
 
 
 [dependencies]
 lib_config = { git="https://github.com/joanmiespada/truly-shared" }
-lib_users = { path = "../lib_users" }
 serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"
 chrono = "0.4.31"
@@ -19,3 +18,4 @@ log = "0.4.20"
 lambda_http = { version = "0.8", features = ["apigw_rest"] }
 rand = "0.8.5"
 random_name_generator = "0.3.6"
+reqwest = "0.11.22"
