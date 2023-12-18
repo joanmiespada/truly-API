@@ -14,4 +14,4 @@ qwdata
 grafana-storage
 terraform.tfstate*
 /terraform/plan.tfplan
-
+deleteme*
