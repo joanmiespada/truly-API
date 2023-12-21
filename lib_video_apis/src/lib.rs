@@ -4,6 +4,9 @@ use url::Url;
 
 pub mod youtube;
 pub mod twitch;
+pub mod instagram;
+pub mod facebook;
+pub mod twitter;
 
 #[async_trait]
 pub trait ExternalData {
