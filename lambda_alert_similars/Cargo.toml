@@ -31,7 +31,6 @@ uuid = { version = "1.6.1", features = ["v4","fast-rng",  "macro-diagnostics",  
 log = "0.4.20"
 
 [dev-dependencies]
-lambda_alert_similars = { path = "../lambda_alert_similars" }
 lib_async_ops = { git = "https://github.com/joanmiespada/truly-shared" }
 lib_util_jwt = { path = "../lib_util_jwt" }
 aws-sdk-dynamodb = "1.4.0"

@@ -16,9 +16,9 @@ async fn youtube_search_test() -> ResultE<()> {
 
     assert_ne!(res.0.len(),0);
 
-    // for item in res.0{
-    //     println!("{}", item.to_string())
-    // }
+    for item in res.0{
+         println!("{}", item.to_string())
+    }
 
     Ok(())
 }
@@ -70,9 +70,9 @@ async fn youtube_get_category_test() -> ResultE<()> {
 
     assert_ne!(res.0.len(),0);
 
-    // for item in res.0{
-    //     println!("{}", item.to_string())
-    // }
+    for item in res.0{
+         println!("{}", item.to_string())
+    }
 
     Ok(())
 }

@@ -30,7 +30,7 @@ lettre = "0.11.2"
 url = "2.5.0"
 
 [dev-dependencies]
-lambda_notifications = { path = "../lambda_notifications" }
+#lambda_notifications = { path = "../lambda_notifications" }
 lib_util_jwt = { path = "../lib_util_jwt" }
 aws-sdk-dynamodb = "1.4.0"
 env_logger = "0.10.1"

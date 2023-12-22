@@ -44,7 +44,7 @@ aws-sdk-sqs = "1.4.0"
 log = "0.4.20"
 
 [dev-dependencies]
-lambda_license = { path = "../lambda_license" }
+#lambda_license = { path = "../lambda_license" }
 aws-sdk-dynamodb = "1.4.0"
 env_logger = "0.10.1"
 aws-types = "1.0.3"
