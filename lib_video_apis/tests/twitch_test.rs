@@ -1,5 +1,5 @@
 
-use lib_config::result::ResultE;
+use lib_config::{result::ResultE, environment::EnvironmentVariablesBuilder};
 use lib_video_apis::{twitch::TwitchAPIBuilder, ExternalData};
 
 
@@ -7,7 +7,13 @@ use lib_video_apis::{twitch::TwitchAPIBuilder, ExternalData};
 async fn twitch_search_test() -> ResultE<()> {
     let id = dotenv::var("TWITCH_CLIENT_ID").unwrap();
     let secret = dotenv::var("TWITCH_CLIENT_SECRET").unwrap();
-    let mut tw = TwitchAPIBuilder::default().client_id(id).client_secret(secret).token(None).token_expiration(None).build()?;
+
+    let vars = EnvironmentVariablesBuilder::default()
+                                        .twitch_client_id(Some(id))
+                                        .twitch_client_secret(Some(secret))
+                                        .build()?;
+    let mut tw = TwitchAPIBuilder::default().environment_vars(vars).build()?;
+
 
     //let key_words= vec!["borderlands-3".to_string()];
     let key_words= vec!["fortnite".to_string()];

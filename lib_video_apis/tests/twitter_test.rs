@@ -10,7 +10,7 @@ async fn facebook_recent_media_test() -> ResultE<()> {
 
     let key_words = vec![ "messi".to_string()];
 
-    let res = api.search(user_id, None,false).await?;
+    let res = api.search(key_words, None,false).await?;
 
     // Check that the response contains media
     assert_ne!(res.0.len(), 0);

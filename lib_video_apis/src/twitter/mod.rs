@@ -59,7 +59,8 @@ impl TwitterAPI {
             .get(&bearer_endpoint)
             .send()
             .await
-            .map_err(|e| TwitterAPIError(format!("Failed to send get bearer request: {}", e)).into())?;
+            .map_err(|e| TwitterAPIError(format!("Failed to send get bearer request: {}", e)))?;
+
         if res.status().is_success() {
             let response_body = res.json::<OAuthResponse>()
                 .await
@@ -68,7 +69,7 @@ impl TwitterAPI {
             // Update the token and expiration
             self.bearer_token = Some(response_body.access_token);
             // Set the appropriate expiration based on the expires_in field
-            self.token_expiration = Some(Utc::now() + Duration::seconds(response_body.expires_in as i64));
+            self.token_expiration = Some(Utc::now() + Duration::days(1));
 
             Ok(())
         } else {

@@ -38,7 +38,8 @@ async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Sen
     conf.setup().await;
     conf.set_aws_config(&shared_config);
     let topic_arn = create(&conf, "video_in_topic".to_string()).await?;
-    env::set_var("SHORTER_VIDEO_IN_TOPIC", topic_arn);
+    env::set_var("TOPIC_ARN_HASHES_SIMILARS_START", topic_arn);
+    //env::set_var("SHORTER_VIDEO_IN_TOPIC", topic_arn);
     conf.refresh_env_vars();
 
     let creation = AssetAllSchema::create_schema(&conf).await;

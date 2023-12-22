@@ -242,3 +242,9 @@ impl VideoManipulation for VideoService {
     }
 
 }
+
+impl Clone for VideoService {
+    fn clone(&self) -> Self {
+        Self { asset_service: self.asset_service.clone(), config: self.config.clone() }
+    }
+}

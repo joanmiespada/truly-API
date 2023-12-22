@@ -7,6 +7,7 @@ pub mod twitch;
 pub mod instagram;
 pub mod facebook;
 pub mod twitter;
+pub mod runner;
 
 #[async_trait]
 pub trait ExternalData {

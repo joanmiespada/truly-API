@@ -1,22 +1,21 @@
 use std::{fs::File, io::Write};
 
-use lib_config::{environment::EnvironmentVariables, config::Config, result::ResultE};
-use reqwest::{StatusCode, header};
+use async_trait::async_trait;
+use chrono::{DateTime, Duration, Utc};
+use derive_builder::Builder;
+use lib_config::{config::Config, environment::EnvironmentVariables, result::ResultE};
+use reqwest::{header, StatusCode};
 use serde_json::Value;
 use url::Url;
-use async_trait::async_trait;
-use chrono::{DateTime, Utc, Duration};
-use derive_builder::Builder;
 
 use crate::ExternalData;
 
 use self::error::YoutubeAPIError;
 pub mod error;
 
-
-
-const MAX_RESULTS:i32=50;
-const BASE_DOMAIN:&str = "https://youtube.googleapis.com/youtube/v3/";
+const MAX_RESULTS: i32 = 50;
+const BASE_DOMAIN: &str = "https://youtube.googleapis.com/youtube/v3/";
+pub const ID: &str = "YOUTUBE";
 
 #[derive(Clone, Debug, Builder)]
 pub struct YoutubeAPI {
@@ -32,9 +31,13 @@ impl YoutubeAPI {
 }
 
 #[async_trait]
-impl ExternalData for YoutubeAPI{
-    async fn search(&mut self, word_keys: Vec<String>, page_token: Option<String>, last24h:bool) -> ResultE<(Vec<Url>, Option<String>)>{
-
+impl ExternalData for YoutubeAPI {
+    async fn search(
+        &mut self,
+        word_keys: Vec<String>,
+        page_token: Option<String>,
+        last24h: bool,
+    ) -> ResultE<(Vec<Url>, Option<String>)> {
         let mut result = Vec::new();
 
         let api_key = self.environment_vars.youtube_api_key().unwrap();
@@ -53,29 +56,29 @@ impl ExternalData for YoutubeAPI{
         }
 
         let client = reqwest::Client::new();
-        let response = client.get(&url)
+        let response = client
+            .get(&url)
             .header(header::ACCEPT_ENCODING, "gzip")
             .send()
             .await;
 
         let response_text;
         match response {
-            Ok(resp)=> {
+            Ok(resp) => {
                 response_text = resp.text().await.unwrap();
                 //println!("{}",response_text)
                 //let mut file = File::create("./deleteme.json")?;
                 //file.write_all(response_text.as_bytes())?;
-            },
-            Err(e)=>{
+            }
+            Err(e) => {
                 if e.status() == Some(StatusCode::FORBIDDEN) {
-                    return Err(YoutubeAPIError("forbidden".to_string()).into() )
-                }else if e.status() == Some(StatusCode::TOO_MANY_REQUESTS) {
-                    return Err(YoutubeAPIError("too_many_request".to_string()).into() )
-                }else {
-                    return Err(YoutubeAPIError(e.to_string()).into() )
+                    return Err(YoutubeAPIError("forbidden".to_string()).into());
+                } else if e.status() == Some(StatusCode::TOO_MANY_REQUESTS) {
+                    return Err(YoutubeAPIError("too_many_request".to_string()).into());
+                } else {
+                    return Err(YoutubeAPIError(e.to_string()).into());
                 }
             }
-            
         }
 
         //let response_text = response.text().await?;
@@ -86,20 +89,19 @@ impl ExternalData for YoutubeAPI{
         if let Some(items) = json["items"].as_array() {
             for item in items {
                 if let Some(video_id) = item["id"]["videoId"].as_str() {
-                    let video_url = Url::parse( &format!("https://www.youtube.com/watch?v={}", video_id))?;
+                    let video_url =
+                        Url::parse(&format!("https://www.youtube.com/watch?v={}", video_id))?;
                     //println!("{}", video_url);
                     if last24h {
-
                         if let Some(published_at) = item["snippet"]["publishedAt"].as_str() {
                             let published_date: DateTime<Utc> = published_at.parse()?;
                             let duration_since_published = Utc::now() - published_date;
-        
+
                             if duration_since_published < Duration::days(1) {
                                 result.push(video_url);
                             }
                         }
-
-                    }else{
+                    } else {
                         result.push(video_url)
                     }
                 }
@@ -107,11 +109,14 @@ impl ExternalData for YoutubeAPI{
         }
 
         Ok((result, next_page_token))
-
     }
 
-    async fn search_by_category(&mut self, word_keys: Vec<String>, page_token: Option<String>, last24h:bool) -> ResultE<(Vec<Url>, Option<String>)>{
-
+    async fn search_by_category(
+        &mut self,
+        word_keys: Vec<String>,
+        page_token: Option<String>,
+        last24h: bool,
+    ) -> ResultE<(Vec<Url>, Option<String>)> {
         let mut result = Vec::new();
 
         let api_key = self.environment_vars.youtube_api_key().unwrap();
@@ -129,29 +134,29 @@ impl ExternalData for YoutubeAPI{
         }
 
         let client = reqwest::Client::new();
-        let response = client.get(&url)
+        let response = client
+            .get(&url)
             .header(header::ACCEPT_ENCODING, "gzip")
             .send()
             .await;
 
         let response_text;
         match response {
-            Ok(resp)=> {
+            Ok(resp) => {
                 response_text = resp.text().await.unwrap();
                 //println!("{}",response_text)
                 let mut file = File::create("./deleteme-category.json")?;
                 file.write_all(response_text.as_bytes())?;
-            },
-            Err(e)=>{
+            }
+            Err(e) => {
                 if e.status() == Some(StatusCode::FORBIDDEN) {
-                    return Err(YoutubeAPIError("forbidden".to_string()).into() )
-                }else if e.status() == Some(StatusCode::TOO_MANY_REQUESTS) {
-                    return Err(YoutubeAPIError("too_many_request".to_string()).into() )
-                }else {
-                    return Err(YoutubeAPIError(e.to_string()).into() )
+                    return Err(YoutubeAPIError("forbidden".to_string()).into());
+                } else if e.status() == Some(StatusCode::TOO_MANY_REQUESTS) {
+                    return Err(YoutubeAPIError("too_many_request".to_string()).into());
+                } else {
+                    return Err(YoutubeAPIError(e.to_string()).into());
                 }
             }
-            
         }
 
         //let response_text = response.text().await?;
@@ -162,20 +167,19 @@ impl ExternalData for YoutubeAPI{
         if let Some(items) = json["items"].as_array() {
             for item in items {
                 if let Some(video_id) = item["id"].as_str() {
-                    let video_url = Url::parse( &format!("https://www.youtube.com/watch?v={}", video_id))?;
+                    let video_url =
+                        Url::parse(&format!("https://www.youtube.com/watch?v={}", video_id))?;
                     //println!("{}", video_url);
                     if last24h {
-
                         if let Some(published_at) = item["snippet"]["publishedAt"].as_str() {
                             let published_date: DateTime<Utc> = published_at.parse()?;
                             let duration_since_published = Utc::now() - published_date;
-        
+
                             if duration_since_published < Duration::days(1) {
                                 result.push(video_url);
                             }
                         }
-
-                    }else{
+                    } else {
                         result.push(video_url)
                     }
                 }
@@ -183,7 +187,5 @@ impl ExternalData for YoutubeAPI{
         }
 
         Ok((result, next_page_token))
-
     }
-
 }
