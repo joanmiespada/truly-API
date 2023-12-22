@@ -12,6 +12,7 @@ use std::str::FromStr;
 use log::{error, info};
 use url::Url;
 use uuid::Uuid;
+use std::clone::Clone;
 
 use validator::Validate;
 
@@ -52,6 +53,7 @@ pub struct AssetService {
     repository: AssetRepo,
     short_repository: ShorterRepo, //owner_service: OwnerService,
 }
+
 
 impl AssetService {
     pub fn new(ass_repo: AssetRepo, short_repo: ShorterRepo) -> AssetService {

@@ -1,9 +1,10 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use derive_builder::Builder;
+use lib_config::environment::EnvironmentVariables;
 use lib_config::{config::Config, result::ResultE};
-use reqwest::{Client, Url};
 use reqwest::{header, StatusCode};
+use reqwest::{Client, Url};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_urlencoded;
@@ -17,6 +18,7 @@ pub mod error;
 
 const MAX_RESULTS: i32 = 50;
 const BASE_URL: &str = "https://api.twitch.tv/helix/";
+pub const ID: &str = "TWITCH";
 
 #[derive(Serialize)]
 struct OAuthRequest {
@@ -34,8 +36,9 @@ struct OAuthResponse {
 
 #[derive(Clone, Debug, Builder)]
 pub struct TwitchAPI {
-    client_id: String,
-    client_secret: String,
+    //client_id: String,
+    //client_secret: String,
+    environment_vars: EnvironmentVariables,
     token: Option<String>,
     token_expiration: Option<DateTime<Utc>>,
 }
@@ -43,8 +46,9 @@ pub struct TwitchAPI {
 impl TwitchAPI {
     pub fn new(conf: &Config) -> TwitchAPI {
         TwitchAPI {
-            client_id: conf.env_vars().twitch_client_id().clone().unwrap(),
-            client_secret: conf.env_vars().twitch_client_secret().clone().unwrap(),
+            //client_id: conf.env_vars().twitch_client_id().clone().unwrap(),
+            //client_secret: conf.env_vars().twitch_client_secret().clone().unwrap(),
+            environment_vars: conf.env_vars().clone(),
             token: None,
             token_expiration: None,
         }
@@ -52,8 +56,8 @@ impl TwitchAPI {
 
     async fn get_oauth_token(&mut self) -> ResultE<()> {
         let request_body = OAuthRequest {
-            client_id: self.client_id.to_owned(),
-            client_secret: self.client_secret.to_owned(),
+            client_id: self.environment_vars.twitch_client_id().unwrap(),
+            client_secret: self.environment_vars.twitch_client_secret().unwrap(),
             grant_type: "client_credentials".to_owned(),
         };
 
@@ -105,7 +109,10 @@ impl TwitchAPI {
                         .ok_or_else(|| TwitchAPIError("Missing token".to_string()))?
                 ),
             )
-            .header("Client-Id", &self.client_id)
+            .header(
+                "Client-Id",
+                self.environment_vars.twitch_client_id().unwrap(),
+            )
             .send()
             .await
             .map_err(|e| TwitchAPIError(e.to_string()))
@@ -234,7 +241,7 @@ impl ExternalData for TwitchAPI {
 
             let encoded_params = serde_urlencoded::to_string(params)?;
 
-            url.push_str(&format!("&{}", encoded_params ));
+            url.push_str(&format!("&{}", encoded_params));
         }
 
         //println!("{}",url);
@@ -254,7 +261,7 @@ impl ExternalData for TwitchAPI {
                         if let Some(idd) = clip["url"].as_str() {
                             //println!("{}",idd);
                             let video_url_1 = Url::parse(&format!("{}", idd))?;
-                            result.push( video_url_1);
+                            result.push(video_url_1);
                         }
                     }
                 }
@@ -266,7 +273,7 @@ impl ExternalData for TwitchAPI {
             StatusCode::TOO_MANY_REQUESTS => {
                 Err(TwitchAPIError("Too many requests".to_string()).into())
             }
-            _ => Err(TwitchAPIError( "Unknown error:".to_string()).into()),
+            _ => Err(TwitchAPIError("Unknown error:".to_string()).into()),
         }
     }
 }

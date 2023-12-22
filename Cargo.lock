@@ -2291,9 +2291,12 @@ dependencies = [
  "chrono",
  "derive_builder",
  "dotenv",
+ "env_logger",
  "jsonwebtoken",
  "lambda_http",
+ "lib_async_ops",
  "lib_config",
+ "lib_licenses",
  "log",
  "rand",
  "random_name_generator",
@@ -2301,8 +2304,10 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_urlencoded",
+ "testcontainers",
  "tokio",
  "url",
+ "uuid",
 ]
 
 [[package]]
