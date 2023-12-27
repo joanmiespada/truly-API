@@ -22,6 +22,7 @@ use uuid::Uuid;
 #[tokio::test]
 async fn add_after_video_process() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env::set_var("RUST_LOG", "debug");
+    env::set_var("AWS_REGION", "eu-central-1");
     env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
 
     env_logger::builder().is_test(true).init();

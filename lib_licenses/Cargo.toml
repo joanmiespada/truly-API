@@ -23,9 +23,9 @@ chrono = {version="0.4.31", features = ["serde"] }
 serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"
 rust-argon2 = "2.0.0"
-aws-config = "1.0.3"
-aws-sdk-dynamodb = "1.4.0"
-async-trait = "0.1.74"
+aws-config = "1.1.1"
+aws-sdk-dynamodb = "1.9.0"
+async-trait = "0.1.75"
 #tracing = { version = "0.1", features = ["log"] }
 validator = { version = "0.16", features = ["derive"] }
 http = "1.0.0"
@@ -33,24 +33,24 @@ http-serde = "2.0.0"
 url = {version="2.5.0", features=["serde"] }
 hex = "0.4.3"
 rand = "0.8.5"
-aws-sdk-kms = "1.4.0"
-aws-sdk-secretsmanager = "1.4.0"
+aws-sdk-kms = "1.9.0"
+aws-sdk-secretsmanager = "1.11.0"
 base64 = "0.21.5"
 uuid = { version = "1.6.1", features=["v4","fast-rng","macro-diagnostics","serde"]}
 maplit = "1.0.2"
-tokio = { version="1.34.0", features=["full"]}
-reqwest = {version = "0.11.22" ,features = ["json"]}
+tokio = { version="1.35.1", features=["full"]}
+reqwest = {version = "0.11.23" ,features = ["json"]}
 lazy_static = "1.4.0"
-thiserror = "1.0.50"
+thiserror = "1.0.52"
 derive_builder = "0.12.0"
 
 #[target.aarch64-apple-darwin.dev-dependencies]
 [dev-dependencies]
 env_logger = "0.10.1"
-aws-types = "1.0.3"
+aws-types = "1.1.1"
 #spectral = "0.6.0"
 #testcontainers = "0.14.0"
 testcontainers = { git="https://github.com/joanmiespada/testcontainers-rs", branch="localstack2"  }
 base64 = "0.21.5"
-tokio = { version="1.34.0", features=["full"]}
+tokio = { version="1.35.1", features=["full"]}
 

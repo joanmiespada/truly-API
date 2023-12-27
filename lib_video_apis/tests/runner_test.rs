@@ -27,6 +27,7 @@ async fn runner_recent_media_test() -> ResultE<()> {
     env::set_var("TWITCH_CLIENT_ID", twitch_client_id);
     env::set_var("TWITCH_CLIENT_SECRET", twitch_client_secret);
     env::set_var("RUST_LOG", "debug");
+    env::set_var("AWS_REGION", "eu-central-1");
     env::set_var(ENV_VAR_ENVIRONMENT, DEV_ENV);
 
     env_logger::builder().is_test(true).init();

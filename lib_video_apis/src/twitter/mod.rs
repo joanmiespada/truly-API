@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc, Duration};
 use lib_config::result::ResultE;
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::Value;
 use url::Url;
 
