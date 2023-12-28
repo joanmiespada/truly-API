@@ -153,7 +153,8 @@ impl ExternalData for FacebookAPI {
         }
     }
 
-    async fn search_by_category(&mut self, word_keys: Vec<String>, page_token: Option<String>, last24h:bool) -> ResultE<(Vec<Url>, Option<String>)>
+    //TODO
+    async fn search_by_category(&mut self, _word_keys: Vec<String>, _page_token: Option<String>, _last24h:bool) -> ResultE<(Vec<Url>, Option<String>)>
     {
         self.ensure_token_valid().await?;
         Ok(( Vec::new(), None))

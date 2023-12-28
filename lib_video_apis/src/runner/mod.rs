@@ -97,7 +97,10 @@ impl Runner {
                 .await
             {
                 Ok((urls, token)) => {
-                    self.create_assets(urls).await;
+                    let save_op = self.create_assets(urls).await;
+                    if let Err(e) = save_op{
+                        println!("error saving {}", e.to_string());
+                    }
                     if token.is_none() {
                         break;
                     }

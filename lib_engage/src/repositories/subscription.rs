@@ -327,7 +327,7 @@ impl SubscriptionRepository for SubscriptionRepo {
             //.get_item()
             .query()
             .table_name(SUBSCRIPTION_TABLE_NAME.clone())
-            .index_name(USER_ASSET_INDEX_ID.clone())
+            .index_name(USER_ASSET_INDEX_ID)
             //.key(SUBSCRIPTION_FIELD_PK, subs_id_av);
             .key_condition_expression("#user_attr = :user_id AND #asset_attr = :asset_id")
             .expression_attribute_names("#asset_attr".to_string(), ASSET_ID_FIELD.to_string())

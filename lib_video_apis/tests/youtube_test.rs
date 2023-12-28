@@ -11,7 +11,7 @@ async fn youtube_search_test() -> ResultE<()> {
                                         .build()?;
     let mut yt = YoutubeAPIBuilder::default().environment_vars(vars).build()?;
 
-    let key_words= vec!["spain".to_string()];
+    let key_words= vec!["fortnite".to_string()];
     let res = yt.search(key_words,None,true).await?;
 
     assert_ne!(res.0.len(),0);

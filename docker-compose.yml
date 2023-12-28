@@ -42,14 +42,15 @@ services:
       - LAMBDA_EXECUTOR=docker
       - DOCKER_HOST=unix:///var/run/docker.sock
       #- AWS_DEFAULT_REGION=eu-central-1
+      - PERSISTENCE=0
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - DATA_DIR=/tmp/localstack/data
       - HOST_TMP_FOLDER=./.localstack
-    volumes:
-      - "./.localstack-community:/tmp/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
-      - "./create-docker-resources.sh:/docker-entrypoint-initaws.d/create-docker-resources.sh"
+    #volumes:
+    #  - "./.localstack-community:/tmp/localstack"
+    #  - "/var/run/docker.sock:/var/run/docker.sock"
+    #  - "./create-docker-resources.sh:/docker-entrypoint-initaws.d/create-docker-resources.sh"
 
   # blockchain:
   #   build: 

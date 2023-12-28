@@ -16,7 +16,7 @@ use lib_licenses::{
     services::{assets::AssetService, video::VideoService},
 };
 use lib_video_apis::{runner::RunnerBuilder, twitch::ID as TWITCH_ID, youtube::ID as YOUTUBE_ID};
-use testcontainers::{clients, images};
+//use testcontainers::{clients, images};
 
 #[tokio::test]
 async fn runner_recent_media_test() -> ResultE<()> {
@@ -32,11 +32,12 @@ async fn runner_recent_media_test() -> ResultE<()> {
 
     env_logger::builder().is_test(true).init();
 
-    let docker = clients::Cli::default();
-    let mut local_stack = images::local_stack::LocalStack::default();
-    local_stack.set_services("dynamodb,sns");
-    let node = docker.run(local_stack);
-    let host_port = node.get_host_port_ipv4(4566);
+    //let docker = clients::Cli::default();
+    //let mut local_stack = images::local_stack::LocalStack::default();
+    //local_stack.set_services("dynamodb,sns");
+    //let node = docker.run(local_stack);
+    //let host_port = node.get_host_port_ipv4(4566);
+    let host_port = 4566;
 
     let shared_config = build_local_stack_connection(host_port).await;
 
@@ -66,8 +67,11 @@ async fn runner_recent_media_test() -> ResultE<()> {
         .video_service(video_service)
         .build()?;
 
-    let word_keys = vec!["fortnite".to_string(), "playstation".to_string()];
+    let word_keys = vec!["fortnite".to_string(), "grand-theft-auto-v".to_string()];
     let res = r.process_searches(word_keys).await;
+    if res.is_err() {
+        println!("{:?}", res);
+    }
 
     assert_eq!(res.is_ok(), true);
 

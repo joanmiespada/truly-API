@@ -1,14 +1,7 @@
 use std::env;
-
-use aws_lambda_events::cloudwatch_events::CloudWatchEvent;
-use aws_lambda_events::http::HeaderMap;
-use aws_lambda_events::http::HeaderValue;
-use chrono::Utc;
 use lambda_notifications::Notificator;
 use lambda_notifications::collect_alerts;
 use lambda_notifications::create_notifications;
-use lambda_runtime::Context;
-use lambda_runtime::LambdaEvent;
 use lib_config::environment::{DEV_ENV, ENV_VAR_ENVIRONMENT};
 use lib_config::infra::build_local_stack_connection;
 use lib_config::result::ResultE;
@@ -41,44 +34,6 @@ use lib_users::services::users::UsersService;
 use lib_util_jwt::randoms::generate_random_email;
 use lib_util_jwt::randoms::generate_random_url;
 use testcontainers::*;
-
-fn _payload_lambda_event() -> LambdaEvent<CloudWatchEvent> {
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        "lambda-runtime-aws-request-id",
-        HeaderValue::from_static("my-id"),
-    );
-    headers.insert(
-        "lambda-runtime-deadline-ms",
-        HeaderValue::from_static("123"),
-    );
-    headers.insert(
-        "lambda-runtime-invoked-function-arn",
-        HeaderValue::from_static("arn::myarn"),
-    );
-    headers.insert(
-        "lambda-runtime-trace-id",
-        HeaderValue::from_static("arn::myarn"),
-    );
-    let tried = Context::try_from(headers);
-
-    let aux: LambdaEvent<CloudWatchEvent> = LambdaEvent::new(
-        CloudWatchEvent {
-            version: None,
-            id: None,
-            detail_type: None,
-            source: None,
-            //account: None,
-            time: Utc::now(),
-            region: None,
-            resources: Vec::new(),
-            detail: None,
-            account_id: None,
-        },
-        tried.unwrap(),
-    );
-    aux
-}
 
 
 async fn create_user(user_service: &UsersService) -> ResultE<User> {

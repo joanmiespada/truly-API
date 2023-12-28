@@ -36,10 +36,10 @@ struct OAuthResponse {
 
 #[derive(Clone, Debug, Builder)]
 pub struct TwitchAPI {
-    //client_id: String,
-    //client_secret: String,
     environment_vars: EnvironmentVariables,
+    #[builder(default)]
     token: Option<String>,
+    #[builder(default)]
     token_expiration: Option<DateTime<Utc>>,
 }
 
